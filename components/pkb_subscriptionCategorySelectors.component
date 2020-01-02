@@ -1,0 +1,194 @@
+<apex:component allowDML="true"
+              controller="CategorySyncController">
+<apex:attribute name="catNum" type="Integer" required="true" description="value that corresponds to the custom settings category group being displayed" />
+<apex:attribute name="catGroup" type="String" required="true" description="category group name" />
+<apex:attribute name="catGroupLabel" type="String" required="true" description="category group label" />
+<apex:attribute name="rootCat" type="String" required="true" description="root category name" />
+<apex:attribute name="occurenceKey" type="String" required="false" description="String used to force uniqueness of the ids, use empty for first one" default=""/>
+
+
+	<style>
+	
+		.frame {
+		    overflow-y: auto;
+		    border: 1px solid black;
+		    height: 3em;
+		    width: 10em;
+		    line-height: 1em;
+		}
+		
+		.frame::-webkit-scrollbar {
+		    -webkit-appearance: none;
+		}
+		
+		.frame::-webkit-scrollbar:vertical {
+		    width: 11px;
+		}
+		
+		.frame::-webkit-scrollbar:horizontal {
+		    height: 11px;
+		}
+		
+		.frame::-webkit-scrollbar-thumb {
+		    border-radius: 8px;
+		    border: 2px solid white; /* should match background, can't be transparent */
+		    background-color: rgba(0, 0, 0, .5);
+		}
+	
+	</style>
+
+
+  <apex:variable var="one" value="&nbsp;" />
+  <apex:variable var="two" value="&nbsp;&nbsp;" />
+  <apex:variable var="three" value="&nbsp;&nbsp;&nbsp;" />
+  <apex:variable var="four" value="&nbsp;&nbsp;&nbsp;&nbsp;" />
+
+    <span><apex:outputText value="{!catGroupLabel} Line" /></span><br/>
+    <div id="catSelectorRoot{!occurenceKey}">
+    
+        <select name="parentCatSelect{!catNum}{!occurenceKey}" id="parentCatSelect{!catNum}{!occurenceKey}"  style="width:210px" onchange="clearFilter{!occurenceKey}(this.id);setCategory{!occurenceKey}(this);">
+            <option >--{!$Label.PKB2_No_Filter}--</option>
+        </select>
+        
+        <br /><apex:outputText value="{!catGroupLabel}" /><br />
+        
+        
+        
+        <div name="multicategorySelect{!catNum}sub{!occurenceKey}" id="multicategorySelect{!catNum}sub{!occurenceKey}"  class="frame" style="margin: 10px;height: 200px;overflow-y: auto;border:1px solid black;width:410px;">
+	   		<!-- <input type="checkbox" name="test0" value="test0" style="margin:5px;">--{!$Label.PKB2_No_Filter}--</input><br/> -->
+	    </div>
+        
+        
+    </div>  
+    
+    <div id="catSelectorData{!occurenceKey}" style="display:none">
+        <knowledge:categoryList categoryVar="c" categoryGroup="{!catGroup}" rootCategory="{!rootCat}" level="-1" >
+          {"depth":{!c.depth},"label":"{!c.label}","value":"{!catGroup}:{!c.Name}"},
+        </knowledge:categoryList>
+    </div>
+    
+    <script type="text/javascript">
+    
+        // Category mapping from the CategorySync__c object (via CategorySyncController)
+        var catMappingArray{!occurenceKey} = new Array();
+        <apex:repeat value="{!categoryMapList}" var="catMapping">
+        catMappingArray{!occurenceKey}['{!JSENCODE(catMapping.KB_Category_ID__c)}'] = '{!JSENCODE(catMapping.Support_Product__r.Product_Name__c)}';
+        </apex:repeat>
+    	
+        var categories = {};
+        var GET = {};
+        
+        var split = location.search.replace('?', '').split('&');
+        for( var i = 0; i < split.length; i++ ) {
+            var p = split[i].split("=");
+            p[1] ? GET[p[0]] = decodeURIComponent(p[1]) : GET[p[0]] = "";
+        }
+        
+        // make sure opposite filter is not selected
+        function clearFilter{!occurenceKey}(id) {
+            if( ! id.match(/.*sub{!occurenceKey}$/) ) {
+                //$$('#categorySelect{!catNum}sub{!occurenceKey} input:checked').removeAttr('selected');
+            }
+        }
+        
+        
+        /*function compare(a,b) {
+		  if (a.value < b.value)
+			 return -1;
+		  if (a.value > b.value)
+			return 1;
+		  return 0;
+		}*/
+		
+		
+        
+        function selectSubCategory{!occurenceKey}(selectedCat, parentCat){
+        
+            var data = $$("#catSelectorData{!occurenceKey} span").html().replace(/,$/,"");
+            data = eval('(['+data+'])');
+            
+            var currentRoot = "";
+            var rootIsSelected = false;
+            for( var i = 0; i < data.length; i++ ) {
+                var c = data[i];
+                if( c.depth == 1 ) {
+                    currentRoot = c.value;
+                    categories[c.value] = [];
+                    
+                    var selected = "";
+                    if( c.value == selectedCat  ||  c.value == parentCat ) {
+                        rootIsSelected = true;
+                        selected = 'selected="selected"';
+                    }
+                    var mylabel = catMappingArray{!occurenceKey}[c.value] ? catMappingArray{!occurenceKey}[c.value] : c.label;
+                    $$("#parentCatSelect{!catNum}{!occurenceKey}").append($$("<option value='"+c.value+"' "+selected+">"+mylabel+"</option>"));
+                    catLabelArray[c.value] = mylabel;
+                } else {
+                    c.parent = currentRoot;
+                }
+            }
+            
+            
+           $$("#multicategorySelect{!catNum}sub{!occurenceKey}").html('');
+            
+            
+            for( var i = 0; i < data.length; i++ ) {
+                var c = data[i];
+                if( c.depth == 2 && (!rootIsSelected || c.parent == selectedCat || c.parent == parentCat ) ) {
+                    var selected = "";
+                    if( c.value == selectedCat ) {
+                        selected = 'selected="selected"';
+                    }
+                    var mylabel = catMappingArray{!occurenceKey}[c.value] ? catMappingArray{!occurenceKey}[c.value] : c.label;
+                    $$("#multicategorySelect{!catNum}sub{!occurenceKey}").append($$('<input type="checkbox" label="'+mylabel+'"  name="'+c.value+'" value="'+c.value+'"  style="margin:5px;">'+mylabel+'</input><br/>'));
+                    catLabelArray[c.value] = mylabel;
+                }
+            }
+        
+        
+        }
+        
+        
+        function fixCategoryLabels{!occurenceKey}() {
+        	jQuery('span.categoryLabel').each(function(){
+        		var cats = jQuery(this).html().split(/,\s*/);
+        		for (i=0; i<cats.length; i++) {
+        			cats[i] = catLabelArray[cats[i]] ? catLabelArray[cats[i]] : cats[i];
+        		}
+        		jQuery(this).html(cats.join(", "));
+        	});
+        }
+        
+        
+        $$(document).ready(function(){
+            // get the current cat, if there is one
+           
+            var selectedCat = "";
+            if( GET.c ) {
+                split = GET.c.split(",");
+                for( var i = 0; i < split.length; i++ ) {
+                    var p = split[i].split(":");
+                    if( p[0] == "{!catGroupLabel}" ) {
+                        selectedCat = "{!catGroupLabel}:"+p[1];
+                        // selectSubCategory(selectedCat);
+                        break;
+                    }
+                }
+            }
+        
+            selectSubCategory{!occurenceKey}(selectedCat, GET.cParent);
+            fixCategoryLabels{!occurenceKey}();
+            
+            
+            
+            
+        });
+        
+        
+        
+        
+        
+        
+    </script>
+
+</apex:component>

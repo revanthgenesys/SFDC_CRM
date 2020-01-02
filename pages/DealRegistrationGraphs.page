@@ -1,0 +1,376 @@
+<apex:page controller="DealRegistrationGraphController" showheader="false" sidebar="false">
+
+    <script>
+    function startVideo(w,h) {
+        var left = (screen.width/2)-(w/2);
+        var top = (screen.height/2)-(h/2);
+        window.open ('https://www.youtube.com/embed/O7XR9U1EkRM', '_blank', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+    }
+    </script>
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="dealreg"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">   
+    
+            <apex:form id="formId">
+                <apex:actionStatus id="counterStatus">                   
+                    <apex:facet name="start">
+                        <div class="waitingSearchDiv waitingSearchDivOpacity" style="width: 100%; height: 100%; display: block;opacity: 0.60;"/>
+                        <div id="loading_image" class="waitingSearchDiv" style="width: 100%; height: 100%; display: block;">
+                            <div class="waitingHolder" style="top: 20%; width: 20px;background:#fff;">
+                                <img class="waitingImage" src="/img/loading.gif" style="background:#fff;"/>
+                                <span class="waitingDescription">Refreshing...</span>
+                            </div>
+                        </div>
+                    </apex:facet>
+                    <apex:facet name="stop"/>
+                </apex:actionStatus>
+                
+                <apex:pageBlock title="Deal Registrations" id="oppRegistrations" rendered="{!isOpportunityReferralPartner}">
+                    <apex:pageBlockButtons location="top">
+                        <apex:outputPanel >
+                            <apex:commandButton value="Submit New Deal Registration" onclick="window.open('/partner/apex/PartnerPortalOppRegistration_Page')"/>
+                            <apex:commandLink value="Tutorial Video" onclick="startVideo(900,600)" style="font-size:14px;color:blue;float:right;"/> 
+                        </apex:outputPanel>                                      
+                    </apex:pageBlockButtons>
+                    <!----OPPORTUNITY   ---->
+                    <apex:outputPanel rendered="{!selectedOpptyYear != null}">
+                        <table align="center">
+                            <tr>
+                                <td align="right">
+                                    <apex:outputLabel value="Year : " >
+                                        <apex:selectList value="{!selectedOpptyYear}" multiselect="false" size="1" >
+                                            <apex:selectOptions value="{!OpptyYears}"></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" reRender="oppRegistrations" status="counterStatus"/>
+                                        </apex:selectList>
+                                    </apex:outputLabel>   
+                                    <!-- Quarter -->
+                                    <apex:outputLabel value="  Quarter : " >
+                                        <apex:selectList value="{!selectedOpptyQ}" multiselect="false" size="1" >
+                                            <apex:selectOptions value="{!Qtrs}" ></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" reRender="oppRegistrations" status="counterStatus"/>
+                                        </apex:selectList>
+                                    </apex:outputLabel>                                                                         
+                                </td>
+                                
+                                <td style="padding-left:20px;" align="right">               
+                                    <apex:commandLink id="s_elf" value="Show Details"  action="{!showOppData}" reRender="oppRegistrations" rendered="{!!showOppData}" status="counterStatus"/>
+                                    <apex:commandLink value="Hide Details"  action="{!hideOppData}" reRender="oppRegistrations" rendered="{!showOppData}" status="counterStatus"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel> 
+                    <table>
+                        <tr>
+                            <td>
+                                <apex:chart height="300" width="600" data="{!ChartData}" animate="true" resizable="true">
+                                    <apex:legend position="right"/>
+                                    <apex:axis type="Numeric" position="left" fields="oppApproved,oppPending,oppRejected" title="Opportunity Count" />
+                                    <apex:axis type="Category" position="bottom" fields="name" title="Quarter Results">
+                                        <apex:chartLabel />
+                                    </apex:axis>
+                                    
+                                    <apex:barSeries title="Opportunity Registrations Approved,Opportunity Registrations Pending,Opportunity Registrations Rejected" orientation="vertical" axis="left" xField="name" yField="oppApproved,oppPending,oppRejected" stacked="false">
+                                        <apex:chartTips height="20" width="12"/>
+                                    </apex:barSeries>
+                                </apex:chart>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div id="oppRegData"  style="margin-right:30%">
+                        <table id="table2" width="100%">
+                            <tr>
+                                <td>
+                                    <apex:pageBlock id="oppRegTable" rendered="{!AND(NOT(ISNULL(opptyReg)),opptyReg.size>0,showOppData)}"> <!-- -->
+                                        <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+                                            <thead class="rich-table-thead">
+                                                <tr class="headerRow">
+                                                    <th class="headerRow" style="height:25px;font-size: 12px;">Opportunity Registrations 
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;                                     
+                                                        <!-- export to Excel Opp Registrations -->
+                                                        <apex:outputLink title="Export To Excel" value="/apex/PartnerOppRegistrationExport?type=oppreg&exp=true&yr={!selectedOpptyYear}&qtr={!selectedOpptyQ}" target="_blank" 
+                                                                         rendered="{!AND(NOT(ISNULL(opptyReg)),opptyReg.size>0,showOppData)}">
+                                                            <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px" style="float: right;"/>    
+                                                        </apex:outputLink>
+                                                        <!-- export -->
+                                                        <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Opportunities for registration purposes. Upon successful approval and closing of an opportunity, the partner would be eligible for additional margin on the opportunity. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+                                                    </th>
+                                                    
+                                                </tr>                                                                       
+                                            </thead>
+                                        </table>
+                                        <apex:outputPanel id="pnlTemp"></apex:outputPanel>
+                                        <apex:actionFunction name="CreateOpportunityAF" action="{!createOpportunity}" status="counterStatus" reRender="pnlTemp">
+                                            <apex:param value="" name="dealRegId" assignTo="{!dealRegId}" />
+                                        </apex:actionFunction>
+                                        <apex:pageBlockTable value="{!opptyReg}"  var="eachCert"  id="theRepeat_2" rendered="{!AND(NOT(ISNULL(opptyReg)),opptyReg.size>0,showOppData)}">  <!-- -->
+                                            <apex:column headerValue="">
+                                                <apex:outputLink Value="/apex/PartnerPortalOppRegistration_Page?id={!eachCert.Id}&ro=true&ap={!eachCert.Status__c=='Approved'}" target="_blank">View</apex:outputLink>
+                                                &nbsp;
+                                                <apex:outputLink value="#" onclick="CreateOpportunityAF('{!eachCert.id}'); return false;" rendered="{!AND(eachCert.Status__c == 'Rejected', eachCert.Opportunity__c == null)}">
+                                                    Create Non-Registered Opportunity                                            
+                                                </apex:outputLink>                                        
+                                            </apex:column>
+                                            <apex:column headerValue="Opportunity Registrations"><apex:outputText value="{!eachCert.Name}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.CreatedDate}"/></apex:outputText></apex:column>
+                                            <apex:column headerValue="Approval Status"><apex:outputText value="{!eachCert.Status__c}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Expiration Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.End_Date__c}"/></apex:outputText></apex:column>
+                                        </apex:pageBlockTable>
+                                    </apex:pageBlock>
+                                    
+                                    <apex:pageBlock rendered="false">
+                                        <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+                                            <thead class="rich-table-thead">
+                                                <tr class="headerRow">
+                                                    <th class="headerRow" style="height:25px;font-size: 12px;">Opportunity Registrations 
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                                        <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Opportunities for registration purposes. Upon successful approval and closing of an opportunity, the partner would be eligible for additional margin on the opportunity. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+                                                    </th>
+                                                    <!-- <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+        <button type="button" onclick="window.open('/partner/apex/PartnerPortalOppRegistration_Page')">Submit New Opportunity Registration</button>
+        </th> -->
+                                                </tr>
+                                                <tr class="dataRow"><td  class="dataCell">No records to display.</td></tr>
+                                            </thead>
+                                        </table>
+                                    </apex:pageBlock>    
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </apex:pageBlock>
+                <!-- Blank Space -->
+                <!--  <div style="width:100%;height:100px">
+
+        </div>-->
+                <!--- END OPPORTUNITY REGISTRATION --->
+                
+                <!-- START PIPELINE --->
+                <!----------------------------------------------------->
+                <apex:pageBlock title="Pipeline/Forecast" id="pipeLn" rendered="{!isOpportunityReferralPartner}">
+                    
+                    <apex:outputPanel rendered="{!selectedPipelineYear != null}">
+                        <table align="center">
+                            <tr>
+                                <td align="right">
+                                    <apex:outputLabel value="Year : " >
+                                        <apex:selectList value="{!selectedPipelineYear}" multiselect="false" size="1" >
+                                            <apex:selectOptions value="{!PpLnYears}"></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" reRender="pipeLn" status="ppStatus"/>
+                                        </apex:selectList>
+                                    </apex:outputLabel>
+                                    <!-- Quarter -->
+                                    <apex:outputLabel value="  Quarter : " >
+                                        <apex:selectList value="{!selectedPipelineQ}" multiselect="false" size="1" >
+                                            <apex:selectOptions value="{!Qtrs}" ></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" reRender="pipeLn" status="counterStatus"/>
+                                        </apex:selectList>
+                                    </apex:outputLabel>                              
+                                </td>
+                                
+                                <td style="padding-left:20px;" align="right">               
+                                    <apex:commandLink value="Show Details"  action="{!showPipelnData}" reRender="pipeLn" rendered="{!!showPipelineData}" status="ppStatus"/>
+                                    <apex:commandLink value="Hide Details"  action="{!hidePipeLnData}" reRender="pipeLn" rendered="{!showPipelineData}" status="ppStatus"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>    
+                    <table>
+                        <tr>
+                            <td>
+                                
+                                <apex:chart height="300" width="600" data="{!PipeLnChartData}" animate="true" resizable="true">                 
+                                    <apex:legend position="right"/>
+                                    <apex:axis type="Numeric" position="left" fields="booked,inhand,committed,expected,upside,pipeline,omitted" title="Opportunity Count" />
+                                    <apex:axis type="Category" position="bottom" fields="name" title="Quarter Results">
+                                        <apex:chartLabel />
+                                    </apex:axis>
+                                    
+                                    <apex:barSeries title="Booked,In Hand,Commit,Expected,Upside,Pipeline,Omitted" orientation="vertical" axis="left" xField="name" yField="booked,inhand,committed,expected,upside,pipeline,omitted" stacked="false">
+                                        <apex:chartTips height="20" width="12"/>
+                                    </apex:barSeries>
+                                    
+                                </apex:chart>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div id="pipeLnData"  style="margin-right:30%">
+                        <table id="tablePpLn" width="100%">
+                            <tr>
+                                
+                                <td>
+                                    <apex:pageBlock id="pipeLnTable" rendered="{!AND(NOT(ISNULL(pipelineAllList)),pipelineAllList.size>0,showPipelineData)}">
+                                        <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+                                            <thead class="rich-table-thead">
+                                                <tr class="headerRow">
+                                                    <th class="headerRow" style="height:25px;font-size: 12px;">Pipeline/Forecast 
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                                        
+                                                        <!-- export to Excel Pipleline -->
+                                                        <apex:outputLink title="Export To Excel" value="/apex/PartnerOppRegistrationExport?type=ppln&exp=true&yr={!selectedPipelineYear}&qtr={!selectedPipelineQ}" target="_blank" 
+                                                                         rendered="{!AND(NOT(ISNULL(pipelineAllList)), pipelineAllList.size>0,showPipelineData)}">
+                                                            <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px" style="float: right;"/>    
+                                                        </apex:outputLink>       
+                                                        
+                                                    </th>                                      
+                                                </tr>
+                                            </thead>
+                                            
+                                        </table>
+                                        <apex:pageBlockTable value="{!Pipeline}"  var="ppl"  id="ppl_tb" rendered="{!AND(NOT(ISNULL(pipelineAllList)), pipelineAllList.size>0,showPipelineData)}">
+                                            <apex:column headerValue=""><apex:outputLink value="View" Value="/apex/PartnerPortalOpportyView?id={!ppl.Id}&acc={!acctId}" target="_blank">View</apex:outputLink></apex:column>
+                                            <apex:column headerValue="Pipeline/Forecast"><apex:outputText value="{!ppl.name}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!ppl.createdate}"/></apex:outputText></apex:column>
+                                            <apex:column headerValue="End User"><apex:outputText value="{!ppl.account}"></apex:outputText></apex:column>                          
+                                            <apex:column headerValue="Stage"><apex:outputText value="{!ppl.stage}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Forecast Status"><apex:outputText value="{!ppl.forecastStatus}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Win/Loss"><apex:outputText value="{!ppl.winloss}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Amount">
+                                                <apex:outputText value="{!ppl.currn} {0,number,###,###,##0.00}" rendered="{!NOT(ISNULL(ppl.amount))}">
+                                                    <apex:param value="{!ppl.amount}"/> 
+                                                </apex:outputText>   
+                                            </apex:column>                          
+                                            <apex:column headerValue="Expiration Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!ppl.expdate}"/></apex:outputText></apex:column>
+                                        </apex:pageBlockTable>
+                                    </apex:pageBlock>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                </apex:pageBlock>
+                <!-- END PIPELINE  --->
+                
+                <!-- START LEAD REFERRAL -->   
+                <apex:pageBlock title="Lead Referral Registrations" id="leadResults" rendered="{!isLeadReferralPartner}">
+                    <apex:pageBlockButtons location="top">
+                        <apex:commandButton value="Submit New Lead Referral Registration" onclick="window.open('/partner/apex/LeadReferralRegistration')"/>
+                    </apex:pageBlockButtons>
+                    
+                    <apex:outputPanel rendered="{!selectedLeadYear != null}"> 
+                        <table align="center">
+                            <tr>
+                                <td align="right">
+                                    <apex:outputLabel value="Year : " >
+                                        <apex:selectList value="{!selectedLeadYear}" multiselect="false" size="1" >
+                                            <apex:selectOptions value="{!LeadYears}"></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" reRender="leadResults" status="ldStatus"/>
+                                        </apex:selectList>
+                                    </apex:outputLabel>
+                                    <!-- Quarter -->
+                                    <apex:outputLabel value="  Quarter : " >
+                                        <apex:selectList value="{!selectedLeadQ}" multiselect="false" size="1" >
+                                            <apex:selectOptions value="{!Qtrs}" ></apex:selectOptions>
+                                            <apex:actionSupport event="onchange" reRender="leadResults" status="counterStatus"/>
+                                        </apex:selectList>
+                                    </apex:outputLabel>                     
+                                </td>
+                                
+                                <td style="padding-left:20px;" align="right">               
+                                    <apex:commandLink value="Show Details"  action="{!showLeadData}" reRender="leadResults" rendered="{!!showLeadData}" status="ldStatus"/>
+                                    <apex:commandLink value="Hide Details"  action="{!hideLeadData}" reRender="leadResults" rendered="{!showLeadData}" status="ldStatus"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>     
+                    <table>
+                        <tr>
+                            <td >
+                                <apex:chart height="300" width="600" data="{!LeadChartData}" >
+                                    <apex:legend position="right"/>
+                                    <apex:axis type="Numeric" position="left" fields="oppApproved,oppPending,oppRejected" title="Lead Registration Count" />
+                                    <apex:axis type="Category" position="bottom" fields="name" title="Quarter Results">
+                                        <apex:chartLabel />
+                                    </apex:axis>
+                                    
+                                    <apex:barSeries title="Lead Referral Registrations Approved,Lead Referral Registrations Pending,Lead Referral Registrations Rejected" orientation="vertical" axis="left" xField="name" yField="oppApproved,oppPending,oppRejected" stacked="false">
+                                        <apex:chartTips height="20" width="120"/>
+                                    </apex:barSeries>
+                                </apex:chart>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div id="leadRegData" style="margin-right:30%">
+                        <table width="100%">
+                            <tr>                                     
+                                <td>
+                                    <apex:pageBlock rendered="{!AND(NOT(ISNULL(leadAllList)),leadAllList.size>0,showLeadData)}">
+                                        <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+                                            <thead class="rich-table-thead">
+                                                <tr class="headerRow">
+                                                    <th class="headerRow" style="height:25px;font-size: 12px;">Lead Referral Registrations 
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                                        
+                                                        <!-- export to Excel -->    
+                                                        <apex:outputLink title="Export To Excel" value="/apex/PartnerOppRegistrationExport?type=ldreg&exp=true&yr={!selectedLeadYear}&qtr={!selectedLeadQ}" target="_blank" 
+                                                                         rendered="{!AND(NOT(ISNULL(leadAllList)),leadAllList.size>0,showLeadData)}"> 
+                                                            <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px" style="float: right;"/>    
+                                                        </apex:outputLink>    
+                                                        
+                                                        <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Lead for registration purposes. Upon successful approval and closing of an lead, the partner would be eligible for additional margin on the lead. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+                                                    </th>                                                                
+                                                </tr>
+                                                <apex:outputPanel rendered="{!AND(NOT(ISNULL(leadAllList)),leadAllList.size=0)}">
+                                                    <tr class="dataRow"><td  class="dataCell">No records to display.</td></tr>
+                                                </apex:outputPanel>    
+                                            </thead>
+                                        </table>
+                                        <apex:pageBlockTable value="{!leadReg}"  var="eachCert"  id="theRepeat_2" rendered="{!AND(NOT(ISNULL(leadAllList)),leadAllList.size>0,showLeadData)}">
+                                            <apex:column headerValue=""><apex:outputLink value="View" Value="/apex/LeadReferralRegistration?id={!eachCert.Id}&ro=true" target="_blank">View</apex:outputLink></apex:column>
+                                            <apex:column headerValue="Lead Referral Registrations"><apex:outputText value="{!eachCert.Name}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.CreatedDate}"/></apex:outputText></apex:column>
+                                            <apex:column headerValue="Approval Status"><apex:outputText value="{!eachCert.Status__c}"></apex:outputText></apex:column>
+                                            <apex:column headerValue="Referral Fee (%)">
+                                                <apex:outputText value="{!eachCert.Percentage_Referral_Fee__c}" rendered="{!IF(eachCert.Status__c == 'Approved', true, false)}" />
+                                                &nbsp;
+                                            </apex:column>
+                                            <apex:column headerValue="Expiration Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.End_Date__c}"/></apex:outputText></apex:column>
+                                        </apex:pageBlockTable>
+                                    </apex:pageBlock>
+                                    <apex:pageBlock rendered="{!AND(NOT(ISNULL(leadAllList)),leadAllList.size=0,showLeadData)}">
+                                        <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+                                            <thead class="rich-table-thead">
+                                                <tr class="headerRow">
+                                                    <th class="headerRow" style="height:25px;font-size: 12px;">Lead Referral Registrations 
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                                        <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Lead for registration purposes. Upon successful approval and closing of an lead, the partner would be eligible for additional margin on the lead. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+                                                    </th>
+                                                    
+                                                </tr>
+                                                <tr class="dataRow"><td  class="dataCell">No records to display.</td></tr>
+                                            </thead>
+                                        </table>
+                                    </apex:pageBlock>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </apex:pageBlock>
+                <apex:pageBlock rendered="{!AND(NOT(isLeadReferralPartner),NOT(isOpportunityReferralPartner))}">
+                    <apex:image id="theImage" value="/img/msg_icons/warning32.png" width="32" height="32" alt="Description of image here"/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <apex:outputText value="Access Denied." style="font-weight: bold;"/>
+                </apex:pageBlock>
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+
+            
+    <style>
+        .bPageBlock .pbTitle .mainTitle{
+            font-size:1.5em;
+        }
+    </style>    
+
+</apex:page>

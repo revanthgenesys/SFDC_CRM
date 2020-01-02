@@ -1,0 +1,60 @@
+<apex:page id="pg" controller="ManageLegalEntitiesController" tabStyle="Cost_Center__c" title="Legal Entities" action="{!updateStatusOfRecord}">
+    <apex:form id="frm">
+        <apex:pageBlock id="pgblk" title="{!strTitle}">            
+            <apex:pageMessage summary="{!objectName} is Under Appproval/Approved. Legal Entities can not be updated." severity="warning" strength="3" rendered="{!objCC.Approval_Status__c != 'New' && objectName == 'Cost Center'}" />
+            <apex:pageMessage summary="{!objectName} is Under Appproval/Approved. Legal Entities can not be updated." severity="warning" strength="3" rendered="{!objBS.Approval_Status__c != 'New' && objectName == 'Business Segment'}" />
+            <apex:pageMessage summary="{!objectName} is Under Appproval/Approved. Legal Entities can not be updated." severity="warning" strength="3" rendered="{!objGLA.Approval_Status__c != 'New' && objectName == 'Business Segment'}" />
+            <apex:pageMessages />
+            <apex:pageBlockButtons location="top"  >
+                <apex:outputPanel rendered="{!objectName == 'Cost Center'}">
+                    <apex:commandButton value="Save" action="{!saveCC}" rendered="{!objCC.Approval_Status__c == 'New'}"/>
+                    <apex:commandLink action="{!redirectToCC}" styleClass="btn" style="text-decoration:none;padding:4px;" value="Back to Cost Center" id="theCommandLinkCC"/>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objectName == 'Business Segment'}">
+                    <apex:commandButton value="Save" action="{!saveBS}" rendered="{!objBS.Approval_Status__c == 'New'}"/>
+                <apex:commandLink action="{!redirectToBS}" styleClass="btn" style="text-decoration:none;padding:4px;" value="Back to Business Segment" id="theCommandLinkBS"/>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objectName == 'GL Account'}">
+                    <apex:commandButton value="Save" action="{!saveGLA}" rendered="{!objGLA.Approval_Status__c == 'New'}"/>
+                <apex:commandLink action="{!redirectToGLA}" styleClass="btn" style="text-decoration:none;padding:4px;" value="Back to GL Account" id="theCommandLinkGLA"/>
+                </apex:outputPanel>
+            </apex:pageBlockButtons>
+            <apex:pageBlockTable value="{!listOfLegalEntitiesWrapper}" var="eachLE" id="pgblk">
+                <apex:column headerValue="Select" id="clmSelect"> 
+                    <apex:facet name="header">
+                        <input type="checkbox" id="chkAll" onclick="checkAll();" />  Select All
+                    </apex:facet>
+                    <apex:inputCheckbox value="{!eachLE.blnSelected}" id="chkSelect" rendered="{!!eachLE.blnRecordLocked}"/>  
+                    <apex:outputPanel rendered="{!eachLE.blnRecordLocked}">
+                        <img src="/img/checkbox_checked.gif" title="This Legal Entity can't be removed." />
+                    </apex:outputPanel>              
+                </apex:column>
+                <apex:column headerValue="Legal Entity Name">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Name}"/>                
+                </apex:column>
+                <apex:column headerValue="Legal Entity ID">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Legal_Entity_ID__c}"/>                
+                </apex:column>
+                <apex:column headerValue="{!IF(objectName != 'GL Account', 'Status', 'GL Account Status')}">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Status__c}" rendered="{!objectName != 'GL Account'}"/>
+                    <apex:inputField value="{!eachLE.objLegalEntity.Status__c}" rendered="{!objectName == 'GL Account'}"/>                
+                </apex:column>
+                <apex:column headerValue="Country">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Country__c}"/>                
+                </apex:column>
+                <apex:column headerValue="Region">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Region__c}"/>                
+                </apex:column>            
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+    <script>
+        function checkAll(){
+            var rowSize = document.getElementById("pg:frm:pgblk:pgblk").rows.length;
+            for(var i = 0; i < rowSize; i++){            
+                if(document.getElementById('pg:frm:pgblk:pgblk:'+i+':chkSelect') != null)
+                    document.getElementById('pg:frm:pgblk:pgblk:'+i+':chkSelect').checked = document.getElementById('chkAll').checked;
+            }
+        }
+    </script>
+</apex:page>

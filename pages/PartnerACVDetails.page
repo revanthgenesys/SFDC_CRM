@@ -1,0 +1,52 @@
+<!--
+Created by: Mukunthan Koothan
+Created on: 02/02/2018
+Purpose: Page behind 'Actual' on PureCloud Dashboard of Performance tab in Parter Portal. Displays list of ACVs of Opportunities with Offering Type 'PureCloud'
+
+-->
+<apex:page controller="PartnerACVDetailsController" readOnly="true" sidebar="false" showheader="false">
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="performance"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+    <apex:form >
+        <apex:pageBlock title="Incremental Booking Details">
+                <table>
+                    <tr>
+                    <td width="85px"><b>Booking Year: </b></td>
+                    <td>{!selectedYear}</td>
+                    </tr>
+                </table>
+                <apex:pageBlockTable value="{!optyList}" var="op" rendered="{!optyList.size > 0 && NOT(displayPreTwentyEighteen)}" id="optyList">
+                    <apex:column value="{!op.Account.Name}" headerValue="End User Name"/>
+                    <apex:column headerValue="Quarter" value="{!op.Closing_Fiscal_Quarter__c}">
+                    </apex:column>
+                    <apex:column headerValue="Annual Contract Value">
+                        <apex:outputText value="{!curcyCd} {0, number, ###,###,###,###,##0}">
+                            <apex:param value="{!op.ACV_Subscription_Only__c}" />
+                        </apex:outputText>
+                    </apex:column>
+                </apex:pageBlockTable>
+                <apex:pageBlockTable value="{!optyList}" var="op1" rendered="{!optyList.size > 0 && displayPreTwentyEighteen}" id="optyList1">
+                    <apex:column value="{!op1.Name}"/>
+                    <apex:column value="{!op1.Account.Name}" headerValue="End User Name"/>
+                    <apex:column headerValue="Bookings Value">
+                        <apex:outputText value="{!curcyCd} {0, number, ###,###,###,###,##0}">
+                            <apex:param value="{!op1.ACV_Subscription_Only__c}" />
+                        </apex:outputText>
+                    </apex:column>
+                </apex:pageBlockTable>
+                <apex:outputLabel style="font-weight:bold;color:black" rendered="{!optyList.size == 0}">No data to display</apex:outputLabel>
+        </apex:pageBlock>
+    </apex:form>
+        </apex:define>
+    </apex:composition>
+</apex:page>

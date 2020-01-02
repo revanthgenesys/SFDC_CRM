@@ -1,0 +1,485 @@
+<apex:page id="pg" controller="OptyQuoteHandler" tabStyle="Opportunity" sidebar="false" action="{!goToCloneQuoteIfOppIsDownUpGrade}" Title="{!objOppQuoteCategory.Name}" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+    <apex:sectionHeader subtitle="{!objOppQuoteCategory.Name}" title="Opportunity" rendered="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}"/> 
+    <script>
+    function switchMenu(obj, obj1, obj2)
+    {
+        var el = document.getElementById(obj);                                       
+        if(el.style.display != 'none' ) {
+            el.style.display = 'none';
+        }
+        else {
+            el.style.display = '';
+        }
+        var e2 = document.getElementById(obj1);                                       
+        if(e2.style.display != 'none' ) {
+            e2.style.display = 'none';
+        }
+        else {
+            e2.style.display = '';
+        }
+        var e3 = document.getElementById(obj2);                                       
+        if(e2.style.display != 'none' ) {
+            e3.style.display = 'none';
+        }
+        else {
+            e3.style.display = '';
+        }
+    }
+    
+    function setCheckBox(val){
+        if(val == 'EQUIP'){
+            document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:0:chkSelected').checked = true;
+            document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:1:chkSelected').checked = false;
+            document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:2:chkSelected').checked = false;
+        }            
+        else if(val == 'DRIVE'){
+            document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:0:chkSelected').checked = false;
+            document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:1:chkSelected').checked = true;
+            document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:2:chkSelected').checked = false;        
+        }
+            else if(val == 'GUIDE'){
+                document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:0:chkSelected').checked = false;
+                document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:1:chkSelected').checked = false;
+                document.getElementById('pg:SiteTemplate:theForm:pgblk2:pgblkSec2:pgblkTab1:2:chkSelected').checked = true;
+            }        
+    } 
+    
+    function passSelectedAmend(inputVal){ 
+        //alert(inputVal.value);
+        document.getElementById("pg:SiteTemplate:theForm:pgblkMain:pgblkSection:all:hidValId").value = inputVal.value;
+        //alert(inputVal.value);
+    }
+    
+    </script>
+    <style>
+        .helpIcon{
+        background: transparent url(/img/alohaSkin/help_orange.png) no-repeat;
+        }
+    </style>
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="optyTab" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="body">
+            
+            <apex:outputPanel style="height:30px;">
+                <apex:actionStatus id="changeStatus">
+                    <apex:facet name="start">
+                        <apex:image value="/img/loading.gif"/>
+                    </apex:facet> 
+                </apex:actionStatus>         
+            </apex:outputPanel>
+            
+            <apex:form id="theForm"> 
+                <apex:outputPanel id="messages">
+                    <apex:pageMessages id="pageMsgs"/>
+                </apex:outputPanel>
+                
+                <apex:actionFunction name="refreshAF" action="{!refresh}" reRender="pgblkMain,theplay,LeverPremise" status="changeStatus"/>        
+                <apex:actionFunction name="populatePlatformAndOfferingTypeAF" action="{!populatePlatformAndOfferingType}" reRender="pgblkMain,Levers" status="changeStatus" />
+                <apex:actionFunction name="loadPlayOfr" action="{!goToStep2}" reRender="theplay, thePlayOffer" status="changeStatus"  /> 
+                <apex:outputPanel ></apex:outputPanel>
+                <!--<apex:pageMessage summary="PureConnect Cloud quoting is currently being upgraded. Quoting for PureConnect Cloud is temporarily suspended from 12 noon PST 11/13/2018 to 9 PM PST 11/14/2018. We appreciate your patience." severity="info" strength="3" /> -->
+                <apex:pageBlock id="pgblkMain" title="{!IF(blnRedirectToDQ, 'Please select:', 'Step 1 - Please select following attributes:')}" rendered="{!pageStep == 1}">
+                    
+                    <apex:pageBlockSection collapsible="false" columns="1" id="pgblkSection">                    
+                                
+                        <!--- MS added for the Walk Through -->
+                        <apex:outputText value="{!objOpty.Type}" label="Opportunity Type" id="opptype"/>
+
+                        <apex:pageBlockSectionItem >                          
+                            <apex:outputLabel value="Lead Platform" />
+                            <apex:outputPanel >
+                                <!-- <apex:inputField value="{!objOppQuoteCategory.Lead_Offer__c}" onchange="populatePlatformAndOfferingTypeAF();" rendered="{!NOT(blnIsPartnerUser)}" />-->
+                                <apex:inputField value="{!objOppQuoteCategory.Lead_Offer__c}" onchange="populatePlatformAndOfferingTypeAF();" rendered="{!NOT(blnIsPartnerUser) && objOpty.RecordType.Name != 'Cloud Renewal'}" />
+                                <apex:outputField value="{!objOppQuoteCategory.Lead_Offer__c}" rendered="{!blnIsPartnerUser}" >
+                                    <apex:actionSupport event="onchange" action="{!getLevers}" rerender="pgblkSection" /> 
+                                </apex:outputField>
+                                <apex:outputField value="{!objOppQuoteCategory.Lead_Offer__c}" rendered="{!objOpty.RecordType.Name == 'Cloud Renewal'}" />
+                            </apex:outputPanel>                    
+                        </apex:pageBlockSectionItem>
+                        
+                        
+                        <apex:pageBlockSectionItem rendered="{!!blnDisableQuoteType}">                
+                            <apex:outputLabel value="Quote Type" />
+                            <apex:outputPanel >
+                                <apex:actionRegion > 
+                                    <apex:selectList value="{!objOppQuoteCategory.Quote_Type__c}" size="1" rendered="{!NOT(blnIsPartnerUser)}" disabled="{!blnDisableQuoteType}">
+                                        <apex:selectOptions value="{!quoteTypeOptions}" />
+                                        <apex:actionSupport event="onchange" action="{!refresh}" rerender="pgblkSection, subscriptionTable,theplay,thePlayOffer"/>
+                                    </apex:selectList>
+                                </apex:actionRegion> 
+                                <apex:outputField value="{!objOppQuoteCategory.Quote_Type__c}" rendered="{!blnIsPartnerUser}"/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>  
+                        
+                        <apex:pageBlockSectionItem rendered="{!AND(objOppQuoteCategory.Quote_Type__c == 'PureConnect On Premise', NOT(blnRedirectToDQ))}" >
+                            <apex:outputLabel value="Product Version" />
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:selectList value="{!objOppQuoteCategory.Product_Version__c}" size="1">
+                                    <apex:selectOptions value="{!productVersion}"/>
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        
+                        <apex:inputField value="{!objOppQuoteCategory.Order_Type__c}" required="{!blnOrderTypeRequired}" rendered="{!AND(OR(objOppQuoteCategory.Offering_Type__c == 'PureConnect', objOppQuoteCategory.Offering_Type__c == 'PureEngage'), OR(objOppQuoteCategory.Quote_Type__c == 'PureConnect On Premise', objOppQuoteCategory.Quote_Type__c == 'PureEngage On Premise'), objOppQuoteCategory.Offering_Details__c != 'Subscription', NOT(blnRedirectToDQ))}" onChange="refreshAF();" /> 
+                         <apex:pageBlockSectionItem rendered="{!(pbLevers.size > 0 && (OR(objOppQuoteCategory.Quote_Type__c == 'PureConnect On Premise', objOppQuoteCategory.Quote_Type__c == 'PureEngage On Premise')) && objOppQuoteCategory.Order_Type__c == 'New')}" id="LeversPremise" helpText="{!$Label.PureBridge_HelpText}">
+                            <apex:outputLabel value="PureBridge Levers Approved" title="Please de-select Lever's that need not be applied"/>
+                            <apex:outputPanel >
+                                <apex:repeat value="{!pbLevers}" var="lr" id="theRepeat">
+                                    <apex:outputLabel value="{!lr.lever}"/>
+                                    <apex:inputCheckbox value="{!lr.isSelected}" />                               
+                                </apex:repeat>
+                            </apex:outputPanel>      
+                        </apex:pageBlockSectionItem>
+                        <!--- MS Small Medium Centers -->
+                        <apex:inputCheckbox value="{!isSmallMediumCenter}" label="PureConnect for Small to Midsize Contact Centers" rendered="{!showOfferingFeature}" >
+                            <apex:actionSupport event="onchange" action="{!refresh}" rerender="theForm,theplay" status="changeStatus"/>
+                        </apex:inputCheckbox>
+                        <!--    -->     
+                        <apex:pageBlockSectionItem rendered="{!AND(objOppQuoteCategory.Quote_Type__c == 'Business Edition', NOT(blnRedirectToDQ))}">
+                            <apex:outputLabel value="Pricing Model"/>
+                            <apex:inputField value="{!objOppQuoteCategory.Pricing_Model__c}" />                
+                        </apex:pageBlockSectionItem> 
+                        <apex:pageBlockSectionItem rendered="{!AND(objOppQuoteCategory.Platform_Type__c =='On Premise', objOppQuoteCategory.Quote_Type__c =='PureEngage On Premise', objOppQuoteCategory.Offering_Details__c != 'Subscription')}" helpText="{!$ObjectType.BigMachines__Quote__c.fields.Quote_Opportunity_Type__c.inlineHelpText}">    
+                            <apex:outputLabel value="Pricing" for="pricingOptions"/>
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:selectList value="{!objOppQuoteCategory.Pricing__c}" size="1" id="pricingOptions">
+                                    <apex:selectOptions value="{!pricingOptions}"/>
+                                </apex:selectList>            
+                            </apex:outputPanel>                           
+                        </apex:pageBlockSectionItem>
+                      <!--  <apex:inputField value="{!objOppQuoteCategory.Conversion_Quote__c}" rendered="{!AND(objOppQuoteCategory.Platform_Type__c =='On Premise', OR(objOppQuoteCategory.Quote_Type__c =='PureEngage On Premise', objOppQuoteCategory.Quote_Type__c =='PureConnect On Premise'), objOppQuoteCategory.Offering_Details__c != 'Subscription', OR(objOppQuoteCategory.Lead_Offer__c = 'PureConnect Premise' ,  objOppQuoteCategory.Lead_Offer__c = 'PureEngage Premise' ))}">
+                            
+                        </apex:inputField> -->
+                                        <apex:pageBlockSectionItem rendered="{!AND(objOppQuoteCategory.Platform_Type__c =='On Premise', OR(objOppQuoteCategory.Quote_Type__c =='PureEngage On Premise', objOppQuoteCategory.Quote_Type__c =='PureConnect On Premise'), objOppQuoteCategory.Offering_Details__c != 'Subscription', OR(objOppQuoteCategory.Lead_Offer__c = 'PureConnect Premise' ,  objOppQuoteCategory.Lead_Offer__c = 'PureEngage Premise' ))}">    
+                <apex:outputLabel value="Pricing Method Conversion" />   
+                <apex:outputPanel >
+                <div class="requiredInput"> 
+                <!--<div class="requiredBlock"></div> -->
+                <apex:inputField value="{!objOppQuoteCategory.Conversion_Quote__c}" rendered="{!AND(objOppQuoteCategory.Platform_Type__c =='On Premise', OR(objOppQuoteCategory.Quote_Type__c =='PureEngage On Premise', objOppQuoteCategory.Quote_Type__c =='PureConnect On Premise'), objOppQuoteCategory.Offering_Details__c != 'Subscription', OR(objOppQuoteCategory.Lead_Offer__c = 'PureConnect Premise' ,  objOppQuoteCategory.Lead_Offer__c = 'PureEngage Premise' ))}"/> 
+                
+                </div>    <apex:outputlabel style="font-weight:bold;color:red;align:right" value="Select Pricing Method Conversion if the Customer wants to move from enabled to concurrent seat model & already owns the enabled licenses." rendered="{!AND(objOppQuoteCategory.Platform_Type__c =='On Premise', OR(objOppQuoteCategory.Quote_Type__c =='PureEngage On Premise', objOppQuoteCategory.Quote_Type__c =='PureConnect On Premise'), objOppQuoteCategory.Offering_Details__c != 'Subscription',   objOppQuoteCategory.Lead_Offer__c = 'PureEngage Premise' )}"/>    
+                <apex:outputlabel style="font-weight:bold;color:red;align:right" value="Select Pricing Method Conversion if the Customer wants to move from enabled to concurrent seat model or vice versa & already owns the enabled/concurrent licenses" rendered="{!AND(objOppQuoteCategory.Platform_Type__c =='On Premise', OR(objOppQuoteCategory.Quote_Type__c =='PureEngage On Premise', objOppQuoteCategory.Quote_Type__c =='PureConnect On Premise'), objOppQuoteCategory.Offering_Details__c != 'Subscription',   objOppQuoteCategory.Lead_Offer__c = 'PureConnect Premise' )}"/>  
+                
+                
+                </apex:outputPanel>                            
+                </apex:pageBlockSectionItem>  
+                        
+                        <!--Anju commented && strSelectedOrderType == 'Amend'  
+                        <apex:pageBlockSectionItem helpText="If Genesys is provisioning new servers for a new instance of this Lead Offer, please select YES.  If customer is adding licenses/functionality to an existing deployment of this Lead Offer, please select NO." rendered="{!strSelectedOrderType != 'Amend' && objOpty.Account.RecordType.DeveloperName == 'EMGCustomerRecordType' && objOppQuoteCategory.Offering_Details__c == 'Subscription' && objOppQuoteCategory.Offering_Type__c != 'PureCloud' && (objOpty.Type == 'Existing Business - Cross Sell' || objOpty.Type == 'Existing Business - Expansion' || objOpty.Type == 'Existing Business - New Line of Business') && NOT(blnRedirectToDQ)}" >
+                       -->
+                       <!-- line 167: removed the oppty type begins with 'existing business' - Changes made by Suresh Rayi on 09-12-2019, for the Incident - INC0408183 -->
+                     <!-- <apex:pageBlockSectionItem helpText="If Genesys is provisioning new servers for a new instance of this Lead Offer, please select YES.  If customer is adding licenses/functionality to an existing deployment of this Lead Offer, please select NO." rendered="{!strSelectedOrderType != 'Amend' && objOpty.Account.RecordType.DeveloperName == 'EMGCustomerRecordType' && objOppQuoteCategory.Offering_Details__c == 'Subscription' && objOppQuoteCategory.Offering_Type__c != 'PureCloud' && BEGINS(objOpty.Type,'Existing Business') && NOT(blnRedirectToDQ)}" >-->
+                     <apex:pageBlockSectionItem helpText="If Genesys is provisioning new servers for a new instance of this Lead Offer, please select YES.  If customer is adding licenses/functionality to an existing deployment of this Lead Offer, please select NO." rendered="{!strSelectedOrderType != 'Amend' && objOpty.Account.RecordType.DeveloperName == 'EMGCustomerRecordType' && objOppQuoteCategory.Offering_Details__c == 'Subscription' && objOppQuoteCategory.Offering_Type__c != 'PureCloud' && NOT(blnRedirectToDQ)}" >
+                            <apex:outputLabel value="Is this a new instance of this Lead offer?" />
+                            <apex:selectList value="{!objOppQuoteCategory.Keep_the_existing_estate_on_Perpetual__c}" size="1" rendered="true" required="true">
+                                <apex:selectOption itemLabel="Yes" itemValue="true" />
+                                <apex:selectOption itemLabel="No" itemValue="false" />
+                                <apex:actionSupport event="onchange" action="{!refresh}" rerender="theForm" status="changeStatus"/>
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem> 
+                        <!-- Anju Sep 6 removing for PCC CPQ objOppQuoteCategory.Lead_Offer__c == 'PureConnect Cloud' -->
+                         <!--line 178: removed the oppty type = 'existing business%' - Changes made by Suresh Rayi on 09-12-2019, for the Incident - INC0408183 -->
+                       <!-- <apex:pageBlockSectionItem helpText="If Genesys is provisioning new servers for a new instance of this Lead Offer, please select YES.  If customer is adding licenses/functionality to an existing deployment of this Lead Offer, please select NO." rendered="{!objOpty.Account.RecordType.DeveloperName == 'EMGCustomerRecordType' && ( (objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud' && objOppQuoteCategory.Quote_Type__c == 'Business Edition')) && objOppQuoteCategory.Offering_Type__c != 'PureCloud' && (objOpty.Type == 'Existing Business - Cross Sell' || objOpty.Type == 'Existing Business - Expansion' || objOpty.Type == 'Existing Business - New Line of Business') && NOT(blnRedirectToDQ)}" >-->
+                        <apex:pageBlockSectionItem helpText="If Genesys is provisioning new servers for a new instance of this Lead Offer, please select YES.  If customer is adding licenses/functionality to an existing deployment of this Lead Offer, please select NO." rendered="{!objOpty.Account.RecordType.DeveloperName == 'EMGCustomerRecordType' && ( (objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud' && objOppQuoteCategory.Quote_Type__c == 'Business Edition')) && objOppQuoteCategory.Offering_Type__c != 'PureCloud' && NOT(blnRedirectToDQ)}" >
+                            <apex:outputLabel value="Is this a new instance of this Lead offer?" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                <apex:selectList value="{!strIsNewInstanceforLeadOffer}" size="1" rendered="true" required="true">
+                                    <apex:selectOption itemLabel="--None--" itemValue="" />
+                                    <apex:selectOption itemLabel="Yes" itemValue="true" />
+                                    <apex:selectOption itemLabel="No" itemValue="false" />
+                                    <apex:actionSupport event="onchange" action="{!refresh}"  rerender="theForm" status="changeStatus"/>
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>  
+                        
+                        <!--Anju July 2018 Cloud changes for PureSuccess additional question -->
+                        <!-- Anju Sep 6 removing for PCC CPQ objOppQuoteCategory.Lead_Offer__c == 'PureConnect Cloud' -->
+                        <apex:pageBlockSectionItem rendered="{!objOpty.Account.RecordType.DeveloperName == 'EMGCustomerRecordType' && strIsNewInstanceforLeadOffer == 'false' && ((objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud' && objOppQuoteCategory.Quote_Type__c == 'Business Edition')) && (objOpty.Type == 'Existing Business - Cross Sell' || objOpty.Type == 'Existing Business - Expansion' || objOpty.Type == 'Existing Business - New Line of Business')  &&  NOT(blnRedirectToDQ)}" >
+                            <apex:outputLabel value="Does this customer currently have PureSuccess?" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                <apex:selectList value="{!strExistingPureSuccessCustomer}" size="1" rendered="true" required="true">
+                                    <apex:selectOption itemLabel="--None--" itemValue="" />
+                                    <apex:selectOption itemLabel="Yes" itemValue="true" />
+                                    <apex:selectOption itemLabel="No" itemValue="false" />
+                                    <apex:actionSupport event="onchange" action="{!refresh}" rerender="theForm" status="changeStatus"/>
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        
+                        <apex:pageBlockSectionItem rendered="{!(intSubscrSize = 0 && (objOppQuoteCategory.Lead_Offer__c == 'PureCloud' || objOppQuoteCategory.Lead_Offer__c == 'PureConnect Cloud')) && $CurrentPage.parameters.redirectTo != 'DQ' && objOppQuoteCategory.Offering_Details__c != 'Free Trial'}" helpText="New = Net-new deal or additional PureCloud Org" >                
+                            <apex:outputLabel value="Subscription Type"/>
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:selectList value="{!strSelectedOrderType}" size="1">
+                                    <apex:selectOption itemValue="-None-" itemLabel="-None-"/>
+                                    <apex:selectOption itemValue="New" itemLabel="New"/>
+                                    <apex:actionSupport event="onchange" action="{!refresh}" rerender="pgblkSection" status="changeStatus"/>
+                                </apex:selectList>                      
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!(intSubscrSize > 0 || (objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud' || objOppQuoteCategory.Lead_Offer__c == 'PureConnect Premise Subscription' || objOppQuoteCategory.Lead_Offer__c == 'PureEngage Premise Subscription')) && $CurrentPage.parameters.redirectTo != 'DQ'}" helpText="New = Net-new deal or additional PureCloud Org & Amend = Changing license types/quantities, services, hardware" >                
+                            <apex:outputLabel value="Subscription Type"/>
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:selectList value="{!strSelectedOrderType}" size="1">
+                                    <apex:selectOptions value="{!orderTypes}" />
+                                    <apex:actionSupport event="onchange" action="{!refresh}" rerender="pgblkSection" status="changeStatus"/>
+                                </apex:selectList>                      
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!intSubscrSize > 0 && $CurrentPage.parameters.redirectTo != 'DQ' && strSelectedOrderType == 'Amend'}" helpText="New PureCloud Org & Subscription = Net-new deal or additional PureCloud Org, Amend Existing Subscription = Changing license types/quantities, services, hardware, Replace Existing Subscription = Replacing existing subscription or PureCloud Trial conversion and Renew Existing Subscription = Renewing current subscription">
+                            <apex:outputLabel value="Subscription Sub-Type" />
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:selectList value="{!strSubscrSubType}" size="1">
+                                    <apex:selectOptions value="{!subscrSubTypes}" />
+                                    <apex:actionSupport event="onchange" action="{!refresh}" rerender="pgblkSection" status="changeStatus"/>
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!(showPbLevers)}" id="Levers" helpText="{!$Label.PureBridge_HelpText}">
+                            <apex:outputLabel value="PureBridge Levers Approved" title="Please de-select Lever's that need not be applied"/>
+                            <apex:outputPanel >
+                                <apex:repeat value="{!pbLevers}" var="lr" id="theRepeat">
+                                    <apex:outputLabel value="{!lr.lever}"/>
+                                    <apex:inputCheckbox value="{!lr.isSelected}" />                               
+                                </apex:repeat>
+                            </apex:outputPanel>      
+                        </apex:pageBlockSectionItem>
+                        <!--Added By Ranjith on Apr 19, 2019 -- Starts -- Reason for new sub -->                        
+                        <apex:pageBlockSection rendered="{!intSubscrSize > 0 && strSelectedOrderType == 'New' && (objOppQuoteCategory.Lead_Offer__c == 'PureCloud' || objOppQuoteCategory.Lead_Offer__c == 'PureConnect Cloud' || objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud') && $CurrentPage.parameters.redirectTo != 'DQ'}">
+                            <apex:inputField value="{!objOppQuoteCategory.Reason_for_New_when_Sub_s_Already_Exist__c}" required="true"/>
+                        </apex:pageBlockSection>
+                        <!--Added By Ranjith on Apr 19, 2019 -- Reason for new sub -- Ends-->
+                        <apex:pageBlockSection id="theplay" rendered="{!AND(OR(objOppQuoteCategory.Order_Type__c != '', strSelectedOrderType == 'New', strSelectedOrderType == 'Amend', objOppQuoteCategory.Quote_Type__c == 'Self Service', objOppQuoteCategory.Quote_Type__c == 'Business Edition', objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud Partner PPU'), objOppQuoteCategory.Offering_Details__c != 'Rental', objOppQuoteCategory.Offering_Details__c != 'Free Trial' ,objOppQuoteCategory.Quote_Type__c != 'Outbound Engagement', objOppQuoteCategory.Quote_Type__c != 'Premier Edition',!isSmallMediumCenter)}">
+                            <apex:pageBlockSectionItem >                    <!--NOT(ISPICKVAL($User.UserType,'PowerPartner')),-->      
+                                <apex:outputLabel value="Primary Play" />
+                                <apex:outputPanel >
+                                    <div class="requiredInput"> 
+                                        <div class="requiredBlock"></div>
+                                        <apex:selectList value="{!selectedPlayOffer}" multiselect="false" size="1" onchange="loadPlayOfr();">
+                                            <apex:selectOptions value="{!list_PlayOffer}"/>
+                                        </apex:selectList>
+                                    </div>      <apex:outputlabel style="font-weight:bold;color:red" value=" The selection of the Plays is necessary to receive Play attribution."/>      
+                                </apex:outputPanel>         
+                            </apex:pageBlockSectionItem>
+                            
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection id="thePlayOffer" rendered="{!AND( OR(objOppQuoteCategory.Order_Type__c != '', strSelectedOrderType == 'New', strSelectedOrderType == 'Amend', objOppQuoteCategory.Quote_Type__c == 'Self Service', objOppQuoteCategory.Quote_Type__c == 'Business Edition', objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud Partner PPU'), objOppQuoteCategory.Offering_Details__c != 'Free Trial' , objOppQuoteCategory.Offering_Details__c != 'Rental', objOppQuoteCategory.Quote_Type__c != 'Outbound Engagement', objOppQuoteCategory.Quote_Type__c != 'Premier Edition',!isSmallMediumCenter)}">
+                            <apex:pageBlockSectionItem helpText="{!$ObjectType.BigMachines__Quote__c.fields.Offer__c.inlineHelpText}" >                              
+                                <apex:outputLabel value="Offer(s)" rendered="{!AND( OR(objOppQuoteCategory.Order_Type__c != '', strSelectedOrderType == 'New', objOppQuoteCategory.Quote_Type__c == 'Self Service', objOppQuoteCategory.Quote_Type__c == 'Business Edition', objOppQuoteCategory.Lead_Offer__c == 'PureEngage Cloud Partner PPU'), objOppQuoteCategory.Offering_Details__c != 'Rental', objOppQuoteCategory.Quote_Type__c != 'Outbound Engagement', objOppQuoteCategory.Quote_Type__c != 'Premier Edition')}" />
+                                <apex:outputPanel >
+                                    <div class="requiredInput"> 
+                                        <div class="{!if(isOfferRequired,'requiredBlock','')}"></div>
+                                        <apex:selectList value="{!selectedPlayOfferType}" multiselect="true" size="3">
+                                            <apex:selectOptions value="{!list_PlayOfferType}"/>
+                                        </apex:selectList>
+                                    </div>
+                                </apex:outputPanel> 
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                        <apex:outputText style="font-style:italic" value="To quote an Offer, selection is required." rendered=""/>
+                        <apex:pageBlockSection columns="1" rendered="false">
+                            <table border="1" cellpadding="0" cellspacing="0" width="100%;">
+                                <tr>
+                                    <td width="50%;">New PureCloud Org and Subscription</td>
+                                    <td>This is used to create a new PureCloud Org and a new subscription</td>
+                                </tr>
+                                <tr>
+                                    <td>Amend Existing</td>
+                                    <td>This is used to amend an existing subscription</td>
+                                </tr>
+                                <tr>
+                                    <td>Replace Existing</td>
+                                    <td>This is used to replace an existing subscription</td>
+                                </tr>
+                                <tr>
+                                    <td>Renew Existing</td>
+                                    <td>This is used to renew an existing subscription</td>
+                                </tr>
+                            </table>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection id="all" columns="1" rendered="{!AND(intSubscrSize > 0, (strSelectedOrderType == 'New' || strSelectedOrderType == 'Amend' || strSelectedOrderType == 'Subscription'))}">   
+                            <apex:pageblocktable id="subscriptionTable" value="{!map_Subscriptions}" var="subscrId" rendered="{!intSubscrSize > 0}">
+                                <apex:column width="1%">
+                                    <apex:outputpanel id="plusImage">
+                                        <apex:image url="{!$Resource.PlusSign}" style="width:15px;height:15px;" onclick="switchMenu('{!$Component.subscrProdTable}','{!$Component.minusImage}','{!$Component.plusImage}')"/> 
+                                    </apex:outputpanel>
+                                    <apex:outputpanel id="minusImage" style="display:none;">
+                                        <apex:image url="{!$Resource.MinusSignGreen}" style="width:15px;height:15px;" onclick="switchMenu('{!$Component.subscrProdTable}','{!$Component.plusImage}','{!$Component.minusImage}')"/>
+                                    </apex:outputpanel>                         
+                                </apex:column> 
+                                <apex:column width="2%" headervalue="Select" rendered="{!strSelectedOrderType != 'New'}">
+                                    <input type="radio" name="selectSusbcr" value="{!subscrId}" onchange="passSelectedAmend(this);">
+                                    <!--<apex:actionSupport event="onclick" rerender="all">
+<apex:param name="subscrId" assignto="{!selectedSubscrToAmend}" value="{!subscrId}"/>
+</apex:actionSupport>-->
+                                </input>                                  
+                            </apex:column> 
+                            <apex:column width="7%" value="{!map_Subscriptions[subscrId].Name}"/>
+                            <apex:column width="13%" headervalue="Account" value="{!map_Subscriptions[subscrId].Account__r.Name}"/>
+                            <apex:column width="13%" headervalue="Opportunity" value="{!map_Subscriptions[subscrId].Opportunity_LookUp__r.Name}" rendered="{!objOppQuoteCategory.Offering_Type__c=='PureCloud' || objOppQuoteCategory.Offering_Type__c=='PureConnect Cloud'}"/>
+                            <apex:column width="12%" headervalue="Organization" value="{!map_Subscriptions[subscrId].Org_Id__c}" rendered="{!objOppQuoteCategory.Offering_Type__c=='PureCloud'}"/>
+                            <apex:column width="3%" value="{!map_Subscriptions[subscrId].Version__c}"/>
+                            <apex:column width="8%" value="{!map_Subscriptions[subscrId].Subscription_Start_Date__c}"/>
+                            <apex:column width="8%" value="{!map_Subscriptions[subscrId].Amendment_Date__c}"/>
+                            <apex:column width="8" value="{!map_Subscriptions[subscrId].Subscription_End_Date__c}"/>
+                            <apex:column width="6%" value="{!map_Subscriptions[subscrId].CMRR__c}"/>
+                            <apex:column width="9%" value="{!map_Subscriptions[subscrId].ACV__c}"/>
+                            <apex:column width="14%" value="{!map_Subscriptions[subscrId].TCV__c}"/>   
+                            <apex:column colspan="2" breakBefore="true" style="border-bottom:0;border:0;padding:0;border-spacing:0;"/>
+                            <apex:column colspan="9" style="border:0;padding:0;border-spacing:0;border-bottom:0;">
+                                <apex:pageblocktable value="{!map_Subscriptions[subscrId].Subscription_Products__r}" var="subscrProd" id="subscrProdTable" style="display:none;">
+                                    <apex:column headerValue="Product" value="{!subscrProd.Product__r.Name} ({!subscrProd.Product__r.APN_Number__c})"/>
+                                    <apex:column headerValue="Quantity" value="{!subscrProd.Product_Quantity__c}"/>
+                                    <apex:column value="{!subscrProd.Total_Discount__c}"/>
+                                    <apex:column value="{!subscrProd.Net_Unit_Price__c}"/>
+                                    <apex:column value="{!subscrProd.Ext_Net_Price__c}"/>
+                                    <apex:column value="{!subscrProd.Is_Overage__c}"/>
+                                </apex:pageblocktable>                                                  
+                            </apex:column>                          
+                        </apex:pageblocktable>
+                        <apex:inputHidden value="{!selectedSubscrToAmend}" id="hidValId" />
+                    </apex:pageBlockSection>         
+                </apex:pageBlockSection> 
+                <apex:pageBlockButtons location="bottom" >
+                    <apex:outputPanel id="btns">     
+                        
+                        <apex:actionStatus id="mySaveStatus">
+                            <apex:facet name="stop">
+                                <apex:commandButton action="{!nextStep1}" title="Click to go to Next Step." value="Next" rendered="{!NOT(blnRedirectToDQ)}" rerender="theForm,pageMsgs" status="mySaveStatus"/>
+                            </apex:facet>
+                            <apex:facet name="start">
+                                <apex:outputPanel >
+                                    <apex:image value="/img/loading.gif" style="height: 15px;"/>
+                                    <apex:commandButton value="Processing..." status="mySaveStatus" disabled="true"/>
+                                </apex:outputPanel>
+                            </apex:facet>
+                        </apex:actionStatus>
+                        <apex:commandButton action="{!redirectToRespectiveDQ}" title="Click to go to Deal Qualification." value="Go to Deal Qualification" rendered="{!blnRedirectToDQ}"  />               
+                        <apex:commandButton title="Click to go back to Opportunity." value="Cancel" onclick="location.href='{!strBaseURL}{!strOppId}'; return false;"/>
+                    </apex:outputPanel>   
+                </apex:pageBlockButtons>             
+            </apex:pageBlock>
+            <apex:pageBlock id="pgblk2" title="Step 2 - Please select packages:" rendered="{!pageStep == 2}" >
+                <apex:pageBlockSection id="pgblkSec2" title="Packages" collapsible="false" >
+                    <apex:outputPanel id="pnl" rendered="{!blnShowBaseAndPureSuccessPackage && NOT(blnShowOnlyUseCases)}" >
+                        <b><apex:outputText rendered="{!objOppQuoteCategory.Lead_Offer__c!='PureEngage Cloud'}" >Base Packages</apex:outputText></b>
+                        <apex:pageBlockTable value="{!listOfBasePackages}" var="eachLine" rendered="{!objOppQuoteCategory.Lead_Offer__c!='PureEngage Cloud'}">
+                            <apex:column headerValue="Select">
+                                <apex:outputField value="{!eachLine.Selected__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Name">
+                                <apex:outputLink onclick="window.open('../apex/ShowBundleproducts?pgId={!eachLine.id}','Window1','menubar=no,width=430,height=360,toolbar=no');return false;">
+                                    <apex:outputField value="{!eachLine.Name}" />
+                                </apex:outputLink>    
+                            </apex:column>
+                            <apex:column headerValue="Description">
+                                <apex:outputField value="{!eachLine.Description__c}" />
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        <br/><br/>
+                        <apex:outputPanel rendered="{!IF(objOppQuoteCategory.Lead_Offer__c == 'PureConnect Premise Subscription' && strSelectedOrderType == 'Migration' && NOT(isSmallMediumCenter),true,false)}">
+                            <b><font color= "red">"Please ensure you have completed the PureSuccess Discovery Tool/Questionnaire prior to making your selection of the PureSuccess offer."</Font></b>
+                        </apex:outputPanel>
+                        <br/><br/>
+                        <apex:outputPanel rendered="{!listOfPureSuccessPackages.size > 0}"> 
+                            <b>PureSuccess</b>
+                            <apex:pageBlockTable id="pgblkTab1" value="{!listOfPureSuccessPackages}" var="eachLine">
+                                <apex:column id="clm1" headerValue="Select">
+                                    <apex:inputField id="chkSelected" value="{!eachLine.Selected__c}" style="display:none;"/>
+                                    <apex:outputPanel id="pnl1" rendered="{!eachLine.Selected__c}">                                
+                                        <input type="radio" name="rdSelected" onclick="setCheckBox('{!eachLine.Type__c}');" checked="true"/>                                   
+                                    </apex:outputPanel>
+                                    <apex:outputPanel id="pnl2" rendered="{!!eachLine.Selected__c}">                                
+                                        <input type="radio" name="rdSelected" onclick="setCheckBox('{!eachLine.Type__c}');" />                                   
+                                    </apex:outputPanel>
+                                </apex:column>
+                                <apex:column headerValue="Name">
+                                    <apex:outputLink onclick="window.open('../apex/ShowBundleproducts?pgId={!eachLine.id}','Window1','menubar=no,width=430,height=360,toolbar=no');return false;">
+                                        <apex:outputField value="{!eachLine.Name}" />
+                                    </apex:outputLink>
+                                </apex:column>
+                                <apex:column headerValue="Description">
+                                    <apex:outputField value="{!eachLine.Description__c}" />
+                                </apex:column>
+                            </apex:pageBlockTable>
+                        </apex:outputPanel>                                
+                    </apex:outputPanel>
+                    <apex:outputPanel >
+                        <apex:outputPanel rendered="{!list_PlayCategory.size > 0}"> 
+                            <b>Please validate your offer use cases for this opportunity </b>&nbsp;<img src="/img/s.gif" title="This is a list of offers associated with the Platform and Play selection, click the Offer(s) you would like to select" class="helpIcon" />
+                            <br/><apex:outputText style="font-style:italic" value="Only those products categorized as mandatory in the selected Use Case(s) will be added to the quote." rendered="{!objOppQuoteCategory.Lead_Offer__c == 'PureCloud'}"/>
+                            <br/><apex:outputText style="font-style:italic" value="Please uncheck all of the Use Case(s) that don't apply." rendered="{!objOppQuoteCategory.Lead_Offer__c == 'PureCloud'}"/><br/>
+                            <apex:repeat value="{!list_PlayCategory}" var="k111">
+                                <b>{!selectedPlayOffer} ({!k111})</b>&nbsp;<img src="/img/s.gif" title="{!map_PlayCategoryError[k111]}" class="helpIcon" /><br />
+                                <apex:pageBlockTable id="pgblkTab13" value="{!map_PlayCategoryListPlayOffer[k111]}" var="eachLine2">                                           
+                                    <apex:column headerValue="Select" style="{!eachLine2.prdGrp.Type__c}" >
+                                        <apex:inputCheckbox value="{!eachLine2.isSelected}" />
+                                    </apex:column>
+                                    <apex:column headerValue="Name" style="{!eachLine2.prdGrp.Type__c};width:20%;">
+                                        <apex:outputLink onclick="window.open('../apex/ShowBundleproducts?pgId={!eachLine2.prdGrp.id}','Window1','menubar=no,width=430,height=360,toolbar=no');return false;">
+                                            <apex:outputField value="{!eachLine2.prdGrp.Name}" />
+                                        </apex:outputLink>
+                                    </apex:column>
+                                    <apex:column headerValue="Description" style="{!eachLine2.prdGrp.Type__c};width:70%;">
+                                        <apex:outputField value="{!eachLine2.prdGrp.Description__c}" />
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <br /><br />
+                            </apex:repeat>
+                        </apex:outputPanel>
+                        <br />
+                        
+                        <!--MS <apex:outputPanel > -->
+                        <apex:outputPanel rendered="{!!isSmallMediumCenter}" > 
+                            <b>Please select any add-on use cases</b>
+                            <apex:pageBlockTable value="{!listOfUseCases}" var="eachLine">
+                                <apex:column headerValue="Select" style="{!eachLine.Type__c}" >
+                                    <apex:inputField value="{!eachLine.Selected__c}" rendered="{!eachLine.Category__c == null}" />
+                                </apex:column>
+                                <apex:column headerValue="Name" style="{!eachLine.Type__c}">
+                                    <b>
+                                        <apex:outputText value="{!eachLine.Category__c}" rendered="{!eachLine.Category__c != null}" />
+                                    </b>
+                                    <apex:outputLink onclick="window.open('../apex/ShowBundleproducts?pgId={!eachLine.id}','Window1','menubar=no,width=430,height=360,toolbar=no');return false;" rendered="{!eachLine.Category__c == null}">
+                                        <apex:outputField value="{!eachLine.Name}" />
+                                    </apex:outputLink>
+                                </apex:column>
+                                <apex:column headerValue="Description" style="{!eachLine.Type__c}">
+                                    <apex:outputField value="{!eachLine.Description__c}" />
+                                </apex:column>
+                            </apex:pageBlockTable>    
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                    
+                </apex:pageBlockSection>            
+                <apex:pageBlockButtons location="both" >
+                    <apex:outputPanel id="btns2">                          
+                        <apex:commandButton value="Back" title="Click to go back to previous step." action="{!backStep2}" reRender="theForm" status="changeStatus" />
+                        <!-- && objOppQuoteCategory.Offering_Type__c != 'PureCloud' -->
+                        <apex:commandButton value="Next" title="Click to go to Quote page." action="{!createQuoteAndGoToQuote}" reRender="messages" status="changeStatus" rendered="{!NOT(blnRedirectToDQ)}"/>                    
+                        
+                        <apex:commandButton title="Click to go back to Opportunity." value="Cancel" onclick="location.href='{!strBaseURL}{!strOppId}'; return false;"/>
+                        
+                    </apex:outputPanel>
+                    
+                </apex:pageBlockButtons>
+                
+            </apex:pageBlock>
+        </apex:form>
+    </apex:define>
+</apex:composition>
+</apex:page>

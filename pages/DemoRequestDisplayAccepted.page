@@ -1,0 +1,136 @@
+<apex:page sidebar="false" standardStylesheets="false" docType="html-5.0" controller="DemoRequestMyDemosController"  tabStyle="My_Demo_Requests__tab">
+    <apex:composition template="DemoRequestNavigation">
+        <apex:define name="content">
+            <html lang="en">
+                <head>
+                    <meta charset="utf-8"/>
+                    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+                    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                    
+                    <title>My Accepted Demo Requests</title>
+                    
+                    <!-- jQuery -->
+                    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"/>
+                    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"/>
+                    <!-- Bootstrap -->
+                    <apex:includeScript value="{!URLFOR($Resource.bootstrap_3_3_1, 'dist/js/bootstrap.min.js')}" />
+                    <apex:stylesheet value="{!URLFOR($Resource.bootstrap_3_3_1, 'dist/css/bootstrap.min.css')}" />
+                    <style>
+                        .collapse table tr td { border: none; }
+                        .collapse.in table tr td { border: none; }
+                        .collapsing table tr td { border: none; }
+                    </style>
+                    
+                    
+                </head>
+                <body>
+                    <apex:pageBlock >        
+                        <div class="container">
+                            
+                            <apex:form >
+                                <div class='row pull-right'>
+                                    <apex:selectList size="1" value="{!selectedState}" title="Choose a filter" styleClass="btn btn-default">
+                                        <apex:selectOptions value="{!statusFilter}"></apex:selectOptions>
+                                        <apex:actionSupport event="onchange" action="{!refresh}" />
+                                    </apex:selectList>
+                                </div>
+                            </apex:form>
+                            
+                            <div class="row">
+                                <div class="col-md-12 col-sm-12 col-xs-12">
+                                    <div class="page-header">
+                                        <h2>My Demo Requests</h2>
+                                    </div>  				
+                                </div>
+                            </div>
+                        </div>  	
+                        
+                        <div class="container">           
+                            <div class="row">
+                                <apex:variable value="1" var="count"/>
+                                <apex:repeat value="{!reqWithRelated}" var="r">
+                                    <div class="col-md-4 col-sm-6 col-xs-12">
+                                        <div class="panel panel-default" style="min-height: 355px;" >
+                                            <div class="panel-heading" style="padding-bottom: 20px;">
+                                                <apex:outputLink value="/{!r.request.Id}"><apex:outputField value="{!r.request.Name}"></apex:outputField></apex:outputLink>
+                                                <div id='action' class='dropdown pull-right btn btn-default'>
+                                                    <a class='dropdown-toggle' data-toggle='dropdown' href='#'>Actions<span class="caret"></span></a>
+                                                    <ul class='dropdown-menu'>
+                                                        <li id='presenter'><apex:outputLink value="{! $Page.DemoRequestPresenter + '?id=' + r.request.Id}">Presenters</apex:outputLink></li>
+                                                        <li id='reschedule'><apex:outputLink value="{! $Page.DemoRequestRescheduleVF + '?id=' + r.request.Id}">Reschedule</apex:outputLink></li>                                    
+                                                        <li id='cancel'><apex:outputLink value="{! $Page.DemoRequestCancelVF + '?id=' + r.request.Id}">Cancel Demo</apex:outputLink></li>
+                                                        <li id='activities'><apex:outputLink value="{! $Page.DemoRequestActivityTracking + '?id=' + r.request.Id}">Activities</apex:outputLink></li>
+                                                        <li id='complete'><apex:outputLink value="{! $Page.DemoRequestActivityTracking + '?id=' + r.request.Id + '&demo=t'}">Complete Demo</apex:outputLink></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <table class="table">
+                                                <tr>
+                                                    <td>Demo Owner:</td>
+                                                    <td><apex:outputField value="{!r.request.Demo_Owner__c}"></apex:outputField></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>State:</td>
+                                                    <td><apex:outputField value="{!r.request.State__c}"></apex:outputField></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Demo Date/Time:</td>
+                                                    <td><apex:outputField value="{!r.request.Demo_Date_Time__c}"></apex:outputField><br/>
+                                                        <apex:outputField value="{!r.request.Demo_Time_Length__c}"></apex:outputField>&nbsp;Hours</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Requester Name:</td>
+                                                    <td><apex:outputField value="{!r.request.Requester_Name__c}"></apex:outputField></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Requester Company:</td>
+                                                    <td><apex:outputField value="{!r.request.Requester_Company__c}"></apex:outputField></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Account Name:</td>
+                                                    <td><apex:outputLink value="/{!r.request.Account__c}"><apex:outputField value="{!r.request.Account__r.Name}"></apex:outputField></apex:outputLink></td>
+                                                </tr>
+                                          	</table>
+                                            <apex:form styleClass="panel panel-default" rendered="{!r.hasRelatedItems}">
+                                                <div class="panel-heading" role="tab" id="{!r.request.Id}headingOne">
+                                                    <h4 class="panel-title">
+                                                        <a role="button" data-toggle="collapse" href="#{!r.request.Id}One" aria-expanded="false" aria-controls="{!r.request.Id}One">
+                                                            Related Items
+                                                        </a>
+                                                    </h4>
+                                                </div>
+                                                <div id="{!r.request.Id}One" class="panel-collapse collapse" role="tabpanel" aria-labelledby="{!r.request.Id}headingOne">
+                                                    <ul class="list-group"><span class="label label-primary" style="{!if(r.hasPlatforms, '', 'display:none')}">Platforms</span>
+                                                        <apex:repeat value="{!r.platforms}" var="plat">                                                            
+                                                            <li class="list-group-item"><apex:outputText value="{!plat}"></apex:outputText></li>                                                            
+                                                        </apex:repeat>
+                                                    </ul>
+                                                    <ul class="list-group"><span class="label label-primary" style="{!if(r.hasProducts, '', 'display:none')}">Products</span>
+                                                        <apex:repeat value="{!r.products}" var="prod">                                                            
+                                                            <li class="list-group-item"><apex:outputText value="{!prod}"></apex:outputText></li>                                                            
+                                                        </apex:repeat>
+                                                    </ul>
+                                                    <ul class="list-group"><span class="label label-primary" style="{!if(r.hasGenCons, '', 'display:none')}">General Concepts</span>
+                                                        <apex:repeat value="{!r.genCons}" var="gC">                                                            
+                                                            <li class="list-group-item"><apex:outputText value="{!gC}"></apex:outputText></li>                                                            
+                                                        </apex:repeat>
+                                                    </ul>
+                                                    <ul class="list-group"><span class="label label-primary" style="{!if(r.hasIntegrations, '', 'display:none')}">Integrations</span>
+                                                        <apex:repeat value="{!r.integrations}" var="int">                                                            
+                                                            <li class="list-group-item"><apex:outputText value="{!int}"></apex:outputText></li>                                                            
+                                                        </apex:repeat>
+                                                    </ul>
+                                                </div>
+                                            </apex:form>                                                
+                                            </div>
+                                        </div>					
+                                    <apex:variable var="count" value="{!VALUE(count) + 1}"/>
+                                </apex:repeat>
+                            </div>
+                        </div>
+                    </apex:pageBlock>
+                </body>
+            </html>
+        </apex:define>
+    </apex:composition>
+</apex:page>

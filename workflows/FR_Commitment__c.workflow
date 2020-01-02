@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>FR_Commitment_Approved</fullName>
+        <description>FR Commitment Approved</description>
+        <protected>false</protected>
+        <recipients>
+            <type>creator</type>
+        </recipients>
+        <recipients>
+            <field>FR_PM_Owner_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <recipient>cameron.smith@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>dmitry.nechayev@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>kelly.still@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>richard.barton@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>vadim.dymshyts@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderAddress>customercare@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>FR_Commitment_Notifications/FR_Commitment_Approved</template>
+    </alerts>
+    <alerts>
+        <fullName>FR_Commitment_Created</fullName>
+        <description>FR Commitment Created</description>
+        <protected>false</protected>
+        <recipients>
+            <type>creator</type>
+        </recipients>
+        <recipients>
+            <field>FR_PM_Owner_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <recipient>cameron.smith@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>dmitry.nechayev@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>kelly.still@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>richard.barton@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>vadim.dymshyts@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderAddress>customercare@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>FR_Commitment_Notifications/FR_Commitment_Created</template>
+    </alerts>
+    <alerts>
+        <fullName>FR_Commitment_Declined</fullName>
+        <description>FR Commitment Declined</description>
+        <protected>false</protected>
+        <recipients>
+            <type>creator</type>
+        </recipients>
+        <recipients>
+            <field>FR_PM_Owner_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <recipient>cameron.smith@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>dmitry.nechayev@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>kelly.still@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>richard.barton@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>vadim.dymshyts@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderAddress>customercare@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>FR_Commitment_Notifications/FR_Commitment_Declined</template>
+    </alerts>
+    <alerts>
+        <fullName>FR_Commitment_Lost</fullName>
+        <description>FR Commitment Lost</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Product_Manager__c</field>
+            <type>userLookup</type>
+        </recipients>
+        <senderAddress>customercare@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>FR_Commitment_Notifications/FR_Commitment_Lost</template>
+    </alerts>
+    <alerts>
+        <fullName>FR_Commitment_Reminder_1</fullName>
+        <description>FR Commitment Reminder 1</description>
+        <protected>false</protected>
+        <recipients>
+            <type>creator</type>
+        </recipients>
+        <recipients>
+            <field>FR_PM_Owner_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <recipient>cameron.smith@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>dmitry.nechayev@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>kelly.still@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>vadim.dymshyts@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderAddress>customercare@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>FR_Commitment_Notifications/FR_Commitment_Reminder</template>
+    </alerts>
+    <alerts>
+        <fullName>FR_Commitment_Request_Submitted</fullName>
+        <description>FR Commitment Request Submitted</description>
+        <protected>false</protected>
+        <recipients>
+            <recipient>cameron.smith@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>dmitry.nechayev@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>kelly.still@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>richard.barton@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>vadim.dymshyts@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <field>Assigned_To__c</field>
+            <type>userLookup</type>
+        </recipients>
+        <recipients>
+            <field>Product_Manager__c</field>
+            <type>userLookup</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>FR_Commitment_Notifications/FR_Commitment_Request_Submitted</template>
+    </alerts>
+    <alerts>
+        <fullName>FR_Commitment_Withdrawn</fullName>
+        <description>FR Commitment Withdrawn</description>
+        <protected>false</protected>
+        <recipients>
+            <type>creator</type>
+        </recipients>
+        <recipients>
+            <field>FR_PM_Owner_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <recipient>cameron.smith@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>dmitry.nechayev@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>kelly.still@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>richard.barton@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>vadim.dymshyts@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderAddress>customercare@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>FR_Commitment_Notifications/FR_Commitment_Withdrawn</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>CSM_Email_Update</fullName>
+        <field>Account_CSM_Email__c</field>
+        <formula>IF( FR__r.RecordType.DeveloperName = &quot;Genesys_Cloud_Feature_Request&quot;,
+FR__r.Cloud_Deployment__r.CSM_Owner__r.Email,
+&quot;&quot;
+)</formula>
+        <name>CSM Email Update</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>CSM_Email_Update2</fullName>
+        <field>Account_CSM_Email__c</field>
+        <formula>IF( FR__r.RecordType.DeveloperName = &quot;Genesys_Cloud_Feature_Request&quot;,
+FR__r.Cloud_Deployment__r.CSM_Owner__r.Email,
+&quot;&quot;
+)</formula>
+        <name>CSM Email Update2</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>CSM_Email_Update3</fullName>
+        <field>Account_CSM_Email__c</field>
+        <formula>IF( FR__r.RecordType.DeveloperName = &quot;Genesys_Cloud_Feature_Request&quot;,
+FR__r.Cloud_Deployment__r.CSM_Owner__r.Email,
+&quot;&quot;
+)</formula>
+        <name>CSM_Email_Update</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>CSM_Email_Update_Withdrawn</fullName>
+        <field>Account_CSM_Email__c</field>
+        <formula>IF( FR__r.RecordType.DeveloperName = &quot;Genesys_Cloud_Feature_Request&quot;,
+FR__r.Cloud_Deployment__r.CSM_Owner__r.Email,
+&quot;&quot;
+)</formula>
+        <name>CSM Email Update Withdrawn</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_PM_Owner_Email</fullName>
+        <field>FR_PM_Owner_Email__c</field>
+        <formula>FR__r.PMOwnerNew__r.Email</formula>
+        <name>Update PM Owner Email</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_PM_Owner_Email_Appr</fullName>
+        <field>FR_PM_Owner_Email__c</field>
+        <formula>FR__r.PMOwnerNew__r.Email</formula>
+        <name>Update PM Owner Email</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_PM_Owner_Email_Declined</fullName>
+        <field>FR_PM_Owner_Email__c</field>
+        <formula>FR__r.PMOwnerNew__r.Email</formula>
+        <name>Update PM Owner Email</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_PM_Owner_Email_Withdrawn</fullName>
+        <field>FR_PM_Owner_Email__c</field>
+        <formula>FR__r.PMOwnerNew__r.Email</formula>
+        <name>Update PM Owner Email Withdrwan</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <rules>
+        <fullName>FR Commitment Approved</fullName>
+        <actions>
+            <name>FR_Commitment_Approved</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>CSM_Email_Update</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <actions>
+            <name>Update_PM_Owner_Email_Appr</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>FR_Commitment__c.Commitment_Progress__c</field>
+            <operation>equals</operation>
+            <value>Accepted</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <description>Sends notification to Record owner and PM when stage = Accepted.</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>FR Commitment Assignto</fullName>
+        <actions>
+            <name>FR_Commitment_Request_Submitted</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <description>Sends notification to Record owner and PM when Product Manager is created/updated.</description>
+        <formula>OR(ISCHANGED(Product_Manager__c),NOT(ISBLANK(Product_Manager__c)))</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>FR Commitment Created</fullName>
+        <actions>
+            <name>FR_Commitment_Created</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>CSM_Email_Update3</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <actions>
+            <name>Update_PM_Owner_Email</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>FR_Commitment__c.Commitment_Progress__c</field>
+            <operation>equals</operation>
+            <value>Under Evaluation,New</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <description>Sends notification to Record owner and PM when stage = Under Evaluation, New</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+        <workflowTimeTriggers>
+            <actions>
+                <name>FR_Commitment_Reminder_1</name>
+                <type>Alert</type>
+            </actions>
+            <timeLength>7</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+        <workflowTimeTriggers>
+            <actions>
+                <name>FR_Commitment_Reminder_1</name>
+                <type>Alert</type>
+            </actions>
+            <timeLength>10</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+    </rules>
+    <rules>
+        <fullName>FR Commitment Declined</fullName>
+        <actions>
+            <name>FR_Commitment_Declined</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>CSM_Email_Update2</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <actions>
+            <name>Update_PM_Owner_Email_Declined</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>FR_Commitment__c.Commitment_Progress__c</field>
+            <operation>equals</operation>
+            <value>Declined</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <description>Sends notification to Record owner and PM when stage = Declined</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>FR Commitment Lost</fullName>
+        <actions>
+            <name>FR_Commitment_Lost</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>FR_Commitment__c.Commitment_Progress__c</field>
+            <operation>equals</operation>
+            <value>Lost Opportunity</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <description>Sends notification to Record owner and PM when stage = Opportunity Lost.</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>FR Commitment Withdrawn</fullName>
+        <actions>
+            <name>FR_Commitment_Withdrawn</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>CSM_Email_Update_Withdrawn</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <actions>
+            <name>Update_PM_Owner_Email_Withdrawn</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>FR_Commitment__c.Commitment_Progress__c</field>
+            <operation>equals</operation>
+            <value>Withdrawn</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <description>Sends notification to Record owner and PM when stage = Withdrawn.</description>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+</Workflow>

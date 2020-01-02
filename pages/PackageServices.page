@@ -1,0 +1,2325 @@
+<apex:page controller="ServiceEntitlementCtrl" sidebar="false" showHeader="false" standardStylesheets="true" docType="html-5.0" >
+    <html>
+        <head>
+            <apex:stylesheet value="{!URLFOR($Resource.VKendo, 'styles/kendo.common.min.css')}"/>
+            <apex:stylesheet value="{!URLFOR($Resource.KendoUICustomTheme, '/kendo.custom.css')}" />
+            <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.min.css" />
+            <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.mobile.min.css" />
+            <apex:includeScript value="{!URLFOR($Resource.VKendo, '/js/jquery.min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.VKendo, '/js/kendo.all.min.js')}"/>
+            <apex:includeScript value="{!URLFOR($Resource.KendoUICustomTheme, '/kendo.custom.js')}" />
+        </head>
+        <body>
+          
+        <div class="k-loading-mask clsPB" style="width:100%;height:100%;z-index:99999998"><span class="k-loading-text">Loading...</span><div class="k-loading-image"><div class="k-loading-color"></div></div></div>
+        
+        
+            <div id="confirmationTemplate" style="display:none;" >
+                <div class="popupMessage" style="text-align:center;"></div>
+                <br/>
+                <div class="dialog_buttons" style="text-align:center;">
+                    <input type="button" class="confirm_yes k-button" value="Yes" style="width: 70px;background: #7bd2f6;" />
+                &nbsp;
+                
+                    <input type="button" class="confirm_no k-button" value="No" style="width: 70px;background: #7bd2f6;" />
+                </div>
+            </div>
+            <div id="messageTemplate" style="display:none;">
+                <div class="popupMessage" style="text-align:center;"></div>
+                <br/>
+                <div class="dialog_buttons" style="text-align:center;">
+                    <input type="button" class="confirm_yes k-button" value="Ok" style="width: 70px;background: #7bd2f6;" />
+                </div>
+            </div>
+            <div id="example">
+                <div class="demo-section k-content">
+                    <div id="tabstrip">
+                        
+                        <br/>
+                        <b style="float: left;margin-right:2%;font-size: larger;margin-left:2%;">
+                            <font size="5">
+                                <b class="tokeval">{!accountName}</b>
+                            </font>
+                        </b>
+                        <br/>
+                        
+                            
+                            <b style="float: right;margin-right:2%;font-size: larger;;">Total Tokens Available: 
+                            <!--<b id="availableToken_top" class="tokeval">{!availableToken}</b> -->
+                            <span id="tokenValuefromDB" class="tokeval">{!availableToken}</span>
+                            </b>
+               
+                        
+                        
+                        
+                        
+                        <br/>
+                        <br/>
+                        <b style="float: right;margin-right:2%;font-size: larger;;">Total GU Units Available: 
+                            <b class="tokeval">{!availableTokenGU}</b>
+                        </b>
+                        <ul style="height:40px;">
+                            <li class="k-state-active" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                            <!--output panel below added by priyank on 14 dec 2018, on request by vinay.-->
+                                <apex:outputPanel onclick="HideOfferingPicklist();return false;">
+                                    PureSuccess
+                                </apex:outputPanel>
+                            </li>
+                            <li style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                                <!--output panel below added by priyank on 14 dec 2018, on request by vinay.-->
+                                <apex:outputPanel onclick="showHideOfferingPicklist();return false;">
+                                    A la Carte Services
+                                </apex:outputPanel>
+                            </li>
+                            <li style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                                <!--output panel below added by priyank on 14 dec 2018, on request by vinay.-->
+                                <apex:outputPanel onclick="HideOfferingPicklist();return false;">
+                                    Token History
+                                </apex:outputPanel>
+                            </li>
+                            <li style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                                <!--output panel below added by priyank on 14 dec 2018, on request by vinay.-->
+                                <apex:outputPanel onclick="HideOfferingPicklist();return false;">
+                                    GU Training Units
+                                </apex:outputPanel>
+                            </li>
+                        </ul>
+                        <div id="two">
+                            <div id="gridPureSuccess"></div>
+                            <br/>
+                            <b style="float: right;margin-right:2%;font-size: larger;;">Total Tokens Available: 
+                                <!-- <b class="tokeval">{!availableToken}</b> -->
+                                
+                                <span id="tokenValuefromDB" class="tokeval">{!availableToken}</span>
+                            </b>
+                        </div>
+                        <div id="three">
+                            <div>
+                                <br/>
+                                <apex:outputPanel styleClass="offerPick">
+                                    <tr>
+                                        <td style="width:5%;">
+                                        <!--------------------- Added by Priyank class below ---------------------->
+                                            <h4 class="OfferingTypeLabel" style="float: left;font-size: initial;margin-top: 3px;">Offering Type : </h4>&nbsp;
+                                        </td>
+                                        <!------------------- Added by priyank -- id and Class below ------------------>
+                                        <td style="width:15%;" id="OfferingTypeID" class="OfferingTypeID">
+                                            <input class="OfferingType" id="OfferingType" style="width:15%;"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                            </div>
+                            <hr/>
+                            <h1 style="margin-left: 2%;font-size: initial;">Services Available To Use / In Progress</h1>
+                            <hr/>
+                            <div id="gridAllocated"></div>
+                            <br/>
+                            <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">Services Available To Buy </b>
+                            <b style="float: right;margin-right:2%;font-size: larger;;">Total Tokens Available: 
+                               <!-- <b  class="tokeval">{!availableToken}</b> -->
+                                
+                                <span id="tokenValuefromDB" class="tokeval">{!availableToken}</span>
+                                
+                            </b>
+                            <b class="buyService" style="display:none;float: right;color: red;margin-right:2%;font-size: larger;;"> Insufficient Token to Buy Service.</b>
+                            <br/>
+                            <hr/>
+                            <div id="gridBuy"></div>
+                            <br/>
+                            <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">Services Consumed</b>
+                            <br/>
+                            <hr/>
+                            <div id="gridConsumed"></div>
+                            <br/>
+                            <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">Services Expired</b>
+                            <br/>
+                            <hr/>
+                            <div id="gridExpired"></div>
+                            <br/>
+                        </div>
+                        <div>
+                            <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">Token Allocations</b>
+                            <br/>
+                            <hr/>
+                            <div id="pTokenHistory"></div>
+                            <br/>
+                        </div>
+                        <div>
+                            <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">GU Training Units : Allocation</b>
+                            <br/>
+                            <hr/>
+                            <div id="GUTrainingUnits"></div>
+                            <br/>
+                            <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">GU Training Units : In-Progress</b>
+                            <br/>
+                            <hr/>
+                            <div id="GUTrainingUnitInProgress"></div>
+                            <br/>
+                             <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">GU Training Units : Completed</b>
+                            <br/>
+                            <hr/>
+                            <div id="GUTrainingUnitCompleted"></div>
+                            <br/>
+                            <br/>
+                             <hr/>
+                            <b style="margin-left: 2%;font-size: initial;">GU Training Units : Cancelled</b>
+                            <br/>
+                            <hr/>
+                            <div id="GUTrainingUnitCancelled"></div>
+                            <br/>
+                        </div>
+                    </div>
+                </div>
+                <div id="window" style="height: auto;display:none;">
+                    <hr/>
+                    <b style="margin-left: 2%;font-size: initial;">Services Consumed</b>
+                    <br/>
+                    <hr/>
+                    <div id="pConsumed"></div>
+                    <br/>
+                    <hr/>
+                    <h1 style="margin-left: 2%;font-size: initial;">Services Available To Use</h1>
+                    <span id="notification" style=""></span>
+                    <br/>
+                    <hr/>
+                    <div id="pAllocated"></div>
+                    <br/>
+                    <b style="float: right;margin-right:2%;font-size: larger;;">Total Tokens Available: 
+                        <b class="tokeval" >{!availableToken}</b>
+                    </b>
+                </div>
+                <div id="contactwindow" style="height: auto;display:none;">
+                    <hr/>
+                    <b style="margin-left: 2%;font-size: initial;">Contact List</b>
+                    <br/>
+                    <hr/>
+                    <div id="contactList"></div>
+                    <br/>
+                    <hr/>
+                </div>
+                <div id="BuyToken" style="height: auto;display:none;">
+                <!--<div style="text-align:right; padding:10px; font-size: larger; border-bottom:1px solid #d4d4d4" ><b>Total Tokens Available222: <b class="tokeval" >{!availableToken}</b></b></div>-->
+                <!--above div commented by priyank and added below div-->
+                <div id="four" style="text-align:right; padding:10px; font-size: larger; border-bottom:1px solid #d4d4d4" >
+                    <b>
+                    Total Tokens Available 
+                        <!--<b class="tokeval" >{!availableToken}</b>-->
+                        <span id="tokenValuefromDB" class="tokeval">{!availableToken}</span>
+                    </b>
+                </div>
+                <!-- priyank code end -->
+                <div id="serviceValue" style="text-align:right; padding:10px; font-size: larger; border-bottom:1px solid #d4d4d4"><b>Token Required for Service: <b class="tokeval" ><span id="srvVal"> </span></b></b></div>
+
+                <div id="tokenconsumption"></div>
+
+                <div id="btnVal" style="text-align:right; padding:10px"><button id="btnValidate" type="button" style="padding:5px 15px; font-size:14px;">Save</button></div>
+               </div>
+
+
+
+                <div id="TokenConsume" style="height: auto;display:none;">
+                    <hr/>
+                    <b style="margin-left: 2%;font-size: initial;">List of Consumption</b>
+                    <div id="TokenConsume"></div>
+                    <hr/>
+                </div>
+                <div id="details"></div>
+                <div id="confirm"></div>
+                <style>
+                #tabstrip h2 {
+                    font-weight: lighter;
+                    font-size: 5em;
+                    line-height: 1;
+                    padding: 0 0 0 30px;
+                    margin: 0;
+                }
+
+                #tabstrip h2 span {
+                    background: none;
+                    padding-left: 5px;
+                    font-size: .3em;
+                    vertical-align: top;
+                }
+
+                #tabstrip p {
+                    margin: 0;
+                    padding: 0;
+                }
+                .k-block>.k-header, .k-window-titlebar{
+                    text-align:center;
+                }
+                .k-widget.k-notification.k-notification-info {
+                    background-color: #2498bc;
+                    color: white;
+                    border-color: #2498bc;
+                }
+                .k-window-titlebar.k-dialog-titlebar.k-header{
+                    display : none;
+                }
+                .k-grid  .k-grid-header  .k-header  .k-link {
+                    height: auto;
+                }
+                  
+                .k-grid  .k-grid-header  .k-header {
+                    overflow: visible;
+                    white-space: normal;
+                }
+            </style>
+                <script>
+                
+                var wnd;
+                var dataItem ;
+                var acntId ;
+                var totToken ;
+                var serviceToken;
+                var prodId;
+                var ProductID;
+                var prdGroup;
+                var name;
+                var CurrencyRate;
+                var tokenValue;
+                var acntId;
+                var OfferSelect = '';//added by priyank on 14 dec 2018, on request by vinay.
+                var offeringTypeLoad = [{!offeringTypeName}];
+                var accId = '{!accntId}';
+                var isBuy = '{!isBuy}';
+                var allService = '{!showAllServiceElement}';
+                var selfService = '{!showSelfServiceElement}';
+                var currencyTypeString = '{!currencyType}';//added by priyank on 14 dec 2018, on request by vinay.
+                var contName = '{!contactName}';
+                if(contName == null || contName == "")
+                    contName = "Click to see contacts";            
+                $(document).ready(function() {
+                
+                   $(".offerPick").hide();//added by priyank on 14 dec 2018, on request by vinay.
+                    OfferSelect = '{!sOfferingType}';//added by priyank on 14 dec 2018, on request by vinay.
+                
+                   $('.clsPB').hide();
+                    //var isBuy = '{!isBuy}'; commented by priyank on 14 dec 2018, set this value outside document.ready(),so tht we can reuse this outside it.
+                    if(isBuy == 'true'){
+                        $('.buyService').show();
+                    }
+                    //var accId = '{!accntId}'; commented by priyank on 14 dec 2018, set this value outside document.ready(),so tht we can reuse this outside it.
+                    $("#tabstrip").kendoTabStrip({
+                        animation:  {
+                            open: {
+                                duration: 600,
+                                effects: "fadeIn"
+                            }
+                        }
+                    });
+                    
+                    //added by priyank on 14 dec 2018, on request by vinay.
+                    // Offering Type
+                    /*var dataOfferingType = [{ itemLabel: "PureEngage Subscription", itemValue: "PureEngage Subscription" },
+                                            { itemLabel: "PureConnect Subscription", itemValue: "PureConnect Subscription" },
+                                            { itemLabel: "PureEngage Cloud", itemValue: "PureEngage Cloud" },
+                                            { itemLabel: "PureConnect Cloud", itemValue: "PureConnect Cloud" },
+                                            { itemLabel: "PureCloud", itemValue: "PureCloud" },];*/
+                                            
+                    var dataOfferingType =[];
+                    dataOfferingType.push.apply(dataOfferingType ,offeringTypeLoad);
+                                            
+                                          
+                    $("#OfferingType").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: dataOfferingType,
+                        select: onSelectOffer
+                    });
+                    var OType  = $("#OfferingType").data("kendoDropDownList");
+                    OType.value(OfferSelect);
+                    
+                    var offerType = $("#OfferingType").data("kendoDropDownList");
+                    OfferSelect =  offerType.value();
+                      
+                    function onSelectOffer(e) {
+                        if(e.item) {
+                            var dataItem = this.dataItem(e.item);
+                            OfferSelect = dataItem.itemValue;
+                            productItemFiterByOfferingType(OfferSelect);
+                        } 
+                    };
+                    //priyank code end.
+                    
+                    // GU Training Units Allocation 
+                    $("#GUTrainingUnits").kendoGrid({
+                        dataSource: {
+                               
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getTokenAllocationGU}",accId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 300,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                             encoded:false,
+                        },
+                        {
+                            field: "Product_Group__r.Name, Is_Consumed__c",
+                            title: "Service Description",   
+                            template: function (d) { return d.Is_Consumed__c > 0 ?  "<u><b> <a onclick=\"showTokencon('"+ d.Id + "')\" style='cursor: pointer;'> " + d.Product_Group__r.Name + "  </a> </b> </u>" : "-"},
+                            encoded:false,
+                        },*/
+                        {
+                            field: "Order__c",
+                            title: "Customer Name",   
+                            template: "#= (data.Order__c) ? Order__r.End_User_Name__r.Name : '-' #",
+                            encoded:false,
+                        },
+                        {
+                            field: "Product_Group__c,Is_Consumed__c",
+                            title: "Service Name",   
+                            template: "#= (data.Product_Group__c) ? Product_Group__r.Name : '-' #",
+                            /*template: '# if (data.Product_Group__r.Name && data.Product_Group__r.Name.length) { #<span>#: Product_Group__r.Name # </span> # } else { # <span> '-' </span> # } #',*/
+                        },
+                        {
+                            field: "Tokens__c",
+                            title: "Units Allocated",   
+                            template: "#= (data.Tokens__c) ? Tokens__c : '-' #",
+                            encoded:false,
+                        },
+                        {
+                            field: "Tokens_Used__c, Is_Consumed__c",
+                            title: "Units Consumed",   
+                            /*template: "#= (data.Tokens_Used__c) ? Tokens_Used__c : '-' #",*/
+                            template: function (d) { return d.Is_Consumed__c > 0 ?  "<u><b> <a onclick=\"showTokencon('"+ d.Id + "')\" style='cursor: pointer;'> " + d.Tokens_Used__c+ "  </a> </b> </u>" : "-"},
+                            encoded:false,
+                        },
+                        {
+                            field: "Tokens_Available__c, Is_consumed__c",
+                            title: "Units Availiable",   
+                            template: "#= (data.Tokens_Available__c) ? Tokens_Available__c : '-' #",
+                            encoded:false,
+                        },
+                       /* {
+                            field: "Is_Consumed__c",
+                            title: "Is Consumed",   
+                            --template: "#= (data.Is_Consumed__c) ? '<u><b> <a onclick=showTokencon('#=Id#')>#= Is_Consumed__c # </a></b></u>' : '-' #",
+                            --template: "<u><b> <a onclick=\"showTokencon('#=Id#')\" style='cursor: pointer;'>#= Is_Consumed__c # </a> </b> </u>",
+                            --template: "<u><b> <a onclick=\"showContact('#=Id#')\" style='cursor: pointer;'> Click to see contacts </a> </b> </u>",
+                            template: function (d) { return d.Is_Consumed__c > 0 ?  "<u><b> <a onclick=\"showTokencon('"+ d.Id + "')\" style='cursor: pointer;'> " + d.Is_Consumed__c + "  </a> </b> </u>" : "-"},
+                            encoded:false,
+                        },*/
+                        {
+                            field: "Token_Status__c",
+                            title: "Units Status",   
+                            template: "#= (data.Token_Status__c) ? Token_Status__c : '-' #",
+                            encoded:false,
+                        },
+                         {
+                            field: "CreatedDate",
+                            title: "Transaction Date", 
+                            template: '#= kendo.toString(new Date(CreatedDate), "d") #' ,
+                            encoded:false,
+                        },
+                        /*{
+                            field: "Contract_Start_Date__c, Contract_End_Date__c",
+                            title: "Valid Through", 
+                            template: '#= kendo.toString(new Date(Contract_Start_Date__c), "d") # - #= kendo.toString(new Date(Contract_End_Date__c), "d") #' ,
+                             encoded:false,
+                        },*/
+                        {
+                            field: "ContractStart_Date__c",
+                            title: "Contract Start Date",   
+                            //template: '#= kendo.toString(new Date(Contract_Start_Date__c), "d") #' ,
+                            // encoded:false,
+                        },
+                        {
+                            field: "ContractEnd_Date__c",
+                            title: "Contract End Date", 
+                            //template: '#= kendo.toString(new Date(Contract_End_Date__c), "d") #' ,
+                        },
+                        /*{
+                            field: "Order__r.Name",
+                            title: "Order#", 
+                            template: '
+                            <a href="#=Order__r.Id#"> #=Order__r.Name# </a>',  
+                             encoded:false,
+                        }*/
+                        ]
+                        
+                    });
+                    
+                    
+                    // GU Training Units In Progress 
+                    $("#GUTrainingUnitInProgress").kendoGrid({
+                        dataSource: {
+                               
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getTokenAllocationGUInProgress}",accId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 300,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        {
+                            field: "Entitlement_Name__c",
+                            title: "GU Entitlement",
+                            encoded:false,
+                        },
+                        {
+                            field: "Entitlement_Number__c",
+                            title: "GU Entitlement Number",   
+                        },
+                        {
+                            field: "Entitlement_Type__c",
+                            title: "Entitlement Type", 
+                        },
+                        {
+                            field: "Student_Name__c",
+                            title: "Student Name", 
+                            encoded:false,
+                        },
+                        {
+                            field: "Student_Email__c",
+                            title: "Student Email",  
+                        },
+                        {
+                            field: "Course_Start_Date__c",
+                            title: "Course Start Date", 
+                            //template: '#= kendo.toString(new Date(Course_Start_Date__c), "d") # - #= kendo.toString(new Date(Course_End_Date__c), "d") #' ,
+                            template: '#= kendo.toString(new Date(Course_Start_Date__c), "d") #' ,
+                        },
+                        
+                         {
+                            field: "Course_End_Date__c",
+                            title: "Course End Date", 
+                            template: '#= kendo.toString(new Date(Course_End_Date__c), "d") #' ,
+                            //template: '#= kendo.toString(new Date(Course_Start_Date__c), "d") # - #= kendo.toString(new Date(Course_End_Date__c), "d") #' ,
+                        },
+                        {
+                            field: "Course_Location__c",
+                            title: "Course Location", 
+                        }
+                        ]
+                        
+                    });
+                    
+                    // GU Training Units Completed 
+                    $("#GUTrainingUnitCompleted").kendoGrid({
+                        dataSource: {
+                               
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getTokenAllocationGUCompleted}",accId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 300,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        {
+                            field: "Entitlement_Name__c",
+                            title: "GU Entitlement",
+                            encoded:false,
+                        },
+                        {
+                            field: "Entitlement_Number__c",
+                            title: "GU Entitlement Number",   
+                        },
+                        {
+                            field: "Entitlement_Type__c",
+                            title: "Entitlement Type", 
+                        },
+                        {
+                            field: "Student_Name__c",
+                            title: "Student Name", 
+                            encoded:false,
+                        },
+                        {
+                            field: "Student_Email__c",
+                            title: "Student Email",  
+                        },
+                        {
+                            field: "Course_Start_Date__c",
+                            title: "Course Start Date", 
+                            //template: '#= kendo.toString(new Date(Course_Start_Date__c), "d") # - #= kendo.toString(new Date(Course_End_Date__c), "d") #' ,
+                            template: '#= kendo.toString(new Date(Course_Start_Date__c), "d") #' ,
+                        },
+                        
+                         {
+                            field: "Course_End_Date__c",
+                            title: "Course End Date", 
+                            template: '#= kendo.toString(new Date(Course_End_Date__c), "d") #' ,
+                            //template: '#= kendo.toString(new Date(Course_Start_Date__c), "d") # - #= kendo.toString(new Date(Course_End_Date__c), "d") #' ,
+                        },
+                         {
+                            field: "Certified__c",
+                            title: "Certified", 
+                            template: '<input type="checkbox" #= Certified__c ? "checked=checked" : "" # disabled="disabled" ></input>'
+                        },
+                        /*{
+                            field: "Certification_Expiration__c",
+                            title: "Certification Expiration", 
+                            template: '#= kendo.toString(new Date(Certification_Expiration__c), "d") #' ,
+                            
+                                                        
+                                                        
+                        }*/
+                        ]
+                        
+                    });
+                    
+                    // GU Training Units Cancelled 
+                    $("#GUTrainingUnitCancelled").kendoGrid({
+                        dataSource: {
+                               
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getTokenAllocationGUcancelled}",accId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 300,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        {
+                            field: "Entitlement_Name__c",
+                            title: "GU Entitlement",
+                            encoded:false,
+                        },
+                        {
+                            field: "Entitlement_Number__c",
+                            title: "GU Entitlement Number",   
+                        },
+                        {
+                            field: "Entitlement_Type__c",
+                            title: "Entitlement Type", 
+                        },
+                        {
+                            field: "Student_Name__c",
+                            title: "Student Name", 
+                            encoded:false,
+                        },
+                        {
+                            field: "Student_Email__c",
+                            title: "Student Email",  
+                        },
+                        
+                        {
+                            field: "Cancellation_Date__c",
+                            title: "Cancellation Date", 
+                            template: '#= kendo.toString(new Date(Cancellation_Date__c), "d") #' ,
+                        }
+                        
+                        ]
+                        
+                    });
+                    
+                    
+                    
+                    // Package Services Services for Consumed
+                    $("#pTokenHistory").kendoGrid({
+                        dataSource: {
+                               
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getTokenAllocation}",accId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 400,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                             encoded:false,
+                        },
+                        {
+                            field: "Product_Group__r.Name, Is_Consumed__c",
+                            title: "Service Description",   
+                            template: function (d) { return d.Is_Consumed__c > 0 ?  "<u><b> <a onclick=\"showTokencon('"+ d.Id + "')\" style='cursor: pointer;'> " + d.Product_Group__r.Name + "  </a> </b> </u>" : "-"},
+                            encoded:false,
+                        },*/
+                        {
+                            field: "Order__c",
+                            title: "Customer Name",   
+                            template: "#= (data.Order__c) ? Order__r.End_User_Name__r.Name : '-' #",
+                            encoded:false,
+                        },
+                        {
+                            field: "Product_Group__c,Is_Consumed__c",
+                            title: "Service Name",   
+                            template: "#= (data.Product_Group__c) ? Product_Group__r.Name : '-' #",
+                            /*template: '# if (data.Product_Group__r.Name && data.Product_Group__r.Name.length) { #<span>#: Product_Group__r.Name # </span> # } else { # <span> '-' </span> # } #',*/
+                        },
+                        {
+                            field: "Tokens__c",
+                            title: "Tokens Allocated",   
+                            template: "#= (data.Tokens__c) ? Tokens__c : '-' #",
+                            encoded:false,
+                        },
+                        {
+                            field: "Tokens_Used__c, Is_Consumed__c",
+                            title: "Tokens Consumed",   
+                            /*template: "#= (data.Tokens_Used__c) ? Tokens_Used__c : '-' #",*/
+                            template: function (d) { return d.Is_Consumed__c > 0 ?  "<u><b> <a onclick=\"showTokencon('"+ d.Id + "')\" style='cursor: pointer;'> " + d.Tokens_Used__c+ "  </a> </b> </u>" : "-"},
+                            encoded:false,
+                        },
+                        {
+                            field: "Tokens_Available__c, Is_consumed__c",
+                            title: "Tokens Availiable",   
+                            template: "#= (data.Tokens_Available__c) ? Tokens_Available__c : '-' #",
+                            encoded:false,
+                        },
+                       /* {
+                            field: "Is_Consumed__c",
+                            title: "Is Consumed",   
+                            --template: "#= (data.Is_Consumed__c) ? '<u><b> <a onclick=showTokencon('#=Id#')>#= Is_Consumed__c # </a></b></u>' : '-' #",
+                            --template: "<u><b> <a onclick=\"showTokencon('#=Id#')\" style='cursor: pointer;'>#= Is_Consumed__c # </a> </b> </u>",
+                            --template: "<u><b> <a onclick=\"showContact('#=Id#')\" style='cursor: pointer;'> Click to see contacts </a> </b> </u>",
+                            template: function (d) { return d.Is_Consumed__c > 0 ?  "<u><b> <a onclick=\"showTokencon('"+ d.Id + "')\" style='cursor: pointer;'> " + d.Is_Consumed__c + "  </a> </b> </u>" : "-"},
+                            encoded:false,
+                        },*/
+                        {
+                            field: "Token_Status__c",
+                            title: "Tokens Status",   
+                            template: "#= (data.Token_Status__c) ? Token_Status__c : '-' #",
+                            encoded:false,
+                        },
+                         {
+                            field: "CreatedDate",
+                            title: "Transaction Date", 
+                            template: '#= kendo.toString(new Date(CreatedDate), "d") #' ,
+                            encoded:false,
+                        },
+                       /* {
+                            field: "Contract_Start_Date__c, Contract_End_Date__c",
+                            title: "Valid Through", 
+                            template: '#= kendo.toString(new Date(Contract_Start_Date__c), "d") # - #= kendo.toString(new Date(Contract_End_Date__c), "d") #' ,
+                             encoded:false,
+                        },*/
+                        {
+                            field: "ContractStart_Date__c",
+                            title: "Contract Start Date",
+                            //template: '#= kendo.toString(new Date(Contract_Start_Date__c), "d") #' ,
+                            
+                        },
+                        {
+                            field: "ContractEnd_Date__c",
+                            title: "Contract End Date",
+                            //template: '#= kendo.toString(new Date(Contract_End_Date__c), "d") #' ,
+                            
+                        },
+                        
+                        /*{
+                            field: "Order__r.Name",
+                            title: "Order#", 
+                            template: '
+                            <a href="#=Order__r.Id#"> #=Order__r.Name# </a>',  
+                             encoded:false,
+                        }*/
+                        ]
+                        
+                    });
+                    
+                    
+                    
+                    // Pure Package Services
+                    $("#gridPureSuccess").kendoGrid({
+                        dataSource: {                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.pureSuccessPacklist}",accId,allService,selfService,
+                                        function(result, event) {
+                                        
+                                            if(event.status) {
+                                            
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 400,
+                        groupable: true,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        columnMenu: false,
+                        filterable: true,
+                        
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [{
+                            field: "Product_Group__c, Order__r.Order_Category__c",
+                            title: "Package Name",
+                            /*template:"<u><b> <a onclick=\"getPack('#=Id#' ,'#=Product_Group__r.Name#' )\" style='cursor: pointer;'>#=Product_Group__r.Name#</a> </b> </u>",*/
+                            /*template: function(data) { return data.link === data.Product_Group__c ? " <span>" + '-' + "</span>" : " <a href='/" + data.Product_Group__r.Id + "'>" + data.Product_Group__r.Name + "</a>"},*/
+                            template: function (d) { return d.Order__r.Order_Category__c != 'PureCloud-Cloud Order' ?  "<u><b> <a onclick=\"getPack('"+ d.Id + "','" + d.Product_Group__r.Name +"')\" style='cursor: pointer;'> " + d.Product_Group__r.Name + "  </a> </b> </u>" : "<b>"+d.Product_Group__r.Name+"</b>"},//added by priyank
+                        },
+                        {
+                            field: "Service_Contract_No__c,Order__r.Contract_Lookup__c",
+                            //title: "Genesys Service  Contract #",
+                            title: "PureSuccess Order #",
+                            template: "#= (data.Order__c) ? Order__r.Name : '-' #",
+                            //template: "#= (data.Service_Contract_No__c) ? Service_Contract_No__c : '-' #",
+                            //template: function (d) { return d.Order__r.Order_Category__c != 'PureCloud-Cloud Order' ?   d.Service_Contract_No__c : ' '},//added by priyank
+                        },
+                        {
+                            field: "Order__r.Order_Category__c",
+                            title: "Offering Type",
+                        },
+                       
+                        {
+                            field: "Order__c",
+                            title: "End User",
+                            template: "#= (data.Order__c) ? Order__r.End_User_Name__r.Name : '-' #",
+                        },
+                        {
+                            field: "Account__c",
+                            title: "End Contact",
+                            template:"<u><b> <a onclick=\"showContact('"+accId+"')\" style='cursor: pointer;'>"+ contName +" </a> </b> </u>",
+                             encoded:false,
+                        },
+                        {
+                            field: "Account__r.Advisor_Name__c",
+                            title: "Advisor Name",
+                            template: "#= (data.Account__r.Advisor_Name__c) ? Account__r.Advisor_Name__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Contract_Start_Date__c,Order__r.Order_Category__c",
+                            title: "Contract Start Date",
+                            //template: '#= kendo.toString(new Date(Contract_Start_Date__c), "d") #' ,//commented by priyank
+                            //template: function (d) { return d.Order__r.Order_Category__c != 'PureCloud-Cloud Order' ? d.Contract_Start_Date__c : ' '},//added by priyank
+                            template: "#if(Order__r.Order_Category__c != 'PureCloud-Cloud Order'){# #= kendo.toString(new Date(Contract_Start_Date__c), 'd') # #}else{# #}#",//added by priyank
+                        },   
+                        {
+                            field: "Contract_End_Date__c",
+                            title: "Contract End Date",
+                            //template: '#= kendo.toString(new Date(Contract_End_Date__c), "d") #' ,//commented by priyank
+                            template: "#if(Order__r.Order_Category__c != 'PureCloud-Cloud Order'){# #= kendo.toString(new Date(Contract_End_Date__c), 'd') # #}else{# #}#",//added by priyank
+                        },
+                       /* {
+                            field: "Tokens__c",
+                            title: "Available Tokens",
+                            
+                        },*/
+                        {
+                            field: "Available_Service_element__c,Order__r.Order_Category__c",
+                            title: "Available Services Elements",
+                            //template: "#= (data.Available_Service_element__c) ? Available_Service_element__c : '-' #",
+                            template: function (d) { return d.Order__r.Order_Category__c != 'PureCloud-Cloud Order' ? d.Available_Service_element__c : ' '},//added by priyank
+                        },
+                        {
+                            field: "DaysToexpiration__c,Order__r.Order_Category__c",
+                            title: "Days to expiration",
+                            //template: "#= (data.DaysToexpiration__c) ? DaysToexpiration__c : '-' #",
+                            template: function (d) { return d.Order__r.Order_Category__c != 'PureCloud-Cloud Order' ? d.DaysToexpiration__c: ' '},//added by priyank
+                        }
+                        ]
+                    });
+                    var grid = $("#gridPureSuccess").data("kendoGrid");
+                    grid.autoFitColumn(0);
+                    
+                    // A la Carte Services for In Progress and Allocated
+                    $("#gridAllocated").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getAlocatedAlaCarte}",accId,allService,selfService,OfferSelect,
+                                        function(result, event) {
+                                        //alert(result);
+                                        
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        dataBound:function(e){
+                            $('.hideshowAlaIn.Progress').text('');
+                            $('.hideshowAlaOrder.Submitted').text('');
+                            
+                        },
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                            template: "#= (data.Product__r.APN_Number__c) ? Product__r.APN_Number__c : '-' #",
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Description__c",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Status__c",
+                            title: "Status",
+                            template: "#= (data.Status__c) ? Status__c : '-' #",
+                        },
+                        {
+                            field: "Order_Name__c",
+                            title: "Pending Token Order",   
+                            template: function(data) { return data.link === data.Order_Name__c? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.OrderID__c+ "'>" + data.Order_Name__c+ "</a>"}
+     
+                            
+                        },
+                        {
+                            field: "Consume_Service_Name__c",
+                            title: "Service In Progress #",   
+                            template: function(data) { return data.link === data.Consume_Service_Name__c ? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.Consume_Service_Id__c + "'>" + data.Consume_Service_Name__c + "</a>"}
+     
+                            
+                        },
+                        {
+                            //field: "PureSuccess_Package__r.Order__r.Order_Category__c,PureSuccess_Package__r.Order__r.Date_Accepted__c",
+                            field: "Start_Date__c",
+                            title: "Available Date",
+                            //template: '#= kendo.toString(new Date(Start_Date__c), "d") #'
+                            template: "#if(Product_Group__r.Offering_Type__c == 'PureCloud'){# #= kendo.toString(new Date(Start_Date__c), 'd') # #}else if(Product_Group__r.Offering_Type__c == 'NULL'){# #= kendo.toString(new Date(Start_Date__c), 'd') # #}else{##}#", //added by priyank
+                            //template: function (d) { return d.Offering_Type__c == 'PureCloud' ?   d.Start_Date__c: ' '},//added by priyank
+                        },
+                        {
+                            field: "End_Date__c",
+                            title: "Expiration Date",
+                            template: "#if(Product_Group__r.Offering_Type__c == 'PureCloud'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else if(Product_Group__r.Offering_Type__c == 'NULL'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else{##}#", //added by priyank
+                            //template: '#= kendo.toString(new Date(End_Date__c), "d") #'
+                            //template: function (d) { return d.Offering_Type__c == 'PureCloud' ?   d.End_Date__c: ' '},//added by priyank
+                        },
+                        {command: 
+                            { 
+                                text : "Use", 
+                                click : createNROAlaCarte 
+                            }, 
+                                attributes: {
+                                      "class": "hideshowAla#=Status__c#"
+                                     },
+                                title: "Action", 
+                                width: "100px",
+                                
+                        }]
+                    });
+                    
+                    // A la Carte Services for Buy
+                    $("#gridBuy").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getProductGroupItems}",accId,allService,selfService,currencyTypeString,OfferSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 350,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        dataBound:function(e){
+                            if(isBuy == 'true'){
+                                $('.k-grid-Buy').hide();
+                            }
+                        },
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "APN_Number__c",
+                            title: "Part Number",
+                            template: "#= (data.APN_Number__c) ? APN_Number__c : '-' #",
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Name",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                            encoded:false,
+                        },
+                         {
+                            /*field: "Product_Group__r.Token_Value__c",*/
+                            /*field: "Product__r.NG5_NA_USD_Price__c * {!currencyRate} / 100 ",*/
+                            field: "Product__r.Currency_Conversion__c / 100",
+                            format: '{0:n0}',// added by priyank to round of decimal value as discussed with jj
+                            title: "Tokens Required",
+                            
+                        },
+                        /*{ command: { text: "Buy", click : buyService}, title: "Action", width: "100px" }]*/
+                        { command: { text: "Buy", click : BuyToken}, title: "Action", width: "100px" }]
+                   });
+                    
+                   // A la Carte Services for Consumed
+                    $("#gridConsumed").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getConsumedAlaCarte}",accId,allService,selfService,OfferSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                       },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                            template: '# if (data.Product__r.APN_Number__c && data.Product__r.APN_Number__c.length) { #<span>#: Product__r.APN_Number__c # </span> # } else { # <span> '-' </span> # } #',
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Description__c",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Consume_Service_Name__c",
+                            title: "Service In Progress #",   
+                            template: function(data) { return data.link === data.Consume_Service_Name__c ? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.Consume_Service_Id__c + "'>" + data.Consume_Service_Name__c + "</a>"}
+                        }]
+                    });
+                    
+                    // A la Carte Services for Expired - Added by Priyank
+                    $("#gridExpired").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getExpiredAlaCarte}",accId,allService,selfService,OfferSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                       },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        {
+                            field: "Product__r.Description__c",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Status__c",
+                            title: "Status",
+                            template: "#= (data.Status__c) ? Status__c : '-' #",
+                        },
+                        {
+                            field: "End_Date__c,Offering_Type__c ",
+                            title: "Expiration Date",
+                            //template: '#= kendo.toString(new Date(End_Date__c), "d") #'
+                            template: "#if(Offering_Type__c == 'PureCloud'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else if(Offering_Type__c == 'NULL'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else{##}#", //added by priyank
+                        }]
+                    });
+                   
+                });
+                
+                //added by priyank on 14 dec 2018, on request by vinay.
+                //On Cick hide and show Offering type picklist
+                function showHideOfferingPicklist(){
+                    $(".offerPick").show();
+                }
+                function HideOfferingPicklist(){
+                    $(".offerPick").hide();
+                }
+                //On Select Offering type for the A la Carte Service.
+                
+                function productItemFiterByOfferingType(OSelect){
+                    // A la Carte Services for In Progress and Allocated
+                    $('#gridAllocated').kendoGrid('destroy').empty();
+                    $("#gridAllocated").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getAlocatedAlaCarte}",accId,allService,selfService,OSelect,
+                                        function(result, event) {
+                                        //alert(result);
+                                        
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        dataBound:function(e){
+                            $('.hideshowAlaIn.Progress').text('');
+                            $('.hideshowAlaOrder.Submitted').text('');
+                            
+                        },
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                            template: "#= (data.Product__r.APN_Number__c) ? Product__r.APN_Number__c : '-' #",
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Description__c",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Status__c",
+                            title: "Status",
+                            template: "#= (data.Status__c) ? Status__c : '-' #",
+                        },
+                        {
+                            field: "Order_Name__c",
+                            title: "Pending Token Order",   
+                            template: function(data) { return data.link === data.Order_Name__c? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.OrderID__c+ "'>" + data.Order_Name__c+ "</a>"}
+     
+                            
+                        },
+                        {
+                            field: "Consume_Service_Name__c",
+                            title: "Service In Progress #",   
+                            template: function(data) { return data.link === data.Consume_Service_Name__c ? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.Consume_Service_Id__c + "'>" + data.Consume_Service_Name__c + "</a>"}
+                        },
+                        {
+                            //field:"PureSuccess_Package__r.Order__r.Order_Category__c,PureSuccess_Package__r.Order__r.Date_Accepted__c",
+                            field: "Start_Date__c",
+                            title: "Available Date",
+                            //template: '#= kendo.toString(new Date(Start_Date__c), "d") #'
+                            template: "#if(Product_Group__r.Offering_Type__c == 'PureCloud'){# #= kendo.toString(new Date(Start_Date__c), 'd') # #}else if(Product_Group__r.Offering_Type__c == 'NULL'){# #= kendo.toString(new Date(Start_Date__c), 'd') # #}else{##}#", //added by priyank
+                            //template: "#if(PureSuccess_Package__r.Order__r.Order_Category__c == 'PureCloud-Cloud Order'){# #= kendo.toString(new Date(PureSuccess_Package__r.Order__r.Date_Accepted__c), 'd') # #}else if(Offering_Type__c == ''){##}else{# #}#"//added by priyank
+                            //template: function (d) { return d.Order__r.Order_Category__c == 'PureCloud' ?   d.Order__r.Date_Accepted__c: ' '},//added by priyank
+                        },
+                        {
+                            field: "End_Date__c",
+                            title: "Expiration Date",
+                            //template: '#= kendo.toString(new Date(End_Date__c), "d") #'
+                            template: "#if(Product_Group__r.Offering_Type__c == 'PureCloud'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else if(Product_Group__r.Offering_Type__c == 'NULL'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else{##}#", //added by priyank
+                        },
+                        {command: 
+                            { 
+                                text : "Use", 
+                                click : createNROAlaCarte 
+                            }, 
+                                attributes: {
+                                      "class": "hideshowAla#=Status__c#"
+                                     },
+                                title: "Action", 
+                                width: "100px",
+                                
+                        }]
+                    });
+                    
+                    // A la Carte Services for Buy
+                    $("#gridBuy").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getProductGroupItems}",accId,allService,selfService,currencyTypeString,OSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 350,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        dataBound:function(e){
+                            if(isBuy == 'true'){
+                                $('.k-grid-Buy').hide();
+                            }
+                        },
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "APN_Number__c",
+                            title: "Part Number",
+                            template: "#= (data.APN_Number__c) ? APN_Number__c : '-' #",
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Name",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                            encoded:false,
+                        },
+                         {
+                            /*field: "Product_Group__r.Token_Value__c",*/
+                            field: "Product__r.Currency_Conversion__c / 100",
+                            format: '{0:n0}',// added by priyank to round of decimal value as discussed with jj
+                            title: "Tokens Required",
+                            
+                        },
+                        /*{ command: { text: "Buy", click : buyService}, title: "Action", width: "100px" }]*/
+                        { command: { text: "Buy", click : BuyToken}, title: "Action", width: "100px" }]
+                    });
+                    
+                    // A la Carte Services for Consumed
+                    $("#gridConsumed").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getConsumedAlaCarte}",accId,allService,selfService,OSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                       },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                            template: '# if (data.Product__r.APN_Number__c && data.Product__r.APN_Number__c.length) { #<span>#: Product__r.APN_Number__c # </span> # } else { # <span> '-' </span> # } #',
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Description__c",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Consume_Service_Name__c",
+                            title: "Service In Progress #",   
+                            template: function(data) { return data.link === data.Consume_Service_Name__c ? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.Consume_Service_Id__c + "'>" + data.Consume_Service_Name__c + "</a>"}
+                        }]
+                    });
+                    
+                    // A la Carte Services for Expired - Added by Priyank
+                    $("#gridExpired").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getExpiredAlaCarte}",accId,allService,selfService,OfferSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                       },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        {
+                            field: "Product__r.Description__c",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Status__c",
+                            title: "Status",
+                            template: "#= (data.Status__c) ? Status__c : '-' #",
+                        },
+                        {
+                            field: "End_Date__c,Offering_Type__c ",
+                            title: "Expiration Date",
+                            //template: '#= kendo.toString(new Date(End_Date__c), "d") #'
+                            template: "#if(Offering_Type__c == 'PureCloud'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else if(Offering_Type__c == 'NULL'){# #= kendo.toString(new Date(End_Date__c), 'd') # #}else{##}#", //added by priyank
+                        }]
+                    });
+                }
+                //Priyank code end.
+                
+                
+                //Buy Token for the A la Carte Service.
+                function tokenConsumption()
+                {
+                }
+                function BuyToken(e){
+                debugger;
+                    dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                    acntId = '{!accntId}';
+                    totToken = '{!availableToken}';
+                    serviceToken = dataItem.Product__r.Currency_Conversion__c;
+                    prodId = dataItem.Id;
+                    ProductID = dataItem.Product__c;
+                    prdGroup = dataItem.Product_Group__c;
+                    name = dataItem.Product__r.Description;
+                    CurrencyRate = '{!currencyRate}';
+                    tokenValue = Math.round((serviceToken / 100));
+                    $("#serviceValue span#srvVal").html(tokenValue);
+                    var wnd = $("#BuyToken")                    
+                    .kendoWindow({
+                        modal: true,
+                        title: 'Buy A la Carte Service',
+                        visible: false,
+                        resizable: false,
+                        width: 300
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "80%");
+                    wnd.center().open();
+                  
+                    // Display all the Contact for the Account
+                    $("#tokenconsumption").kendoGrid({
+                        dataSource: {
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getTokenAllocationForBuy}",acntId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 150,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: false,
+                        filterable: true,
+                        
+                        /*pageable: {
+                            alwaysVisible: false,
+                            pageSizes: [25, 50, 100, 200]
+                        },*/
+                        columns: 
+                        [
+                        {
+                            field: "Name",
+                            title: "Token Allocation Name",
+                            template: "#= (data.Name) ? Name : '-' #",
+                             encoded:false,
+                        },
+                       {
+                            field: "Contract_No__c, Order__r.Name",
+                            //title: "Service Contract#", 
+                            //template: "#= (data.Contract_No__c) ? Contract_No__c : '-' #" ,
+                            title: "PureSuccess Order #", //Vinay added on 05/22/19
+                            template: "#= (data.Order__c) ? Order__r.Name : '-' #",
+                             encoded:false,
+                        },
+                         /*{
+                            field: "Tokens__c",
+                            title: "Total Token", 
+                            template: "#= (data.Tokens__c) ? Tokens__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Tokens_Used__c",
+                            title: "Tokens Used", 
+                            template: "#= (data.Tokens_Used__c) ? Tokens_Used__c : '-' #",
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Tokens_Available__c",
+                            title: "Tokens Available", 
+                            template: "#= (data.Tokens_Available__c) ? Tokens_Available__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Contract_Start_Date__c, Contract_End_Date__c",
+                            title: "Valid Through", 
+                            template: '#= kendo.toString(new Date(Contract_Start_Date__c), "d") # - #= kendo.toString(new Date(Contract_End_Date__c), "d") #' ,
+                             encoded:false,
+                        },
+                        
+                        {
+                            field: "Id",
+                            title: "Consume Tokens", 
+                            template: function (d) { return totToken > tokenValue ?  "<input data-tokId=" + d.Id + "  type=\"text\" value=\"0\" data-tokenAv=" +d.Tokens_Available__c +"  />" : "Not Enough"},
+                            editable:true, 
+                        }       
+                    ],
+                    });
+                } 
+                
+               
+                
+                // Validate the token service element cost Start
+                  $("#btnValidate").click(function () {
+                    debugger;                   
+                    //alert(tokenValue);
+                    var totalValue = tokenValue;
+                    var calculateSumFromTextBox = 0;
+                    var tokenId;                    
+                    var availableToken_new = 0;
+                    var offeringType = $('#OfferingType').val();
+                    var eachTR = $("div#BuyToken").children().find("table tbody tr");
+                    var isValid = false;
+                    var tokencollection = {};
+                    var tokenallocations = [];
+                    tokencollection.tokenallocations = tokenallocations;
+                    //tokencollection.length = 0; // we set as we want to set new value on place of doing append.
+                    var tokencombo = '';
+                    $(eachTR).each(function (key, value) {
+                    /*Find TD which have textbox*/
+                        debugger;
+                        if(!isValid)
+                        {
+                            var textbox = $(value).children("td").eq(4).find("input[type=\"text\"]");                    
+                            if (textbox.length > 0) {
+                                var textBoxValue =$.trim(textbox.val());
+                                var tokenAval = $(textbox).data("tokenav");
+                                tokenId = $(textbox).data("tokid");
+                                
+                                //alert('@tokenAval ' +tokenAval );
+                                availableToken_new = tokenAval;
+                                
+                                if(tokenAval >= parseInt(textBoxValue))
+                                {
+                                    if(parseInt(textBoxValue)>0)
+                                    {
+                                        tokencombo = tokencombo + tokenId +"-"+parseInt(textBoxValue)+";"
+                                        var tokenalloca = { "id":tokenId, "tokenValue":parseInt(textBoxValue)  }                                        
+                                        tokencollection.tokenallocations.push(tokenalloca);
+                                    }
+                                    calculateSumFromTextBox+=textBoxValue.length > 0 ? parseInt(textBoxValue) : 0;
+                                    isValid = false;
+                                }    
+                                else
+                                {
+                                    alert ("Token consume value cannot be greater than token avaliable.");
+                                    isValid = true;
+                                    return;
+                                }                        
+                            }
+                        }                
+                    });
+                    if(!isValid)
+                    {
+                        if (isNaN(calculateSumFromTextBox)) 
+                        {
+                            alert("Invalid input.");
+                        }
+                        else 
+                        {
+
+                            //alert("prodId=="+prodId +"==name==" +name + "==acntId==" +acntId + "==ProductID == " +ProductID +  "==prdGroup ==" +prdGroup);
+                            if (calculateSumFromTextBox === totalValue) {
+                                if(confirm("Are you sure you want to buy the service?")){
+                                    
+                                    
+                               // alert('tokenAval ' +availableToken_new);       
+                               // alert('tokenselected ' + tokenValue);
+                                
+                                //alert('Final available token ' + (availableToken_new-tokenValue) );
+                                    
+                                    
+                                    $('.clsPB').show();
+                                    Visualforce.remoting.Manager.invokeAction(
+                                           '{!$RemoteAction.ServiceEntitlementCtrl.CreateTokenConsumption}',prodId,name,acntId,ProductID,prdGroup,tokencombo,totalValue,offeringType,tokenId,
+                                             function(result, event)
+                                             {
+                                                 if(event.status) 
+                                                {  
+                                                     //$("#BuyToken").parent().remove();
+                                                     //$("#BuyToken").remove();
+                                                     
+                                                     debugger;
+                                                     
+                                                     $('.clsPB').hide();
+                                                     $('span.k-i-close').click();
+                                                     
+                                                     //alert('@totalValue ' + totalValue);
+                                                     
+                                                    // $("#tabstrip span#tokenValuefromDB").html(totalValue);
+                                                     
+                                                    // $('.callRefresh').click();
+                                                     
+                                                     //location.reload(); 
+                                                     $("#notification").kendoNotification({
+                                                        autoHideAfter: 100000,
+                                                        width: "auto",                                                                                                                
+                                                        position: {
+                                                            bottom: 40,
+                                                            right: 30
+                                                        }
+                                                     });
+                                                    $("#notification").getKendoNotification().show("Your request has been created Successfully.");
+                                                    //$("#tokenValuefromDB").data("22222");
+                                                    $("#gridAllocated").data("kendoGrid").dataSource.read();
+                                                    //$("#gridBuy").data("kendoGrid").dataSource.read();
+                                                    $('.k-animation-container').css('z-index','10004');
+                                                    
+                                                 }
+                                                                                                
+                                              }
+                                        );
+                                        
+                                        Visualforce.remoting.Manager.invokeAction(
+                                           '{!$RemoteAction.ServiceEntitlementCtrl.fetchCounter}',acntId,
+                                             function(result, event)
+                                             {
+                                                 if(event.status) 
+                                                {  
+                                                     //$("#BuyToken").parent().remove();
+                                                     //$("#BuyToken").remove();
+                                                     
+                                                     debugger;
+                                                     //alert('result '+ result);
+                                                     
+                                                     $("#tabstrip span#tokenValuefromDB").html(result);
+                                                     
+                                                     $("#two span#tokenValuefromDB").html(result);
+                                                     
+                                                     $("#three span#tokenValuefromDB").html(result);
+                                                     $("#four span#tokenValuefromDB").html(result);//added by priyank.
+                                                 }
+                                                                                                
+                                              }
+                                        );
+                                        
+                                        
+                                } 
+                            }
+                            else if (calculateSumFromTextBox > totalValue) {
+                                alert("Total token value cannot be greater then: - "+totalValue);
+                            }
+                            else {
+                                alert("To buy this service we need more token.");
+
+                            }
+                        }
+                    }
+                });
+                
+                // Validate the token Value element cost end
+                function showTokencon(tknAllcId)
+                {
+                    debugger;
+                    var wnd = $("#TokenConsume")
+                    .kendoWindow({
+                        title: 'Consumption',
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 300
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "80%");
+                    wnd.center().open();
+                  
+                    // Display all the Contact for the Account
+                    $("#TokenConsume").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getTokenConsumptionFortknAllc}",tknAllcId,
+                                        function(result, event) {
+                                            if(event.status) {
+                                             debugger;
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Name",
+                            title: "Token Consumption Name",
+                            template: "#= (data.Name) ? Name : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Token_Allocation__c,",
+                            title: "Token Allocation", 
+                            template: "#= (data.Token_Allocation__r.Name) ? Token_Allocation__r.Name : '-' #",
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__c,",
+                            title: "Consumed Item", 
+                            template: "#= (data.Product__r) != null ? Product__r.Description__c : GU_Entitlement__r.Entitlement_Name__c#",
+                             encoded:false,
+                        },
+                        {
+                            field: "CreatedDate",
+                            title: "Consumed Date", 
+                            template: '#= kendo.toString(new Date(CreatedDate), "d") #' ,
+                            encoded:false,
+                        },
+                        {
+                            field: "Tokens__c",
+                            title: "Tokens/GU Units",   
+                            template: "#= (data.Tokens__c) ? Tokens__c : '-' #"
+                        }        
+                    ]});
+                    
+                }
+                //Show the List of all Contact for the Account
+                function showContact(packId){
+                    debugger;
+                    var wnd = $("#contactwindow")
+                    .kendoWindow({
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 300
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "80%");
+                    wnd.center().open();
+                  
+                    // Display all the Contact for the Account
+                    $("#contactList").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getEndContactList}",packId,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        {
+                            field: "Name",
+                            title: "Contact Name",
+                            template: "#= (data.Name) ? Name : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Email,",
+                            title: "Contact Email", 
+                            template: "#= (data.Email) ? Email : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "PureSuccess_Main_Contact__c",
+                            title: "PureSuccess Main Contact",   
+                            template: "#= (data.PureSuccess_Main_Contact__c) ? PureSuccess_Main_Contact__c : '-' #"
+                        } ,
+                        {
+                            field: "All_Service_Elements_Access__c",
+                            title: "PureSuccess All Service Elements Access",   
+                            template: "#= (data.All_Service_Elements_Access__c) ? All_Service_Elements_Access__c : '-' #"
+                        } ,
+                        {
+                            field: "Self_Service_Elements_Access__c",
+                            title: "PureSuccess Self Service Elements Access",   
+                            template: "#= (data.Self_Service_Elements_Access__c) ? Self_Service_Elements_Access__c : '-' #"
+                        }        
+                    ]});
+                }   
+                // Called from Pure Success Package to show related Packages Services
+                function getPack(packId, packName){
+                   //alert(packId);
+                   var sethide = [];
+                   var sethideshow = [];
+                   var sethideInProgress = [];
+                   var sethideInProgressIds = [];
+                   debugger;
+                    var wnd = $("#window")
+                    .kendoWindow({
+                        title: packName,
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 300
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "80%");
+                    wnd.center().open();
+                    
+                    // Package Services Services for Allocated /In Progress /  Available
+                    $("#pAllocated").kendoGrid({
+                       
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getPackageServicesAvailable}",packId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                
+                                                for(i=0 ; i < result.length ; i++){
+                                                    
+                                                    if(result[i].Product_Group_Item__r.Product_To_Hide__c != undefined && result[i].Product__r.Consumption_Model__c != 'Continuous - Not Tracked'){
+                                                        debugger;
+                                                        sethide.push(result[i].Product_Group_Item__r.Product_To_Hide__c);
+                                                    }
+                                                    
+                                                    if(result[i].Product_Group_Item__r.Product_To_Hide__c != undefined 
+                                                        && result[i].Product__r.Consumption_Model__c != 'Continuous - Not Tracked'
+                                                        && result[i].Status__c == 'In Progress'){
+                                                        debugger;
+                                                        sethideInProgress.push(result[i].Product_Group_Item__c);
+                                                    }
+                                                    
+                                                    if(result[i].Product_Group_Item__r.Product_To_Hide__c != undefined 
+                                                        && result[i].Product__r.Consumption_Model__c != 'Continuous - Not Tracked'){
+                                                        debugger;
+                                                        sethideInProgressIds.push(result[i].Product_Group_Item__r.Product_To_Hide__c);
+                                                    }
+                                                }
+                                                
+                                                /*for(i=0 ; i < result.length ; i++){
+                                                    if(result[i].Product_Group_Item__r.Product_To_Hide__c != undefined 
+                                                        && result[i].Product__r.Consumption_Model__c != 'Continuous - Not Tracked'
+                                                        && sethideInProgress.includes(result[i].Product_Group_Item__r.Product_To_Hide__c)){
+                                                        debugger;
+                                                        sethideInProgressIds.push(result[i].Product_Group_Item__r.Product_To_Hide__c);
+                                                    }
+                                                }*/
+                                                console.log(sethide);    
+                                                debugger;
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                       },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        dataBound:function(e){
+                            debugger;
+                            $('.hideshowIn.Progress').text('');
+                            $('.hideshowAllocated.Continuous.Not.Tracked').html('<a class="k-button" onclick="goto();">Go To</a>');
+                            $('.hideshowAllocated.Continuous.Not.Tracked.PureEngage.Subscription').html('<a class="k-button" onclick="gotoEngage();">Go To</a>');
+                            $('.hideshowAllocated.Continuous.Not.Tracked.PureEngage.Cloud').html('<a class="k-button" onclick="gotoEngageCloud();">Go To</a>');
+                            $('.hideshowAllocated.Continuous.Not.Tracked.Business.Edition').html('<a class="k-button" onclick="gotoEngageCloud();">Go To</a>');
+                            $('.hideshowAllocated.Continuous.Not.Tracked.PureConnect.Cloud').html('<a class="k-button" onclick="gotoConnectCloud();">Go To</a>');
+                            
+                            console.log('' + sethideInProgress);
+                            console.log(sethideInProgressIds);
+                            debugger;
+                            for(i=0 ; i < sethideInProgress.length ; i++){
+                                if(sethideInProgressIds.includes(sethideInProgress[i])){
+                                    console.log(sethideInProgress[i]);
+                                    $('.'+ sethideInProgress[i]).text('');
+                                }
+                            }
+                            
+                            
+                            sethideInProgress = [];
+                            sethideInProgressIds = [];
+                        },
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                            template: '# if (data.Product__r.APN_Number__c && data.Product__r.APN_Number__c.length) { #<span>#: Product__r.APN_Number__c # </span> # } else { # <span> '-' </span> # } #',  
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Description__c",
+                            title: "Service Description",
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                             encoded:false,
+                        },
+                        {
+                            field: "Consume_Service_Name__c",
+                            title: "Service In Progress #",   
+                            template: function(data) { return data.link === data.Consume_Service_Name__c ? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.Consume_Service_Id__c + "'>" + data.Consume_Service_Name__c + "</a>"}
+                        },
+                        {
+                            field: "Status__c",
+                            title: "Status",
+                            template: '# if (data.Status__c && data.Status__c.length) { #<span>#: Status__c # </span> # } else { # <span> '-' </span> # } #',     
+                        },
+                       
+                        {command: 
+                            { 
+                                text :  'Use' ,                                
+                                click :createNROPureSuccess
+                            }, attributes: {
+                                      "class": "hideshow#=Status__c# #=Product__r.Consumption_Model__c# #=PureSuccess_Package__r.Order__r.Order_Category__c# #=Product_Group_Item__r.Product_To_Hide__c#",
+                                     },
+                                title: "Action", 
+                                width: "100px"
+                        }]
+                        
+                    });
+                    
+                    // Package Services Services for Consumed
+                    $("#pConsumed").kendoGrid({
+                        dataSource: {
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.ServiceEntitlementCtrl.getPackageServicesConsumed}",packId,allService,selfService,
+                                        function(result, event) {
+                                            if(event.status) {
+                                               
+                                                
+                                                for(i=0 ; i < result.length ; i++){
+                                                     debugger;
+                                                     console.log(result[i].Product_Group_Item__c);
+                                                    if(sethide.includes(result[i].Product_Group_Item__c)){
+                                                        
+                                                        sethideshow.push(result[i].Product_Group_Item__c);
+                                                    }
+                                                }
+                                                options.success(result);
+                                                
+                                            }
+                                        }
+                                    );
+                                }
+                           },
+                            pageSize: 25
+                        },
+                        height: 250,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        filterable: true,
+                        dataBound:function(e){
+                            debugger; 
+                            for(i=0 ; i < sethideshow.length ; i++){
+                                $('.'+ sethideshow[i]).text('');
+                            }
+                            
+                            sethide = [];
+                            sethideshow = [];
+                        },
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [
+                        /*{
+                            field: "Product__r.APN_Number__c",
+                            title: "Part Number",
+                            template: '# if (data.Product__r.APN_Number__c && data.Product__r.APN_Number__c.length) { #<span>#: Product__r.APN_Number__c # </span> # } else { # <span> '-' </span> # } #',
+                             encoded:false,
+                        },*/
+                        {
+                            field: "Product__r.Description__c,",
+                            title: "Service Description", 
+                            template: "#= (data.Product__r.Description__c) ? Product__r.Description__c : '-' #",
+                            encoded:false,
+                        },
+                        {
+                            field: "Consume_Service_Name__c",
+                            title: "Service In Progress #",   
+                            template: function(data) { return data.link === data.Consume_Service_Name__c ? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.Consume_Service_Id__c + "'>" + data.Consume_Service_Name__c + "</a>"}
+                        }
+
+                        ]
+                    });
+                }
+                
+                function goto(){
+                    debugger;
+                     window.open(
+                      'https://my.inin.com/products/Pages/PureConnect-PureSuccess-Self-Service-Elements.aspx',
+                      '_blank' // <- This is what makes it open in a new window.
+                    );
+                }
+                
+                function gotoEngage(){
+                    debugger;
+                     window.open(
+                      'https://docs.genesys.com/Documentation/PRSCS/Closed/SelfService/Welcome',
+                      '_blank' // <- This is what makes it open in a new window.
+                    );
+                }
+                
+                 function gotoEngageCloud(){
+                    debugger;
+                     window.open(
+                      'https://docs.genesys.com/Documentation/PRSCS/Closed/SelfService/Welcome',
+                      '_blank' // <- This is what makes it open in a new window.
+                    );
+                }
+                
+                 function gotoConnectCloud(){
+                    debugger;
+                     window.open(
+                      'https://my.inin.com/products/Pages/PureConnect-PureSuccess-Self-Service-Elements.aspx',
+                      '_blank' // <- This is what makes it open in a new window.
+                    );
+                }
+                
+                function createNROPureSuccess(e){
+                    debugger;
+                    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                    $.when(showConfirmationWindow('Do you want to Consume this Service?')).then(function(confirmed){
+
+                        if(confirmed){
+                            var prodId = dataItem.Id;
+                            var ProductID = dataItem.Product__c;
+                            var name = dataItem.Product__r.Description;
+                            var acntId = '{!accntId}';
+                            if(prodId != ''){
+                                Visualforce.remoting.Manager.invokeAction(
+                                    "{!$RemoteAction.ServiceEntitlementCtrl.createCase}",prodId,name,acntId,ProductID,
+                                    function(result, event) {
+                                        if(event.status) {
+                                           debugger;
+                                           $("#notification").kendoNotification({
+                                                autoHideAfter: 80000,
+                                                width: "auto",
+                                                position: {
+                                                    bottom: 40,
+                                                    right: 30
+                                                }
+                                                
+                                            });
+                                            
+                                            $("#notification").getKendoNotification().show("Your Case has been created Successfully1.");
+                                            $("#pAllocated").data("kendoGrid").dataSource.read();
+                                            $('.k-animation-container').css('z-index','10004');
+                                        }
+                                    }
+                                );
+                               
+                            }
+                        }
+                        else{
+                            //alert('Cancel');
+                        }
+                     });
+                }
+                
+                function createNROAlaCarte(e){
+                    debugger;
+                    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                    
+                    $.when(showConfirmationWindow('Do you want to Consume this Service?')).then(function(confirmed){
+
+                    if(confirmed){
+                        var prodId = dataItem.Id;
+                        var ProductID = dataItem.Product__c;
+                        var name = dataItem.Product__r.Description;
+                        var acntId = '{!accntId}';
+                        if(prodId != ''){
+                            Visualforce.remoting.Manager.invokeAction(
+                                "{!$RemoteAction.ServiceEntitlementCtrl.createCase}",prodId,name,acntId,ProductID,
+                                function(result, event) {
+                                    if(event.status) {
+                                       debugger;
+                                       $("#notification").kendoNotification({
+                                            autoHideAfter: 3000,
+                                            width: "auto",
+                                            position: {
+                                                bottom: 40,
+                                                right: 30
+                                            }
+                                        });
+                                       
+                                        $("#notification").getKendoNotification().show("Your Case has been Submitted Successfully.");
+                                        $("#gridAllocated").data("kendoGrid").dataSource.read();
+                                    }
+                                }
+                            );
+                           
+                        }
+                    }
+                    else{
+                      //alert('Cancel');
+                    }
+                  });
+                    
+                }
+                
+                function buyService(e){
+                   debugger;
+                    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                    
+                            var totToken = '{!availableToken}';
+                            var serviceToken = dataItem.Product__r.Currency_Conversion__c;
+                            var prodId = dataItem.Id;
+                            var ProductID = dataItem.Product__c;
+                            var prdGroup = dataItem.Product_Group__c;
+                            var name = dataItem.Product__r.Description;
+                            var acntId = '{!accntId}';
+                            var CurrencyRate = '{!currencyRate}';
+                            var tokenValue = Math.round(serviceToken / 100);
+                            
+                            if(totToken > tokenValue){
+                            $.when(showConfirmationWindow('<table width=300 cellpadding=3 cellspacing=3 border=0> <tr> <td align=left style=color:#2e586a; font-size:12px;> <b>Total Tokens Available: </b> </td> <td align=right style=color:#2e586a; font-size:12px;> <b>' +totToken +'</b> </td></tr><tr><td align=left style=color:#2e586a; font-size:12px;> <b>Token Required for Service: -</b> </td> <td align=right style=color:#2e586a; font-size:12px;> <b>'+tokenValue +'</b> </td></tr><tr><td colspan=2 align=center style=\"color:#2e586a; font-size:16px\";> <b>Do you want to Buy this Service?</b> </td> </tr> </table>')).then(function(confirmed){
+                            
+                            if(confirmed){
+                            if(prodId != ''){
+                                Visualforce.remoting.Manager.invokeAction(
+                                    "{!$RemoteAction.ServiceEntitlementCtrl.createPackageALaCarte}",prodId,name,acntId,ProductID,prdGroup,tokenValue,
+                                    function(result, event) {
+                                    //alert(prodId+'-'+name+'-'+acntId+'-'+ProductID+'-'+prdGroup);
+                                        if(event.status) {
+                                           debugger;
+                                           $("#notification").kendoNotification({
+                                                autoHideAfter: 3000,
+                                                width: "auto",
+                                                position: {
+                                                    bottom: 40,
+                                                    right: 30
+                                                }
+                                            });
+                                            debugger;
+                                            if(result != ''){
+                                                var tokenval = result.split(':');
+                                                if(tokenval.length > 1){
+                                                    $('.tokeval').html(tokenval[1]);
+                                                }
+                                            }
+                                            
+                                            $("#notification").getKendoNotification().show("Order is created.");
+                                            $("#gridBuy").data("kendoGrid").dataSource.read();
+                                            $("#gridAllocated").data("kendoGrid").dataSource.read();
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                        else{
+                            //alert('Cancel');
+                        }
+                        
+                  });
+                 }
+                 else
+                 {
+                     $.when(showMessageWindow('You do not have sufficent token to Buy this Service.'));
+                 } 
+                } 
+                
+                //To show confirmation message
+                function showConfirmationWindow(message) {
+                    return showWindow('#confirmationTemplate', message)
+                };
+                
+                function showMessageWindow(message) {
+                    return showWindow('#messageTemplate', message)
+                };
+                function showWindow(template, message) {
+                    var dfd = new jQuery.Deferred();
+                    var result = false;
+            
+                    $("<div id='popupWindow'></div>")
+                        .appendTo("body")
+                        .kendoWindow({
+                        width: "auto",
+                        modal: true,
+                        title: "",
+                        modal: true,
+                        visible: false,
+                        close: function (e) {
+                        this.destroy();
+                        dfd.resolve(result);
+                      }
+                    }).data('kendoWindow').content($(template).html()).center().open();
+            
+                    $('.popupMessage').html(message);
+            
+                    $('#popupWindow .confirm_yes').val('OK');
+                    $('#popupWindow .confirm_no').val('Cancel');
+            
+                    $('#popupWindow .confirm_no').click(function () {
+                        $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    $('#popupWindow .confirm_yes').click(function () {
+                      result = true;
+                      $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    return dfd.promise();
+                };
+            
+                 
+            
+                </script>
+            </div>
+        </body>
+    </html>
+</apex:page>

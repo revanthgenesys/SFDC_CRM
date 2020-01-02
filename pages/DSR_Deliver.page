@@ -1,0 +1,1068 @@
+<apex:page controller="DSRDeliverCtlr"  sidebar="false" docType="html-5.0">
+    <apex:form >
+        <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <head>
+                <apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            </head>
+        </html>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <apex:includeScript value="{!$Resource.SharepointIntegration}"/>
+            <Script> function setFocusOnLoad() {}</Script>
+        
+        <script>
+            var j$ = jQuery.noConflict();
+        var sceid = '{!dsrsce.Id}';
+        j$(document).ready(function(){
+            j$('.dateFormat').hide();
+            
+            /*Set z-index for Date picker on POP up window*/
+            j$('.datePicker').css('z-index', 99999);
+            j$('.clsDt').on('focus', function (e) {
+                e.preventDefault();
+                j$(this).datepicker('show');
+                j$(this).datepicker('widget').css('z-index', 99999);
+            });
+            
+        });
+        
+        function GetDesc(){
+            debugger;
+            var VisionType = j$('.clsAttachmentType').val(); //j$('.slds-input.clsVisionType').val();
+            //Added by Ashish Goyal (09/20/2018) to resolve None selection issue
+            if(VisionType == 'None'){
+                document.getElementById('urlLinkId').setAttribute('href', '#');
+                document.getElementById('urlLinkId').className = 'disabled';
+                j$('.attachDesc').val('');
+                j$('.attachNote').val('');
+                return;
+            }
+            
+            j$('.clsSpinner').css('display','block');
+            Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.DSRDeliverCtlr.GetDescription}',
+                                                      VisionType, 
+                                                      function(result, event){
+                                                          if (event.status) {
+                                                              var des = result;
+                                                              j$('.slds-input.clsDesc').val(des.Description__c);
+                                                              j$('.slds-input.clsURL').val(des.URL__c);
+                                                              
+                                                              if(des.URLRequired__c)
+                                                              {
+                                                                  j$('.clsAttachment').css('border-left','2px solid red');
+                                                                  j$('[id$=hdnUrlReq]').val('YES');
+                                                              }
+                                                              else
+                                                              {
+                                                                  j$('[id$=hdnUrlReq]').val('NO');
+                                                                  j$('.clsAttachment').css('border-left','');
+                                                              }
+                                                              var prefix = des.FullDescriptionURL__c;
+                                                              if(prefix != null){
+                                                                  if(!prefix.includes('http://') && !prefix.includes('https://')){
+                                                                      prefix = 'http://'+ des.FullDescriptionURL__c;
+                                                                  }
+                                                                  document.getElementById('urlLinkId').setAttribute('href', prefix);
+                                                                  document.getElementById('urlLinkId').className = '';
+                                                              }else{
+                                                                  document.getElementById('urlLinkId').setAttribute('href', '#');
+                                                                  document.getElementById('urlLinkId').className = 'disabled';
+                                                              }
+                                                              j$('.attachDesc').val(des.Description__c);
+                                                              j$('.attachNote').val(des.Notes__c);
+                                                              j$('.clsSpinner').css('display','none');
+                                                              
+                                                              //alert(j$('[id$=hdnUrlReq]').val());
+                                                          } 
+                                                      }, 
+                                                      {escape: true}
+                                                     );
+        }
+        
+        
+        function GetReqDesc(){
+            debugger;
+            var VisionType = j$('.clsAttachmentType').val();
+            //Added by Ashish Goyal (09/20/2018) to resolve None selection issue
+            if(VisionType == 'None'){
+                document.getElementById('urlLinkId').setAttribute('href', '#');
+                document.getElementById('urlLinkId').className = 'disabled';
+                j$('.attachDesc').val('');
+                j$('.attachNote').val('');
+                return;
+            }
+            
+            j$('.clsSpinner').css('display','block');
+            Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.DSRDeliverCtlr.GetReqDescription}',
+                                                      VisionType, 
+                                                      function(result, event){
+                                                          if (event.status) {
+                                                              var des = result;
+                                                              console.log(des);
+                                                              j$('.slds-input.clsDesc').val(des.Description__c);
+                                                              j$('.slds-input.clsURL').val(des.URL__c);
+                                                              
+                                                              if(des.URLRequired__c)
+                                                              {
+                                                                  j$('.clsDelAttachment').css('border-left','2px solid red');
+                                                                  j$('[id$=hdnUrlReq]').val('YES');
+                                                              }
+                                                              else
+                                                              {
+                                                                  j$('[id$=hdnUrlReq]').val('NO');
+                                                                  j$('.clsDelAttachment').css('border-left','');
+                                                              }
+                                                              var prefix = des.AdditionalURL__c;
+                                                              if(prefix != null){
+                                                                  if(!prefix.includes('http://') && !prefix.includes('https://')){
+                                                                      prefix = 'http://'+ des.AdditionalURL__c;
+                                                                  }
+                                                                  document.getElementById('urlLinkId1').setAttribute('href', prefix);
+                                                                  document.getElementById('urlLinkId1').className = '';
+                                                              }else{
+                                                                  document.getElementById('urlLinkId').setAttribute('href', '#');
+                                                                  document.getElementById('urlLinkId').className = 'disabled';
+                                                              }
+                                                              j$('.attachDesc').val(des.Description__c);
+                                                              j$('.attachNote').val(des.Notes__c);
+                                                              j$('.clsSpinner').css('display','none');  
+                                                          } 
+                                                      }, 
+                                                      {escape: true}
+                                                     );
+        }
+        
+        // Priyank added below function for Url validation. 
+        function validUrlCheck(){
+            var a = document.getElementsByClassName("clsDelAttachment")[0].value;
+            if(a != ''){
+                //var regexp = new RegExp(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/ );
+                //var regexp = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/|ftp:\/\/www\.|ftps:\/\/www\.|ftp:\/\/|ftps:\/\/|smtp:\/\/www\.|smtps:\/\/www\.|smtp:\/\/|smtps:\/\/)?([w][w][w])+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+                var regexp = /^((https|smtps|ftps|ftp|smtp)?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/;
+                if(regexp.test(a)) {
+                    saveMethod();
+                    return true;
+                }else{
+                    var div = document.getElementById("errorMesg");
+                    div.innerHTML = "URL is Not Valid. Please Enter Valid URL";
+                    return false;
+                }
+            }else{
+                saveMethod();
+            }
+        }
+        
+        function validUrlCheck1(){
+            var a = document.getElementsByClassName("clsAttachment")[0].value;
+            if(a != ''){
+                //var regexp = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/|ftp:\/\/www\.|ftps:\/\/www\.|ftp:\/\/|ftps:\/\/|smtp:\/\/www\.|smtps:\/\/www\.|smtp:\/\/|smtps:\/\/)?([w][w][w])+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/;
+                var regexp = /^((https|smtps|ftps|ftp|smtp)?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/;
+                if(regexp.test(a)) {
+                    saveMethod1();
+                    return true;
+                }else{
+                    var div = document.getElementById("errorMesg1");
+                    div.innerHTML = "URL is Not Valid. Please Enter Valid URL";
+                    return false;
+                }
+                
+            }else{
+                saveMethod1();
+            }
+        }
+        
+        //Below function was added by priyank 15 Nov 2018 to check the mandatory URL on click of edit button.
+        function requiredCheck(isCheck){
+            if(isCheck){
+                j$('.clsAttachment').css('border-left','2px solid red');
+                j$('.clsDelAttachment').css('border-left','2px solid red');
+                j$('[id$=hdnUrlReq]').val('YES');
+            }else{
+                j$('.clsAttachment').css('border-left','');
+                j$('.clsDelAttachment').css('border-left','');
+                j$('[id$=hdnUrlReq]').val('NO');
+            }
+        }
+        //Priyank ended.
+        
+        </script>
+        <style type="text/css">
+            .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: outset;
+            z-index: 9999;
+            left: 40%;
+            padding:10px;
+            position: fixed;
+            margin-left: -250px;
+            top:100px;
+            border-color: #0070d2;
+            border-radius: 4px;
+            margin-top:-5%;
+            }
+            .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+            }
+            .messageTable{
+            width: 100%;
+            margin-bottom: 10px;
+            }
+            .message .messageText h4 { 
+            display: none;
+            } 
+            .errorM3 .msgIcon, .errorMedium {
+            background-image:
+            background-position: 0 0;
+            width: 0;
+            height: 0;
+            }
+            .message .messageText {
+            color: red;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            }
+            .spinnerBg{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            background-color: #000;
+            opacity: 0.2;
+            z-index: 999999;
+            }
+            .spinner{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            background-image: url("/img/loading32.gif");
+            background-size: 16px;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            z-index: 9999999;
+            opacity: 1;
+            }
+            
+            .slds hr {
+            display: block;
+            margin: 32px 0;
+            border-top: 2px solid #006fd2;
+            height: 1px;
+            clear: both;
+            }
+            .slds .slds-table th, .slds .slds-table td {
+            
+            white-space: normal;
+            }
+            a.disabled {
+            pointer-events: none;
+            cursor: default;
+            }
+        </style>
+        
+        <style>
+            <!-- progress bar -->
+            .clsSpinner{
+            /* Background color */
+            
+            filter: alpha(opacity = 20);
+            
+            /* Dimensions */
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 99999999999;
+            position: absolute;
+            
+            /* Mouse */
+            cursor:wait;
+            }
+            
+            /* This is for the message DIV */
+            .PopupPanel {
+            /* Background color */
+            border: solid 2px blue;
+            background-color: white;
+            
+            /* Dimensions */
+            left: 50%;
+            width: 150px;
+            margin-left: -100px;
+            top: 50%;
+            height: 20px;
+            margin-top: -25px;
+            z-index: 1001;
+            position: fixed;
+            
+            /* Mouse */
+            cursor:pointer;
+            }
+        </style>
+        
+        <Script>
+            function setFocusOnLoad() {
+            
+            }
+        </Script>
+        <body>
+            <!-- Priyank added below 2 action function -->
+            <apex:actionFunction name="saveMethod" action="{!closeDeliverRequirement}" reRender="deliverReq,deliveryReq, visionLoad" status="spinnerStatus" />
+            <apex:actionFunction name="saveMethod1" action="{!closeServiceTransitionActivites}" reRender="serviceTrans,ServTrans, visionLoad1" status="spinnerStatus"/>
+            <apex:inputHidden value="{!strURLReq}" id="hdnUrlReq"/>
+            <apex:actionStatus id="spinnerStatus">
+                <apex:facet name="start">
+                    <div class="spinnerBg" />
+                    <div class="spinner" ></div>
+                </apex:facet>
+            </apex:actionStatus>
+            
+            <div id="spinner" style="display: none" class="clsSpinner">
+                <div class="PopupPanel">
+                    <apex:image id="theProgress" value="{!$Resource.ProgressBarStatus}" width="20" height="20"/>
+                </div>
+            </div>
+            
+            
+            
+            <div class="slds"> 
+                <div class="slds-page-header" role="banner"> 
+                    <div class="slds-grid">
+                        <div class="slds-col">  
+                            <div class="slds-media"> 
+                                <div class="slds-media__figure">
+                                </div>
+                                <div class="slds-media__body">
+                                    <table>
+                                        <tr>
+                                            <td><h1 class="slds-text-heading--small"><a  href="{!IF((dsrsce.Is_partner_DSR__C && objUsera.IsPortalEnabled == false ), '/partner','/apex')}/SC_Engagement_Design?id={!dsrsce.Id}" target="_self"><apex:image id="theImage" value="{!$Resource.aerrow_left}" width="20" height="20" /></a></h1></td>
+                                            <td><h1 class="slds-text-heading--small"><b>Delivery</b></h1> </td>
+                                            
+                                            <apex:outputpanel rendered="{!!dsrsce.Is_Partner_DSR__c}">
+                                                <td style="text-align: -webkit-right;"><b>
+                                                    <apex:outputPanel id="delivery">
+                                                        <apex:outputPanel rendered="{!dsrsce.Has_Delivery_Activities__c}">
+                                                            <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!!dsrsce.Has_Delivery_Activities__c}">
+                                                            <img src="/img/checkbox_unchecked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                    Has Delivery Activities ?
+                                                    </b>
+                                                </td>
+                                            </apex:outputPanel>
+                                            
+                                            <apex:outputpanel rendered="{!!dsrsce.Is_Partner_DSR__c}">
+                                                <td style="text-align: -webkit-right;"><h1 class="slds-text-heading--small"><a href="{!map_DesignLinks['Delivery How To']}" target="_blank">Delivery How To</a></h1></td>
+                                                <td style="text-align: -webkit-right;"><h1 class="slds-text-heading--small"><a  href="{!map_DesignLinks['Delivery Assets']}" target="_blank">Delivery Assets</a></h1></td>
+                                            </apex:outputpanel>
+                                            <td style="text-align: -webkit-right;"><h1 class="slds-text-heading--small"><b><a  href="{!HomeURL}" target="_self">Home</a></b></h1></td>
+                                            <apex:outputPanel rendered="{!!dsrsce.Is_Partner_DSR__c}">
+                                                <td style="text-align: -webkit-right;"><h1 class="slds-text-heading--small"><a  href='/apex/DSR_Solution_Overview?id={!dsrsce.Id}' target="_self"><apex:image id="theImage2" value="{!$Resource.aerrow_right}" width="20" height="20"/></a></h1></td>
+                                            </apex:outputPanel>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="myapp">
+                    <div class="slds-grid slds-m-top--large">
+                        <div style="width:550%; margin-left:0%;">
+                            <div class="slds-card" style="text-align:-webkit-center;">
+                                <div class="slds-card__body" style="width: 95%;;">
+                                    <table>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                            <td style="width:10%;text-align:right;"><b>SC DSR Name :</b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"><a href="/apex/SC_Engagement_DSR?id={!dsrsce.Id}">{!dsrsce.Name}</a></td>
+                                            
+                                            <!--<td style="width:10%;text-align:right;"><b>Opportunity Offering Type : </b></td>
+<td style="width:1%"></td>
+<td style="width:10%;text-align:left;">{!dsrsce.Opportunity_ID__r.Lines_of_Businesses__c}</td>-->
+                                            
+                                            <td class="" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity Lead Offer :</b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"><apex:outputField value="{!dsrsce.Opportunity_ID__r.Lead_Offer__c}"/></td>
+                                            
+                                            <td style="width:10%;text-align:right;"><b>Delivery Start Date : </b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;">
+                                                <apex:Inputfield value="{!dsrsce.Deliver_Start_Date__c }" id="idVStartDtPart" rendered="{!NOT(blnIsSubmitted)}" styleClass="slds-input" style="width:60%;"/>
+                                                <apex:outputfield value="{!dsrsce.Deliver_Start_Date__c }"   rendered="{!blnIsSubmitted }" styleClass="slds-input" style="width:60%;"/>
+                                            </td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                            <td style="width:10%;text-align:right;"><b>Opportunity :</b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"> <a href="/{!dsrsce.Opportunity_ID__C}" target="_blank">{!dsrsce.Opportunity_ID__r.Name}</a></td>
+                                            
+                                            <!--<td style="width:10%;text-align:right;"><b> Opportunity Platform Type :</b></td>
+<td style="width:1%"></td>
+<td style="width:10%;text-align:left;">{!dsrsce.Opportunity_ID__r.Primary_Line_of_Business__c}</td>-->
+                                            
+                                            <td style="width:10%;text-align:right;"><b> Current Stage :</b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"> {!dsrsce.Opportunity_ID__r.StageName}</td>
+                                            
+                                            <td style="width:10%;text-align:right;"><b> Delivery End Date : </b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;">
+                                                <apex:inputField value="{!dsrsce.Deliver_End_Date__c}" id="idVEndDtPart" rendered="{!NOT(blnIsSubmitted)}" styleClass="slds-input" style="width:60%;"/>
+                                                <apex:outputField value="{!dsrsce.Deliver_End_Date__c}"  rendered="{!blnIsSubmitted }" styleClass="slds-input" style="width:60%;"/>
+                                            </td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                            <td style="width:10%;text-align:right;"><b> Account :</b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"> <a href="/{!dsrsce.Account_ID__c}" target="_blank">{!dsrsce.Account_ID__r.Name}</a></td>
+                                            
+                                            <td style="width:10%;text-align:right;"><b> Stage when DSR is Created :</b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;">{!dsrsce.Stage_When_DSR_Created__c}</td>
+                                            
+                                            <td style="width:10%;text-align:right;"><b> </b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"></td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                            <td class="" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity Current Stage : </b></td>
+                                            <td style="width:1%"></td>
+                                            <td class="" data-label="Monthlyrent" style="width:10%;text-align:left;"><apex:outputField value="{!dsrsce.Opportunity_ID__r.StageName}"/></td>
+                                            
+                                            
+                                            
+                                            <td style="width:10%;text-align:right;"><b> </b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"></td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 50px;">
+                                            <td style="width:10%;"><b style="">Delivery - General Notes : </b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"></td>
+                                            
+                                            <td style="width:10%;text-align:right;"></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"></td>
+                                            
+                                            <td style="width:10%;text-align:right;"></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"></td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                            <td colspan="9" style="text-align: -webkit-center;">
+                                                <apex:inputTextarea value="{!dsrsce.Deliver_Notes__c}" rendered="{!NOT(blnIsSubmitted)}" style="width:100%;height:85px;border-radius: 8px;border: 2px solid #5786e0;" />  
+                                                <apex:outputfield value="{!dsrsce.Deliver_Notes__c}" rendered="{!blnIsSubmitted}" style="width:100%;height:85px;border-radius: 8px;border: 2px solid #5786e0;" />
+                                                <br/> 
+                                            </td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 50px;">
+                                            <td colspan="9" style="text-align: -webkit-left;">
+                                                <apex:commandButton value="Save" rendered="{!NOT(blnIsSubmitted)}" style="font-weight: bolder;width: 8%;" styleClass="slds-button slds-button--brand slds-button--larger" action="{!saveSCDSR}" status="spinnerStatus"/>    
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="9"><hr/></td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 80px;">
+                                            <td style="width:12%;"><b style="">Delivery Requirements </b></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:center;">
+                                                <apex:commandButton value="Add" rendered="{!NOT(blnIsSubmitted)}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!showDeliverRequirement}" rerender="deliverReq" status="spinnerStatus"/>
+                                            </td>
+                                            
+                                            <td style="width:10%;text-align:right;">
+                                            </td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"></td>
+                                            
+                                            <td style="width:10%;text-align:right;"></td>
+                                            <td style="width:1%"></td>
+                                            <td style="width:10%;text-align:left;"></td>
+                                        </tr>
+                                        <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                            <td colspan="9" style="text-align: -webkit-center;">
+                                                <apex:outputPanel id="deliveryReq">
+                                                    
+                                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;">
+                                                        <thead>
+                                                            <tr style="background-color:#0070d2;">
+                                                                <th style="">
+                                                                    <b style="color: white;">Activity Type</b>
+                                                                </th>
+                                                                <th  style="">
+                                                                    <b style="color: white;">Description</b>
+                                                                </th>
+                                                                <th  style="">
+                                                                    <b style="color: white;">Attachment URL</b>
+                                                                </th>
+                                                                <th  style="">
+                                                                    <b style="color: white;">Date Of Requirement</b>
+                                                                </th>
+                                                                <!--<apex:outputpanel rendered="{!!dsrsce.Is_Partner_DSR__c }">-->
+                                                                <th  style="display:{!if(dsrsce.Is_Partner_DSR__c,'none','')}">
+                                                                    <b style="color: white;">Access</b>
+                                                                </th>
+                                                                <!--</apex:outputpanel>-->
+                                                                <th >
+                                                                    <b style="color: white;">Document Source</b>
+                                                                </th>
+                                                                <th >
+                                                                    <b style="color: white;">Notes</b>
+                                                                </th>
+                                                                <th style="{!IF((NOT(blnIsSubmitted)),'','display:none;')}">
+                                                                    <b style="color: white;">Action</b>
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody style="width:100%;table-layout: fixed;">
+                                                            <apex:repeat value="{!lstDelivery}" var="delR">
+                                                                <tr class="slds-hint-parent"  style="width: auto;">
+                                                                    <td style="max-width:30px;word-wrap: break-word;"> {!delR.AttachmentType__c} </td>
+                                                                    <td style="max-width:50px;word-wrap: break-word;text-align: justify;"> {!delR.Description__c}</td>
+                                                                    <td style="max-width:30px;word-wrap: break-word;"> <apex:outputLink value="{!IF(BEGINS(LOWER(delR.AttachmentURL__c), 'http'), delR.AttachmentURL__c, 'https://'+delR.AttachmentURL__c)}" target="_blank">{!delR.AttachmentURL__c}</apex:outputLink></td>
+                                                                    <td style="max-width:20px;word-wrap: break-word;"> <apex:outputText value="{0,date,MM/dd/yyyy}"> <apex:param value="{!delR.DateofAttachment__c}" /> </apex:outputText></td>
+                                                                    
+                                                                    <!--<apex:outputpanel rendered="{!!dsrsce.Is_Partner_DSR__c }">-->
+                                                                    <td style="max-width:20px;word-wrap: break-word;display:{!if(dsrsce.Is_Partner_DSR__c,'none','')}"> {!delR.Access__c}</td>
+                                                                    <!--</apex:outputpanel>-->
+                                                                    <td style="max-width:20px;word-wrap: break-word;"> {!delR.Source__c}</td>
+                                                                    <td style="max-width:200px;word-wrap: break-word;text-align: justify;"> {!delR.Notes__c}</td>
+                                                                    <td style="{!IF((NOT(blnIsSubmitted)),'word-wrap: break-word;','display:none;')}"> 
+                                                                        <!--priyank added oncomplete in below tag to check url is mandatory or not. 15 Nov 2018 -->
+                                                                        <apex:commandLink value="Edit" rendered="{!NOT(blnIsSubmitted)}" action="{!editDeliverReq}" rerender="deliveryReq, deliverReq" oncomplete="requiredCheck({!checkMandatory})" status="spinnerStatus">
+                                                                            <apex:param name="drId" assignTo="{!deliverId}" value="{!delR.Id}"/ >
+                                                                            </apex:commandLink> &nbsp;|&nbsp;
+                                                                            <apex:commandLink value="Remove" rendered="{!NOT(blnIsSubmitted)}" action="{!removeDeliverReq}" rerender="deliveryReq, delivery" status="spinnerStatus">
+                                                                                <apex:param name="drId" assignTo="{!deliverId}" value="{!delR.Id}"/ >
+                                                                                </apex:commandLink>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </apex:repeat>
+                                                            </tbody>
+                                                        </table>
+                                                </apex:outputPanel>
+                                            </td>
+                                        </tr>
+                                        <apex:outputpanel rendered="{!!dsrsce.Is_Partner_DSR__c}">   
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 80px;">
+                                                <td style="width:12%;"><b style="">Service Transition Activities </b></td>
+                                                <td style="width:1%"></td>
+                                                <td style="width:10%;text-align:center;">
+                                                    <apex:commandButton value="Add" rendered="{!NOT(blnIsSubmitted)}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!showServiceTransitionActivites}" rerender="serviceTrans" status="spinnerStatus"/>
+                                                </td>
+                                                
+                                                <td style="width:10%;text-align:right;">
+                                                </td>
+                                                <td style="width:1%"></td>
+                                                <td style="width:10%;text-align:left;"></td>
+                                                
+                                                <td style="width:10%;text-align:right;"></td>
+                                                <td style="width:1%"></td>
+                                                <td style="width:10%;text-align:left;"></td>
+                                            </tr>
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                                <td colspan="9" style="text-align: -webkit-center;">
+                                                    <apex:outputPanel id="ServTrans">
+                                                        <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;">
+                                                            <thead>
+                                                                <tr style="background-color:#0070d2;">
+                                                                    <th style="">
+                                                                        <b style="color: white;">Activity Type</b>
+                                                                    </th>
+                                                                    <th  style="">
+                                                                        <b style="color: white;">Description</b>
+                                                                    </th>
+                                                                    <th  style="">
+                                                                        <b style="color: white;">Attachment URL</b>
+                                                                    </th>
+                                                                    <th  style="">
+                                                                        <b style="color: white;">Date Of Activity</b>
+                                                                    </th>
+                                                                    <th  style="">
+                                                                        <b style="color: white;">Access</b>
+                                                                    </th>
+                                                                    <th >
+                                                                        <b style="color: white;">Document Source</b>
+                                                                    </th>
+                                                                    <th style="width: 20%;">
+                                                                        <b style="color: white;">Notes</b>
+                                                                    </th>
+                                                                    <th style="{!IF((NOT(blnIsSubmitted)),'','display:none;')}">
+                                                                        <b style="color: white;">Action</b>
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody style="width:100%;table-layout: fixed;">
+                                                                <apex:repeat value="{!lstService}" var="serT">
+                                                                    <tr class="slds-hint-parent"  style="width: auto;">
+                                                                        <td style="max-width:30px;word-wrap: break-word;"> {!serT.AttachmentType__c} </td>
+                                                                        <td style="max-width:50px;word-wrap: break-word;text-align: justify;"> {!serT.Description__c}</td>
+                                                                        <td style="max-width:30px;word-wrap: break-word;"> <apex:outputLink value="{!IF(BEGINS(LOWER(serT.AttachmentURL__c), 'http'), serT.AttachmentURL__c, 'https://'+serT.AttachmentURL__c)}" target="_blank">{!serT.AttachmentURL__c}</apex:outputLink></td>
+                                                                        <td style="max-width:20px;word-wrap: break-word;"> <apex:outputText value="{0,date,MM/dd/yyyy}"> <apex:param value="{!serT.DateofAttachment__c}" /> </apex:outputText></td>
+                                                                        <td style="max-width:20px;word-wrap: break-word;"> {!serT.Access__c}</td>
+                                                                        <td style="max-width:20px;word-wrap: break-word;"> {!serT.Source__c}</td>
+                                                                        <td style="max-width:200px;word-wrap: break-word;text-align: justify;"> {!serT.Notes__c}</td>
+                                                                        <td style="{!IF((NOT(blnIsSubmitted)),'word-wrap: break-word;','display:none;')}"> 
+                                                                            <!--priyank added oncomplete in below tag to check url is mandatory or not. 15 Nov 2018 -->
+                                                                            <apex:commandLink value="Edit" rendered="{!NOT(blnIsSubmitted)}" action="{!editServiceTrans}" rerender="serviceTrans" oncomplete="requiredCheck({!checkMandatory})" status="spinnerStatus">
+                                                                                <apex:param name="serId" assignTo="{!serviceId}" value="{!serT.Id}"/ >
+                                                                                </apex:commandLink> &nbsp;|&nbsp;
+                                                                                <apex:commandLink value="Remove" rendered="{!NOT(blnIsSubmitted)}" action="{!removeServiceTrans}" rerender="ServTrans, delivery" status="spinnerStatus">
+                                                                                    <apex:param name="serId" assignTo="{!serviceId}" value="{!serT.Id}"/ >
+                                                                                    </apex:commandLink>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </apex:repeat>
+                                                                </tbody>
+                                                            </table>
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:outputpanel>  
+                                    </table> 
+                                    <br/><br/>
+                                    
+                                    <!-- Virtual Team EDIT Popup Start-->
+                                    
+                                    <apex:outputPanel id="deliverReq">
+                                        <div>
+                                            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!deliverReq}" style="height:95%; overflow-y: auto;"/>
+                                            <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!deliverReq}" style="height:95%; overflow-y: auto;">
+                                                <div style="float:left;width:10px;color:black;"></div>
+                                                <div  class="slds-tile"> 
+                                                    <div style="width:50%;"><apex:pageMessages id="emsg" /><br/></div>
+                                                    <div  class="slds-tile__detail">
+                                                        <table>
+                                                            <tr>
+                                                                <td style="text-align:left;color:#3B76DD;font-size:larger"><b>Attachment Type</b></td>
+                                                                <td style="text-align:right;color:#3B76DD;font-size:larger"><b>Delivery Requirements</b></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="2">&nbsp;</td>
+                                                            </tr>
+                                                            <tr class="slds-item_label slds-text-color_weak slds-truncate"  style="width: 90%;height: 50px;margin-top:5%">
+                                                                <td colspan="2" style="padding-left: 20px;">
+                                                                    <apex:selectList value="{!activityType}" size="1"  styleClass="clsAttachmentType slds-input"  onchange="GetReqDesc()" style="border-left: 2px solid red;" >
+                                                                        <apex:selectOptions value="{!selectActivityType}"/>
+                                                                    </apex:selectList>
+                                                                </td>
+                                                            </tr>
+                                                        </table><br />
+                                                        <apex:outputPanel id="visionLoad">
+                                                            <table>
+                                                                <tr>
+                                                                    <td style="text-align:left; color:#3B76DD;font-size:larger"><b>Attachment Type Info</b></td>
+                                                                    <td style="text-align:right;"><a class="{!if(dataDef.FullDescriptionURL__c != null, '','disabled')}" id="urlLinkId" href="{!if(dataDef.FullDescriptionURL__c != null, dataDef.FullDescriptionURL__c,'#')}" target="_blank" style="text-decoration: underline;">Documentation on Attachment Type</a></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="2">&nbsp;</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="2">
+                                                                        <table style="outline: 2px solid blue;" cellpadding="4">
+                                                                            <tr>
+                                                                                <td colspan="4">&nbsp;</td>
+                                                                            </tr>
+                                                                            <tr style="width: 90%;height: 20px;margin-top:5%">
+                                                                                <td style="padding-left: 20px;vertical-align: top; color:#808080">Attachment<br/>Type<br/>Description</td>
+                                                                                <td style="width:4px;">&nbsp;</td>
+                                                                                <td>
+                                                                                    <div class="">
+                                                                                        <div class=""></div>
+                                                                                        <apex:inputTextArea styleClass="attachDesc" readonly="true" rows="3" cols="80" value="{!dataDef.Description__c}" />
+                                                                                    </div>&nbsp;&nbsp;
+                                                                                </td>
+                                                                                <td style="width: 10px;">&nbsp;</td>
+                                                                            </tr>
+                                                                            <tr style="width: 90%;height: 20px;margin-top:5%">
+                                                                                <td style="padding-left: 20px;vertical-align: top; color:#808080">Notes on<br/>Attachment<br/>Type</td>
+                                                                                <td style="width:4px;">&nbsp;</td>
+                                                                                <td>
+                                                                                    <div class="">
+                                                                                        <div class=""></div>
+                                                                                        <apex:inputTextArea styleClass="attachNote"  readonly="true" rows="3" cols="80" value="{!dataDef.Notes__c}" />
+                                                                                    </div>&nbsp;&nbsp;
+                                                                                </td>
+                                                                                <td style="width: 10px;">&nbsp;</td>
+                                                                            </tr>
+                                                                        </table>
+                                                                    </td>
+                                                                </tr>
+                                                            </table><br/>
+                                                            <table>
+                                                                <table>
+                                                                    <tr>
+                                                                        <td style="text-align:left;color:#3B76DD; font-size:larger"><b>Attachment Details for this DSR</b></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td colspan="2">&nbsp;</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td colspan="2">
+                                                                            <table style="width:100%; outline: 2px solid blue;" cellpadding="4">
+                                                                                <tr>
+                                                                                    <td colspan="6" style="padding-bottom: 7px; padding-top: 2px; padding-left: 5px; color:#808080">Enter information about the activity or attachment below:</td>
+                                                                                </tr>
+                                                                                <tr style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Description</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="3">
+                                                                                        <div class="">
+                                                                                            <div class=""></div>
+                                                                                            <apex:inputTextArea rows="3" cols="80" value="{!dsrActivity.Description__c}" id="idDesc"/>
+                                                                                        </div>&nbsp;&nbsp;
+                                                                                    </td>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Attachment<br/> URL</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="3">
+                                                                                        <div class="">
+                                                                                            <apex:outputPanel id="atturl">
+                                                                                                <apex:inputField value="{!dsrActivity.AttachmentURL__c}" style="{!IF((strURLReq == 'YES'),'border-left: 2px solid red;wwidth:100%;height:39px;line-height: normal;','width:100%;height:39px;line-height: normal;')}" styleClass="slds-input clsURL clsDelAttachment"/><br/>
+                                                                                            </apex:outputpanel>
+                                                                                            <!-- Priyank added below Div -->
+                                                                                            <div id="errorMesg" style="width:100%;color:red;"></div>
+                                                                                        </div>
+                                                                                        <input type="file" id="attachmentFile" /> 
+                                                                                        <apex:outputpanel rendered="{!!dsrsce.Is_Partner_DSR__c}">
+                                                                                            <button onclick="return uploadFile('Vision','{!dsrsce.Name}','clsDelAttachment');" Class="slds-button slds-button--brand slds-button--small" style="line-height:10px;font-size:15px;padding-left: 10px;padding-right: 10px;">Upload File</button>
+                                                                                        </apex:outputpanel>
+                                                                                        <apex:outputpanel rendered="{!dsrsce.Is_Partner_DSR__c}">
+                                                                                            <button onclick="return uploadFileAttached();" Class="slds-button slds-button--brand slds-button--small" style="line-height:10px;font-size:15px;padding-left: 10px;padding-right: 10px;">Upload File</button>
+                                                                                        </apex:outputpanel>
+                                                                                    </td>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr  style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Date of<br/> Activity:</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="2">
+                                                                                        <div class="">
+                                                                                            <div class=""></div>
+                                                                                            <apex:inputField value="{!dsrActivity.DateofAttachment__c}" style="border-left: 2px solid red;" styleClass="clsActdate slds-input"/>
+                                                                                        </div>&nbsp;&nbsp;
+                                                                                    </td>
+                                                                                    <td colspan="2">&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr  style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Source</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td>
+                                                                                        <div class="">
+                                                                                            <div class=""></div>
+                                                                                            <apex:selectList value="{!docSource}" size="1" id="idSource1"  style="border-left: 2px solid red;" styleClass="clsSource slds-input">
+                                                                                                <apex:selectOptions value="{!selectSource }"/>
+                                                                                            </apex:selectList>
+                                                                                        </div>&nbsp;&nbsp;
+                                                                                    </td>
+                                                                                    <apex:outputpanel layout="{!if(dsrsce.Is_Partner_DSR__c,'','none')}"> 
+                                                                                        <td style="padding-left: 20px; text-align:center; vertical-align: top;">Access</td>
+                                                                                        <td style="vertical-align: top;">
+                                                                                            <div class="">
+                                                                                                <div class=""></div>
+                                                                                                <apex:selectList value="{!access}"  style="width:100%;border-left: 2px solid red;vertical-align: top;"  size="1" id="idAccess1" styleClass="clsAccess slds-input">
+                                                                                                    <apex:selectOptions value="{!selectAccess}"/>
+                                                                                                </apex:selectList>
+                                                                                            </div> 
+                                                                                        </td>
+                                                                                    </apex:outputpanel>
+                                                                                    <apex:outputpanel layout="{!if(!dsrsce.Is_Partner_DSR__c,'','none')}"> 
+                                                                                        <td colspan="2">&nbsp;</td>
+                                                                                    </apex:outputpanel>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr  style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Notes</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="3"><apex:inputTextArea rows="3" cols="80" value="{!dsrActivity.Notes__c}" /></td>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                
+                                                                            </table>
+                                                                        </td>
+                                                                    </tr>
+                                                                </table><br/>
+                                                                
+                                                                
+                                                            </table>    
+                                                        </apex:outputPanel>
+                                                    </div>  
+                                                    
+                                                    <div style="text-align: -webkit-center;">
+                                                        <!--<apex:commandButton value="Save" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeDeliverRequirement}" rerender="deliverReq, deliveryReq,emsg, delivery,idVStartDtPart,idVEndDtPart" status="spinnerStatus"/> &nbsp;&nbsp;-->
+                                                        <!-- Priyank commented the above line and added new line below. -->     
+                                                        <apex:commandButton value="Save" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small"  onclick="validUrlCheck();return false;" rerender="deliverReq, deliveryReq,emsg, delivery,idVStartDtPart,idVEndDtPart,visionLoad" status="spinnerStatus"/> &nbsp;&nbsp;
+                                                        <apex:commandButton value="Cancel" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeDeliverRequirementCancel}" rerender="deliverReq, deliveryReq,emsg" status="spinnerStatus"/>
+                                                    </div>
+                                                    
+                                                </div>
+                                            </apex:outputPanel>
+                                        </div>
+                                    </apex:outputPanel>
+                                    
+                                    <!-- Virtual Team Popup End-->
+                                    
+                                    <!-- Virtual Team EDIT Popup Start-->
+                                    
+                                    <apex:outputPanel id="serviceTrans">
+                                        <div>
+                                            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!serviceTrans}" style="height:95%; overflow-y: auto;"/>
+                                            <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!serviceTrans}" style="height:95%; overflow-y: auto;">
+                                                <div style="float:left;width:10px;color:black;"></div>
+                                                <div class="slds-tile"> 
+                                                    <div style="width:50%;">
+                                                        <apex:pageMessages id="emsgs" /><br/>
+                                                    </div>
+                                                    <div class="slds-tile__detail">
+                                                        <table>
+                                                            <tr>
+                                                                <td style="text-align:left;color:#3B76DD;font-size:larger"><b>Attachment Type</b></td>
+                                                                <td style="text-align:right;color:#3B76DD;font-size:larger"><b>Service Transition Activities</b></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="2">&nbsp;</td>
+                                                            </tr>
+                                                            <tr class="slds-item_label slds-text-color_weak slds-truncate"  style="width: 90%;height: 50px;margin-top:5%">
+                                                                <td colspan="2" style="padding-left: 20px;">
+                                                                    <apex:selectList value="{!activityType}" size="1"  styleClass="clsAttachmentType slds-input" id="VisionType" onchange="GetDesc()" style="border-left: 2px solid red;" >
+                                                                        <apex:selectOptions value="{!selectActivityType}"/>
+                                                                    </apex:selectList>
+                                                                </td>
+                                                            </tr>
+                                                        </table><br />
+                                                        <apex:outputPanel id="visionLoad1">
+                                                            <table>
+                                                                <tr>
+                                                                    <td style="text-align:left; color:#3B76DD;font-size:larger"><b>Attachment Type Info</b></td>
+                                                                    <td style="text-align:right;"><a class="{!if(dataDef.FullDescriptionURL__c != null, '','disabled')}" id="urlLinkId" href="{!if(dataDef.FullDescriptionURL__c != null, dataDef.FullDescriptionURL__c,'#')}" target="_blank" style="text-decoration: underline;">Documentation on Attachment Type</a></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="2">&nbsp;</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td colspan="2">
+                                                                        <table style="outline: 2px solid blue;" cellpadding="4">
+                                                                            <tr>
+                                                                                <td colspan="4">&nbsp;</td>
+                                                                            </tr>
+                                                                            <tr style="width: 90%;height: 20px;margin-top:5%">
+                                                                                <td style="padding-left: 20px;vertical-align: top; color:#808080">Attachment<br/>Type<br/>Description</td>
+                                                                                <td style="width:4px;">&nbsp;</td>
+                                                                                <td>
+                                                                                    <div class="">
+                                                                                        <div class=""></div>
+                                                                                        <apex:inputTextArea styleClass="attachDesc" readonly="true" rows="3" cols="80" value="{!dataDef.Description__c}" />
+                                                                                    </div>&nbsp;&nbsp;
+                                                                                </td>
+                                                                                <td style="width: 10px;">&nbsp;</td>
+                                                                            </tr>
+                                                                            <tr style="width: 90%;height: 20px;margin-top:5%">
+                                                                                <td style="padding-left: 20px;vertical-align: top; color:#808080">Notes on<br/>Attachment<br/>Type</td>
+                                                                                <td style="width:4px;">&nbsp;</td>
+                                                                                <td>
+                                                                                    <div class="">
+                                                                                        <div class=""></div>
+                                                                                        <apex:inputTextArea styleClass="attachNote"  readonly="true" rows="3" cols="80" value="{!dataDef.Notes__c}" />
+                                                                                    </div>&nbsp;&nbsp;
+                                                                                </td>
+                                                                                <td style="width: 10px;">&nbsp;</td>
+                                                                            </tr>
+                                                                        </table>
+                                                                    </td>
+                                                                </tr>
+                                                            </table><br/>
+                                                            <table>
+                                                                <table>
+                                                                    <tr>
+                                                                        <td style="text-align:left;color:#3B76DD; font-size:larger"><b>Attachment Details for this DSR</b></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td colspan="2">&nbsp;</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td colspan="2">
+                                                                            <table style="width:100%; outline: 2px solid blue;" cellpadding="4">
+                                                                                <tr>
+                                                                                    <td colspan="6" style="padding-bottom: 7px; padding-top: 2px; padding-left: 5px; color:#808080">Enter information about the activity or attachment below:</td>
+                                                                                </tr>
+                                                                                <tr style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Description</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="3">
+                                                                                        <div class="">
+                                                                                            <div class=""></div>
+                                                                                            <apex:inputTextArea rows="3" cols="80" value="{!dsrActivity.Description__c}" id="idDesc1"/>
+                                                                                        </div>&nbsp;&nbsp;
+                                                                                    </td>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Attachment<br/> URL</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="3">
+                                                                                        <div class="">
+                                                                                            <apex:outputPanel id="atturl1">
+                                                                                                <apex:inputField value="{!dsrActivity.AttachmentURL__c}" style="{!IF((strURLReq == 'YES'),'border-left: 2px solid red;wwidth:100%;height:39px;line-height: normal;','width:100%;height:39px;line-height: normal;')}" styleClass="slds-input clsURL clsAttachment" /><br/>
+                                                                                            </apex:outputpanel>
+                                                                                            <!-- Priyank added below Div -->
+                                                                                            <div id="errorMesg1" style="width:100%;color:red;"></div>
+                                                                                        </div>
+                                                                                        <input type="file" id="attachmentFile" /> 
+                                                                                        <apex:outputpanel rendered="{!!dsrsce.Is_Partner_DSR__c}">
+                                                                                            <button onclick="return uploadFile('Vision','{!dsrsce.Name}','clsAttachment');" Class="slds-button slds-button--brand slds-button--small" style="line-height:10px;font-size:15px;padding-left: 10px;padding-right: 10px;">Upload File</button>
+                                                                                        </apex:outputpanel>
+                                                                                        <apex:outputpanel rendered="{!dsrsce.Is_Partner_DSR__c}">
+                                                                                            <button onclick="return uploadFileAttached();" Class="slds-button slds-button--brand slds-button--small" style="line-height:10px;font-size:15px;padding-left: 10px;padding-right: 10px;">Upload File</button>
+                                                                                        </apex:outputpanel>
+                                                                                    </td>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr  style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Date of<br/> Activity:</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="2">
+                                                                                        <div class="">
+                                                                                            <div class=""></div>
+                                                                                            <apex:inputField value="{!dsrActivity.DateofAttachment__c}" style="border-left: 2px solid red;" styleClass="clsActdate slds-input"/>
+                                                                                        </div>&nbsp;&nbsp;
+                                                                                    </td>
+                                                                                    <td colspan="2">&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr  style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Source</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td>
+                                                                                        <div class="">
+                                                                                            <div class=""></div>
+                                                                                            <apex:selectList value="{!docSource}" size="1" id="idSource"  style="border-left: 2px solid red;" styleClass="clsSource slds-input">
+                                                                                                <apex:selectOptions value="{!selectSource }"/>
+                                                                                            </apex:selectList>
+                                                                                        </div>&nbsp;&nbsp;
+                                                                                    </td>
+                                                                                    <apex:outputpanel layout="{!if(dsrsce.Is_Partner_DSR__c,'','none')}"> 
+                                                                                        <td style="padding-left: 20px; text-align:center; vertical-align: top;">Access</td>
+                                                                                        <td style="vertical-align: top;">
+                                                                                            <div class="">
+                                                                                                <div class=""></div>
+                                                                                                <apex:selectList value="{!access}"  style="width:100%;border-left: 2px solid red;vertical-align: top;"  size="1" id="idAccess" styleClass="clsAccess slds-input">
+                                                                                                    <apex:selectOptions value="{!selectAccess}"/>
+                                                                                                </apex:selectList>
+                                                                                            </div> 
+                                                                                        </td>
+                                                                                    </apex:outputpanel>
+                                                                                    <apex:outputpanel layout="{!if(!dsrsce.Is_Partner_DSR__c,'','none')}"> 
+                                                                                        <td colspan="2">&nbsp;</td>
+                                                                                    </apex:outputpanel>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                <tr  style="width: 90%;">
+                                                                                    <td style="padding-left: 20px;vertical-align: top;">Notes</td>
+                                                                                    <td style="width:4px;">&nbsp;</td>
+                                                                                    <td colspan="3"><apex:inputTextArea rows="3" cols="80" value="{!dsrActivity.Notes__c}" /></td>
+                                                                                    <td>&nbsp;</td>
+                                                                                </tr>
+                                                                                
+                                                                            </table>
+                                                                        </td>
+                                                                    </tr>
+                                                                </table><br/>
+                                                            </table>    
+                                                        </apex:outputPanel>
+                                                    </div> <br/>
+                                                    <div style="text-align: -webkit-center;">
+                                                        <!--<apex:commandButton value="Save" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small"  action="{!closeServiceTransitionActivites}" rerender="serviceTrans,ServTrans,emsgs, delivery" status="spinnerStatus"/> &nbsp;&nbsp;-->
+                                                        <!-- Priyank commented the above line and added new line below. -->     
+                                                        <apex:commandButton value="Save" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" onclick="validUrlCheck1();return false;" rerender="serviceTrans,ServTrans,emsgs, delivery" status="spinnerStatus"/> &nbsp;&nbsp;
+                                                        <apex:commandButton value="Cancel" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeServiceTransitionActivitesCancel}" rerender="serviceTrans,ServTrans,emsgs" status="spinnerStatus"/>
+                                                    </div>
+                                                </div>
+                                            </apex:outputPanel>
+                                        </div>
+                                    </apex:outputPanel>
+                                    
+                                    <!-- Virtual Team Popup End-->
+                                    
+                                </div>
+                            </div>   
+                        </div>     
+                    </div>       
+                </div>
+            </div>
+            <script type="text/javascript">
+            var maxStringSize = 6000000;    //Maximum String size is 6,000,000 characters
+            var maxFileSize = 4350000;      //After Base64 Encoding, this is the max file size
+            var chunkSize = 950000;         //Maximum Javascript Remoting message size is 1,000,000 characters
+            var attachment;
+            var attachmentName;
+            var fileSize;
+            var positionIndex;
+            var doneUploading;
+            
+            //Method to prepare a file to be attached to the Account bound to the page by the standardController
+            function uploadFileAttachd() {
+                debugger;
+                
+                
+                var file = document.getElementById('attachmentFile').files[0];
+                console.log(file);
+                if(file != undefined) {
+                    
+                    attachmentName = file.name;
+                    var fileReader = new FileReader();
+                    fileReader.onloadend = function(e) {
+                        attachment = window.btoa(this.result);  //Base 64 encode the file before sending it
+                        positionIndex=0;
+                        fileSize = attachment.length;
+                        console.log("Total Attachment Length: " + fileSize);
+                        doneUploading = false;
+                        uploadAttachments();
+                    }
+                    fileReader.onerror = function(e) {
+                        alert("There was an error reading the file.  Please try again.");
+                    }
+                    fileReader.onabort = function(e) {
+                        alert("There was an error reading the file.  Please try again.");
+                    }
+                    
+                    fileReader.readAsBinaryString(file);  //Read the body of the file
+                    
+                } else {
+                    alert("You must choose a file before trying to upload it");
+                }
+                //j$('.clsSpinner').css('display','none');
+                return false;
+            }
+            
+            //Method to send a file to be attached to the Account bound to the page by the standardController
+            //Sends parameters: Account Id, Attachment (body), Attachment Name, and the Id of the Attachment if it exists to the controller   
+            function uploadAttachments() {
+                debugger;
+                j$('.clsSpinner').css('display','block');
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.DSRDeliverCtlr.FileURLinsert}',attachment, attachmentName, sceid,
+                    function(result, event) {
+                        debugger;
+                        console.log(result);
+                        j$('.clsDR').val(result);
+                        j$('.clsSpinner').css('display','none');
+                    },
+                    {escape: false, timeout: 120000}
+                );
+            }
+            </script>
+        </body>    
+    </apex:form> 
+</apex:page>

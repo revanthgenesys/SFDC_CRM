@@ -1,0 +1,321 @@
+<apex:page controller="TransferToolController" id="pageId" cache="true">
+<style type="text/css">
+    .pbTitle {
+        white-space: nowrap
+    }
+</style>
+    <style>
+    .activeTab {font-size:13px;}
+    .inActiveTab {font-size:13px;}
+    .yourStyleClass{width: 300px;}
+	
+	//added by Swastika for progress bar
+    /* This is for the full screen DIV */
+    .popupBackground {
+        /* Background color */
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        /* Dimensions */
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 998;
+        position: absolute;
+        /* Mouse */
+        cursor:wait;
+    }
+ 
+    /* This is for the message DIV */
+    .PopupPanel {
+        /* Background color */
+        border: solid 2px blue;
+        background-color: white;
+ 
+        /* Dimensions */
+        left: 50%;
+        width: 200px;
+        margin-left: -100px;
+        top: 50%;
+        height: 50px;
+        margin-top: -25px;
+        z-index: 999;
+        position: fixed;
+        
+        /* Mouse */
+        cursor:pointer;
+    }
+    </style>
+   
+    <script type="text/javascript">
+        jQuery.noConflict();
+    
+    	function inputLimiter(e,allow) {
+			var AllowableCharacters = '';
+
+           	// if (allow == 'Letters'){AllowableCharacters=' ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';}
+            if (allow == 'Numbers'){AllowableCharacters='1234567890';}
+            //if (allow == 'NameCharacters'){AllowableCharacters=' ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-.\'';}
+            //if (allow == 'NameCharactersAndNumbers'){AllowableCharacters='1234567890 ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-\'';}
+           	// if (allow == 'Currency'){AllowableCharacters='1234567890.';}
+
+            var k = document.all?parseInt(e.keyCode): parseInt(e.which);
+            if (k!=13 && k!=8 && k!=0){
+                if ((e.ctrlKey==false) && (e.altKey==false)) {
+                return (AllowableCharacters.indexOf(String.fromCharCode(k))!=-1);
+                } else {
+                return true;
+                }
+            } else {
+                return true;
+            }
+        }       
+       
+    	function valueTransferOnSelected(){
+        	//alert(111);
+    	}         
+	</script>
+
+	<apex:form id="formId">
+		<div id="dialog" title="Form Validation!" style="display:none;">
+    		<p>Please select atleast one record to transfer.</p>
+   		</div>
+        <apex:tabpanel switchType="client" selectedTab="transfer" id="TabPanel" tabClass="activeTab" inactiveTabClass="inactiveTab" >
+            <apex:tab label="Transfer License Entitlements" name="transfer" id="transferId" >
+                <apex:pageBlock id="transferpb">
+                    <apex:pageBlockSection columns="1" >
+                        
+                        <apex:outputPanel style="margin-left: 1.3cm;">
+                            <apex:outputLabel value="Account" style="font-weight: normal;text-align:right"></apex:outputLabel>
+                            <apex:outputPanel style="margin-left: 0.5cm;">
+                            <apex:inputField value="{!transferTool.Account__c}">
+                                <apex:actionSupport event="onchange" action="{!getServiceContracts}" reRender="serviceContractPanel, clipanel, submitpanel" /> 
+                            </apex:inputField>
+                            </apex:outputPanel>    
+                        </apex:outputPanel> 
+                        
+                        <apex:outputPanel id="serviceContractPanel" >
+                            <apex:outputPanel rendered="{!hasServiceContracts == true}">  
+                                <b>Service Contracts</b>
+                                <br /><br />
+                                <apex:pageBlockTable value="{!serviceContractList}" var="scItem">
+									<apex:column headerValue="Select" width="45px;" >
+                                         <input type="radio" name="CreateSelectRadio" id="radio">
+                                             <apex:actionSupport event="onclick" action="{!getContractLineItems}" reRender="clipanel, submitpanel" status="actionstatusTag" > 
+                                                 <apex:param name="selectServiceContractId" assignTo="{!selectServiceContractId}" value="{!scItem.Id}"/>
+											</apex:actionSupport>
+                                     	</input>
+                                	</apex:column>
+                                    <apex:column headerValue="Service Contract">
+                                		<apex:outputLink value="/{!scItem.Id}" target="_blank">{!scItem.Name}</apex:outputLink>
+                                     </apex:column>
+                                     <apex:column value="{!scItem.Sold_To_Name__c}" />
+                                     <apex:column value="{!scItem.StartDate}" />
+                                     <apex:column value="{!scItem.EndDate}" />
+                                     <apex:column value="{!scItem.Agreement_Status__c}" />
+                                     <apex:column value="{!scItem.Opp_Status__c}" />
+                                     <apex:column value="{!scItem.Service_Contract_Type__c }" />
+                                </apex:pageBlockTable>                            
+	                             <!--   
+                                <apex:outputLabel value="Service Contracts" style="font-weight: normal;text-align:right"></apex:outputLabel>
+                                <apex:outputPanel style="margin-left: 0.5cm;">
+                                    <apex:selectList value="{!selectServiceContractId}" multiselect="false" size="1" >
+                                        <apex:selectOptions value="{!serviceContractName}" />
+                                        
+                                        <apex:actionSupport event="onchange" action="{!getContractLineItems}" reRender="clipanel,submitpanel" status="actionstatusTag" />                                                      
+                                    </apex:selectList>
+                                </apex:outputPanel>  
+								-->
+                            </apex:outputPanel>  
+                            
+                        </apex:outputPanel>                                      
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+                <apex:actionStatus id="actionstatusTag" stopText="" >
+	                <apex:facet name="start">
+                        <div>
+                            <div class="popupBackground" />
+                            <div class="PopupPanel">
+                                <table border="0" width="100%" height="100%">
+                                    <tr>
+                                        <td align="center"><b>Please Wait</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center"><img src="{!$Resource.ProgressBarStatus}"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                    	</div>
+                    </apex:facet>
+                  </apex:actionStatus>
+                <apex:outputPanel id="clipanel">
+                    <apex:pageBlock id="cliBlock" title="License Entitlements" rendered="{!hasCli == true}">
+                        <apex:messages style="color: #ff0000;"/>
+                        <apex:pageBlockTable value="{!transferCliWrapperList}" var="tc">
+                            <apex:column headerValue="Product Name">
+                                <apex:outputLink value="/{!tc.cli.PricebookEntry.Product2Id}">{!tc.cli.PricebookEntry.Product2.Name}</apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Product Desc">
+                             	<apex:outputField value="{!tc.cli.PricebookEntry.Product2.Description}"/>                          
+                            </apex:column>
+                            <apex:column headerValue="Original License Invoice">
+                             	<apex:outputField value="{!tc.cli.Lic_Invoice__c}"/>                          
+                            </apex:column>
+                            <apex:column headerValue="Original License Invoice Date">
+                             	<apex:outputField value="{!tc.cli.Original_License_Invoice_Date__c}"/>                          
+                            </apex:column>
+                            
+                            <apex:column headerValue="Original Quantity">
+                                <apex:outputField value="{!tc.cli.Actual_Original_Quantity__c}"/>
+                            </apex:column>
+                            <apex:column value="{!tc.cli.Current_Quantity__c}"/>
+                            <apex:column headerValue="Transfer Quantity">
+                                <apex:inputText value="{!tc.transferQty}" styleClass="transferQty1" rendered="{!awaitingForApproval == false}" onkeypress="return inputLimiter(event,'Numbers');"/>
+                                <apex:outputText value="{!tc.transferQty}"  rendered="{!awaitingForApproval == true}"/>
+                            </apex:column> 
+                            <apex:column headerValue="Transfer to End User" >
+                            	<apex:inputField value="{!tc.toolForAccTransfer.Transfer_to_ST_EU__c}" rendered="{!awaitingForApproval == false}"/>
+                                <apex:outputField value="{!tc.toolForAccTransfer.Transfer_to_ST_EU__c}" rendered="{!awaitingForApproval == true}"/>
+                            </apex:column>
+                             <apex:column headerValue="Transfer to Sold To " >
+                                <apex:inputField value="{!tc.cli.Sold_To_Name_Lookup__c}" rendered="{!awaitingForApproval == false}"/>
+                                <apex:outputField value="{!tc.cli.Sold_To_Name_Lookup__c}" rendered="{!awaitingForApproval == true}"/>
+                            </apex:column>
+                            <apex:column headerValue="Select">
+                                <apex:inputCheckBox value="{!tc.isSelect}" styleClass="mutex" disabled="{!awaitingForApproval == true}" onclick="valueTransferOnSelected();"/>
+                                </apex:column> 
+                        </apex:pageBlockTable>   
+                        <apex:pageBlockButtons location="bottom">
+                            <apex:commandButton value="Transfer" status="actionstatusTag" action="{!displayTransferredRows}" rendered="{!awaitingForApproval == false}" reRender="hiddenBlock,submitpanel,cliBlock,attachmentPanel,TransToolApp">
+                                <apex:param name="clickedTransferStr" value="true" assignTo="{!clickedTransferStr}"/>
+                            </apex:commandButton>
+                            <apex:pageBlock id="hiddenBlock" rendered="false"/>
+                        </apex:pageBlockButtons>
+                    </apex:pageBlock>
+                </apex:outputPanel>
+                <apex:outputPanel id="submitpanel" >
+                    <apex:pageBlock id="pbTransEnt" mode="detail" rendered="{!newTransferToolList.size>0}" title="Entitlement Transfer Detail [Request No: {!currentTTA.Name}  Status: {!currentTTA.Status__c}]">
+                         <apex:facet name="header">
+                            <table width="100%">
+                              <tr>
+                                  <td align="left" class="pbTitle"><h3>Entitlement Transfer Detail [ Request No: <a href="/{!currentTTA.Id}" target="_blank">{!currentTTA.Name}</a> | Status: {!currentTTA.Status__c} ]</h3></td>
+                              </tr>
+                            </table>
+                        </apex:facet>
+	                    <apex:pageBlockSection showHeader="false">
+    	               	</apex:pageBlockSection>
+                    	<apex:pageBlockSection columns="1">
+                        	<apex:pageBlockTable value="{!newTransferToolList}" var="newTransfer">
+                                <apex:column headerValue="Product Name">
+                                    <apex:outputLink value="/{!newTransfer.Product__c}">{!newTransfer.Product__r.Name}</apex:outputLink>
+                                </apex:column>
+                                 <apex:column headerValue="Product Desc">
+                                    <apex:outputText value="{!newTransfer.Product__r.Description}"/>   
+                                </apex:column>
+                                <apex:column value="{!newTransfer.Service_Contract__c}"/>
+                                <apex:column headerValue="Transfer Quantity">
+                                    <apex:outputText value="{!newTransfer.Transfer_Quantity__c}"/>   
+                                </apex:column>
+                                <apex:column value="{!newTransfer.Transfer_to_ST_EU__c}"/>
+                                <apex:column value="{!newTransfer.Transfer_to_Sold_To__c}"/>
+                                <apex:column headerValue="Remove" rendered="{!awaitingForApproval == false}">
+                                	<apex:commandLink value="Remove" status="actionstatusTag" action="{!removeNonApprovedRows}" reRender="clipanel,submitpanel,TransToolApp">
+                                    	<apex:param name="removeTransferId" value="{!newTransfer.Id}" assignTo="{!removeTransferId}"/>
+                                    	<apex:param name="lineItemId" value="{!newTransfer.Contract_Line_Item__c}" assignTo="{!lineItemId}"/>
+                                    </apex:commandLink>
+                                </apex:column>
+                        	</apex:pageBlockTable>
+                    	</apex:pageBlockSection>
+                    	<apex:pageBlockButtons location="bottom" rendered="{!newTransferToolList.size>0}">
+                            <!--
+                            <apex:outputPanel rendered="{!(blnDisableConTrans == false)}">
+                                <input value="Confirm Transfer"  class="btn" name="ConfirmTransfer" title="Confirm Transfer" type="button" onclick="window.open('/{!TTA_ID}'); location.reload();" />
+                            </apex:outputPanel>
+							<apex:outputlink value="/{!TTA_ID}" target="_blank" onClick="location.reload();" rendered="{!(blnDisableConTrans == false)}"><b>Confirm Transfer</b></apex:outputlink> 
+							-->
+                            <apex:commandButton value="Confirm Transfer" rendered="{!(blnDisableConTrans == false)}" action="{!refreshCurrentPage}" onclick="window.open('/{!TTA_ID}');"/>
+                            <apex:commandButton value="Edit Transfer" rendered="{!blnReinstateTransfer}" action="{!reinstateTransfer}" reRender="serviceContractPanel,clipanel,submitpanel" status="actionstatusTag"/>
+	                    </apex:pageBlockButtons>
+                	</apex:pageBlock>
+             	</apex:outputPanel>                
+            </apex:tab>
+        <!--
+            <apex:tab label="Entitlement Transfer history" name="consolidation" id="consolidationId" >
+                <apex:pageBlock >
+                    <apex:pageBlockSection columns="1">
+                        <apex:outputPanel style="margin-left: 1.3cm;">
+                            <apex:outputLabel value="Account" style="font-weight: normal;text-align:right"></apex:outputLabel>
+                            <apex:outputPanel style="margin-left: 0.5cm;">
+                                <apex:inputField value="{!selectAcc.Account__c}">
+                                   <apex:actionSupport event="onchange" status="actionstatusTag" action="{!showContracts}" reRender="servicecnts,transSCItems"/> 
+                                </apex:inputField>
+                            </apex:outputPanel>    
+                        </apex:outputPanel>   
+                    	<apex:outputPanel id="servicecnts" style="margin-left: 0.1cm;">
+                            <apex:pageBlockSectionItem rendered="{!hasContracts == true}" >
+                                <apex:outputLabel value="Service Contracts" style="font-weight: normal;"></apex:outputLabel>
+								<apex:outputPanel style="margin-left: 0.45cm;">
+                                    <apex:selectList value="{!selectedCntId}" multiselect="false" size="1" >
+                                        <apex:selectOptions value="{!svContractNames}" />
+                                        <apex:actionSupport event="onchange" status="actionstatusTagHist" action="{!showApprovedContractsTransfers}" reRender="transSCItems"/>                                                      
+                                    </apex:selectList>
+                            	</apex:outputPanel>     
+                        	</apex:pageBlockSectionItem>
+                       	</apex:outputPanel>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+				<apex:actionStatus id="actionstatusTagHist" stopText="" >
+                <apex:facet name="start">
+                	<div>
+                    	<div class="popupBackground" />
+                    	<div class="PopupPanel">
+                        	<table border="0" width="100%" height="100%">
+                                <tr>
+                                    <td align="center"><b>Please Wait</b></td>
+                                </tr>
+                                <tr>
+                                    <td align="center"><img src="{!$Resource.ProgressBarStatus}"/></td>
+                                </tr>
+                        	</table>
+                    	</div>
+            		</div>
+            	</apex:facet>
+          		</apex:actionStatus>
+                    <apex:outputPanel id="transSCItems" >
+                        <apex:pageBlock title="Transferred Entitlements" rendered="{!transfersBasedSC.size>0}">
+                           <apex:pageBlockButtons location="bottom">
+                                <apex:commandLink value="Export" action="{!exportFun}" target="_blank">
+                                </apex:commandLink>                        
+                        	</apex:pageBlockButtons>
+                            <apex:pageBlockTable value="{!transfersBasedSC}" var="listItem">
+                                <apex:column value="{!listItem.Product__r.Name}"/>
+                                <apex:column headerValue="Product Desc">
+                                    <apex:outputText value="{!listItem.Product__r.Description}"/>   
+                                </apex:column>                           
+                                <apex:column value="{!listItem.Transfer_Quantity__c}"/>
+                                <apex:column value="{!listItem.Transfer_to_ST_EU__c}"/>
+                                <apex:column value="{!listItem.Transfer_to_Sold_To__c}"/>
+                                <apex:column value="{!listItem.New_Contract_No__c}"/>
+                                <apex:column value="{!listItem.Date_of_Transfer__c}"/>  
+                                <apex:column headerValue="Created By" value="{!listItem.CreatedBy.Name}"/>
+                               	<apex:column headerValue="Approved By" value="{!listItem.Transfer_Tool_Approval__r.LastModifiedBy.Name}"/>
+                            </apex:pageBlockTable>
+						</apex:pageBlock>
+                    	<apex:pageBlock title="Transfer Hierarchy" rendered="{!transfersBasedSC.size>0}">
+                      		<apex:pageBlockSection title="Closed Service Contract:">
+                       			<apex:outputlink value="/{!objOldSC.id}" target="_blank">{!objOldSC.name}</apex:outputlink>
+                      		</apex:pageBlockSection>
+                      		<apex:pageBlockSection title="Original Service Contract:">
+                       			<apex:outputlink value="/{!objOldSC.New_Origin_SC__c}" target="_blank">{!objOldSC.New_Origin_SC__r.name}</apex:outputlink>
+                      		</apex:pageBlockSection>
+                      		<apex:pageBlockSection title="Parent Service Contract: ">
+                       			<apex:outputlink value="/{!objOldSC.New_Origin_SC__r.Original_Service_Contract__c}" target="_blank">{!objOldSC.New_Origin_SC__r.Original_Service_Contract__r.name}</apex:outputlink>
+                      		</apex:pageBlockSection>
+                    	</apex:pageBlock>
+                   </apex:outputPanel> 
+            </apex:tab>
+			-->
+        </apex:tabpanel>
+   </apex:form> 
+</apex:page>

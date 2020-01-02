@@ -1,0 +1,89 @@
+<apex:page sidebar="false" showheader="false" controller="Partner_UserRequest_Contact_Lookup_Class">
+<apex:pageBlock >
+<apex:form id="form" >  
+    <script language="javascript">
+   window.onload = new function() 
+   { 
+        var winMain=window.opener;
+      // bring popup window to front
+      window.focus(); 
+      var ele=document.getElementById('{!$Component.form.block.section.searchText}');
+      if (ele)
+      {
+         ele.focus();
+      } 
+   }
+   
+   function fillIn(name, id)
+   {
+      console.log('------------------------------name------------------------------'+name);
+      
+      console.log('------------------------------id------------------------------'+id);
+      
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      var ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield}');
+      ele.value=name;
+      ele=winMain.document.getElementById('{!$CurrentPage.parameters.idfield}');
+      ele.value=id;
+      CloseWindow();
+   }
+
+   function CloseWindow()
+   {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+    //  window.opener.test();
+      winMain.closeLookupPopup();
+   }
+</script>
+    <apex:messages />
+     <div style="width 100%">
+        <apex:pageBlock title="Lookup" id="block">
+          <apex:panelGrid id="section" columns="2">
+               <apex:outputPanel >
+               <apex:outputLabel value="Enter search text" />
+               &nbsp;&nbsp;&nbsp;
+               <apex:inputText value="{!searchStr}" id="searchText" label="Enter search text"/>
+               &nbsp;&nbsp;&nbsp;
+               <apex:actionStatus id="status">
+               <apex:facet name="start">
+               <apex:image value="/img/loading.gif"/>
+               </apex:facet>
+               </apex:actionStatus>
+                &nbsp;&nbsp;&nbsp;
+              <apex:commandButton value="Go" reRender="results" action="{!searchContact}" status="status"/>
+              </apex:outputPanel>
+          </apex:panelGrid>
+        </apex:pageBlock>
+
+        <apex:pageBlock id="results" >
+          <apex:pageBlockSection columns="1"  rendered="{!AND(NOT(ISNULL(objects)),objects.size>0)}">
+              <apex:pageBlockTable value="{!objects}" var="res">
+                <apex:column headerValue="Contact Name">
+                  <apex:outputLink value="#" onclick="fillIn('{!JSENCODE(res[fieldAPINames[1]])}', '{!res[fieldAPINames[0]]}')">{!res[fieldAPINames[1]]}</apex:outputLink>       
+                </apex:column>
+                <apex:column headerValue="Email" value="{!res[fieldAPINames[2]]}"/>
+                <apex:column headerValue="Account Name" value="{!res[fieldAPINames[3]]}"/>
+                <apex:column headerValue="Country" value="{!res[fieldAPINames[4]]}" /> 
+                <apex:column headerValue="GARN Number" value="{!res[fieldAPINames[5]]}" /> 
+                <apex:column headerValue="Account Type" value="{!res[fieldAPINames[6]]}" /> 
+              </apex:pageBlockTable>    
+          </apex:pageBlockSection>
+        
+        <apex:pageBlockSection rendered="{!OR(ISNULL(objects),objects.size=0)}">
+        <b>No records to display. </b>
+        
+        </apex:pageBlockSection>
+        </apex:pageBlock>     
+     </div> 
+
+    </apex:form> 
+</apex:pageBlock>
+</apex:page>

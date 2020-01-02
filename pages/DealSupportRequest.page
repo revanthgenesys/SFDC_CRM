@@ -1,0 +1,1531 @@
+<apex:page controller="DealSupportRequestController" tabStyle="Deal_Support__c" 
+    sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+    
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="dealsupport" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="body">
+    <apex:form >
+        <apex:pageBlock title="Legal Request" rendered="{!$CurrentPage.parameters.area = 'Legal' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >                
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+                
+                
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Contract Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/GCRequest?crt=General Inquiry{!gcrPageParams}">General Inquiry</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            A General Inquiry is any request for information.  This can include interpretation of existing contract language (Genesys’ or your customer’s) or any other type of question that you may have.
+                        </td>
+                    </tr>
+                   
+                    
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/GCRequest?crt=New Contract{!gcrPageParams}">New Contract</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            A New Contract Request is any request for a new contract that will need to be negotiated with the customer.  This includes Cloud Agreements, Non-Disclosure Agreements, Professional Services Agreements, Business Associate Agreements, etc.  It does not include standard template agreements that you can generate from Salesforce.com.
+                        </td>
+                    </tr>
+                    
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/GCRequest?crt=Amendment{!gcrPageParams}">Amendment</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            The Amendment request is for any modification or addition to an existing contract.  Examples include adding new products, extending an existing agreement, changing prices.
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/GCRequest?crt=Standard NDA/MSLSA{!gcrPageParams}">Standard Service NDA/MSLSA</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            A request for a Standard Agreement includes an automated tool for you to generate standard Genesys customer or partner template agreements.  Initially, Non-Disclosure and Master Software License and Services Agreements will be offered.  Professional Services and Channel Agreements will be added later.
+                        </td>
+                    </tr>
+                      <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/GCRequest?crt=Partner Contract{!gcrPageParams}">Partner Contract</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            For partner contracts, amendments, and agreements please use this contract type. Please reference the partner account in your request.  
+                        </td>
+                    </tr>  
+                
+                 <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/GCRequest?crt=Privacy{!gcrPageParams}">Privacy</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            Privacy agreements.
+                        </td>
+                    </tr>
+                
+                </tbody>
+            </table>
+        
+        <table border="0" bgcolor = "LightGreen" cellpadding="0" cellspacing="0" style="width:700px;height:40px;font-size:14px;valign:center;">
+                <thead>
+                     <tr class="headerRow">
+                        <th colspan= '2' class="headerRow">&nbsp;</th>
+                   </tr>
+                    <tr class="headerRow">
+                        <th colspan= '2' class="headerRow">&nbsp;Standard Templates</th>
+                   </tr>
+                    <tr class="headerRow">
+                        <th colspan= '2' class="headerRow">&nbsp;</th>
+                   </tr>
+                </thead>
+          </table>
+        
+         <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Document</th>
+                        <th class="headerRow">Last Updated</th>
+                    </tr>
+                </thead>
+         
+        <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="https://genesys.gosavo.com/CustomPage/View.aspx?id=43072169">Standard Legal Templates in Genie</apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+              Aug 12, 2017
+             </td>
+          </tr>
+        
+       
+          
+           
+           <!--<tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005MjsC">MSLSA-USA</apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+              Mar 18, 2016
+             </td>
+          </tr>
+          
+          <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005MjsM">MSLSA-Canada </apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+             Mar 18, 2016
+             </td>
+          </tr>
+      
+            <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005MjsbM">MSA for Premier Services </apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+             Dec 23, 2015
+             </td>
+          </tr>
+           
+          <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mjsg">MSA Business Edition and Enterprise </apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+               Dec 2, 2015
+             </td>
+          </tr>
+        
+         <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mq1a">MSA Stand Alone</apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+              Oct 30, 2015
+             </td>
+          </tr>
+        
+           
+     <tr class="dataRow"> 
+           <td class ="dataCell"> 
+            <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005MjrJ"> Simple Mutual NDA US </apex:outputLink>
+           </td>
+           <td class="dataRow"> 
+            Feb 3, 2016
+           </td>
+           
+          </tr>
+        
+          <tr class="dataRow"> 
+           <td class ="dataCell"> 
+            <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005MjrY"> Simple Mutual NDA Canada </apex:outputLink>
+           </td>
+           <td class="dataRow"> 
+            Jan 1, 2016
+           </td>
+           
+          </tr>       
+              
+           <tr class="dataRow"> 
+           <td class ="dataCell"> 
+            <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mjqa"> Software Evaluation Amendment (US) </apex:outputLink>
+           </td>
+           <td class="dataRow"> 
+             Apr 22, 2015
+           </td>
+           
+          </tr>
+   
+         
+          <tr class="dataRow"> 
+           <td class ="dataCell"> 
+            <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005MjrE"> Software Evaluation Amendment (Canada) </apex:outputLink>
+           </td>
+           <td class="dataRow"> 
+             Apr 7, 2016
+           </td>
+           
+          </tr>
+       
+        <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mq29">LicenseShelving Amendment Template (US)</apex:outputLink>
+             </td>
+              <td class="dataRow"> 
+                Apr 7, 2016
+             </td>
+          </tr>   
+       
+       
+          <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mq2J">LicenseShelving Amendment Template (Canada)</apex:outputLink>
+             </td>
+              <td class="dataRow"> 
+                Apr 7, 2016
+             </td>
+          </tr> 
+       
+        <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mjri">PSA for Clients (US) </apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+             Aug 28, 2014
+             </td>
+          </tr>
+         
+            <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mjrx">PSA for Clients (Canada) </apex:outputLink>
+             </td>
+             <td class="dataRow"> 
+               Apr 7, 2016
+             </td>
+          </tr>  
+          
+            
+          
+           <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mq1k">POEF Purchase Order Form</apex:outputLink>
+             </td>
+              <td class="dataRow"> 
+              Nov 3, 2015
+             </td>
+          </tr>  
+          <tr class="dataRow"> 
+             <td class ="dataCell"> 
+              <apex:outputLink value="/servlet/servlet.FileDownload?file=015U0000005Mq1u">Outbound Communications Supplement.</apex:outputLink>
+             </td>
+              <td class="dataRow"> 
+                Mar 14, 2016
+             </td>
+          </tr> -->         
+          </table>        
+        </apex:pageBlock>
+        
+        <apex:pageBlock title="POR Review" rendered="{!$CurrentPage.parameters.area = 'POR Review' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/PORDSR?supportarea=POR Review&type=Cloud POR Review{!gcrPageParams}">Cloud POR Review</apex:outputLink>
+                        </td>
+                        <td class="dataCell"></td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/PORDSR?supportarea=POR Review&type=Cloud SOW Review{!gcrPageParams}">Cloud SOW Review</apex:outputLink>
+                        </td>
+                        <td class="dataCell"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:pageBlock>
+        
+        <apex:pageBlock title="Finance Request" rendered="{!$CurrentPage.parameters.area = 'Finance' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection collapsible="false" title="On Premise"/>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow" style="width: 200px;">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Order Management On Premise{!gcrPageParams}">Order Management On Premise</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Contact for Customer order processing status for premise license, usage, maintenance, professional service and education, and for software delivery status
+                        </td>
+                    </tr>
+                    <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Revenue Recognition On Premise{!gcrPageParams}">Accounting On Premise</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            Contact for the review of company policy in regards to compliance with ASC 605 (through FY19) or ASC 606 (Starting FY20) and its impact on the amount of revenue recognized on a specific order or contract. Inquiries to Accounting are specific to the GAAP revenue recognition of Contracts, Invoices and Orders. EXCLUDES topics pertaining to bookings, order credit and compensation
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Credit Collections On Premise{!gcrPageParams}">Credit Collections On Premise</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Contact for Customer credit decisions, credit limits, outstanding invoices and Customer account balances    
+                        </td>
+                    </tr>
+                    <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Account Receivables On Premise{!gcrPageParams}">Account Receivables On Premise</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            Contact for posting of cash receipts against Customer invoices, credit memos and for providing Customer invoices and associated backup detail   
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!NOT(blnIsPartner)}"> 
+                   <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=PureConnect Revenue On Premise{!gcrPageParams}">PureConnect Accounting On Premise</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                           Contact for the review of company policy in regards to compliance with ASC 605 (through FY19) or ASC 606 (Starting FY20) and its impact on the amount of revenue recognized on a specific order or contract. Inquiries to Accounting are specific to the GAAP revenue recognition of Contracts, Invoices and Orders.  EXCLUDES topics pertaining to bookings, order credit and compensation
+                        </td>
+                    </tr>
+                    </apex:outputPanel>   
+                </tbody>
+            </table>
+            <apex:pageBlockSection collapsible="false" title="Cloud"/>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow" style="width: 200px;">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Order Management Cloud{!gcrPageParams}">Order Management Cloud</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Contact for Customer order processing status for cloud, usage, maintenance, professional service and education, and for software delivery status
+                        </td>
+                    </tr>
+                   <apex:outputPanel rendered="{!NOT(blnIsPartner)}">     
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Revenue Recognition Cloud{!gcrPageParams}">Accounting Cloud</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            Contact for the review of company policy in regards to compliance with ASC 605 (through FY19) or ASC 606 (Starting FY20) and its impact on the amount of revenue recognized on a specific order or contract. Inquiries to Accounting are specific to the GAAP revenue recognition of Contracts, Invoices and Orders.  EXCLUDES topics pertaining to bookings, order credit and compensation
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Credit Collections Cloud{!gcrPageParams}">Credit Collections Cloud</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Contact for Customer credit decisions, credit limits, outstanding invoices and Customer account balances    
+                        </td>
+                    </tr>
+                    <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=Account Receivables Cloud{!gcrPageParams}">Account Receivables Cloud</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            Contact for posting of cash receipts against Customer invoices, credit memos and for providing Customer invoices and associated backup detail   
+                            </td>
+                        </tr>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="/apex/DealSupportQuery?supportarea=Finance&type=PureConnect Cloud Revenue Cloud{!gcrPageParams}">PureConnect/PureCloud–Accounting Cloud</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                             Contact for the review of company policy in regards to compliance with ASC 605 (through FY19) or ASC 606 (Starting FY20) and its impact on the amount of revenue recognized on a specific order or contract. Inquiries to Accounting are specific to the GAAP revenue recognition of Contracts, Invoices and Orders.  EXCLUDES topics pertaining to bookings, order credit and compensation </td>
+                        </tr>
+                    </apex:outputPanel> 
+                </tbody>
+            </table>
+        </apex:pageBlock>
+        <apex:pageBlock title="Pricing Request" rendered="{!$CurrentPage.parameters.area = 'Pricing' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=Pricing&offeringType=Pure Cloud{!gcrPageParams}">PureCloud</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Questions on pricing for PureCloud
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=Pricing&offeringType=Pure Connect{!gcrPageParams}">PureConnect</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Questions on pricing for PureConnect cloud or premise
+                       </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=Pricing&offeringType=Pure Engage{!gcrPageParams}">PureEngage</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Questions on pricing for PureEngage cloud or premise
+                       </td>
+                    </tr> 
+                </tbody> 
+                <!--<tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=On Premise Pricing{!gcrPageParams}">On Premise Pricing</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Questions related to pricing for Business Edition Premise or Enterprise Edition Premise 
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=Simplified Packaging and Pricing Initiative{!gcrPageParams}">Simplified Packaging and Pricing Initiative</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Questions related to the Simplified Packaging and Pricing Initiative    
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=Business Edition Cloud and Enterprise Edition Cloud Pricing{!gcrPageParams}">Business Edition Cloud and Enterprise Edition Cloud Pricing</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Questions related to pricing for Business Edition Cloud or Enterprise Edition Cloud 
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=Premier Edition Pricing{!gcrPageParams}">Premier Edition Pricing</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Questions related to pricing for Premier Edition    
+                        </td>
+                    </tr>
+                    <apex:outputPanel rendered="{!blnIsPartner}">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=PureConnect Premise{!gcrPageParams}">PureConnect Premise</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            Questions related to pricing for PureConnect Premise    
+                            </td>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=PureConnect Cloud{!gcrPageParams}">PureConnect Cloud</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            Questions related to pricing for PureConnect Cloud    
+                            </td>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Pricing&type=PureCloud Pricing{!gcrPageParams}">PureCloud Pricing</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            Questions related to pricing for PureCloud Pricing    
+                            </td>
+                        </tr>
+                      </apex:outputPanel>  
+                </tbody>-->
+            </table>
+        </apex:pageBlock>
+        <apex:pageBlock title="Finance – Field Finance" rendered="{!$CurrentPage.parameters.area = 'Finance – Field Finance' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Finance – Field Finance&type=Field Finance{!gcrPageParams}">Field Finance</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            Inquiries for regional Field Finance teams, most likely related to opportunity booking amount, opportunity forecasting, or account segmentation.
+                        </td>
+                    </tr>                    
+                    
+                </tbody> 
+              
+            </table>
+        </apex:pageBlock>
+        
+        <apex:pageBlock title="Deal Desk Request" rendered="{!$CurrentPage.parameters.area = 'Deal Desk' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Deal Desk&type=Deal Economics{!gcrPageParams}">Deal Economics</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Guidance regarding deal structure to optimize Genesys profitability 
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Deal Desk&type=Net Pricing{!gcrPageParams}">Net Pricing</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Guidance regarding business intelligence on street prices aligned with value pricing initiative
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Deal Desk&type=Discounting{!gcrPageParams}">Discounting</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Guidance regarding business intelligence on discounts aligned with value pricing initiative
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Deal Desk&type=Non-Standard Terms{!gcrPageParams}">Non-Standard Terms</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Guidance regarding business intelligence on non standard terms and wording aligned with value pricing initiative
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Deal Desk&type=Pre-Set Discount Levels{!gcrPageParams}">Pre-Set Discount Levels</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Guidance regarding business intelligence on pre set discount level aligned with value pricing initiative
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Deal Desk&type=Deal Approval Process{!gcrPageParams}">Deal Approval Process</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Guidance regarding any support throughout the deal approval process
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:pageBlock>
+        <!-- Modified for new PS DSR Process :NikM: Dec-2016-->
+        <apex:pageBlock title="Professional Services Request" rendered="{!$CurrentPage.parameters.area = 'Professional Services' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/PSDealSupportQuery?supportarea=Professional Services&isPSSMART=yes&type=Budgetary Estimate (BE){!gcrPageParams}">Pre-Sales Requests</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Assistance with a Request for Genesys Support, Services quote (Budgetary Estimate, Scope of Work, etc.), or a Proposal (RFP)
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/Project_Request_Form?{!IF(ISBLANK(oppId),'Aid='+accId,'Oid='+oppId)}">Premier/Self-Service Project Request</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            Premier/Self-Service Project Request.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:pageBlock>
+        <apex:pageBlock title="Customer Care Request" rendered="{!$CurrentPage.parameters.area = 'Customer Care' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Customer Care&type=Genesys Care Rate, Pricing Structure, Genesys Care Modelling{!gcrPageParams}">Genesys Care Rate, Pricing Structure, Genesys Care Modelling</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        This includes questions around pricing strategies and alignment with current rates as well as packaging the most optimal Genesys Care offerings based on the customers’ needs.  
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Customer Care&type=License Entitlement{!gcrPageParams}">License Entitlement</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        License entitlement is directly responsible for the issuance of license files.  The licensing team works closely with Order Management and Genesys Care  to confirm individual customers’ products, quantities,  and necessary alignment amongst respective products.   
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Customer Care&type=Compliance{!gcrPageParams}">Compliance</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        This includes any question related to a customer using more licenses than they are entitled to or for a purpose outside the scope of the agreement. 
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Customer Care&type=Cloud (all related cloud requests){!gcrPageParams}">Cloud (all related cloud requests)</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        This includes questions around the customer care support modeling for Cloud customers, pricing strategies, and status of existing customer entitlements.    
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:pageBlock>
+        
+        <!--
+            Start: Added By Ashish (08/09/2018)
+            Desc: Added new request type as Competitive Intelligence, on request of Debbie
+        -->
+                        
+        <apex:pageBlock title="Competitive Intelligence Request" rendered="{!$CurrentPage.parameters.area = 'Competitive Intelligence'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Competitive Intelligence&type=Competitive Intelligence{!gcrPageParams}">Competitive Intelligence</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Request Support from the Comp. Intelligence Team.  
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:pageBlock>
+        
+        <!-- End: Added By Ashish -->
+                <apex:pageBlock title="References Request" rendered="{!$CurrentPage.parameters.area = 'References'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=References&type=References{!gcrPageParams}">References</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Inquiries to the references team regarding your opportunity.  
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:pageBlock>
+        <!-- End added by aparna -->
+        
+        <apex:pageBlock title="Business Consulting Request" rendered="{!$CurrentPage.parameters.area = 'Business Consulting' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Business Consulting&type=Business Consulting Inquiry{!gcrPageParams}">Business Consulting Inquiry</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            Inquiries to the business consulting team regarding your opportunity
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </apex:pageBlock>
+                <apex:pageBlock title="Value Consulting" rendered="{!$CurrentPage.parameters.area = 'Value Consulting' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Value Consulting&type=Value Consulting Inquiry{!gcrPageParams}">Value Consulting Inquiry</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                            Inquiries to the Value Consulting team regarding your opportunity
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </apex:pageBlock>
+       
+       <!-- Added by Jitendra Jain on 12/28/2017 requested by Debbie-->
+         <apex:pageBlock title="Subscription/PureSuccess" rendered="{!$CurrentPage.parameters.area = 'Subscription PureSuccess' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                 <!--   <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Deal%20Desk%2FField%20Finance{!gcrPageParams}">Deal Desk/Field Finance</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        How do I structure a subscription deal and can I get help on pricing and terms and conditions?
+                        </td>
+                    </tr>
+                    
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Sales%20%26%20Services%20University{!gcrPageParams}">Sales &amp; Services University</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Where do I go to learn more about subscription and PureSuccess?
+                        </td>
+                    </tr> -->
+                        <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=PureSuccess Center{!gcrPageParams}">PureSuccess Center</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        How do I position and prescribe PureSuccess and the service elements of the offers?
+                        </td>
+                   </tr>
+                    <!--                     <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Sales Ops{!gcrPageParams}">Sales Ops</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        How do I input my opportunity in SFDC accurately? 
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Partners{!gcrPageParams}">Partners</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        I have an indirect deal, can my partner leverage subscription?
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Migration{!gcrPageParams}">Migration</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        How does my customer convert all of their licenses to subscription?
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Professional Services{!gcrPageParams}">Professional Services</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        How does implementation get quoted with subscription?
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Order Management{!gcrPageParams}">Order Management</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Are there differences in order management processes?
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Licensing%20%26%20Entitlements{!gcrPageParams}">Licensing &amp; Entitlements</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        How will entitlement for licenses and services work? 
+                        </td>
+                    </tr>
+
+                    <tr class="dataRow">
+                        <td class="dataCell"><apex:outputLink value="/apex/DealSupportQuery?supportarea=Subscription PureSuccess&type=Product Management{!gcrPageParams}">Product Management</apex:outputLink></td>
+                        <td>
+                         How do I understand what products are sellable within the subscription offer?
+                        </td>
+
+                    </tr> -->
+
+                </tbody>
+            </table>
+        </apex:pageBlock>
+ 
+       
+        <apex:pageBlock title="Product Management Request" rendered="{!$CurrentPage.parameters.area = 'Product Management' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!--<apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputLink value="/apex/Genie_Tab_Page?sfdc.tabName=01rU0000000QTRS&returnUrl=https://genesys.gosavo.com/Question/Create">Product/Solution/Edition forums</apex:outputLink>
+                            </td>
+                            <td class="dataCell">
+                            To view Product/Solution/Edition FAQs or ask a question in a forum   
+                            </td>
+                        </tr>
+                    </apex:outputPanel>-->
+                    <!--<tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="/apex/Genie_Tab_Page?sfdc.tabName=01rU0000000QTRS&returnUrl=https://genesys.gosavo.com/Question/Create">Edition forums</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        To view Edition FAQs or ask a question in a forum   
+                        </td>
+                    </tr>-->
+                     <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                            
+                               <!-- <apex:outputLink value="/aGh/e?CF00N0B0000065tto={!objOpp.Name}">Field Commit Feature Request</apex:outputLink>-->
+                               <apex:outputLink value="/aGh/e?CF00N0d000003aEbK={!accname}&CF00N0d000003aEbK_lkid={!accnt.id}&CF00N0B0000065tto={!opptname}&CF00N0B0000065tto_lkid={!oppt.id}">Field Customer Commitment Request</apex:outputLink>
+                             
+                            </td>
+                            <td class="dataCell">
+                               <!-- If you have an open opportunity and the customer is requiring a specific feature be added in order to close the sale. <br></br>
+                        We will review and respond to your request within 15 business days. Reqs: Opportunity is Stage 3 or 4 and revenue of $1M per product with Deal Size of $3M and Executive Decision that the feature request is critical for customer success.   -->
+                        If you have an open PureEngage Cloud opportunity and to win the sale a specific roadmap or early adopter capability has to be included in the customer quotation. <br></br> 
+                            Reqs: PureEngage Cloud Opportunity meets the minimum monthly spend requirements or an exception is granted by executive decision with determination that such commitment is critical for customer success.
+
+                    </td>
+                </tr>
+        </apex:outputPanel>
+        
+        <!-- ****** Change Request : show Customized Roadmap Support to Internal Users shared  by Debora Lane and Trevor***** --> 
+        <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Product Management&type=Customized Roadmap Support{!gcrPageParams}">Customized Roadmap Support</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    To contact a product manager for assistance in creating a tailored roadmap view and specific guidance for your customer
+                </td>
+            </tr>
+        </apex:outputPanel>
+        
+        
+        
+        <!-- ****** Change Request : show Roadmap Inquiry/Support to Partner Users shared  by Debora Lane and Trevor***** --> 
+        <apex:outputPanel rendered="{!blnIsPartner}">   
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Product Management&type=Roadmap Inquiry/Support{!gcrPageParams}">Roadmap Inquiry/Support</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    To contact a product manager in case of feature/functionality questions 
+                </td>
+            </tr>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Product Management&type=Product Idea Lab{!gcrPageParams}">Product Ideas Lab Escalation</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Escalate an idea from the Product Ideas Lab on behalf of your customer
+                </td>
+            </tr>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <!-- ****** Change Request shared  by Debora Lane and Trevor***** --> 
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Product Management&type=Who is the Assigned Solution or Product Manager{!gcrPageParams}">Who is the Assigned Solution or Product Manager?</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    For help identifying the solution manager or production manager for a solution/product  
+                </td>
+            </tr>
+        </apex:outputPanel>
+        <tr class="dataRow">
+            <td class="dataCell">
+                <!-- ****** Change Request shared  by Debora Lane and Trevor***** --> 
+                <apex:outputLink value="/apex/DealSupportQuery?supportarea=Product Management&type=When Will/Has Product Enter End of Life{!gcrPageParams}">When Will/Has Product Enter End of Life</apex:outputLink>
+            </td>
+            <td class="dataCell">
+                General EOL process questions or product specific EOL questions 
+            </td>
+        </tr>
+        <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <!-- ****** Change Request shared  by Debora Lane and Trevor***** --> 
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Product Management&type=Data Protection{!gcrPageParams}">Data Protection</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                   The Data Protection DSR allows designated users within the CTO to submit inquiries to the Cloud legal team and to track those inquiries for security and compliance reasons.
+ 
+ 
+                </td>
+            </tr>
+        </apex:outputPanel>
+    </tbody>
+</table>
+</apex:pageBlock>
+<apex:pageBlock title="Sales Ops Request" rendered="{!$CurrentPage.parameters.area = 'sales ops backup' || $CurrentPage.parameters.area = 'all'}">
+    <apex:pageBlockButtons >
+        <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+        
+    </apex:pageBlockButtons>
+    <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+        <thead>
+            <tr class="headerRow">
+                <th class="headerRow">Request Type</th>
+                <th class="headerRow">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=Data Management{!gcrPageParams}">Data Management</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Questions regarding modifying and managing Account Names, Account Owners, Contact names, Contact Owners, Duplicates, Mergers    
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=User Access{!gcrPageParams}">User Access</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Requests regarding access to Tools  
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=Error Messages{!gcrPageParams}">Error Messages</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Questions regarding error messages on the tools 
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=How To/Training{!gcrPageParams}">How To/Training</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Questions regarding processes in the Tools on how to achieve an objective   
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=General Inquiry{!gcrPageParams}">General Inquiry</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Questions that do not fall in any of the above category 
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</apex:pageBlock>
+<apex:pageBlock title="Pre-Sales Support Request" rendered="{!$CurrentPage.parameters.area = 'PreSales Support' || $CurrentPage.parameters.area = 'all'}">
+    <apex:pageBlockButtons >
+        <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+    </apex:pageBlockButtons>
+    <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+        <thead>
+            <tr class="headerRow">
+                <th class="headerRow">Request Type</th>
+                <th class="headerRow">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!--
+<tr class="dataRow">
+<td class="dataCell">
+<apex:outputLink value="/apex/WoW_Request_Form?id={!oppId}&IdU={!strUserID}">SC Engagement Request</apex:outputLink>
+</td>
+<td class="dataCell">
+Request SC support to support your opportunity with Vision setting, Discovery – Design. 
+This can include Vision clips, CX safari’s, Designs leveraging use-cases and reference architectures.
+</td>
+</tr>
+-->
+            <!-- Added by Jitendra Jain on 02/11/2018 -->
+            <!-- SCE2.0 live on 02/12/18. Now SCE1.0 DSR will be redirected to old DSR and new will be created in SCE2.0-->
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <!-- Redirect to SCE1.0 DSR -->
+                    <!-- This option is not required after 1.0 Data Migration on 03/01/2018-->
+                    <!--<apex:outputLink value="/apex/WoW_Request_Form?id={!oppId}" rendered="{!SCEForm.Id != null}">SC Engagement Request</apex:outputLink>-->
+                    <!-- Create SCE2.0 DSR -->
+                    <apex:outputLink value="/apex/SC_Engagement_DSR?oppid={!oppId}&IdU={!strUserID}" rendered="{!dsr.Id == null }">SC Engagement Request</apex:outputLink>
+                    <!-- Redirect to SCE2.0 DSR -->
+                    <!-- Condition modified: 1.0 DSR check ( && SCEForm.Id == null)is removed after data migration on 03/01/2018-->
+                    <apex:outputLink value="/apex/SC_Engagement_DSR?id={!dsr.id}" rendered="{!dsr.Id != null}">SC Engagement Request</apex:outputLink>
+                    
+                    
+                </td>
+                <td class="dataCell">
+                    Request SC support to support your opportunity with Vision setting, Discovery – Design. 
+                    This can include Vision clips, CX safari’s, Designs leveraging use-cases and reference architectures.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/POCEngagementRequest?id={!oppId}&IdU={!strUserID}">POC Engagement Request</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Request a Proof of Concept for this Opportunity.
+                </td>
+            </tr>
+            <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <!-- ****** Change Request shared  by Debora Lane and Trevor***** --> 
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Pre-Sales Support&type=SC-DSR Issues / Error{!gcrPageParams}">SC-DSR Issues / Error</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                   Request support for issues and enhancements related to SC-DSR
+                </td>
+            </tr>
+        </apex:outputPanel>
+        </tbody>
+    </table>
+</apex:pageBlock>
+<apex:pageBlock title="ININ Sales Support" rendered="{!$CurrentPage.parameters.area = 'ININ Sales Support' || $CurrentPage.parameters.area = 'all'}">
+    <apex:pageBlockButtons >
+        <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+    </apex:pageBlockButtons>
+    <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 1000px;">
+        <thead>
+            <tr class="headerRow">
+                <th class="headerRow" style="width: 20%;">Request Type</th>
+                <th class="headerRow" style="width: 80%;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Business Consultant Support{!gcrPageParams}">Business Consultant Support</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Business Consulting Support for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Care{!gcrPageParams}">Care</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Care for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Channels{!gcrPageParams}">Channels</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Channels for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Education{!gcrPageParams}">Education</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Education for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Finance/Tax{!gcrPageParams}">Finance/Tax</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Finance/Tax for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Lead Management{!gcrPageParams}">Lead Management</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions are Lead Management for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Legal{!gcrPageParams}">Legal</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Legal for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=PS Support{!gcrPageParams}">PS Support</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Professional Services support around ININ. 
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Quote{!gcrPageParams}">Quote</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes support creating quotes for ININ products. 
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=SE/SC Support{!gcrPageParams}">SE/SC Support</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around pricing strategies and positioning ININ offerings based on the customers’ needs.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=General Inquiry{!gcrPageParams}">General Inquiry</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    A General Inquiry is any request for information around selling ININ products. This can include interpretation of existing contract language (Genesys’ or your customer’s) or any other type of question that you may have.   
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=ININ Sales Support&type=Deal Desk{!gcrPageParams}">Deal Desk</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    This includes questions around Deal Desk support for ININ products.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DemoRequestSubmissionAccount?scontrolCaching=1&id={!IF(ISBLANK(oppId),accId,oppId)}&retURL=/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}" rendered="{!IF(ISBLANK(oppId),true,false)}">Demo Request</apex:outputLink>
+                    <apex:outputLink value="/apex/Demo_Request_VF_Submission?scontrolCaching=1&id={!IF(ISBLANK(oppId),accId,oppId)}&retURL=/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}" rendered="{!IF(ISBLANK(oppId),false,true)}">Demo Request</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Requests for Genesys to provide product demonstrations.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</apex:pageBlock>
+<!-- Added by Jitendra Jain, R Systems-->
+<apex:pageBlock title="Sales Ops Request" rendered="{!$CurrentPage.parameters.area = 'Sales Ops' || $CurrentPage.parameters.area = 'all'}">
+    <apex:pageBlockButtons >                
+        
+        <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;" rendered="{!NOT(blnIsPartner)}"/>
+        <apex:commandButton value="Return To Opportunity" onclick="location.href='/partner/{!oppId}'; return false" rendered="{!blnIsPartner}" />
+    </apex:pageBlockButtons>
+    <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+        <thead>
+            <tr class="headerRow">
+                <th class="headerRow">Request Type</th>
+                <th class="headerRow">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=Data Management{!gcrPageParams}">Data Management</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Update or reassign Accounts, Contacts, Opportunities or Quotes.    
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=Opportunity/Quote Error{!gcrPageParams}">Opportunity/Quote Error</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    You are receiving an error message while trying to update data in Salesforce.com.  
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=Partner Request{!gcrPageParams}">Partner Request</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Channel Managers submit your partner related requests.  
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=Training{!gcrPageParams}">Training</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Request training for yourself or your team.
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=User Access{!gcrPageParams}">User Access/Permission</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    You or a team member are having trouble accessing or need to be set up on a sales tool. 
+                </td>
+            </tr>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Sales Ops&type=General Inquiry{!gcrPageParams}">General Inquiries (other)</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    All other inquiries.  
+                </td>
+            </tr>
+        </tbody>
+        
+    </table>
+    <table>
+        <tr><td><br></br></td></tr>
+<tr>
+    <td>
+        <apex:pageblockSection >
+            <apex:pageBlockSectionItem >            
+                <apex:commandLink onclick="window.open('https://genesys.gosavo.com/CustomPage/View.aspx?id=38373721');return false;" target="_blank" value="Sales Ops Help – Documentation on sales tools and processes" style="align:left;"/>
+                </apex:pageBlockSectionItem>
+                </apex:pageblockSection>
+            </td>
+            </tr>
+           </table>
+        </apex:pageBlock>
+        
+        
+        <apex:pageBlock rendered="{!$CurrentPage.parameters.area = 'Legal' || $CurrentPage.parameters.area = 'all'}">
+            <apex:outputLabel value="No record(s) to show." rendered="{!NOT(showGrid)}"/>
+            <apex:pageBlockTable value="{!gcrs}" var="eachGCR" rendered="{!showGrid}">
+                <apex:column headerValue="GCR Name">
+                    <apex:outputLink value="/apex/GCRequest?id={!eachGCR.id}"> {!eachGCR.Name} </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Contract Type">
+                    {!eachGCR.Contract_Type__c}
+                </apex:column>
+                <apex:column headerValue="Synopsis">
+                    {!eachGCR.Synopsis__c}
+                </apex:column>
+                <apex:column headerValue="Status">
+                    {!eachGCR.Status__c}
+                </apex:column>
+                <apex:column headerValue="Created Date">
+                    {!eachGCR.CreatedDate}
+                </apex:column>              
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+        
+        <apex:pageBlock title="Tools/Systems Support" rendered="{!$CurrentPage.parameters.area = 'Tools/Systems Support'}">
+            <apex:pageBlockButtons >  
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;" rendered="{!blnIsPartner}"/>               
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Tools/Systems Support&type=Data Management{!gcrPageParams}">Data Management</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Update or reassign Accounts, Contacts, Opportunities or Quotes.    
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Tools/Systems Support&type=Opportunity/Quote Error{!gcrPageParams}">Opportunity/Quote Error</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        You are receiving an error message while trying to update data in Salesforce.com.  
+                        </td>
+                    </tr>                    
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Tools/Systems Support&type=General Inquiry{!gcrPageParams}">General Inquiries (other)</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        All other inquiries.  
+                        </td>
+                    </tr>
+                </tbody>                
+            </table>            
+        </apex:pageBlock>
+        
+        <!-- Quote Request Start -->
+        <apex:pageBlock title="Quote Request" rendered="{!$CurrentPage.parameters.area = 'Quote Request' || $CurrentPage.parameters.area = 'all'}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartner, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+            </apex:pageBlockButtons>
+            <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Request Type</th>
+                        <th class="headerRow">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="dataRow">
+                        <td class="dataCell">
+                            <apex:outputLink value="{!IF(blnIsPartner, '/partner','/apex')}/DealSupportQuery?supportarea=Quote Request&type=Quote Request{!gcrPageParams}">Quote Request</apex:outputLink>
+                        </td>
+                        <td class="dataCell">
+                        Request a PureConnect, PureEngage or PureCloud quote. 
+                        </td>
+                    </tr>
+                    
+        </tbody>
+    </table>
+</apex:pageBlock>
+<apex:pageBlock title="Security Issue Request" rendered="{!$CurrentPage.parameters.area = 'Security' || $CurrentPage.parameters.area = 'all'}">
+                    <apex:pageBlockButtons >
+                        <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+                        
+                    </apex:pageBlockButtons>
+                    <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                        <thead>
+                            <tr class="headerRow">
+                                <th class="headerRow">Request Type</th>
+                                <th class="headerRow">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="dataRow">
+                                <td class="dataCell">
+                                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Security&iSTranshelp=yes&type=Security Support{!gcrPageParams}">Security Support</apex:outputLink>
+                                </td>
+                                <td class="dataCell">
+                               Submit the Security Questionnaire   
+                                </td>
+                            </tr>                            
+                        </tbody>
+                    </table>
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="Play Support" rendered="{!$CurrentPage.parameters.area = 'Play Support' || $CurrentPage.parameters.area = 'all'}">
+                    <apex:pageBlockButtons >
+                        <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+                        
+                    </apex:pageBlockButtons>
+                    <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+                        <thead>
+                            <tr class="headerRow">
+                                <th class="headerRow">Request Type</th>
+                                <th class="headerRow">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="dataRow">
+                                <td class="dataCell">
+                                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Play Support&type=Play Assistance{!gcrPageParams}">Play Assistance</apex:outputLink>
+                                </td>
+                                <td class="dataCell">
+                               Play 3, Play 4, Play 5 Assistance
+                                </td>
+                            </tr>  
+                                <tr class="dataRow">
+                                <td class="dataCell">
+                                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Play Support&type=Migrations Assistance{!gcrPageParams}">Migrations Assistance</apex:outputLink>
+                                </td>
+                                <td class="dataCell">
+                               Platform to Platform Migrations Assistance   
+                                </td>
+                            </tr>
+                            <!--- navanee added -->
+                            <tr class="dataRow">
+                                <td class="dataCell">
+                                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Play Support&type=PureBridge{!gcrPageParams}">PureBridge Qualification</apex:outputLink>
+                                </td>
+                                <td class="dataCell">
+                               PureBridge Qualification for Levers 1, 2, 3, 5
+                                </td>
+                            </tr>
+                            <tr class="dataRow">
+                                <td class="dataCell">
+                                    <apex:outputLink value="/apex/DealSupportQuery?supportarea=Play Support&type=Cloud Migration Assistance{!gcrPageParams}">Cloud Migration Assistance</apex:outputLink>
+                                </td>
+                                <td class="dataCell">
+                                Cloud Migration Assistance - Incentive 2
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </apex:pageBlock>
+<!-- Quote Request End -->
+<!-- Added by Navaneetha on 07/30/2018 requested by Ankit-->
+<apex:pageBlock title="Transactional Quotes and Orders" rendered="{!$CurrentPage.parameters.area = 'Transactional Help' || $CurrentPage.parameters.area = 'all'}">
+    <apex:pageBlockButtons >
+        <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(oppId),accId,oppId)}';return false;"/>
+    </apex:pageBlockButtons>
+    <table class="list " border="0" cellpadding="0" cellspacing="0" style="width: 700px;">
+        <thead>
+            <tr class="headerRow">
+                <th class="headerRow">Request Type</th>
+                <th class="headerRow">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQueryQO?supportarea=Transactional Help&iSTranshelp=yes&type=Create a Quote{!gcrPageParams}">Create a Quote</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Request to create an Add-on Quote
+                </td>
+            </tr>
+            
+            <tr class="dataRow">
+                <td class="dataCell">
+                    <apex:outputLink value="/apex/DealSupportQueryQO?supportarea=Transactional Help&iSTranshelp=yes&type=Submit an Order{!gcrPageParams}">Submit an Order</apex:outputLink>
+                </td>
+                <td class="dataCell">
+                    Request to submit an Add-on Order
+                </td>
+            </tr>                                    
+            
+        </tbody>
+    </table>
+</apex:pageBlock>
+<!-- Quote Request End -->
+</apex:form>
+</apex:define>
+</apex:composition>
+<style type="text/css">
+    tr.dataRow {
+    background-color:white;
+    }
+    tr.dataRow:hover {
+    background-color: #e3f3ff;
+    }
+</style>
+</apex:page>

@@ -1,0 +1,1165 @@
+<!-- This is really the page for Cloud Billing Contract Setup -->
+<apex:page standardController="GCR_Content_Document_Detail__c" extensions="QuoteServiceBillingController" tabStyle="Cloud_Billing_Contracts__tab">
+    <apex:sectionHeader title="Manage Tiers" subtitle="{!objContract.Name}"/>
+    <apex:form id="mainForm">
+        <apex:pageMessage escape="false" severity="Warning" strength="1" rendered="{!blnHasRatingExceptions}">
+            There are Rating Exceptions pending resolution. Please click the link below to view the report.<br/>
+            <apex:outputLink value="/00OU00000035ISD?pv1={!objContract.Name}" target="_blank">View Exceptions Report</apex:outputLink>
+        </apex:pageMessage>
+        <apex:pageMessages id="msgs"/>
+        <apex:tabPanel switchType="client" selectedTab="ContractDetails" id="theTabPanel">
+            <apex:tab label="Billing Details" name="ContractDetails" id="ContractDetails" style="font-size:105%">
+                <apex:pageBlock title="Information" id="contractBlock">
+                    <apex:pageBlockButtons location="top">                        
+                        <apex:commandButton value="Update Billing Setup" action="{!saveContract}" status="status" rerender="theTabPanel,msgs" rendered="{!NOT(blnIsContractReadOnly)}"/>
+                        <apex:commandButton value="Clone" action="{!cloneBtnHandler}" rendered="{!NOT(blnIsContractApprover) && NOT(blnIsContractReadOnly)}"/>
+                        <apex:commandButton value="Reviewed" action="{!reviewedBtnHandler}" rendered="{!NOT(objContract.Reviewed__c) && NOT(blnIsContractApprover) && NOT(blnIsContractReadOnly)}" status="status" rerender="contractBlock"/>
+                        <apex:commandButton value="Return to Search" onclick="location.href='/apex/billingsearchcontract';return false;"/>
+                    </apex:pageBlockButtons>
+                    <apex:pageBlockSection >
+                        <apex:inputField value="{!objContract.Status__c}"/>
+                        <apex:inputField value="{!objContract.Status_Notes__c}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Account" columns="2">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="End User"/>
+                            <apex:outputField value="{!objContract.Account_Name__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="End User GARN"/>
+                            <apex:outputField value="{!objContract.Account_Name__r.SAP_Account_Code__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Sold To"/>
+                            <apex:outputField value="{!objContract.Sold_To_Name_Formula__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objContract.Account_Name__r.Country__r.Region__c}"/>
+                        <apex:pageBlockSectionItem rendered="{!objContract.Quote__c!=null}">
+                            <apex:outputLabel value="Sold To GARN"/>
+                            <apex:outputField value="{!objContract.Quote__r.Sold_To_Name__r.SAP_Account_Code__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!objContract.Zuora_Quote__c!=null}">
+                            <apex:outputLabel value="Sold To GARN"/>
+                            <apex:outputField value="{!objContract.Zuora_Quote__r.zqu__Opportunity__r.BusinessPartner__r.SAP_Account_Code__c}"/>                           
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objContract.Account_Name__r.Subsidary__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Tenant Id List"/>
+                            <apex:outputLink value="https://inventory.genesyscloud.com/tenants.php" target="_blank">
+                                <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" title="Help Link"/>
+                            </apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objContract.Account_Name__r.OwnerId}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Deployments" columns="1">
+                        <apex:pageBlockTable value="{!list_TenantId}" var="objCloudDeployment" rendered="{!list_TenantId.size > 0}" columns="3" columnsWidth="300px,300px,300px"> 
+                            <apex:column headerValue="Tenant Id">
+                                <apex:outputLink value="/{!objCloudDeployment.Id}">
+                                    {!objCloudDeployment.Tenant_ID__c}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Assign This Billing Setup">
+                                <apex:inputCheckbox value="{!objCloudDeployment.Cloud_Billing_Contract_Add__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Other Assignments">
+                                <apex:pageBlockTable value="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r}" var="objContractAssignment" >
+                                    <apex:column headerValue="Also Assigned To">
+                                        <apex:outputLink value="/apex/QuoteServiceBilling?id={!objContractAssignment.Contract__c}" rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+                                            {!objContractAssignment.Contract__r.Name}
+                                        </apex:outputLink>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r == NULL || objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size == 0}">
+                                </apex:outputPanel>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        
+                        <apex:pageBlockTable value="{!list_SubscriberId}" var="objCloudDeployment" rendered="{!list_SubscriberId.size > 0}" columns="3" columnsWidth="300px,300px,300px"> 
+                            <apex:column headerValue="Subscriber Id">
+                                <apex:outputLink value="/{!objCloudDeployment.Id}">
+                                    {!objCloudDeployment.PE_Subscription_ID__c}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Assign This Billing Setup">
+                                <apex:inputCheckbox value="{!objCloudDeployment.Cloud_Billing_Contract_Add__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Other Assignments">
+                                <apex:pageBlockTable value="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r}" var="objContractAssignment" >
+                                    <apex:column headerValue="Also Assigned To">
+                                        <apex:outputLink value="/apex/QuoteServiceBilling?id={!objContractAssignment.Contract__c}" rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+                                            {!objContractAssignment.Contract__r.Name}
+                                        </apex:outputLink>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r == NULL || objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size == 0}">
+                                </apex:outputPanel>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        
+                        <apex:pageBlockTable value="{!list_PorticoId}" var="objCloudDeployment" rendered="{!list_PorticoId.size > 0}" columns="3" columnsWidth="300px,300px,300px"> 
+                            <apex:column headerValue="Portico Id">
+                                <apex:outputLink value="/{!objCloudDeployment.Id}">
+                                    {!objCloudDeployment.Portico_Platform_Id__c}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Assign This Billing Setup">
+                                <apex:inputCheckbox value="{!objCloudDeployment.Cloud_Billing_Contract_Add__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Other Assignments">
+                                <apex:pageBlockTable value="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r}" var="objContractAssignment" >
+                                    <apex:column headerValue="Also Assigned To">
+                                        <apex:outputLink value="/apex/QuoteServiceBilling?id={!objContractAssignment.Contract__c}" rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+                                            {!objContractAssignment.Contract__r.Name}
+                                        </apex:outputLink>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r == NULL || objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size == 0}">
+                                </apex:outputPanel>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        
+                        
+                        <apex:pageBlockTable value="{!list_PureConnectId}" var="objCloudDeployment" rendered="{!list_PureConnectId.size > 0}" columns="3" columnsWidth="300px,300px,300px"> 
+                            <apex:column headerValue="PureConnect Id">
+                                <apex:outputLink value="/{!objCloudDeployment.Id}">
+                                    {!objCloudDeployment.PureConnect_Id__c}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Assign This Billing Setup">
+                                <apex:inputCheckbox value="{!objCloudDeployment.Cloud_Billing_Contract_Add__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Other Assignments">
+                                <apex:pageBlockTable value="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r}" var="objContractAssignment" >
+                                    <apex:column headerValue="Also Assigned To">
+                                        <apex:outputLink value="/apex/QuoteServiceBilling?id={!objContractAssignment.Contract__c}" rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+                                            {!objContractAssignment.Contract__r.Name}
+                                        </apex:outputLink>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r == NULL || objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size == 0}">
+                                </apex:outputPanel>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        
+                        <apex:pageBlockTable value="{!list_PureCloudId}" var="objCloudDeployment" rendered="{!list_PureCloudId.size > 0}" columns="3" columnsWidth="300px,300px,300px">
+                            <apex:column headerValue="PureCloud Id">
+                                <apex:outputLink value="/{!objCloudDeployment.Id}">
+                                    {!objCloudDeployment.PureCloud_OrgID__c}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Assign This Billing Setup">
+                                <apex:inputCheckbox value="{!objCloudDeployment.Cloud_Billing_Contract_Add__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Other Assignments">
+                                <!--apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r != NULL && objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size > 0}"-->
+                                <apex:pageBlockTable value="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r}" var="objContractAssignment" >
+                                    <apex:column headerValue="Also Assigned To">
+                                        <apex:outputLink value="/apex/QuoteServiceBilling?id={!objContractAssignment.Contract__c}" rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+                                            {!objContractAssignment.Contract__r.Name}
+                                        </apex:outputLink>
+                                        <!--apex:outputPanel rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+Equal (Test)
+</apex:outputPanel-->
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <!--/apex:outputPanel-->
+                                <apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r == NULL || objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size == 0}">
+                                    
+                                </apex:outputPanel>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        <apex:pageBlockTable value="{!list_BillingPlatformId}" var="objCloudDeployment" rendered="{!list_BillingPlatformId.size > 0}" columns="3" columnsWidth="300px,300px,300px"><!--**Section to show related Billing Platform Cloud Deployment Records**-->
+                            <apex:column headerValue="Subscription Id">
+                                <apex:outputLink value="/{!objCloudDeployment.Id}">
+                                    {!objCloudDeployment.Billing_Platform_Id__c}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Assign This Billing Setup">
+                                <apex:inputCheckbox value="{!objCloudDeployment.Cloud_Billing_Contract_Add__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Other Assignments">
+                                <!--apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r != NULL && objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size > 0}"-->
+                                <apex:pageBlockTable value="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r}" var="objContractAssignment" >
+                                    <apex:column headerValue="Also Assigned To">
+                                        <apex:outputLink value="/apex/QuoteServiceBilling?id={!objContractAssignment.Contract__c}" rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+                                            {!objContractAssignment.Contract__r.Name}
+                                        </apex:outputLink>
+                                        <!--apex:outputPanel rendered="{!objContractAssignment.Contract__c != objContract.Id}">
+Equal (Test)
+</apex:outputPanel-->
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <!--/apex:outputPanel-->
+                                <apex:outputPanel rendered="{!objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r == NULL || objCloudDeployment.Cloud_Deployment_To_Contract_Junctions__r.size == 0}">
+                                    
+                                </apex:outputPanel>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Quote" columns="2" rendered="{!objContract.Quote__c == null && objContract.Zuora_Quote__c == null}">
+                        <apex:pageMessage severity="warning" strength="2">
+                            No Quote Assigned To This Setup
+                        </apex:pageMessage>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Quote" columns="2" rendered="{!objContract.Quote__c != null}">
+                        <apex:outputField value="{!objContract.Quote__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.BigMachines__Description__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Quote Currency"/>
+                            <apex:outputField value="{!objContract.Quote__r.CurrencyISOCode}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputHidden id="HiddenField1"/>                        
+                        <apex:pageBlockSectionItem rendered="{!blnIsContractSuperUser}" >
+                            <apex:outputLabel value="Override Quote Currency"/>
+                            <apex:inputField value="{!objContract.CurrencyISOCode}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!NOT(blnIsContractSuperUser)}" >
+                            <apex:outputLabel value="Override Quote Currency"/>
+                            <apex:outputField value="{!objContract.CurrencyISOCode}"/>
+                        </apex:pageBlockSectionItem>
+
+                        <apex:outputField value="{!objContract.Quote__r.Billing_Period__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Special_Offer_Terms__c}"/> 
+                        <apex:outputField value="{!objContract.Quote__r.Legal_Terms__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Overage_Allowance__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Overage_Price_Premium__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Overage_Allowance_Other__c}"/>
+                        <apex:inputField value="{!objContract.Usage_Data_Submission_Method__c}" id="UsageDataSubmissionMethod"/>
+                        <script type="text/javascript">
+                        (function(){
+                            var e = document.querySelectorAll('[id$="UsageDataSubmissionMethod"]')[0];
+                            if (e && !e[0].value) {e.remove(0);}
+                        })();
+                        </script>
+                        <apex:outputField value="{!objContract.Product_Group__c}"/>
+                        <apex:inputHidden id="HiddenField2"/>                        
+                        <apex:outputField value="{!objContract.Quote__r.Offering_Type__c}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Quote" columns="2" rendered="{!objContract.Zuora_Quote__c != null}">
+                        <apex:outputField value="{!objContract.Zuora_Quote__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.BigMachines__Description__c}"/>
+                        <apex:outputField value="{!objContract.Zuora_Quote__r.zqu__Currency__c}"/>
+                        <apex:outputField value="{!objContract.Zuora_Quote__r.zqu__PaymentTerm__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Billing_Period__c}"/>
+                        <apex:outputField value="{!objContract.Zuora_Quote__r.zqu__Terms__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Legal_Terms__c}"/>
+                        <apex:outputField value="{!objContract.Zuora_Quote__r.zqu__Opportunity__r.Direct_Sales__c}"/>
+                        <apex:outputField value="{!objContract.Product_Group__c}"/>
+                        <apex:inputHidden id="HiddenField"/> 
+                        <apex:outputField value="{!objContract.Zuora_Quote__r.zqu__Opportunity__r.Lines_of_Businesses__c}"/>
+                    </apex:pageBlockSection>
+
+                    <apex:pageBlockSection title="Master Order" columns="2" rendered="{!objContract.Quote__r.Order__c != null}">
+                        <apex:outputField value="{!objContract.Quote__r.Order__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.TotalOrder__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.Pricing_Model__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.Payment_Terms__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.Direct_Sales__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.CreatedDate}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.Maintenance_Start__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.Maintenance_End__c}"/>
+                        <apex:outputField value="{!objContract.Quote__r.Order__r.License_FYM_detail__c}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Billing Address" columns="2" rendered="{!objBillingAddress.Id != null && NOT(blnIsContractApprover)}">
+                        <apex:inputField value="{!objBillingAddress.Address__c}"/>
+                        <apex:inputField value="{!objBillingAddress.Address2__c}"/>
+                        <apex:inputField value="{!objBillingAddress.City__c}"/>
+                        <apex:inputField value="{!objBillingAddress.State__c}"/>
+                        <apex:inputField value="{!objBillingAddress.Country__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Postal Code"/>
+                            <apex:inputField value="{!objBillingAddress.Zip_Code__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objBillingAddress.Phone__c}"/>
+                        <apex:inputField value="{!objBillingAddress.Fax__c}"/>
+                        <apex:inputField value="{!objBillingAddress.Email__c}"/>
+                        <apex:inputField value="{!objBillingAddress.Additional_Emails__c}"/>
+                        <apex:inputField value="{!objBillingAddress.Attention_To__c}"/>
+                        <apex:outputField value="{!objContract.Reviewed__c}"/>
+                        <apex:outputText />
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel />
+                            <apex:commandButton value="Update Billing Address" action="{!updateBillingAddressBtnHandler}" status="status" rerender="msgs" rendered="{!NOT(blnIsContractApprover) && NOT(blnIsContractReadOnly)}"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Billing Address" columns="2" rendered="{!objBillingAddress.Id != null && blnIsContractApprover}">
+                        <apex:outputField value="{!objBillingAddress.Address__c}"/>
+                        <apex:outputField value="{!objBillingAddress.Address2__c}"/>
+                        <apex:outputField value="{!objBillingAddress.City__c}"/>
+                        <apex:outputField value="{!objBillingAddress.State__c}"/>
+                        <apex:outputField value="{!objBillingAddress.Country__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Postal Code"/>
+                            <apex:outputField value="{!objBillingAddress.Zip_Code__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objBillingAddress.Phone__c}"/>
+                        <apex:outputField value="{!objBillingAddress.Fax__c}"/>
+                        <apex:outputField value="{!objBillingAddress.Email__c}"/>
+                        <apex:outputField value="{!objBillingAddress.Additional_Emails__c}"/>
+                        <apex:outputField value="{!objBillingAddress.Attention_To__c}"/>
+                        <apex:outputField value="{!objContract.Reviewed__c}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Billing Address" columns="1" rendered="{!objBillingAddress.Id == null}">
+                        <apex:pageMessage severity="warning" strength="2">
+                            No Billing Address For This Setup
+                        </apex:pageMessage>
+                    </apex:pageBlockSection>
+                     
+                    <apex:pageBlockSection title="PPU Address Overrides" columns="2">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="PPU Country Override"/>
+                            <apex:inputField value="{!objContract.Country_Override__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="PPU Postal Code Override"/>
+                            <apex:inputField value="{!objContract.Postal_Code_Override__c}"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Finance" columns="2" rendered="{!NOT(blnIsContractApprover)}">
+                        <apex:inputField value="{!objContract.Invoice_Type__c}"/>
+                        <apex:inputField value="{!objContract.Invoice_Delivery_Type__c}"/>
+                        <apex:inputField value="{!objContract.Override_Invoice_Footer__c}"/>
+                        <apex:inputField value="{!objContract.Invoice_Footer_Text__c}"/>
+                        <apex:inputField value="{!objContract.Genesys_Entity__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Renewal Date"/>
+                            <apex:inputField value="{!objContract.Expiration_Renewal_Date__c}"/>
+                        </apex:pageBlockSectionItem>
+                        
+                        <apex:inputField value="{!objContract.Manual_Review_Required__c}"/>
+                        <apex:inputField value="{!objContract.Manual_Review_Reason__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Billing Effective Start Date"/>
+                            <apex:inputField value="{!objContract.Pricing_Start_Date__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Billing Effective End Date"/>
+                            <apex:inputField value="{!objContractPricingEndDate.Pricing_End_Date__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objContract.Ramp_Start_Date__c}"/>
+                        <apex:inputField value="{!objContract.Ramp_End_Date__c}"/>
+                        <apex:inputField value="{!objContract.Service_Level_Agreement__c}"/>
+                        <!-- apex:inputField value="{!objContract.Outbound_Billing_Type__c}"/ -->
+                        <!--Nitin Code Comment <apex:outputField value="{!objContract.Product_Group__c}"/>-->
+                        <apex:pageBlockSectionItem >
+                            <apex:outputpanel >
+                                <apex:outputLabel value="Outbound Rate Table Discount"/>
+                                <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" title="{!$ObjectType.GCR_Content_Document_Detail__c.Fields.Outbound_Rate_Table_Discount__c.InlineHelpText}"/>
+                            </apex:outputpanel>
+                            <apex:outputpanel >
+                                <apex:inputField value="{!objContract.Outbound_Rate_Table_Discount__c}"/>
+                                %
+                            </apex:outputpanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objContract.Order_Date_Option__c}"/>
+                        <apex:inputField value="{!objContract.Inbound_Billing_Type__c}"/>
+                        <apex:inputField value="{!objContract.Net_Days_Override__c}"/>
+                        <apex:inputField value="{!objContract.Direct_Sales_Rep_Override__c}"/>
+                        <apex:inputField value="{!objContract.Account_Name_Override__c}"/>
+                        <apex:inputField value="{!objContract.Name__c}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Finance" columns="2" rendered="{!blnIsContractApprover}">
+                        <apex:outputField value="{!objContract.Invoice_Type__c}"/>
+                        <apex:outputField value="{!objContract.Invoice_Delivery_Type__c}"/>
+                        <apex:outputField value="{!objContract.Override_Invoice_Footer__c}"/>
+                        <apex:outputField value="{!objContract.Invoice_Footer_Text__c}"/>
+                        <apex:outputField value="{!objContract.Genesys_Entity__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Renewal Date"/>
+                            <apex:outputField value="{!objContract.Expiration_Renewal_Date__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objContract.Manual_Review_Required__c}"/>
+                        <apex:outputField value="{!objContract.Manual_Review_Reason__c}"/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Billing Effective Start Date"/>
+                            <apex:outputField value="{!objContract.Pricing_Start_Date__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Billing Effective End Date"/>
+                            <apex:outputField value="{!objContractPricingEndDate.Pricing_End_Date__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objContract.Ramp_Start_Date__c}"/>
+                        <apex:outputField value="{!objContract.Ramp_End_Date__c}"/>
+                        <apex:outputField value="{!objContract.Service_Level_Agreement__c}"/>
+                        <apex:outputField value="{!objContract.Outbound_Billing_Type__c}"/>
+                        <!-- Nitin Code Comment <apex:outputField value="{!objContract.Product_Group__c}"/>-->
+                        <apex:pageBlockSectionItem >
+                            <apex:outputpanel >
+                                <apex:outputLabel value="Outbound Rate Table Discount"/>
+                                <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" title="{!$ObjectType.GCR_Content_Document_Detail__c.Fields.Outbound_Rate_Table_Discount__c.InlineHelpText}"/>
+                            </apex:outputpanel>
+                            <apex:outputpanel >
+                                <apex:outputField value="{!objContract.Outbound_Rate_Table_Discount__c}"/>
+                                %
+                            </apex:outputpanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objContract.Order_Date_Option__c}"/>
+                        <apex:outputField value="{!objContract.Inbound_Billing_Type__c}"/>
+                        <apex:outputField value="{!objContract.Net_Days_Override__c}"/>
+                        <apex:outputField value="{!objContract.Direct_Sales_Rep_Override__c}"/>
+                        <apex:outputField value="{!objContract.Account_Name_Override__c}"/>
+                        <apex:outputField value="{!objContract.Name__c}"/>
+                    </apex:pageBlockSection>
+
+                    <apex:pageBlockSection title="Existing Commitments" id="existingCommitments" columns="1">
+                        <apex:commandButton value="New Commitment" action="{!addNewCommitment}" />
+                        <apex:pageBlockTable value="{!listBillingCommitments}" var="billingCommitmentWrapper" columns="5">
+                            <!--apex:column headerValue="Delete">
+                                <apex:commandButton value="Delete" action="{!addNewCommitment}" />
+                            </apex:column -->
+                            <apex:column headerValue="Commitment Description">
+                                <apex:outputLink value="/{!billingCommitmentWrapper.objBillingCommitment.Id}">
+                                    {!billingCommitmentWrapper.objBillingCommitment.Description__c}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Commitment Description">
+                                <apex:inputField value="{!billingCommitmentWrapper.objBillingCommitment.Description__c}" rendered="{!blnIsContractSuperUser || (objContract.Status__c != 'Approved' && blnIsContractManager)}" />
+                                <apex:outputField value="{!billingCommitmentWrapper.objBillingCommitment.Description__c}" rendered="{!NOT(blnIsContractSuperUser) && NOT(blnIsContractManager)}" />
+                            </apex:column>
+                            <apex:column headerValue="Product">
+                                <apex:inputField value="{!billingCommitmentWrapper.objBillingCommitment.Product__c}" rendered="{!blnIsContractSuperUser || (objContract.Status__c != 'Approved' && blnIsContractManager)}"/>
+                                <apex:outputField value="{!billingCommitmentWrapper.objBillingCommitment.Product__c}" rendered="{!NOT(blnIsContractSuperUser) && NOT(blnIsContractManager)}" />
+                            </apex:column>
+                            <apex:column headerValue="Committed Amount">
+                                <apex:inputField value="{!billingCommitmentWrapper.objBillingCommitment.Committed_Amount__c}" rendered="{!blnIsContractSuperUser || (objContract.Status__c != 'Approved' && blnIsContractManager)}"/>
+                                <apex:outputField value="{!billingCommitmentWrapper.objBillingCommitment.Committed_Amount__c}" rendered="{!NOT(blnIsContractSuperUser) && NOT(blnIsContractManager)}" />
+                            </apex:column>
+                            <apex:column headerValue="Tier Set Assignments">
+                                <apex:pageBlockTable value="{!billingCommitmentWrapper.listCommitmentTierSetWrapper}" var="billingCommitmentTSWrapper" >
+                                    <apex:column >
+                                        <apex:inputCheckbox value="{!billingCommitmentTSWrapper.blnAssigned}" disabled="{!(NOT(blnIsContractSuperUser) && NOT(blnIsContractManager)) || objContract.Status__c == 'Approved'}"/>
+                                    </apex:column>
+                                    <apex:column >
+                                        <apex:outputField value="{!billingCommitmentTSWrapper.objContractTierSet.Name}"/>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <apex:commandButton value="Update Tier Set Assignments" action="{!upsertBillingCommitments}" disabled="{!(NOT(blnIsContractSuperUser) && NOT(blnIsContractManager)) || objContract.Status__c == 'Approved'}"/>
+                            </apex:column>
+                        </apex:pageBlockTable>
+    
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="PO" columns="2" rendered="{!NOT(blnIsContractApprover)}">
+                        <apex:inputField value="{!objContract.PO__c}"/>
+                        <apex:inputField value="{!objContract.PO_Adjustment_Description__c}"/>
+                        <apex:inputField value="{!objContract.PO_Starting_Balance__c}"/>
+                        <apex:inputField value="{!objContract.PO_Remaining_Balance__c}"/>
+                        <apex:inputField value="{!objContract.PO_Start_Date__c}"/>
+                        <apex:inputField value="{!objContract.PO_End_Date__c}"/>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="PO" columns="2" rendered="{!blnIsContractApprover}">
+                        <apex:outputField value="{!objContract.PO__c}"/>
+                        <apex:outputField value="{!objContract.PO_Adjustment_Description__c}"/>
+                        <apex:outputField value="{!objContract.PO_Starting_Balance__c}"/>
+                        <apex:outputField value="{!objContract.PO_Remaining_Balance__c}"/>
+                        <apex:outputField value="{!objContract.PO_Start_Date__c}"/>
+                        <apex:outputField value="{!objContract.PO_End_Date__c}"/>
+                    </apex:pageBlockSection>
+                    <!--<apex:pageBlockSection title="Attachments" columns="1">
+<apex:sectionHeader title="Attach File"/>
+<apex:pageBlockSectionItem >
+<apex:commandButton value="Attach New File" action="{!AttachNewFile}"/>
+<apex:inputFile value="{!Attach}" fileName="{!strUploadedfileName}"></apex:inputFile>         
+</apex:pageBlockSectionItem>
+</apex:pageBlockSection>-->
+                    <apex:pageBlockSection title="Related Quotes" columns="2">
+                        <!-- apex:pageBlockTable value="{!list_TenantId}" var="objCloudDeployment" rendered="{!list_TenantId.size > 0}" columns="3" columnsWidth="300px,300px,300px" --> 
+                        <apex:pageBlockTable value="{!list_RelatedQuotes}" var="objQuote" rendered="{!list_RelatedQuotes.size > 0}" columns="2">
+                            <apex:column headerValue="Quote Number">
+                                <apex:outputLink value="/{!objQuote.id}" target="_blank">{!objQuote.Quote_Number__c}</apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Created Date">
+                                <apex:outputText label="Created Date" value="{0,date,MM'/'dd'/'yyyy}">
+                                    <apex:param value="{!objQuote.CreatedDate}" />
+                                </apex:outputText>
+                            </apex:column>
+                        </apex:pageBlockTable>  
+                    </apex:pageBlockSection>
+
+                    <!-- list_contractAttachments -->         
+                    <apex:pageBlockSection title="Legal" columns="1">   
+                        <apex:pageBlockTable value="{!list_Documents}" var="objDoc" rendered="{!list_Documents.size > 0}">
+                            <apex:column headerValue="Name">
+                                {!objDoc.Document_Name__c}
+                            </apex:column>
+                            <apex:column headerValue="Contract Type">
+                                {!objDoc.Contract_Type__c}                  
+                            </apex:column>
+                            <apex:column headerValue="Agreement Type">
+                                {!objDoc.Agreement_Type__c}             
+                            </apex:column>
+                            <apex:column headerValue="Folder">
+                                <apex:outputField value="{!objDoc.Folder__c}"/>             
+                            </apex:column>
+                            <apex:column headerValue="View Document">
+                                <apex:outputField value="{!objDoc.View_Folder__c}"/>                
+                            </apex:column>      
+                        </apex:pageBlockTable>   
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+            </apex:tab>
+            <apex:tab label="Tier/Service Configuration" name="ServiceConfig" id="ServiceConfig">
+                <apex:pageBlock title="Information" id="configBlock">
+                    <apex:pageBlockButtons location="both">                    
+                        <apex:commandButton value="Import/Overwrite Info from Quote" action="{!resetServiceInfoFromQuote}" rendered="{!NOT(blnIsContractApprover) && NOT(blnIsContractReadOnly) && NOT(blnIsEdit) && NOT(blnIsBOGOEdit)}" disabled="{!objContract.Approved__c || objContract.Status__c == 'Approved' || objContract.Status__c == 'Awaiting Approval'}" rerender="configBlock,msgs,existingCommitments" status="status" style="font-size:100%;"/>
+                        <apex:commandButton value="Quick Save" action="{!quickSaveBtnHandler}" rerender="configBlock,msgs,existingCommitments" status="status" rendered="{!blnIsEdit}" style="font-size:100%;"/>
+                        <apex:commandButton value="Save" action="{!saveBtnHandler}" rerender="configBlock,msgs,existingCommitments" status="status" rendered="{!blnIsEdit}" style="font-size:100%;"/>
+                        <apex:commandButton value="Cancel Edit" immediate="true" action="{!cancelEditBtnHandler}" rerender="configBlock,msgs" status="status" rendered="{!blnIsEdit}" style="font-size:100%;"/>
+                        <apex:commandButton value="Edit" action="{!editBtnHandler}" rerender="configBlock,msgs" status="status" rendered="{!NOT(blnIsContractApprover) && NOT(blnIsContractReadOnly) && NOT(blnIsEdit) && NOT(blnIsBOGOEdit)}" disabled="{!objContract.Status__c == 'Approved' || objContract.Status__c == 'Awaiting Approval'}" style="font-size:100%;"/>
+                        <apex:commandButton value="Edit BOGO Info" action="{!editBOGOBtnHandler}" rerender="configBlock,msgs" status="status" rendered="{!NOT(blnIsContractApprover) && NOT(blnIsContractReadOnly) && NOT(blnIsEdit) && NOT(blnIsBOGOEdit)}" disabled="{!objContract.Status__c == 'Approved' || objContract.Status__c == 'Awaiting Approval'}" style="font-size:100%;"/>
+                        <apex:commandButton value="Save BOGO Info" action="{!saveBOGOBtnHandler}" rerender="configBlock,msgs" status="status" rendered="{!blnIsBOGOEdit}" style="font-size:100%;"/>
+                        <apex:commandButton value="Cancel Edit BOGO Info" action="{!cancelEditBOGOBtnHandler}" rerender="configBlock,msgs" status="status" rendered="{!blnIsBOGOEdit}" style="font-size:100%;"/>
+                    </apex:pageBlockButtons>
+                    <apex:pageBlockSection columns="2">
+                        <apex:outputField value="{!objContract.Account_Name__c}"/>
+                        <apex:outputField value="{!objContract.Quote__c}" rendered="{!objContract.Quote__c!=null}"/>
+                        <apex:outputField value="{!objContract.Zuora_Quote__c}" rendered="{!objContract.Zuora_Quote__c!=null}"/>
+                    </apex:pageBlockSection>
+                    <apex:variable var="rowNumTier" value="{!0}"/>
+                    <apex:commandlink action="{!addTierSetOnTop}" rerender="configBlock" title="Add Tier Set" rendered="{!blnIsEdit}">
+                        <apex:image value="{!$Resource.PlusSign}" width="30px" height="30px"/>
+                    </apex:commandLink>
+                    <br/>
+                    <apex:pageBlockTable value="{!list_TierSetWrappers}" var="objTSWrapper">
+                        <apex:column headerValue="Action" rendered="{!blnIsEdit}">
+                            <apex:commandlink action="{!removeTierSet}" rerender="configBlock" title="Remove Tier Set and Services">
+                                <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                <apex:image url="{!$Resource.MinusSign}" width="20px" height="20px"/>    
+                            </apex:commandlink>
+                        </apex:column>
+                        <apex:column headerValue="Quote Product/Product">
+                            <!-- Replace the line below to revert the change <apex:outputPanel rendered="{!objTSWrapper.objContractTierSet.Quote_Product__c != null}">-->
+                            <apex:outputPanel >
+                                <table style="border-collapse: collapse;border: 1px solid rgba(237, 237, 237, 0)" border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <th><b>Line</b></th>
+                                        <td>
+                                            <apex:outputField value="{!objTSWrapper.objContractTierSet.Product__c}"  rendered="{!objTSWrapper.objContractTierSet.Product__c != null}"/>
+                                            <apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__c}"  rendered="{!objTSWrapper.objContractTierSet.Product__c == null}"/>
+                                            <apex:outputPanel rendered="{!objTSWrapper.objContractTierSet.Quote_Product__r.Level_Of_Support__c != null}">
+                                                {!objTSWrapper.objContractTierSet.Quote_Product__r.Level_Of_Support__c}
+                                            </apex:outputPanel>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Product</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__r.BigMachines__Product__c}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Metric</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__r.Metric__c}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Quantity</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__r.BigMachines__Quantity__c}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Net Price Per Month</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__r.Net_Unit_Price_1_Per_Month__c}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Net Price 1</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__r.Net_Unit_Price_1__c}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Net Price 2</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__r.Net_Unit_Price_2__c}"/></td>
+                                    </tr>
+                                </table>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!objTSWrapper.objContractTierSet.Quote_Charge_Detail__c != null}">
+                                <table style="border-collapse: collapse;border: 1px solid rgba(237, 237, 237, 0)" border="0" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <th><b>Line</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Charge_Detail__c}"/>
+                                            <apex:outputPanel rendered="{!objTSWrapper.objContractTierSet.Quote_Product__r.Level_Of_Support__c != null}">
+                                                {!objTSWrapper.objContractTierSet.Quote_Product__r.Level_Of_Support__c}
+                                            </apex:outputPanel>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Product</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Charge_Detail__r.zqu__ProductRatePlan__r.zqu__Product__c}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Metric</b></th>
+                                        <td><apex:outputField value="{!objTSWrapper.objContractTierSet.Quote_Product__r.Metric__c}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Quantity</b></th>
+                                        <td>
+                                            <!--<apex:outputField rendered="{!blnDispZuNetprQuantitiy}" value="{!map_PrdRtPlChrgeToQtRtPlChrge[map_QtChrgeDtlToPrdRtPlChrge[objTSWrapper.objContractTierSet.Quote_Charge_Detail__c]].zqu__Quantity__c}"/>-->
+                                            <apex:outputText rendered="{!blnDispZuNetprQuantitiy}" value="{!objTSWrapper.decZuQuantity}"/>
+                                            <apex:outputField rendered="{!NOT(blnDispZuNetprQuantitiy)}" value="{!objTSWrapper.objContractTierSet.Quote_Product__r.BigMachines__Quantity__c}"/>
+                                        </td>
+                                        
+                                    </tr>
+                                    <tr>
+                                        <th><b>Net Price 1</b></th>
+                                        <td>
+                                            <!--<apex:outputField rendered="{!blnDispZuNetprQuantitiy}" value="{!map_PrdRtPlChrgeToQtRtPlChrge[map_QtChrgeDtlToPrdRtPlChrge[objTSWrapper.objContractTierSet.Quote_Charge_Detail__c]].zqu__EffectivePrice__c}"/>-->
+                                            <apex:outputText rendered="{!blnDispZuNetprQuantitiy}" value="{!objTSWrapper.decZuNetPrice}"/>
+                                            <apex:outputField rendered="{!NOT(blnDispZuNetprQuantitiy)}" value="{!objTSWrapper.objContractTierSet.Quote_Product__r.Net_Unit_Price_1__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th><b>Net Price 2</b></th>
+                                        <td>
+                                            <!--<apex:outputField rendered="{!blnDispZuNetprQuantitiy}" value="{!map_PrdRtPlChrgeToQtRtPlChrge[map_QtChrgeDtlToPrdRtPlChrge[objTSWrapper.objContractTierSet.Quote_Charge_Detail__c]].zqu__EffectivePrice__c}"/>-->
+                                            <apex:outputText rendered="{!blnDispZuNetprQuantitiy}" value="{!objTSWrapper.decZuNetPrice}"/>
+                                            <apex:outputField rendered="{!NOT(blnDispZuNetprQuantitiy)}" value="{!objTSWrapper.objContractTierSet.Quote_Product__r.Net_Unit_Price_2__c}"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!objTSWrapper.objContractTierSet.Quote_Product__c == null && objTSWrapper.objContractTierSet.Quote_Charge_Detail__c == null}">
+                                <apex:inputField value="{!objTSWrapper.objContractTierSet.Product__c}" rendered="{!blnIsEdit}"/>
+                                <!--Nitin Code change for Refresh Product Tier Set for new products ---BEGIN -->
+                                <br/>                                
+                                <apex:commandButton action="{!refreshProductTierSet}" title="Refresh from Product Tier Set" value="Refresh from Product Tier Set"  rendered="{!blnIsEdit}" rerender="configBlock">
+                                    <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                </apex:commandButton>
+                                <!--Nitin Code change for Refresh Product Tier Set for new products ---END -->
+                                <apex:outputField value="{!objTSWrapper.objContractTierSet.Product__c}" rendered="{!NOT(blnIsEdit)}"/>
+                            </apex:outputPanel>
+                        </apex:column>
+                        <apex:column headerValue="Tier Set" id="tierSetCell">
+                            <b>Name : </b>&nbsp;
+                            <apex:inputField value="{!objTSWrapper.objContractTierSet.Name}" rendered="{!blnIsEdit}" style="width:200px"/>
+                            <apex:outputField value="{!objTSWrapper.objContractTierSet.Name}" rendered="{!NOT(blnIsEdit)}"/>
+                            <br/><br/>
+                            <b>Aggregation Model : </b>&nbsp;
+                            <apex:inputField value="{!objTSWrapper.objContractTierSet.Aggregation_Model__c}" rendered="{!blnIsEdit}"/>
+                            <apex:outputField value="{!objTSWrapper.objContractTierSet.Aggregation_Model__c}" rendered="{!NOT(blnIsEdit)}"/>
+                            <br/><br/>
+                            <b>Units Type : </b>&nbsp;
+                            <apex:inputField value="{!objTSWrapper.objContractTierSet.Units_Type__c}" rendered="{!blnIsEdit}"/>
+                            <apex:outputField value="{!objTSWrapper.objContractTierSet.Units_Type__c}" rendered="{!NOT(blnIsEdit)}"/>
+                            <br/><br/>
+                            <b>Usage Term (months) : </b>&nbsp;
+                            <apex:inputField value="{!objTSWrapper.objContractTierSet.Period_In_Months__c}" rendered="{!blnIsEdit}"/>
+                            <apex:outputField value="{!objTSWrapper.objContractTierSet.Period_In_Months__c}" rendered="{!NOT(blnIsEdit)}"/>
+                            <br/><br/>
+                            <b>Recurring Charge Billing Term (months) : </b>&nbsp;
+                            <apex:inputField value="{!objTSWrapper.objContractTierSet.RC_Period__c}" rendered="{!blnIsEdit}"/>
+                            <apex:outputField value="{!objTSWrapper.objContractTierSet.RC_Period__c}" rendered="{!NOT(blnIsEdit)}"/>
+                            <br/><br/>
+                            <b>Carrier (optional) : </b>&nbsp;
+                            <apex:selectList value="{!objTSWrapper.objContractTierSet.Carrier__c}" rendered="{!blnIsEdit}" size="1">
+                                <apex:selectOptions value="{!list_TierSetCarriersToSelect}"/>
+                            </apex:selectList>
+                            <apex:outputField value="{!objTSWrapper.objContractTierSet.Carrier__c}" rendered="{!NOT(blnIsEdit)}"/>                          
+                            <br/><br/>
+                            <apex:variable var="rowNumRange" value="{!0}"/>
+                            <apex:pageBlockTable value="{!objTSWrapper.list_ContractTierRanges}" var="objContractTR" style="width:250px;border-collapse: collapse;border:solid 1px black;">
+                                <apex:column headerValue="Action" rendered="{!blnIsEdit}" style="background-color:white;">
+                                    <apex:commandlink action="{!removeTierRange}" rerender="configBlock" title="Remove Tier Range">
+                                        <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                        <apex:param name="strRowIndex" assignTo="{!strRowIndex}" value="{!rowNumRange}"/>
+                                        <apex:image url="{!$Resource.MinusSign}" width="16px" height="16px"/>    
+                                    </apex:commandlink>
+                                    <apex:variable var="rowNumRange" value="{!rowNumRange + 1}"/>
+                                </apex:column>
+                                <apex:column headerValue="From" style="background-color:#FFFF99;">
+                                    <apex:inputField value="{!objContractTR.From__c}" style="width:100px" rendered="{!blnIsEdit}"/>
+                                    <apex:outputField value="{!objContractTR.From__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                </apex:column>
+                                <apex:column headerValue="To" style="background-color:#FFFF99;">
+                                    <apex:inputField value="{!objContractTR.To__c}" style="width:100px" rendered="{!blnIsEdit}"/>
+                                    <apex:outputField value="{!objContractTR.To__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                </apex:column>
+                                <apex:column headerValue="Price" style="background-color:#FFFF99;">
+                                    <apex:inputField value="{!objContractTR.Price__c}" style="width:100px" rendered="{!blnIsEdit}"/>
+                                    <apex:outputField value="{!objContractTR.Price__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                </apex:column>
+                            </apex:pageBlockTable>
+                            <br/>
+                            <apex:commandLink action="{!addTierRange}" rerender="configBlock" title="Add Tier Range" rendered="{!blnIsEdit}">
+                                <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                <apex:image value="{!$Resource.PlusSign}" width="25px" height="25px"/>
+                            </apex:commandLink>
+                        </apex:column>
+                        
+                        <apex:column headerValue="Services/Recurring Charges/BOGO" id="serviceCell">
+                            <apex:outputPanel rendered="{!blnIsEdit || objTSWrapper.list_ContractServices.size > 0}">
+                                <b>Services</b>
+                                <apex:variable var="rowNumRange" value="{!0}"/>
+                                <apex:pageBlockTable value="{!objTSWrapper.list_ContractServices}" var="objContService" style="border-collapse: collapse;border:solid 1px black;">
+                                    <apex:column headerValue="Action" rendered="{!blnIsEdit}" style="background-color:white;">
+                                        <apex:commandlink action="{!removeContractService}" rerender="configBlock" title="Remove Contract Service">
+                                            <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                            <apex:param name="strRowIndex" assignTo="{!strRowIndex}" value="{!rowNumRange}"/>
+                                            <apex:image url="{!$Resource.MinusSign}" width="16px" height="16px"/>    
+                                        </apex:commandlink>
+                                    </apex:column>
+                                    <apex:column headerValue="Service Name" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objContService.Service__c}" rendered="{!objContService.Id != null}"/>
+                                        <apex:inputField value="{!objContService.Service__c}" required="false" rendered="{!objContService.Id == null && blnIsEdit}"/>
+                                        <apex:variable var="rowNumRange" value="{!rowNumRange + 1}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Channel Type" style="background-color:#FFFF99;" id="info1">
+                                        <apex:outputField value="{!objContService.Service__r.Channel_Type__c}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Device Type" style="background-color:#FFFF99;" id="info2">
+                                        <apex:outputField value="{!objContService.Service__r.Device_Type__c}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Service Type" style="background-color:#FFFF99;" id="info3">
+                                        <apex:outputField value="{!objContService.Service__r.Service_Type__c}"/>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <br/>
+                                <apex:outputPanel rendered="{!blnIsEdit}">
+                                    <apex:commandLink title="Add Contract Service" action="{!addContractService}" rerender="configBlock">
+                                        <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                        <apex:image value="{!$Resource.PlusSign}" width="25px" height="25px"/>
+                                    </apex:commandLink>
+                                    <br/><br/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!blnIsEdit || objTSWrapper.list_ContractRecurringCharges.size > 0}" id="recurringCharges">
+                                <b>Recurring Charges</b>
+                                <apex:variable var="rowNumRange" value="{!0}"/>
+                                <apex:pageBlockTable value="{!objTSWrapper.list_ContractRecurringCharges}" var="objRecCharge" style="border-collapse: collapse;border:solid 1px black;">
+                                    <apex:column headerValue="Action" rendered="{!blnIsEdit}" style="background-color:white;">
+                                        <apex:commandlink action="{!removeRecurringCharge}" rerender="recurringCharges" title="Remove Recurring Charge">
+                                            <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                            <apex:param name="strRowIndex" assignTo="{!strRowIndex}" value="{!rowNumRange}"/>
+                                            <apex:image url="{!$Resource.MinusSign}" width="16px" height="16px"/>    
+                                        </apex:commandlink>
+                                        <apex:variable var="rowNumRange" value="{!rowNumRange + 1}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Active" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objRecCharge.Active__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                        <apex:inputField value="{!objRecCharge.Active__c}" rendered="{!blnIsEdit}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Pre-Bill" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objRecCharge.Pre_Bill__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                        <apex:inputField value="{!objRecCharge.Pre_Bill__c}" rendered="{!blnIsEdit}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Deferred" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objRecCharge.Deferred__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                        <apex:inputField value="{!objRecCharge.Deferred__c}" rendered="{!blnIsEdit}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Amount" style="background-color:#FFFF99;">
+                                        <apex:inputField value="{!objRecCharge.Amount__c}" style="width:100px" rendered="{!blnIsEdit}"/>
+                                        <apex:outputText value="{0, number, $###,###,###,###,##0.0000}">
+                                            <apex:param value="{!objRecCharge.Amount__c}"/>
+                                        </apex:outputText>
+                                    </apex:column>
+                                    <apex:column headerValue="Type" style="background-color:#FFFF99;">
+                                        <apex:inputField value="{!objRecCharge.Type__c}" rendered="{!blnIsEdit}">
+                                            <apex:actionSupport event="onchange" rerender="recurringCharges" status="status"/>
+                                        </apex:inputField>
+                                        <apex:outputField value="{!objRecCharge.Type__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Charge Description" style="background-color:#FFFF99;">
+                                        <apex:inputField value="{!objRecCharge.Charge_Description__c}" rendered="{!blnIsEdit}"/>
+                                        <apex:outputField value="{!objRecCharge.Charge_Description__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="External Note" style="background-color:#FFFF99;">
+                                        <apex:inputField value="{!objRecCharge.External_Note__c}" rendered="{!blnIsEdit}"/>
+                                        <apex:outputField value="{!objRecCharge.External_Note__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                    </apex:column>
+                                    
+                                    <apex:column headerValue="Quantity" style="background-color:#FFFF99;" >
+                                        <apex:inputField value="{!objRecCharge.Quantity__c}" rendered="{!blnIsEdit}"/>
+                                        <apex:outputField value="{!objRecCharge.Quantity__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Rate" style="background-color:#FFFF99;">
+                                        <apex:inputField value="{!objRecCharge.Rate__c}" rendered="{!blnIsEdit}"/>
+                                        <apex:outputField value="{!objRecCharge.Rate__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                    </apex:column>
+                                    
+                                    <apex:column headerValue="Options" style="background-color:#FFFF99;" id="optionsCol">
+                                        <apex:outputPanel rendered="{!objRecCharge.Type__c == 'Business Care'}">
+                                            <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" title="{!$ObjectType.Contract_Recurring_Charge__c.Fields.Business_Care_Min_Revenue_Threshold__c.InlineHelpText}" rendered="{!blnIsEdit}"/>
+                                            <b>Minimum Revenue Threshold : </b>&nbsp;
+                                            <apex:inputField value="{!objRecCharge.Business_Care_Min_Revenue_Threshold__c}" rendered="{!blnIsEdit}"/>
+                                            <apex:outputField value="{!objRecCharge.Business_Care_Min_Revenue_Threshold__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                            <br/><br/>
+                                            <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" title="{!$ObjectType.Contract_Recurring_Charge__c.Fields.Business_Care_Max_Revenue_Threshold__c.InlineHelpText}" rendered="{!blnIsEdit}"/>
+                                            <b>Maximum Revenue Threshold : </b>&nbsp;
+                                            <apex:inputField value="{!objRecCharge.Business_Care_Max_Revenue_Threshold__c}" rendered="{!blnIsEdit}"/>
+                                            <apex:outputField value="{!objRecCharge.Business_Care_Max_Revenue_Threshold__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                            <br/><br/>
+                                            <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" title="{!$ObjectType.Contract_Recurring_Charge__c.Fields.Business_Care_Support_Fee_Percentage__c.InlineHelpText}" rendered="{!blnIsEdit}"/>
+                                            <b>Support Fee Percentage : </b>&nbsp;
+                                            <apex:inputField value="{!objRecCharge.Business_Care_Support_Fee_Percentage__c}" rendered="{!blnIsEdit}"/>
+                                            <apex:outputField value="{!objRecCharge.Business_Care_Support_Fee_Percentage__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                            <br/><br/>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!objRecCharge.Type__c == 'Units In Plan'}">
+                                            <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" title="{!$ObjectType.Contract_Recurring_Charge__c.Fields.Units__c.InlineHelpText}" rendered="{!blnIsEdit}"/>
+                                            <b>Units : </b>&nbsp;
+                                            <apex:inputField value="{!objRecCharge.Units__c}" rendered="{!blnIsEdit}"/>
+                                            <apex:outputField value="{!objRecCharge.Units__c}" rendered="{!NOT(blnIsEdit)}"/>
+                                        </apex:outputPanel>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <br/>
+                                <apex:outputPanel rendered="{!blnIsEdit}">
+                                    <br/>
+                                    <apex:commandLink title="Add Recurring Charge" action="{!addRecurringCharge}" rerender="configBlock">
+                                        <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                        <apex:image value="{!$Resource.PlusSign}" width="25px" height="25px"/>
+                                    </apex:commandLink>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!blnIsBOGOEdit || objTSWrapper.list_BOGODetails.size > 0}">
+                                <b>BOGO Details</b>
+                                <apex:variable var="rowNumRange" value="{!0}"/>
+                                <apex:pageBlockTable value="{!objTSWrapper.list_BOGODetails}" var="objBOGODetail" style="border-collapse: collapse;border:solid 1px black;">
+                                    <apex:column headerValue="Action" rendered="{!blnIsBOGOEdit}" style="background-color:white;">
+                                        <apex:commandlink action="{!removeBOGODetail}" rerender="configBlock" title="Remove BOGO Detail">
+                                            <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                            <apex:param name="strRowIndex" assignTo="{!strRowIndex}" value="{!rowNumRange}"/>
+                                            <apex:image url="{!$Resource.MinusSign}" width="16px" height="16px"/>    
+                                        </apex:commandlink>
+                                        <apex:variable var="rowNumRange" value="{!rowNumRange + 1}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Parent Quantity" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objBOGODetail.Parent_Quantity__c}" rendered="{!NOT(blnIsBOGOEdit)}"/>
+                                        <apex:inputField value="{!objBOGODetail.Parent_Quantity__c}" style="width:100px" rendered="{!blnIsBOGOEdit}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Related Quantity" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objBOGODetail.Related_Quantity__c}" rendered="{!NOT(blnIsBOGOEdit)}"/>
+                                        <apex:inputField value="{!objBOGODetail.Related_Quantity__c}" style="width:100px" rendered="{!blnIsBOGOEdit}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Related Tier Set" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objBOGODetail.Related_Tier_Set__r.Name}" rendered="{!NOT(blnIsBOGOEdit)}"/>
+                                        <!--<apex:inputField value="{!objBOGODetail.Related_Tier_Set__c}" rendered="{!blnIsBOGOEdit}"/>-->
+                                        <apex:selectList value="{!objBOGODetail.Related_Tier_Set__c}" size="1" rendered="{!blnIsBOGOEdit}">
+                                            <apex:selectOptions value="{!list_TierSetOptions}"/>
+                                        </apex:selectList>
+                                    </apex:column>
+                                    <apex:column headerValue="Prorate" style="background-color:#FFFF99;">
+                                        <apex:outputField value="{!objBOGODetail.Prorate__c}" rendered="{!NOT(blnIsBOGOEdit)}"/>
+                                        <apex:inputField value="{!objBOGODetail.Prorate__c}" rendered="{!blnIsBOGOEdit}"/>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <apex:outputPanel rendered="{!blnIsBOGOEdit}">
+                                    <br/>
+                                    <apex:commandLink title="Add BOGO Detail" action="{!addBOGODetail}" rerender="configBlock">
+                                        <apex:param name="strTierIndex" assignTo="{!strTierIndex}" value="{!rowNumTier}"/>
+                                        <apex:image value="{!$Resource.PlusSign}" width="25px" height="25px"/>
+                                    </apex:commandLink>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <apex:variable var="rowNumTier" value="{!rowNumTier + 1}"/>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                    <br/>
+                    <apex:commandlink action="{!addTierSetAtBottom}" rerender="configBlock" title="Add Tier Set" rendered="{!blnIsEdit}">
+                        <apex:image value="{!$Resource.PlusSign}" width="30px" height="30px"/>
+                    </apex:commandLink>
+                </apex:pageBlock>
+            </apex:tab>
+            <apex:tab label="Reports" name="reports" style="font-size:105%">
+                <apex:pageBlock title="New Report Request" id="newReportRequests" lang="">
+                    <apex:pageBlockSection >
+                        <apex:pageBlockTable value="{!objNewReportRequest}" var="objNewReportRequest">
+                            <apex:column headerValue="Platform Ids">
+                                <apex:selectList value="{!list_SelectedPlatformIds}" multiselect="true">
+                                    <apex:selectOptions value="{!list_SelectPlatformIds}"/>
+                                </apex:selectList>
+                            </apex:column>
+                            <apex:column headerValue="Report Types">
+                                <apex:inputField value="{!objNewReportRequest.Report_Type__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Start Month">
+                                <apex:selectList value="{!objNewReportRequest.Start_Month__c}" size="1" >
+                                    <apex:selectOption itemValue="1" itemLabel="Jan"/>
+                                    <apex:selectOption itemValue="2" itemLabel="Feb"/>
+                                    <apex:selectOption itemValue="3" itemLabel="Mar"/>
+                                    <apex:selectOption itemValue="4" itemLabel="Apr"/>
+                                    <apex:selectOption itemValue="5" itemLabel="May"/>
+                                    <apex:selectOption itemValue="6" itemLabel="Jun"/>
+                                    <apex:selectOption itemValue="7" itemLabel="Jul"/>
+                                    <apex:selectOption itemValue="8" itemLabel="Aug"/>
+                                    <apex:selectOption itemValue="9" itemLabel="Sep"/>
+                                    <apex:selectOption itemValue="10" itemLabel="Oct"/>
+                                    <apex:selectOption itemValue="11" itemLabel="Nov"/>
+                                    <apex:selectOption itemValue="12" itemLabel="Dec"/>
+                                </apex:selectList>
+                            </apex:column>
+                            <apex:column headerValue="Start Year">
+                                <apex:inputField value="{!objNewReportRequest.Start_Year__c}" />
+                            </apex:column>
+                            <apex:column headerValue="End Month">
+                                <apex:selectList value="{!objNewReportRequest.End_Month__c}" size="1" >
+                                    <apex:selectOption itemValue="1" itemLabel="Jan"/>
+                                    <apex:selectOption itemValue="2" itemLabel="Feb"/>
+                                    <apex:selectOption itemValue="3" itemLabel="Mar"/>
+                                    <apex:selectOption itemValue="4" itemLabel="Apr"/>
+                                    <apex:selectOption itemValue="5" itemLabel="May"/>
+                                    <apex:selectOption itemValue="6" itemLabel="Jun"/>
+                                    <apex:selectOption itemValue="7" itemLabel="Jul"/>
+                                    <apex:selectOption itemValue="8" itemLabel="Aug"/>
+                                    <apex:selectOption itemValue="9" itemLabel="Sep"/>
+                                    <apex:selectOption itemValue="10" itemLabel="Oct"/>
+                                    <apex:selectOption itemValue="11" itemLabel="Nov"/>
+                                    <apex:selectOption itemValue="12" itemLabel="Dec"/>
+                                </apex:selectList>
+                            </apex:column>
+                            <apex:column headerValue="End Year">
+                                <apex:inputField value="{!objNewReportRequest.End_Year__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Create">
+                                <apex:commandButton value="Create" action="{!createNewReportRequest}" status="status" />
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+                <apex:pageBlock title="Run Report Requests" id="reportRequests" >
+                    <apex:pageBlockSection columns="1" title="Run Report Requests">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Month"/>
+                            <apex:selectList value="{!objReportJobLog.Month__c}" size="1">
+                                <apex:selectOption itemValue="" itemLabel="--None--"/>
+                                <apex:selectOption itemValue="1" itemLabel="Jan"/>
+                                <apex:selectOption itemValue="2" itemLabel="Feb"/>
+                                <apex:selectOption itemValue="3" itemLabel="Mar"/>
+                                <apex:selectOption itemValue="4" itemLabel="Apr"/>
+                                <apex:selectOption itemValue="5" itemLabel="May"/>
+                                <apex:selectOption itemValue="6" itemLabel="Jun"/>
+                                <apex:selectOption itemValue="7" itemLabel="Jul"/>
+                                <apex:selectOption itemValue="8" itemLabel="Aug"/>
+                                <apex:selectOption itemValue="9" itemLabel="Sep"/>
+                                <apex:selectOption itemValue="10" itemLabel="Oct"/>
+                                <apex:selectOption itemValue="11" itemLabel="Nov"/>
+                                <apex:selectOption itemValue="12" itemLabel="Dec"/>
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objReportJobLog.Year__c}"/>
+                        <apex:commandButton value="Run Reports" action="{!runReportRequests}" status="status" />
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+                <apex:pageBlock title="Existing Report Requests" id="viewReportRequests" >
+                    <apex:pageBlockSection columns="2" title="Run Report Requests" showHeader="false">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="View Report Request Detail"/>
+                            <apex:outputLink value="/00O0B000003SIyo?pv0={!objContract.Name}" target="_blank" style="text-decoration:none" styleClass="btn">View</apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <br/>
+                    <apex:pageBlockTable value="{!list_CloudBillingReportRequest}" var="reportRequest" >
+                        <apex:column headerValue="Report Request Name">
+                            <apex:outputLink value="/{!reportRequest.Id}" >
+                                {!reportRequest.Name}
+                            </apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Report Types">
+                            <apex:outputField value="{!reportRequest.Report_Type__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Platform Ids">
+                            <apex:outputField value="{!reportRequest.Platform_Id_List__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Start Month">
+                            <apex:outputField value="{!reportRequest.Start_Month__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Start Year">
+                            <apex:outputField value="{!reportRequest.Start_Year__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="End Month">
+                            <apex:outputField value="{!reportRequest.End_Month__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="End Year">
+                            <apex:outputField value="{!reportRequest.End_Year__c}"/>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+            </apex:tab>
+            <apex:tab label="Audit Info" name="auditInfo">
+                <apex:pageBlock >
+                    <apex:pageBlockSection title="Client Product Mappings For This Account">
+                        <apex:pageBlockTable value="{!list_ClientProductMappings}" var="objClientProductMapping" rendered="{!list_ClientProductMappings.size > 0}">
+                            <apex:column headerValue="Cloud Deployment Name">
+                                <apex:outputLink value="/{!objClientProductMapping.Id}" >
+                                    {!objClientProductMapping.Cloud_Deployment__r.Name}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Tenant Id">
+                                <apex:outputField value="{!objClientProductMapping.Tenant_Id__c}"/>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Links" collapsible="false"/>
+                    <apex:outputLink value="/{!objContract.Id}?nooverride=1" target="_blank" style="font-size:110%" rendered="{!NOT(blnIsContractApprover)}">View Billing Details Standard Page</apex:outputLink>
+                    <br/><br/>
+                    <apex:outputLink value="/00OU00000035ISE?pv0={!objContract.Account_Name__r.Name}" target="_blank" style="font-size:110%">View Billing Master Orders</apex:outputLink>
+                    <br/><br/>
+                    <apex:outputLink value="/00OU00000035ISJ?pv0={!objContract.Name}" target="_blank" style="font-size:110%">View Monthly Billing Orders Report</apex:outputLink>
+                    <br/><br/>
+                    <apex:outputLink value="/00OP0000000PpIc?pv0={!objContract.Account_Name__r.Name}" target="_blank" style="font-size:110%">View Monthly Credit Memos</apex:outputLink>
+                    <br/>
+                    <apex:pageBlockSection title="Usages/Manual Order" collapsible="false"/>
+                    <apex:outputLabel value="Month" style="font-weight:bold"/>
+                    &nbsp;&nbsp;
+                    <apex:selectList value="{!objLog.Month__c}" size="1">
+                        <apex:selectOption itemValue="" itemLabel="--None--"/>
+                        <apex:selectOption itemValue="1" itemLabel="Jan"/>
+                        <apex:selectOption itemValue="2" itemLabel="Feb"/>
+                        <apex:selectOption itemValue="3" itemLabel="Mar"/>
+                        <apex:selectOption itemValue="4" itemLabel="Apr"/>
+                        <apex:selectOption itemValue="5" itemLabel="May"/>
+                        <apex:selectOption itemValue="6" itemLabel="Jun"/>
+                        <apex:selectOption itemValue="7" itemLabel="Jul"/>
+                        <apex:selectOption itemValue="8" itemLabel="Aug"/>
+                        <apex:selectOption itemValue="9" itemLabel="Sep"/>
+                        <apex:selectOption itemValue="10" itemLabel="Oct"/>
+                        <apex:selectOption itemValue="11" itemLabel="Nov"/>
+                        <apex:selectOption itemValue="12" itemLabel="Dec"/>
+                    </apex:selectList>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <apex:outputLabel value="Year" style="font-weight:bold"/>
+                    &nbsp;&nbsp;
+                    <apex:inputField value="{!objLog.Year__c}"/>
+                    &nbsp;&nbsp;&nbsp;
+                    <apex:commandLink value="View Usage Report" action="{!viewUsageReport}" target="_blank" style="font-size:110%;text-decoration:none" styleClass="btn"/>
+                    <apex:commandLink value="View Usage Report Subscription Bursting" action="{!viewUsageReportWithBursting}" target="_blank" style="font-size:110%;text-decoration:none" styleClass="btn"/>
+                    <apex:commandLink value="Create Blank Order" action="{!handleManualOrderCreation}" target="_blank" style="font-size:110%;text-decoration:none" styleClass="btn"/>
+                    
+                    <br/>
+                    <apex:pageBlockSection title="History" collapsible="false"/>
+                    <c:GenericHistoryComponent object="{!objContract}" recordsLimit="20"/>
+                </apex:pageBlock>
+            </apex:tab> 
+            <apex:tab label="Re-Rate Usage Data" name="rerate" rendered="{!NOT(blnIsContractManager) && NOT(blnIsContractReadOnly)}">
+                <!-- TotalJobItems, JobItemsProcessed, Status, CreatedDate -->
+                <apex:pageBlock id="reRatingBlock">
+                    <apex:pageBlockSection title="Notes" columns="2" rendered="{!intContractStartDay != 1}">
+                        <apex:pageBlockSectionItem >
+                            Will start on day {!intContractStartDay} of the month due to contract start date
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Timeline" columns="2">                         
+                        
+                        <!--Nitin Code block Start
+<apex:pageBlockSectionItem >
+<apex:outputLabel value="Select Date" style="font-weight:bold"/>                                                  
+<apex:selectList id="timePeriod" value="{!RerateYearMonthSelection}" size="1">
+<apex:selectOptions value="{!RerateTimeperiodoptions}"/>
+</apex:selectList>
+</apex:pageBlockSectionItem>
+Nitin Code block End-->
+                        
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Month"/>
+                            <apex:selectList value="{!objRerateLog.Month__c}" size="1">
+                                <apex:selectOption itemValue="" itemLabel="--None--"/>
+                                <apex:selectOption itemValue="1" itemLabel="Jan"/>
+                                <apex:selectOption itemValue="2" itemLabel="Feb"/>
+                                <apex:selectOption itemValue="3" itemLabel="Mar"/>
+                                <apex:selectOption itemValue="4" itemLabel="Apr"/>
+                                <apex:selectOption itemValue="5" itemLabel="May"/>
+                                <apex:selectOption itemValue="6" itemLabel="Jun"/>
+                                <apex:selectOption itemValue="7" itemLabel="Jul"/>
+                                <apex:selectOption itemValue="8" itemLabel="Aug"/>
+                                <apex:selectOption itemValue="9" itemLabel="Sep"/>
+                                <apex:selectOption itemValue="10" itemLabel="Oct"/>
+                                <apex:selectOption itemValue="11" itemLabel="Nov"/>
+                                <apex:selectOption itemValue="12" itemLabel="Dec"/>
+                            </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objRerateLog.Year__c}"/>
+                        
+                        
+                        <!--<apex:outputText value="OR" style="font-weight:bold"/>
+<apex:inputField value="{!objRerateLog.Start_Date__c}"/>
+<apex:inputField value="{!objRerateLog.End_Date__c}"/>-->
+                        <apex:pageBlockSectionItem rendered="{!objContract.Product_Group__c != 'PureEngage'}">      
+                            <apex:outputLabel value="Re-Rate Usage Data"/>
+                            <apex:commandButton value="Execute" action="{!reRateUsageData}" status="status" rerender="reRatingBlock,msgs" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!objContract.Product_Group__c == 'PureEngage'}">      
+                            <apex:outputLabel value="Re-Rate Usage Data"/>
+                            <apex:outputLabel value="Re-Rate Disabled for PureEngage, Contact your Admin" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="View Cloud Billing Logs"/>
+                            <apex:outputLink value="/a9n?fcf=00BU0000004GmIi" target="_blank" style="text-decoration:none" styleClass="btn">View</apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >                            
+                            <apex:outputLabel value="Rate Usage Data"/>
+                            <apex:commandButton value="Execute" action="{!rateUsageData}" status="status" rerender="reRatingBlock,msgs"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <!--apex:pageBlockSection title="Rating Jobs">
+<apex:pageBlockTable id="RatingStatus" value="{!list_ratingJobs}" var="job" rendered="{!list_ratingJobs.size > 1}" >
+<apex:column headerValue="Rating Job Name" >
+<apex:outputField value="{!job.ApexClass.Name}"/>
+</apex:column>
+<apex:column headerValue="Total Items" >
+<apex:outputField value="{!job.TotalJobItems}"/>
+</apex:column>
+<apex:column headerValue="Processed Items" >
+<apex:outputField value="{!job.JobItemsProcessed}"/>
+</apex:column>
+<apex:column headerValue="Status" >
+<apex:outputField value="{!job.Status}"/>
+</apex:column>
+<apex:column headerValue="Created Date" >
+<apex:outputField value="{!job.CreatedDate}"/>
+</apex:column>
+</apex:pageBlockTable>
+<apex:outputText rendered="{!list_ratingJobs.size = 0}">None pending.</apex:outputText>
+</apex:pageBlockSection -->
+                </apex:pageBlock>
+            </apex:tab>
+        </apex:tabPanel>               
+    </apex:form>
+    <br/>
+    <apex:relatedList subject="{!GCR_Content_Document_Detail__c}" list="CombinedAttachments" rendered="{!NOT(blnIsContractReadOnly)}"/>
+    
+    <!--<apex:relatedList subject="{!GCR_Content_Document_Detail__c}" list="Genesys_Quotes1__r" rendered="{!NOT(blnIsContractReadOnly)}"/>-->
+    <!--Rony May 2 Bursted quotes-->
+    <div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">    
+                <apex:outputPanel id="popPanel">
+                    <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                    <apex:outputPanel styleClass="custPopup" layout="block">
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:facet>                           
+        </apex:actionStatus>
+    </div>
+    <style> 
+        .custPopup
+        {
+        background-color: white;
+        border-width: 2px;
+        border-style: solid;
+        z-index: 9999;
+        left: 50%;
+        padding:10px;
+        position: fixed;
+        width: 500px;
+        margin-left: -250px;
+        top: 40%;
+        }
+        .popupBackground
+        {
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+        }
+    </style>
+</apex:page>

@@ -1,0 +1,876 @@
+<apex:component controller="LMSNewLicenseComponentController" id="cmp" allowDML="True">
+    <apex:attribute name="paramUserType" description="Logged in User Type" type="String" required="true" assignTo="{!userType}"/>
+    <apex:attribute name="paramAccountId" description="Account Id" type="String" required="true" assignTo="{!endUserAccountId}"/>
+    <apex:attribute name="paramSoldToAccountIds" description="List of Sold To Account Ids" type="String[]" required="true"  assignTo="{!soldToAccountIds}"/>
+    <apex:attribute name="Hybrid" description="Include Subscription Parts" type="String" required="true" assignTo="{!requestType}"/>
+    <apex:includeScript value="{!$Resource.jquery19}" />
+    
+    <style>
+        .errorBox {border-color:red;}
+        hr {
+            border-style:double;
+        }
+    </style>
+    <script type="text/javascript">
+    var j$ = jQuery.noConflict(); 
+    var siteState = '0';
+    var productState = '0';
+    var prodLineState = '0';
+    var switchSelected = 'false';
+    
+    function showHideKeys(divNumber) {
+        var PartKeysDiv = document.getElementById('PartKeys'+divNumber);
+        var plusDiv = document.getElementById('plus'+divNumber);
+        var minusDiv = document.getElementById('minus'+divNumber);
+        if (PartKeysDiv.style.display === "none") {
+            PartKeysDiv.style.display = "block";
+        } else {
+            PartKeysDiv.style.display = "none";
+        }
+        if (plusDiv.style.display === "none") {
+            plusDiv.style.display = "block";
+        } else {
+            plusDiv.style.display = "none";
+        }
+        if (minusDiv.style.display === "none") {
+            minusDiv.style.display = "block";
+        } else {
+            minusDiv.style.display = "none";
+        }
+    }  
+    
+    function orderedCallout(){
+        document.documentElement.scrollTop = 0;
+        var state = 'true';
+        var inc = 0 ; 
+
+        j$(".macHybrid").each(function() {
+            if(j$(this).val()==''){ 
+                j$(this).addClass("error");
+                state = 'false';
+            }                   
+            else{
+                j$(this).removeClass("error");
+            }  
+        });
+        
+        j$(".macHybrid").each(function() {
+            if(j$(this).val()==''){ 
+                j$(this).addClass("error");
+                state = 'false';
+                if(inc==0)
+                    j$("[id=hosthyberrorMsg]").show();
+                if(inc==1)    
+                    j$("[id=namehyberrorMsg]").show();
+                if(inc==2)    
+                    j$("[id=hybexpirationErrMsg]").show();
+            }                   
+            else{
+                j$(this).removeClass("error");
+                if(inc==0)
+                    j$("[id=hosthyberrorMsg]").hide();
+                if(inc==1)    
+                    j$("[id=namehyberrorMsg]").hide();
+                if(inc==2)    
+                    j$("[id=hybexpirationErrMsg]").hide();
+            }  
+          inc++;  
+        });
+        
+
+        if(j$("[id$=switch]").is(":visible"))
+        j$(".switchmacHybrid").each(function() {
+            if(j$(this).val()=='' && switchSelected == 'false'){
+                j$(this).addClass("error");
+                state = 'false';
+                  if(inc==0)
+                    j$("[id=switchhostidErr]").show();
+                  if(inc==1)    
+                    j$("[id=switchmachinenameErr]").show();
+            }
+            else{
+                j$(this).removeClass("error");
+                if(inc==0)
+                    j$("[id=switchhostidErr]").hide();
+                if(inc==1)
+                    j$("[id=switchmachinenameErr]").hide();
+            }   
+          inc++;    
+        });
+
+        
+        if(j$("input:radio[name='serverpartRadio']").is(':checked')==false){ //this validates server selection not null
+            state='false';
+            j$("[id$=serverSelectionErr]").css('display','block');
+        }
+        else
+            j$("[id$=serverSelectionErr]").css('display','none');
+        
+        if(j$("[id$=switch]").is(":visible"))
+        if(j$(".test").is(":checked")==false) 
+          if(j$("input:radio[name='switchoverRadio']").is(':visible')){  
+            if(j$("input:radio[name='switchoverRadio']").is(':checked')==false){  //this validates switchover radio selection not null
+                state='false';
+                j$("[id$=switchSelectionErr]").show();
+            }
+        }
+        else
+            j$("[id$=switchSelectionErr]").css('display','none');
+        
+        
+        if(state == 'true'){
+            setLoadingDialogMessage('Generating Activation File...');
+            showLoadingDialog();
+            callout();
+        }    
+        else    
+            return false;    
+    }     
+    
+    function nonOrderedCallout(){
+        document.documentElement.scrollTop = 0;
+        var state = 'true';
+        var inc = 0 ;
+        j$(".macnoHybrid").each(function() {
+            if(j$(this).val()==''){ 
+                j$(this).addClass("error");
+                state = 'false';
+            }                   
+            else{
+                j$(this).removeClass("error");
+            }    
+        });
+        
+        if(j$("[id$=switch1]").is(":visible"))
+        j$(".switchmacHybrid1").each(function() {
+            if(j$(this).val()=='' && switchSelected == 'false'){
+                j$(this).addClass("error");
+                state = 'false';
+                  if(inc==0)
+                    j$("[id=switchhostidErr1]").show();
+                  if(inc==1)    
+                    j$("[id=switchmachinenameErr1]").show();
+            }
+            else{
+                j$(this).removeClass("error");
+                if(inc==0)
+                    j$("[id=switchhostidErr1]").hide();
+                if(inc==1)
+                    j$("[id=switchmachinenameErr1]").hide();
+            }   
+          inc++;    
+        });
+        
+        
+        if(state == 'true'){
+            setLoadingDialogMessage('Generating Activation File...');
+            showLoadingDialog();
+            callout();
+        }    
+        else    
+            return false;  
+    }
+    
+    function check(available,cnt,e){
+        if(parseInt(e.value) > parseInt(available)){
+            setLoadingMessageDialogContent('Please order with in the available Quantity:'+available);
+            setLoadingMessageTitle('Message');
+            showMessage();
+            e.value=0;
+            e.focus();
+        }
+    }
+
+    function checkBlank(e){     
+         if(isNaN(e.value) == false && e.value.trim()!='')
+          {
+           return;
+          }
+         else
+          { 
+           e.value = 0;
+           e.focus();
+           return; 
+          }
+    }
+
+    
+    function callme(){
+        var state = 'true';
+        if(j$('select[id$=productHybrid]').val() == '-- SELECT --'){
+            j$('[id$=productHybrid]').addClass('error');
+            j$('[id$=productErr]').css('display','block');   
+            state = 'false';  
+        } 
+        if(j$('select[id$=siteHybrid]').val() == 'All Install Sites') {
+            j$('[id$=siteErr]').css('display','block');
+            j$('[id$=siteHybrid]').addClass('error');
+            state = 'false';
+        }
+        if(j$('select[id$=soldTo]').val() == '--SELECT--') {
+            j$('[id$=soldToErr]').css('display','block');
+            j$('[id$=soldTo]').addClass('error');
+            state = 'false';
+        }   
+        if(j$('select[id$=prodLineHybrid]').val() == '-- SELECT --') {
+            j$('[id$=prodLineErr]').css('display','block');
+            j$('[id$=prodLineHybrid]').addClass('error');
+            state = 'false';
+        }    
+        if(j$('select[id$=licenseHybrid]').val() == '-- SELECT --') {
+            j$('[id$=licenseErr]').css('display','block');
+            j$('[id$=licenseHybrid]').addClass('error');
+            state = 'false';
+        }    
+        if(state=='true'){
+            disableFields();
+            setLoadingDialogMessage('fetching parts...');
+            showLoadingDialog();
+            fetchParts();
+        }
+    }
+    
+    function disableFields(){
+        j$('[id$=productHybrid]').removeClass('error');
+        j$('[id$=productErr]').css('display','none');   
+        j$('[id$=siteErr]').css('display','none');
+        j$('[id$=soldToErr]').css('display','none');
+        j$('[id$=siteHybrid]').removeClass('error');
+        j$('[id$=prodLineErr]').css('display','none');
+        j$('[id$=prodLineHybrid]').removeClass('error');
+        j$('[id$=licenseErr]').css('display','none');
+        j$('[id$=licenseHybrid]').removeClass('error');
+        j$('[id$=Go]').prop('disabled','true');
+        j$('[id$=productHybrid]').prop('disabled','true');
+        j$('[id$=prodLineHybrid]').prop('disabled','true');
+        j$('[id$=siteHybrid]').prop('disabled','true');
+        j$('[id$=soldTo]').prop('disabled','true');
+        j$('[id$=licenseHybrid]').prop('disabled','true');
+    }
+    
+    j$(document).ready(function(){ 
+        if('{!pageBlock}'=='page3' || '{!pageBlock}'=='NonOrdered' || '{!pageBlock}'=='NoServer'){
+            disableFields();
+        }
+       
+        j$('[id$=productHybrid]').change(function(){
+            if(j$('[id$=productHybrid]').val() == '-- SELECT --'){
+                j$('[id$=productHybrid]').addClass('error');
+                j$('[id$=productErr]').css('display','block');
+            } else {
+                j$('[id$=productHybrid]').removeClass('error');
+                j$('[id$=productErr]').css('display','none');       
+            }   
+        });
+        
+        j$('[id$=prodLineHybrid]').change(function(){
+            if(j$('[id$=prodLineHybrid]').val() == '-- SELECT --'){
+                j$('[id$=prodLineHybrid]').addClass('error');
+                j$('[id$=prodLineErr]').css('display','block');
+            } else {
+                j$('[id$=prodLineHybrid]').removeClass('error');
+                j$('[id$=prodLineErr]').css('display','none');       
+            }   
+        });
+        
+        j$('[id$=siteHybrid]').change(function(){    
+            if(j$('[id$=siteHybrid]').val() == 'All Install Sites') {
+                j$('[id$=siteErr]').css('display','block');
+                j$('[id$=siteHybrid]').addClass('error');
+            } else {
+                j$('[id$=siteErr]').css('display','none');    
+                j$('[id$=siteHybrid]').removeClass('error');
+            }  
+        });
+        
+        j$('[id$=soldTo]').change(function(){    
+            if(j$('[id$=soldTo]').val() == 'All Install Sites') {
+                j$('[id$=soldToErr]').css('display','block');
+                j$('[id$=soldTo]').addClass('error');
+            } else {
+                j$('[id$=soldToErr]').css('display','none');    
+                j$('[id$=soldTo]').removeClass('error');
+            }  
+        }); 
+        
+        productSelection();    
+    }); 
+    
+    function productSelection() {
+      //This is used for grouping in product picklist
+     
+     var selectList = j$("[id$=productHybrid]"); 
+     var regions = {};
+
+        // iterate all of the options and collect them by region
+        j$('option', selectList).each(function (i) {
+            if (i === 0) {
+                return; // skip the first element in the list
+            }
+            var oElement = j$(this);
+            var regionCountryArray = oElement.text().split('_');
+            // create an array entry for the region name if there is not one
+            if (!regions[regionCountryArray[0]]) {
+                regions[regionCountryArray[0]] = [];
+            }
+
+            // add the item to the array for this region
+            regions[regionCountryArray[0]].push(oElement);
+        });
+        
+        
+            for (var region in regions) {
+            // make sure the name did not come from the prototype
+            if (regions.hasOwnProperty(region)) {
+            // turn the array of items into a single jQuery collection
+             var groupElements = j$(regions[region]).map(function () {
+             return this.toArray();
+            });
+
+            var optgroup = j$('<optgroup/>');
+                optgroup.attr('label', region);
+
+                // wrap the option elements in an optgroup
+                groupElements.wrapAll(optgroup);
+
+                // remove the region text from the label
+                groupElements.each(function () {
+                    j$(this).text(function () {
+                        return j$(this).text().replace(region + '_', '');
+                    });
+                });
+            }
+          } 
+    }
+    
+     var isChecked = false;
+     function called(val){
+         if(j$("input:radio[name='switchoverRadio']").is(":checked") && isChecked){
+             j$("input:radio[name='switchoverRadio']").prop('checked', false);
+             isChecked = false;
+             j$("[id*='theHiddenInput']").val('');
+         }    
+         else{
+             isChecked = true;    
+             j$("[id*='theHiddenInput']").val(val);
+         }
+         switchServer();
+     }
+    
+    j$(document).on('change','.test',function(){
+        if(j$(this).is(":checked")) {
+            j$('[id$=showHidden]').val(true);
+            switchSelected = 'true';
+            j$('[id$=switch]').hide();
+        }
+        else{
+            j$('[id$=showHidden]').val(false);
+            switchSelected  = 'false';
+            j$('[id$=switch]').show();
+        } 
+        switchServer();
+    });      
+    
+   j$(document).on('change','.test1',function(){ 
+        if(j$(this).is(":checked")) {
+            j$('[id$=showHidden1]').val(true);
+            switchSelected = 'true';
+            j$('[id$=switch1]').hide();
+        }
+        else{
+            j$('[id$=showHidden1]').val(false);
+            switchSelected  = 'false';
+            j$('[id$=switch1]').show();
+        } 
+        switchServer();
+    });   
+    
+    function resetBtn() {
+        Reset();
+    }
+    
+    function checkLength(elem){
+        var fieldLength = elem.value.length;
+        if(fieldLength <13){
+            return true;
+        }
+        else{
+            var str = elem.value;
+            str = str.substring(0, str.length - 1);
+            elem.value = str;
+        }
+    }
+    </script> 
+    <apex:form id="frm">
+        <apex:actionFunction name="callout"  action="{!calloutLicenseService}" oncomplete="hideLoadingDialog();" reRender="frm,showmsg" />
+        <apex:actionFunction name="switchServer" action="{!dummyAction}"  rerender="none"/>
+        <apex:actionFunction name="fetchParts"  action="{!pageTwoCompleted}" oncomplete="hideLoadingDialog();" reRender="page3,NonOrdered,showmsg,NoServer" />    
+        <apex:actionFunction name="fetchLicense" reRender="page2" />   
+        <apex:actionFunction name="Reset" action="{!refresh}" oncomplete="productSelection();" rerender="frm" status="status"/> 
+        
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        
+        <apex:pageMessages escape="false" id="showmsg"></apex:pageMessages>
+        
+        <apex:outputPanel id="page1">
+            <apex:pageBlock rendered="{!(pageBlock == 'page1' || pageBlock == 'page2' || pageBlock == 'page3' || pageBlock == 'NoServer')}" title="Please select a product"> 
+                <TABLE WIDTH="100%"  style="border-collapse: separate; border-spacing: 5px;">
+                    <TR>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Sold To</b><br/>
+                            <apex:selectList id="soldTo" value="{!selectedSoldToAccountId}" multiselect="false" size="1" readonly="{!!isMultipleSoldTos}">
+                                <apex:selectOptions value="{!soldTo}"/>
+                            </apex:selectList> 
+                            <div id="soldToErr" class="errorMsg" style="display:none"><strong>Error:</strong>&nbsp;Please select a sold to</div>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Install Site</b><br/>
+                            <apex:selectList id="siteHybrid" value="{!selectedInstallSite}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!installSites}"/>
+                            </apex:selectList> 
+                            <div id="siteErr" class="errorMsg" style="display:none"><strong>Error:</strong>&nbsp;Please select a install site</div>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Product</b><br/>  
+                            <apex:selectList id="productHybrid" label="" value="{!selectedProduct}" multiselect="false" size="1">
+                                <apex:actionSupport event="onchange" action="{!getSecondaryPickVals}" reRender="prodLineHybrid,page2" status="status"/>
+                                <apex:selectOptions value="{!selectProdType}" />
+                            </apex:selectList>
+                            <div id="productErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please select a product</div>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Product Version</b><br/>
+                            <apex:selectList id="prodLineHybrid" label="" value="{!selectedProdLine}"  multiselect="false" size="1">
+                                <apex:actionSupport event="onchange" action="{!dummyAction}" reRender="page2" status="status"/>
+                                <apex:selectOptions value="{!selectProdLineList }" />
+                            </apex:selectList>
+                            <div id="prodLineErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;please select a line item</div>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <apex:outputPanel id="page2"> 
+                                <apex:outputPanel >
+                                    <b>License Type</b><br/>
+                                    <apex:selectList label="" id="licenseHybrid" value="{!selectedLicense}"  multiselect="false" size="1">
+                                        <apex:selectOptions value="{!licenseTypes}" />
+                                    </apex:selectList>
+                                    <div id="licenseErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;please select a license type</div>
+                                </apex:outputPanel> 
+                            </apex:outputPanel>
+                        </TD>
+                        <TD VALIGN="BOTTOM" style="white-space: nowrap">
+                            <apex:outputPanel id="GoBtn">
+                                <input type='button' id='Go' value=' Go ' onClick='callme();return false' width='10px' class="btn"/>&nbsp;&nbsp;
+                                <input type='button' id="Reset" value="Reset" onClick="resetBtn();" class="btn"/> 
+                            </apex:outputPanel>
+                        </TD>
+                    </TR>
+                </TABLE>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        
+        <apex:outputPanel id="page3" >
+            <apex:outputPanel rendered="{!pageBlock == 'page3'}">
+              <!--  <apex:pageMessage rendered="{!isProductKeysEmpty}" severity="Error">This product has no active keys available</apex:pageMessage>-->
+                <apex:pageBlock id="page3a">
+                    <apex:outputText Value="Machine Details" style="font-weight:bold"/>  <hr/>                  
+                    <apex:pageBlockSection columns="2">
+                        <apex:outputPanel rendered="{!!inputs.isSIP}">
+                        <span><b>Host Id</b><span style="color:red;"><b>&nbsp;*</b></span><br/><span style="font-size:small;">This value can be retrieved from the IC Setup Assistant. Host Id can also be generated using the GetHostID utility and is available on the Support website.</span>  </span>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{! inputs.isSIP && sipType=='Bulk Caller'}">
+                        <span><b>MAC Address</b><span style="color:red;"><b>&nbsp;*</b></span></span>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{! inputs.isSIP && sipType<>'Bulk Caller'}">
+                        <span><b>Machine Id</b><span style="color:red;"><b>&nbsp;*</b></span></span>
+                        </apex:outputPanel>
+
+                        <apex:inputText value="{!log.MAC_Address__c}" label="" styleClass="macHybrid" id="macId" onKeyUp="checkLength(this)"> 
+                            <div class="hosthyberrorMsg" style="display:none"><strong>Error:</strong>&nbsp;Please fill machine name</div>
+                        </apex:inputText> 
+                        <span><b>Machine Name</b><span style="color:red;"><b>&nbsp;*</b></span></span>
+                        <apex:inputText value="{!log.Machine_Name__c}" label="" styleClass="macHybrid">
+                            <div class="namehyberrorMsg" style="display:none"><strong>Error:</strong>&nbsp;Please fill machine name</div>
+                        </apex:inputText>
+                        <apex:outputPanel rendered="{!showSystemType}">
+                            <span><b>System Type</b> <br/><span style="font-size:small;"> Important Note: The System Type must be accurate or your license may not work as expected.</span> </span>  
+                        </apex:outputPanel>
+                            <apex:inputfield value="{!log.SystemType1__c}" label="" rendered="{!showSystemType}"/>    
+                        <apex:outputPanel rendered="{!showMailConnector}">
+                            <span><b>Mail Connector</b><br/><span style="font-size:small;"> Please specify the type of Mail Connector in use.</span></span>
+                        </apex:outputPanel>
+                            <apex:inputfield value="{!log.MailConnector1__c}" label="" rendered="{!showMailConnector}"/>
+                        
+                         <apex:outputPanel >
+                               <span><b>Expiration Date</b> <span style="color:red;"><b>&nbsp;*</b></span></span>
+                        </apex:outputPanel>       
+                            <apex:inputfield value="{!log.Expiration_Date__c}" label="" showDatePicker="true" styleClass="macHybrid">    
+                            <div id="hybexpirationErrMsg" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in expiration date</div>
+                            </apex:inputField>
+                            
+                        <apex:outputPanel >
+                             <span><b>Notes</b></span>
+                        </apex:outputPanel>
+                            <apex:inputtextArea value="{!log.Notes__c}" label="" cols="50" rows="5"/>    
+                    </apex:pageBlockSection> 
+                </apex:pageBlock>
+                
+                <apex:outputPanel id="dummy">
+                </apex:outputPanel>
+                
+                <apex:variable var="count" value="{!10001}"/>
+                <apex:pageBlock rendered="{!displaySummary}">
+                    <TABLE width="100%">
+                    <col width="70%"/>
+                    <col width="30%"/>
+                    <TR>
+                    <TD>
+                    <apex:outputText Value="Select One Valid Server Item" style="font-weight:bold"/>  
+                    </TD>
+                    <TD style="text-align:right;">
+                    <div id="serverSelectionErr" style="display:none">
+                        <span class="errorMsg" style="font-weight:bold"><strong>Error:</strong>&nbsp;Please select a server</span>
+                    </div> 
+                    </TD>
+                    </TR>
+                    </TABLE>
+                    <HR/>
+                    
+                    <apex:pageBlockTable value="{!licenseSummaryData}" var="record" id="DataTable1" >
+                        <apex:column headerValue=" " style="vertical-align:Top" width="5%">
+                            <div id="plus{!count}" style="display:block">
+                                <apex:image value="{!$Resource.ArrowCollapse}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;" />
+                            </div>
+                            <div id="minus{!count}" style="display:none">
+                                <apex:image value="{!$Resource.ArrowExpand}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;"/>
+                            </div>
+                        </apex:column>
+                        <apex:column headerValue="Part Number" style="vertical-align:Top">                    
+                            {!record.partNumber}
+                            <div id="PartKeys{!count}" name="PartKeys{!count}" style="display:none">
+                                <TABLE BORDER="0" WIDTH="100%">
+                                    <apex:repeat value="{!record.partKeys}" var="partKey">
+                                        <TR><TD>&nbsp;&nbsp; {!partKey}</TD></TR>
+                                    </apex:repeat>
+                                </TABLE>                                    
+                            </div>
+                            <apex:variable value="{!count+1}" var="count"/>
+                        </apex:column>
+                        <apex:column headerValue="Description" value="{!record.description}" style="vertical-align:Top"/>                    
+                        <apex:column headerValue="Total" value="{!record.total}" style="vertical-align:Top" />                    
+                        <apex:column headerValue="Used" value="{!record.used}" style="vertical-align:Top" />                    
+                        <apex:column headerValue="Available" value="{!record.available}" style="vertical-align:Top" /> 
+                        <apex:column headerValue="Use">
+                            <apex:outputPanel rendered="{!(record.partKeys.size>0)&& (record.partKeys[0]!=noKeyStr) && (record.available!=0)}">
+                                <apex:outputPanel >
+                                    <input name="serverpartRadio" type="radio">
+                                    <apex:actionSupport event="onclick" action="{!dummyAction}" rerender="serverSelectionErr,page3b"> 
+                                        <apex:param name="selectedServer" assignTo="{!inputs.selectedServer}" value="{!record.partNumber}"/>
+                                    </apex:actionSupport>
+                                </input>
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                        <apex:outputText value="#NA" rendered="{!((record.partKeys.size==1) && (record.partKeys[0]==noKeyStr)) || record.available==0}"/>
+                    </apex:column>    
+                </apex:pageBlockTable>
+            </apex:pageBlock>
+            
+            <apex:outputpanel rendered="{!!inputs.isSIP}">
+                 <apex:outputPanel id="switchoverPanel" rendered="{!showSwitchoverMachineDetail}">      
+                <table style="margin-left:20px; border-collapse: separate; border-spacing:10px">
+                 <tr> <td>       
+                <apex:inputCheckbox id="test" styleClass="test" value="{!show}" />  </td> <td>
+                <h4>Provide Switchover information at another time</h4></td>
+                </tr>
+                </table>
+                <apex:outputPanel id="switch" style="display:block">
+                    <apex:inputHidden value="{!show}" id="showHidden"/>
+                               
+                    <apex:pageBlock id="switchHostInfo" >
+                    <TABLE width="100%">
+                    <TR>
+                    <TD width="70%">
+                    <apex:outputText Value="Switchover Machine" style="font-weight:bold"/>
+                    </TD>
+                    <TD width="30%" style="text-align:right;">
+                    <div id="switchSelectionErr" style="display:none;">
+                        <span class="errorMsg" style="font-weight:bold"><strong>Error:</strong>Please select a switchover server</span>
+                    </div>
+                    </TD>
+                    </TR>
+                    </TABLE>
+                    <HR/>
+                        <table style="border-spacing: 10px; border-collapse: separate;">
+                             <col width="30%"/>
+                             <col width="20%"/>
+                             <col width="30%"/>                             
+                                <tr> 
+                                <td>
+                                    <span><b>Host Id</b></span><br/><span>This value can be retrieved from the IC Setup Assistant.<br/> Host Id can also be generated using the GetHostID utility and is available on the Support website.  </span>
+                                </td>
+                                <td>
+                                    <apex:inputText value="{!switchHostIds}" id="switchHostIds" styleClass="switchmacHybrid" onKeyUp="checkLength(this)"/>
+                                </td>
+                                <td>
+                                    <div id="switchhostidErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in switchover hostid</div>
+                                </td>
+                                </tr>    
+                                <tr>
+                                <td><span><b>Machine Name</b></span></td>
+                                <td><apex:inputText value="{!switchmachineNames}" id="switchmachinenames" styleClass="switchmacHybrid"/></td>
+                                <td><div id="switchmachinenameErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in switchover machine name</div></td>
+                                </tr>
+                            </table>
+                
+                        <apex:outputPanel style="padding-left:10px;" rendered="{!hasSwitchOverParts}"> 
+                            <apex:outputText id="swithchoverTxt" Value="Select One Valid Switchover Server Item" style="font-weight:bold"/>                    
+                            <apex:pageBlockTable value="{!switchoverSummaryData}" var="record" id="DataTable2">
+                                <apex:column headerValue=" " style="vertical-align:Top" width="5%">
+                                    <div id="plus{!count}" style="display:block">
+                                        <apex:image value="{!$Resource.ArrowCollapse}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;" />
+                                    </div>
+                                    <div id="minus{!count}" style="display:none">
+                                        <apex:image value="{!$Resource.ArrowExpand}" onclick="showHideKeys('{!count}')" width="18px;" height="18px;"/>
+                                    </div>
+                                </apex:column>
+                                <apex:column headerValue="Part Number" style="vertical-align:Top">                    
+                                    {!record.partNumber}
+                                    <div id="PartKeys{!count}" name="PartKeys{!count}" style="display:none">
+                                        <TABLE BORDER="0" WIDTH="100%">
+                                            <apex:repeat value="{!record.partKeys}" var="partKey">
+                                                <TR><TD>&nbsp;&nbsp; {!partKey}</TD></TR>
+                                            </apex:repeat>
+                                        </TABLE>                                    
+                                    </div>
+                                    <apex:variable value="{!count+1}" var="count"/>
+                                </apex:column>
+                                <apex:column headerValue="Description" value="{!record.description}" style="vertical-align:Top"/>                    
+                                <apex:column headerValue="Total" value="{!record.total}" style="vertical-align:Top" />                    
+                                <apex:column headerValue="Used" value="{!record.used}" style="vertical-align:Top" />                    
+                                <apex:column headerValue="Available" value="{!record.available}" style="vertical-align:Top" /> 
+                                <apex:column headerValue="Use">
+                                    <apex:outputPanel rendered="{!(record.partKeys.size>0)&& (record.partKeys[0]!=noKeyStr)}">
+                                        <apex:outputPanel >
+                                            <input id="switchoverRadio" name="switchoverRadio" type="radio" onClick="called('{!record.partNumber}');"/>
+                                            <apex:inputHidden value="{!inputs.selectedSwitchover}" id="theHiddenInput"/>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    <apex:outputText value="#NA" rendered="{!(record.partKeys.size==1)&& (record.partKeys[0]==noKeyStr)}"/>
+                                </apex:column>
+                            </apex:pageBlockTable>
+                        </apex:outputpanel>
+                    </apex:pageBlock>
+            </apex:outputPanel>            
+            </apex:outputPanel>       
+            <apex:outputPanel rendered="{!(!hasSwitchOverParts && displaySummary)}">
+                <h3> There are no switchover parts available </h3> 
+            </apex:outputPanel>
+            </apex:outputpanel>
+      <!--Switchover Licensetype 2.4 order-->      
+            <apex:outputPanel id="switchProds" rendered="{!selectedLic.Use_Parent__c}">
+                <apex:pageBlock rendered="{!If(requests.size>0,true,false)}">
+                    <apex:outputText Value="Select Any Add-on Item" style="font-weight:bold"/>
+                        <apex:pageBlockTable value="{!requests}" var="record">
+                            <apex:column headerValue="Generation Date" value="{!record.Generation_Date__c}" style="vertical-align:Top" width="5%"/>
+                            <apex:column headerValue="Generated By" value="{!record.Generated_By__c}" style="vertical-align:Top" width="5%"/>                            
+                            <apex:column headerValue="Product Line" value="{!record.Product_Line__r.Name}" style="vertical-align:Top" width="5%"/>
+                            <apex:column headerValue="License Type" value="{!record.License_Type__r.Name}" style="vertical-align:Top" width="5%"/>
+                            <apex:column headerValue=" "  style="vertical-align:Top" width="5%">  
+                                <apex:outputPanel >
+                                    <input id="switchoverRadio" name="switchoverRadio" type="radio" onClick="called('{!record.id}');"/>
+                                            <apex:inputHidden value="{!inputs.selectedSwitchover}" id="theHiddenInput"/>
+                                </apex:outputPanel>
+                            </apex:column>                                                      
+                        </apex:pageBlockTable>    
+                </apex:pageBlock>
+            </apex:outputPanel>
+            
+            <apex:outputPanel id="page3b" rendered="{!hasAddon}">
+            <apex:pageBlock rendered="{!(isMedia4 || (NOT(inputs.isSIP) && selectedLic.Allow_Addons__c))}">
+              <c:SummaryPagination summary="{!addOnSummaryData}" label="Select Any Add-on Item" NoOfRecords="50" source="{!paginationKey}" id="addOnComponent"/>     
+            </apex:pageBlock>
+            </apex:outputPanel>
+            
+            <apex:outputPanel id="subscriptionParts"> 
+            <apex:pageBlock >
+              <c:SummaryPagination summary="{!SubscriptionSummaryData}" NoOfRecords="50" label="Select Any Subscription Item" source="{!paginationKey}" id="subscriptionComponent"/>     
+            </apex:pageBlock>
+            </apex:outputPanel>
+            
+            <apex:pageBlock >
+                <apex:pageBlockButtons location="bottom" >
+                    <apex:commandButton value="Generate Activation File" onclick="javascript:orderedCallout();return false;" rendered="{!requestType!='Hybrid'}"/>
+                    <apex:commandButton value="Generate Hybrid File" onclick="javascript:orderedCallout();return false;" rendered="{!requestType=='Hybrid'}" /> 
+                    <apex:commandButton value="Cancel" onClick="resetBtn();return false;" styleclass="btn"/>
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:outputPanel>  
+    <apex:outputPanel id="NoServer">
+        <apex:outputPanel rendered="{!pageBlock=='NoServer'}">
+            <p style="text-align:center;font-color:red;font-size:20px;padding-top:3%;padding-bottom:3%;">  There are no server items for this product!</p>
+        </apex:outputPanel>
+    </apex:outputPanel> 
+
+
+<apex:outputPanel id="NonOrdered" >
+    <apex:outputPanel rendered="{!pageBlock == 'NonOrdered'}">
+        <apex:pageBlock >
+          <apex:outputText Value="Machine Details" style="font-weight:bold"/>  
+            <apex:pageBlockSection columns="2">
+                <apex:outputPanel rendered="{!!inputs.isSIP}">
+                        <span><b>Host Id</b><span style="color:red;"><b>&nbsp;*</b></span><br/><span style="font-size:small;">This value can be retrieved from the IC Setup Assistant. Host Id can also be generated using the GetHostID utility and is available on the Support website.</span>  </span>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!inputs.isSIP}">
+                        <span><b>MAC Address</b><span style="color:red;"><b>&nbsp;*</b></span></span>
+                </apex:outputPanel>
+                <apex:inputText value="{!log.MAC_Address__c}" label="" styleClass="macnoHybrid"  onKeyUp="checkLength(this)"> 
+                </apex:inputText> 
+                <span><b>Machine Name</b><span style="color:red;"><b>&nbsp;*</b></span></span>
+                <apex:inputText value="{!log.Machine_Name__c}" label="" styleClass="macHybrid">
+                    <div class="nameerrorMsg" style="display:none"><strong>Error:</strong>&nbsp;Please fill machine name</div>
+                </apex:inputText>                      
+                <apex:outputPanel rendered="{!showSystemType}">
+                    <span><b>System Type</b> <br/> <span style="font-size:small;">Important Note: The System Type must be accurate or your license may not work as expected. </span> </span> 
+                </apex:outputPanel>
+                    <apex:inputfield value="{!log.SystemType1__c}" label="" rendered="{!showSystemType}"/>    
+                <apex:outputPanel rendered="{!showMailConnector}">
+                    <span><b>Mail Connector</b><br/> <span style="font-size:small;">Please specify the type of Mail Connector in use.</span></span>
+                </apex:outputPanel>
+                    <apex:inputfield value="{!log.MailConnector1__c}" label="" rendered="{!showMailConnector}"/>
+            </apex:pageBlockSection> 
+        </apex:pageBlock>
+        
+        
+        <apex:outputpanel rendered="{!!inputs.isSIP}">
+            <apex:outputPanel id="switchoverpanel1"> 
+                
+                <table style="margin-left:20px; border-collapse: separate; border-spacing:10px">
+                 <tr> <td>       
+                <apex:inputCheckbox id="test1" styleClass="test1" value="{!show}" />  </td> <td>
+                <h4>Provide Switchover information at another time</h4></td>
+                </tr>
+                </table>
+                <apex:outputPanel id="switch1" style="display:block">
+                    <apex:inputHidden value="{!show}" id="showHidden1"/>
+                               
+                    <apex:pageBlock id="switchHostInfo1" >
+                    <TABLE width="100%">
+                    <TR>
+                    <TD width="70%">
+                    <apex:outputText Value="Switchover Machine" style="font-weight:bold"/>
+                    </TD>
+                    <TD width="30%" style="text-align:right;">
+                    <div id="switchSelectionErr1" style="display:none;">
+                        <span class="errorMsg1" style="font-weight:bold"><strong>Error:</strong>Please select a switchover server</span>
+                    </div>
+                    </TD>
+                    </TR>
+                    </TABLE>
+                    <HR/>
+                        <table style="border-spacing: 10px; border-collapse: separate;">
+                             <col width="30%"/>
+                             <col width="20%"/>
+                             <col width="30%"/>                             
+                                <tr> 
+                                <td>
+                                    <span><b>Host Id</b></span><br/><span>This value can be retrieved from the IC Setup Assistant.<br/> Host Id can also be generated using the GetHostID utility and is available on the Support website.  </span>
+                                </td>
+                                <td>
+                                    <apex:inputText value="{!switchHostIds}" id="switchHostIds1" styleClass="switchmacHybrid1" onKeyUp="checkLength(this)"/>
+                                </td>
+                                <td>
+                                    <div id="switchhostidErr1" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in switchover hostid</div>
+                                </td>
+                                </tr>    
+                                <tr>
+                                <td><span><b>Machine Name</b></span></td>
+                                <td><apex:inputText value="{!switchmachineNames}" id="switchmachinenames1" styleClass="switchmacHybrid1"/></td>
+                                <td><div id="switchmachinenameErr1" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in switchover machine name</div></td>
+                                </tr>
+                     </table>
+               </apex:pageBlock>      
+            </apex:outputpanel>
+            </apex:outputpanel>
+            </apex:outputpanel>
+        
+        <apex:pageBlock id="portlicense">
+           <apex:outputText Value="Port Licensing" style="font-weight:bold"/> 
+           <apex:outputPanel rendered="{!!hasLicense}">
+            <p style="text-align:center;font-color:red;font-size:10px;padding-top:3%;padding-bottom:3%;">  There are no license keys for this product!</p>
+           </apex:outputPanel>
+            <apex:pageBlockTable value="{!nonOrderedLicenses['License']}" var="record" title="License Keys" rendered="{!hasLicense}">
+                <apex:column headerValue="Key" value="{!record.licenseObj.Name}" style="vertical-align:Top" />                    
+                <apex:column headerValue="Description" value="{!record.licenseObj.description}" style="vertical-align:Top"/>                    
+                <apex:column headerValue="Assigned" rendered="{!validVersion}">
+                    <apex:inputText value="{!record.licenseObj.assigned}" onchange="checkBlank(this)"/>
+                </apex:column>                  
+                <apex:column headerValue="Pooled">
+                    <apex:inputText value="{!record.licenseObj.pooled}" onchange="checkBlank(this)"/>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+        <apex:pageBlock id="addOnlicense">
+           <apex:outputText Value="Addon & Component Licensing" style="font-weight:bold"/> 
+           <apex:outputPanel rendered="{!!hasAddon}">
+            <p style="text-align:center;font-color:red;font-size:10px;padding-top:3%;padding-bottom:3%;">  There are no addon keys for this product!</p>
+           </apex:outputPanel>        
+            <apex:pageBlockTable value="{!nonOrderedLicenses['Addon License']}" var="record"  title="Addon Keys" rendered="{!hasAddon}">
+                <apex:column headerValue="Key" value="{!record.licenseObj.Name}" style="vertical-align:Top" />                    
+                <apex:column headerValue="Description" value="{!record.licenseObj.description}" style="vertical-align:Top"/>                 
+                <apex:column headerValue="Assigned" rendered="{!validVersion}">
+                    <apex:inputText value="{!record.licenseObj.assigned}" onchange="checkBlank(this)" />
+                </apex:column>                  
+                <apex:column headerValue="Pooled">
+                    <apex:inputText value="{!record.licenseObj.pooled}" onchange="checkBlank(this)"/>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+        <apex:pageBlock id="featurelicense">
+           <apex:outputText Value="Optional Features" style="font-weight:bold"/> 
+           <apex:outputPanel rendered="{!!hasFeature}"><br/>
+             <p style="text-align:center;font-color:red;font-size:10px;padding-top:3%;padding-bottom:3%;">  There are no addon keys for this product!</p>
+           </apex:outputPanel>
+            <apex:pageBlockTable value="{!nonOrderedLicenses['Feature']}" var="record" title="Features" rendered="{!hasFeature}">
+                <apex:column headerValue="Key" value="{!record.licenseObj.Name}" style="vertical-align:Top" />                    
+                <apex:column headerValue="Description" value="{!record.licenseObj.description}" style="vertical-align:Top"/>                    
+                <apex:column headerValue=""> 
+                    <apex:inputcheckbox value="{!record.isSelected}"/>
+                </apex:column>                  
+            </apex:pageBlockTable>
+           <apex:pageBlockButtons location="bottom">
+               <apex:commandButton value="Generate Activation File" onclick="javascript:nonOrderedCallout();return false;" styleclass="btn"/>  
+               <apex:commandButton value="Cancel" onClick="resetBtn();return false;" styleclass="btn"/>
+           </apex:pageBlockButtons> 
+        </apex:pageBlock> 
+    </apex:outputPanel>
+</apex:outputPanel>  
+
+<apex:outputPanel rendered="{!pageBlock == 'page4'}">
+    <apex:pageBlock title="New Activation File">
+         <CENTER> 
+                <p style="font-size:15px;">
+                    Activation File has been generated successfully.
+                </p>
+                <br/><br/>
+            <input type='button' id="start" value="Create Another Activation File" onClick="resetBtn();" class="btn"/>
+            <input type="button" class="btn" value="View Activation File" onClick="window.open('{!urlPrefix}/apex/LMSLicenseView?id={!log.Id}','_blank')" />
+            <input type="button" class="btn" value="Download Activation File" onClick="window.open('{!urlPrefix}/apex/LMSLicenseDownload?id={!log.Id}','_blank')" />
+       </CENTER>     
+        <BR/><BR/><BR/><BR/><BR/><BR/> 
+    </apex:pageBlock>
+</apex:outputPanel>
+</apex:form>
+
+</apex:component>

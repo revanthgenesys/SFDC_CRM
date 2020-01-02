@@ -1,0 +1,341 @@
+<apex:component controller="CloudInvoiceComponentControllerPCC" access="global">
+    <apex:attribute name="invoiceId" type="Id" assignTo="{!idInvoice}" description="Invoice Id"/>
+    <apex:attribute name="isExcel" type="Boolean" assignTo="{!blnIsExcel}" default="false" description="Set if used for generating spreadsheet"/>
+    <apex:stylesheet value="{!URLFOR($Resource.CloudBillingInvoiceCSS)}"/>
+    <table style="width:100%;" class="invoiceHeader">
+        <tr>
+            <td class="genesysLogo">
+                <img src="{!$Resource.GenesysLogo}" width="250px;" rendered="{!NOT(blnIsExcel)}"/>
+                <apex:outputPanel rendered="{!blnIsExcel}">
+                    <img src="{!baseURL}servlet/servlet.ImageServer?id=015U000000123Bs&oid=00Dq00000009tFB" width="150px;" height="100px"/>
+                </apex:outputPanel>
+                <apex:outputField value="{!objGenesysEntity.Selling_Entity__c}"/>
+            </td>
+            <td align="right" class="invoiceInfo">
+                <apex:outputText value="Invoice" style="font-size:250%;font-weight:bold;font-family: 'Times'"/><br/><br/>
+                <table align="right" cellspacing="5" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;text-align:left;">
+                    <tr>
+                        <th>Invoice #</th>
+                        <td>
+                            {!objOrder.Invoice_Number__c}   
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Invoice Date</th>
+                        <td>
+                            <apex:outputField value="{!objOrder.Invoice_Date__c}"/> 
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Due Date</th>
+                        <td>
+                            <apex:outputField value="{!objOrder.Due_Date__c}"/> 
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <br/>
+    <table cellspacing="4" style="width:100%;table-layout:fixed;">
+        <tr>
+            <td width="50%" style="vertical-align: text-top;">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:left;width:80%;">
+                    <tr style="font-weight:bold;background-color:#E6E6E6;font-size:105%;">
+                        <td>Bill To</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            {!objOrder.Sold_To_Name__r.Name}<br/>
+                            {!objBillingAddress.Address__c}<br/>
+                            <apex:outputPanel layout="none" rendered="{!NOT(ISBLANK(objBillingAddress.Address2__c))}">
+                                {!objBillingAddress.Address2__c}<br/>
+                            </apex:outputPanel>
+                            {!objBillingAddress.City__c}&nbsp;&nbsp;{!objBillingAddress.State__c} - {!objBillingAddress.Zip_Code__c}<br/>
+                            {!objBillingAddress.Country__c}<br/>
+                            <apex:outputPanel layout="none" rendered="{!objBillingAddress.Attention_To__c != null}">
+                                <br/>
+                                Attention To: {!objBillingAddress.Attention_To__c}
+                            </apex:outputPanel>
+                            <br/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="50%">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:left;width:100%;">
+                    <tr style="font-weight:bold;background-color:#E6E6E6;font-size:105%;">
+                        <td>Remit To</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputField value="{!objGenesysEntity.Remit_To__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Payable in {!strCurrencyISOCode} <br/>
+                            Payment Terms: {!objOrder.Payment_Terms__c}<br/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td style="vertical-align: text-top;word-wrap: break-word;" width="50%">
+            <table cellspacing="2"  style="text-align:left;">
+                <tr>
+                    <th>Service Period</th>
+                    <td>
+                        <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                        <apex:outputText value="{0, date, dd MMM yyyy}">
+                            <apex:param value="{!objOrder.Maintenance_Start__c}" /> 
+                        </apex:outputText>
+                        - 
+                        <apex:outputText value="{0, date, dd MMM yyyy}">
+                            <apex:param value="{!objOrder.Maintenance_End__c}" /> 
+                        </apex:outputText>
+                    </td>
+                </tr>
+                <tr>
+                    <th>GARN Code</th>
+                    <td>
+                        <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                        {!objOrder.Sold_To_Name__r.SAP_Account_Code__c}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Service Order</th>
+                    <td>
+                        <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                        {!objOrder.quote_number__c} 
+                    </td>
+                </tr>
+                <tr>
+                    <th>Purchase Order</th>
+                    <td>
+                        <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                        {!objOrder.PO_Number__c}    
+                    </td>
+                </tr>
+                <apex:outputPanel layout="none" rendered="{!objOrder.Contract_Lookup__r.Invoice_Type__c == 'Partner'}">
+                    <tr>
+                        <th>End User</th>
+                        <td>
+                            <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                            {!objOrder.Contract_Lookup__r.Quote__r.End_User_ID__r.Name}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>End User GARN Code</th>
+                        <td>
+                            <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                            {!objOrder.Contract_Lookup__r.Quote__r.End_User_ID__r.SAP_Account_Code__c}
+                        </td>
+                    </tr>
+                </apex:outputPanel>
+                <tr>
+                    <th>Sales Order</th>
+                    <td>
+                        <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                        {!objOrder.Order_Number__c} 
+                    </td>
+                </tr>
+                <tr>
+                    <th>Tax ID</th>
+                    <td>
+                        <b>:<apex:outputPanel layout="none" rendered="{!NOT(blnIsExcel)}">&nbsp;</apex:outputPanel></b>
+                        {!objOrder.Customer_Tax_Id__c}  
+                    </td>
+                </tr>
+            </table>
+            </td>
+            <td style="vertical-align: text-top;" width="50%">
+                <apex:outputPanel rendered="{!NOT(ISBLANK(objOrder.Memo__c))}">
+                        <b style="padding-top:0em">Memo :</b> <apex:outputField value="{!objOrder.Memo__c}"/>
+                </apex:outputPanel>
+            </td>
+        </tr>
+    </table>
+    <br/>
+    <!--<div class="page-break"/>-->
+
+    <table cellspacing="1" cellpadding="5" border="1" 
+        style="font-family:Courier;font-size:6pt;border-color:black;border-collapse:collapse;width:100%;text-align:left;" >
+            <tr class="header" style="font-size:110%">
+                <apex:outputPanel layout="none">
+                    <th>Part Number</th>
+                </apex:outputPanel>
+                
+                <!--th>ID</th-->
+                <th>Description</th>
+                <th>Memo</th>
+                <th>Qty</th>
+                <!--  Added By Vijay - End -->
+                <th>UOM</th>
+                <th>Rate</th>
+                <apex:outputPanel layout="none" rendered="{!blnHasOrderLineTaxRate}">
+                    <th>Tax Rate</th>
+                </apex:outputPanel>
+                <th>Amount</th>
+            </tr>
+        <apex:repeat value="{!list_ProductDetails}" var="objProdDetail">
+            <tr style="font-weight:bold;background-color:#E6E6E6;">
+                <!--<td>{!objProdDetail.strProductNumber}</td>-->
+                <apex:outputPanel layout="none">
+                    <td>{!objProdDetail.strAPNNumber}</td>
+                </apex:outputPanel>
+                <!--td>{!objProdDetail.strQuoteProdcut}</td-->
+                <td>{!objProdDetail.strProductName}</td>
+                <td></td>
+                <td style="text-align:right;">
+                    <apex:outputText value="{0, number, ###,##0.00}" rendered="{!objProdDetail.decTotalQuantity != 0}">
+                        <apex:param value="{!objProdDetail.decTotalQuantity}"/>
+                    </apex:outputText>
+                </td>
+                <!-- Added by Vijay - End-->
+                <td>{!objProdDetail.strUOM}</td>
+                <td></td>
+                <apex:outputPanel layout="none" rendered="{!blnHasOrderLineTaxRate}">
+                    <td style="text-align:right;">
+                        <apex:outputText value="{0, number, ###,##0.00}%" rendered="{!objProdDetail.decTaxRate != null}">
+                            <apex:param value="{!objProdDetail.decTaxRate}"/>
+                        </apex:outputText>
+                    </td>
+                </apex:outputPanel>
+                <td style="text-align:right;">
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!objProdDetail.decTotalAmount}"/>
+                    </apex:outputText>
+                </td>
+                
+            </tr>
+            <apex:repeat value="{!objProdDetail.list_UsageDetails}" var="objUsageDetail">
+                <tr>
+                    <!--td>{!objProdDetail.strProductId}</td-->
+                    <apex:outputPanel layout="none">
+                        <td></td>
+                    </apex:outputPanel>
+                    <td></td>
+                    <td>{!objUsageDetail.strMemo}</td>
+                    <td style="text-align:right;">
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!objUsageDetail.decQuantity}"/>
+                        </apex:outputText>
+                    </td>
+                    <td></td>
+                    <td>
+                        <apex:outputText value="{0, number, ###,##0.0000}">
+                            <apex:param value="{!objUsageDetail.decRate}"/>
+                        </apex:outputText>
+                        <apex:outputText value="Variable" rendered="{!objUsageDetail.strMemo == 'Based on Calling Rates'}"/>
+                    </td>
+                    <apex:outputPanel layout="none" rendered="{!blnHasOrderLineTaxRate}">
+                        <td></td>
+                    </apex:outputPanel>
+                    <td style="text-align:right;">
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!objUsageDetail.decAmount}"/>
+                        </apex:outputText>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </apex:repeat>
+        <tr style="font-weight:bold;background-color:#CFCFCF;font-size:120%;display:{!IF(blnHasTax, 'table-row', 'none')};">
+            <!--IF(blnHasOrderLineTaxRate  && blnPeriodInHeader, 7, If(blnHasOrderLineTaxRate || blnPeriodInHeader ), 6, 5)  -->
+            <th colspan="{!intColspan}">Sub Total</th>
+            <th colspan="3" style="text-align:right;">
+                {!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode}
+                <apex:outputText value="{0, number, ###,##0.00}">
+                    <apex:param value="{!decTotalInvoiceAmount}"/>
+                </apex:outputText>
+            </th>
+        </tr>
+        <tr style="font-weight:bold;font-size:120%;display:{!IF(blnHasTax, 'table-row', 'none')};">
+            <th colspan="{!intColspan}">Tax Total</th>
+            <th colspan="3" style="text-align:right;">
+                {!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 
+                <apex:outputText value="{0, number, ###,##0.00}">
+                    <apex:param value="{!objOrder.Tax_Amount__c}"/>
+                </apex:outputText>
+            </th>
+        </tr>
+        <tr style="font-weight:bold;background-color:#CFCFCF;font-size:120%;">
+            <th colspan="{!intColspan}">Total</th>
+            <th colspan="3" style="text-align:right;">
+                {!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 
+                <apex:outputText value="{0, number, ###,##0.00}">
+                    <apex:param value="{!decGrandTotal}"/>
+                </apex:outputText>
+            </th>
+        </tr>
+    </table>
+    <br/>
+     <!--
+    <apex:outputPanel rendered="{! decTotalTaxAmount != NULL && decTotalTaxAmount > 0.0}">
+        <br/>
+        <table style="font-family:Courier;font-size:6pt;border-color:black;border-collapse:collapse;width:45%;text-align:left;"
+               border="1" cellpadding="5">
+            <tr class="header"><th>Tax Analysis</th> <th>Taxable amount</th> <th>Tax Amount</th></tr>
+            <tr>
+                <td><b>Sales Tax</b></td>
+                <td>
+                    {!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decGrandTotal}"/>
+                    </apex:outputText>
+                </td>
+                <td>
+                    {!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decTotalTaxAmount}"/>
+                    </apex:outputText>
+                </td>
+            </tr>
+        </table>
+    </apex:outputPanel>  
+    -->
+    <apex:outputPanel rendered="{!objInvoice.Show_Tax_Info__c}">
+        <br/>
+        <table style="font-family:Courier;font-size:6pt;border-color:black;border-collapse:collapse;width:45%;text-align:left;"
+               border="1" cellpadding="5">
+               <tr class="header"><th>Tax Analysis</th> <th>Tax Amount</th></tr>
+            <apex:repeat value="{!list_TaxDetails}" var="objTax">
+                <tr>
+                    <td>{!objTax.strDescription}</td>
+                    <td>{!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!objTax.decTaxAmount}"/>
+                        </apex:outputText>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </table>
+    </apex:outputPanel>
+    <!--apex:outputPanel rendered="{!objInvoice.Show_Tax_Info__c}">
+        <br/>
+        <table style="font-family:Courier;font-size:6pt;border-color:black;border-collapse:collapse;width:45%;text-align:left;"
+               border="1" cellpadding="5">
+               <tr class="header"><th>Tax Analysis</th> <th>Tax Amount</th></tr>
+               <tr><td>FCC Fee - Toll Free Number</td><td>{!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 0.00</td></tr>
+               <tr><td>Federal TRS Fund </td><td>{!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 0.00</td></tr>
+               <tr><td>Federal Universal Fund Charge</td><td>{!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 0.00</td></tr>
+               <tr><td>State and Local Taxes </td><td>{!objOrder.Contract_Lookup__r.Quote__r.CurrencyISOCode} 0.00</td></tr>
+        </table>
+    </apex:outputPanel-->
+    
+    <br/>
+    <!--<apex:outputPanel rendered="{!NOT(blnHasTax)}">
+        0 % VAT Export Supply<br/><br/>
+    </apex:outputPanel>-->
+    <apex:outputPanel rendered="{!NOT(ISBLANK(objOrder.Zero_Tax_Wording__c)) && objOrder.Sold_To_Name__r.Country__r.Name != 'United States'}">
+        <br/>
+        {!objOrder.Zero_Tax_Wording__c}
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!objOrder.Contract_Lookup__r.Invoice_Type__c == 'BEEEC'}">
+        Business Care For Cloud Is Included In Your Monthly Subscription Charge.
+    </apex:outputPanel>
+    <div class="footer">
+        <apex:outputText value="{!strFooterText}" escape="false"/>
+    </div>
+</apex:component>

@@ -1,0 +1,616 @@
+<apex:component controller="NewSubscriptionComponentController" id="cmp" allowDML="True">
+    <apex:includeScript value="{!$Resource.jquery19}" />
+    
+    <style>
+        .errorBox {border-color:red;}
+        hr {
+            border-style:double;
+        }
+    </style>
+    <script type="text/javascript">
+    var j$ = jQuery.noConflict(); 
+    var siteState = '0';
+    var productState = '0';
+    var prodLineState = '0';
+    var switchSelected = false;
+    
+    function showHideKeys(divNumber) {
+        var PartKeysDiv = document.getElementById('PartKeys'+divNumber);
+        var plusDiv = document.getElementById('plus'+divNumber);
+        var minusDiv = document.getElementById('minus'+divNumber);
+        if (PartKeysDiv.style.display === "none") {
+            PartKeysDiv.style.display = "block";
+        } else {
+            PartKeysDiv.style.display = "none";
+        }
+        if (plusDiv.style.display === "none") {
+            plusDiv.style.display = "block";
+        } else {
+            plusDiv.style.display = "none";
+        }
+        if (minusDiv.style.display === "none") {
+            minusDiv.style.display = "block";
+        } else {
+            minusDiv.style.display = "none";
+        }
+    }  
+    
+    function orderedCallout(){
+        document.documentElement.scrollTop = 0;
+        var state = 'true';
+        var inc = 0 ; 
+
+        j$(".mac").each(function() {
+            if(j$(this).val()==''){ 
+                j$(this).addClass("error");
+                state = 'false';
+                if(inc==0)
+                    j$("[id=hostidErrMsg]").show();
+                if(inc==1)    
+                    j$("[id=machinenameErrMsg]").show();
+                if(inc==2)    
+                    j$("[id=expirationErrMsg]").show();
+            }                   
+            else{
+                j$(this).removeClass("error");
+                if(inc==0)
+                    j$("[id=hostidErrMsg]").hide();
+                if(inc==1)    
+                    j$("[id=machinenameErrMsg]").hide();
+                if(inc==2)    
+                    j$("[id=expirationErrMsg]").hide();
+            }  
+          inc++;  
+        });
+        
+        var lkp = 0;
+        j$(".dep").each(function() {
+            if(lkp==0)
+                if(j$(this).val()==''){ 
+                   j$(this).addClass("error"); 
+                   j$("[id=deploymentErrMsg]").show();
+                   state = 'false';
+                }
+                else{
+                j$(this).removeClass("error");
+                j$("[id=deploymentErrMsg]").hide();
+                }
+                
+           lkp++;     
+        });
+        
+
+        if(j$("[id$=switch]").is(":visible"))
+        inc = 0;    
+        j$(".switchmac").each(function() {
+           // alert(switchSelected === 'false'?'true':'false');
+            if(j$(this).val()=='' && switchSelected === false){
+             //   if(switchSelected == false ? true : false){
+                j$(this).addClass("error");
+                state = 'false';
+                //alert('state:'+state);
+                  if(inc==0)
+                    j$("[id=switchhostidErr]").show();
+                  if(inc==1)    
+                    j$("[id=switchmachinenameErr]").show();
+            }
+            else{
+                j$(this).removeClass("error");
+                if(inc==0)
+                    j$("[id=switchhostidErr]").hide();
+                if(inc==1)
+                    j$("[id=switchmachinenameErr]").hide();
+            }   
+          inc++;    
+        });
+
+        var packs = [];
+        if(j$("[id$=switch1]").is(":visible")){
+            j$(".basePackage").each(function() {
+                if(j$(this).val()!='' && parseInt(j$(this).val())>0){
+                    packs.push(parseInt(j$(this).val())); 
+                }
+            });
+
+            if(packs.length>0){ 
+                    j$("[id$=serverSelectionErr]").css('display','none');
+              //      state = 'true';
+            }                   
+            else{
+                    j$("[id$=serverSelectionErr]").css('display','block');
+                    state = 'false';
+            }    
+        }
+        if(state == 'true'){
+            setLoadingDialogMessage('Generating Subscription File...');
+            showLoadingDialog();
+            //callout();           
+            generateDeployment();
+        }    
+        else    
+            return false;    
+    }     
+       
+       
+    function check(available,cnt,e){
+        if(parseInt(e.value) > parseInt(available)){
+            setLoadingMessageDialogContent('Please order with in the available Quantity:'+available);
+            setLoadingMessageTitle('Message');
+            showMessage();
+            e.value=0;
+            e.focus();
+        }
+    }
+    
+
+
+    function callme(){
+        var state = 'true';
+        if(j$('[id$=accnt]').val() == ''){
+            j$('[id$=accnt]').addClass('error');
+            j$('[id$=accntErr]').css('display','block');   
+            state = 'false';  
+        } 
+           
+        if(j$('select[id$=prodLine]').val() == '-- SELECT --') {
+            j$('[id$=prodLineErr]').css('display','block');
+            j$('[id$=prodLine]').addClass('error');
+            state = 'false';
+        }    
+            
+        if(state=='true'){
+            disableFields();
+            setLoadingDialogMessage('fetching parts...');
+            showLoadingDialog();
+            fetchParts();
+        }
+    }
+    
+    function disableFields(){
+        j$('[id$=accnt]').removeClass('error');
+        j$('[id$=accntErr]').css('display','none');   
+        j$('[id$=prodLineErr]').css('display','none');
+        j$('[id$=prodLine]').removeClass('error');
+        j$('[id$=Go]').prop('disabled','true');
+        j$('[id$=accnt]').prop('disabled','true');
+        j$('[id$=prodLine]').prop('disabled','true');
+    }
+    
+    j$(document).ready(function(){ 
+        if('{!pageBlock}'=='page3' || '{!pageBlock}'=='NonOrdered' || '{!pageBlock}'=='NoServer'){
+            disableFields();
+        }
+       
+        j$('[id$=prodLine]').change(function(){
+            if(j$('[id$=prodLine]').val() == '-- SELECT --'){
+                j$('[id$=prodLine]').addClass('error');
+                j$('[id$=prodLineErr]').css('display','block');
+            } else {
+                j$('[id$=prodLine]').removeClass('error');
+                j$('[id$=prodLineErr]').css('display','none');       
+            }   
+        });
+        
+        j$('[id$=site]').change(function(){    
+            if(j$('[id$=site]').val() == 'All Install Sites') {
+                j$('[id$=siteErr]').css('display','block');
+                j$('[id$=site]').addClass('error');
+            } else {
+                j$('[id$=siteErr]').css('display','none');    
+                j$('[id$=site]').removeClass('error');
+            }  
+        });
+        
+    }); 
+    
+    
+     var isChecked = false;
+    
+    j$(document).on('change', '.basePackage',function(){ 
+        var curVal = j$(this).val();
+        var avail = j$(this).closest("tr").find('td.avail').text();
+
+       
+        if(curVal <= avail) {
+            j$('.basePackage').val(0);
+            j$(this).val(curVal);
+        }
+        else{
+            setLoadingMessageDialogContent('Please order within the available Quantity:'+avail);
+            setLoadingMessageTitle('Message');
+            showMessage();            
+            j$(this).focus();
+            j$(this).val(0);
+        }
+
+    });
+
+
+    j$(document).on('change','.test',function(){
+        if(j$(this).is(":checked")) {
+            j$('[id$=showHidden]').val(true);
+            switchSelected = true;
+            j$('[id$=switch]').hide();
+        }
+        else{
+            j$('[id$=showHidden]').val(false);
+            switchSelected  = false;
+            j$('[id$=switch]').show();
+        } 
+        switchServer();
+    });      
+    
+   j$(document).on('change','.test1',function(){ 
+        if(j$(this).is(":checked")) {
+            j$('[id$=showPackageHidden]').val(true);
+            j$('[id$=switch1]').hide();
+        }
+        else{
+            j$('[id$=showPackageHidden]').val(false);           
+            j$('[id$=switch1]').show();
+        } 
+        switchServer();
+    });   
+    
+    function resetBtn() {
+        switchSelected = false;
+        Reset();
+    }
+    
+    function checkLength(elem){
+        var fieldLength = elem.value.length;
+        if(fieldLength <13){
+            return true;
+        }
+        else{
+            var str = elem.value;
+            str = str.substring(0, str.length - 1);
+            elem.value = str;
+        }
+    }
+    </script> 
+   
+    <script type="text/javascript"> 
+     function openLookup(baseURL, width, modified, searchParam){
+         
+         j$ = jQuery.noConflict();
+
+         var accountId=j$('input[id$=accnt_lkid]').val();
+    var originalbaseURL = baseURL;
+    var originalwidth = width;
+    var originalmodified = modified;
+    var originalsearchParam = searchParam;
+
+    var lookupType = baseURL.substr(baseURL.length-3, 3);
+    if (modified == '1') baseURL = baseURL + searchParam;
+    
+    var isCustomLookup = false;
+    //alert('baseUrl:'+baseURL);    
+    // Following "001" is the lookup type for Account object so change this as per your standard or custom object
+    if(lookupType == "a0h"){
+  
+      var urlArr = baseURL.split("&");
+      var txtId = '';
+      
+      if(urlArr.length > 2) {
+        urlArr = urlArr[1].split('=');
+        txtId = urlArr[1];
+      }
+        // alert('AccountID'+'{!accountSelection.accountId}');  
+      // Following is the url of Custom Lookup page. You need to change that accordingly
+      baseURL = "/apex/CustomOrderLookup?txt=" + txtId+'&acc='+accountId;
+      // Following is the id of apex:form control "myForm". You need to change that accordingly
+      baseURL = baseURL + "&frm=" + escapeUTF("{!$Component.myForm}");
+      if (modified == '1') {
+        baseURL = baseURL + "&lksearch=" + searchParam;
+      }
+      //  alert(searchParam);       
+      // Following is the ID of inputField that is the lookup to be customized as custom lookup
+      if(txtId.indexOf('orderId') > -1 ){
+        isCustomLookup = true;
+      }
+    }
+    
+    //alert(isCustomLookup);
+    if(isCustomLookup == true){
+      openPopup(baseURL, "lookup", 350, 480, "width="+width+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
+    }
+    else {
+      if (modified == '1') originalbaseURL = originalbaseURL + originalsearchParam;
+      openPopup(originalbaseURL, "lookup", 350, 480, "width="+originalwidth+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
+    } 
+  }
+</script>
+
+    <apex:outputPanel id="frm">
+        <apex:actionFunction name="generateDeployment"  action="{!createDeployment}" oncomplete="callout();" />
+        <apex:actionFunction name="callout" action="{!calloutLicenseService}" oncomplete="hideLoadingDialog();" reRender="content,showmsg" />
+        <apex:actionFunction name="switchServer" action="{!dummyAction}"  rerender="none"/>
+        <apex:actionFunction name="fetchParts"  action="{!pageTwoCompleted}" oncomplete="hideLoadingDialog();" reRender="page3,page3b,NonOrdered,showmsg,NoServer" />    
+        <apex:actionFunction name="fetchLicense" reRender="page2" />   
+        <apex:actionFunction name="Reset" action="{!refresh}" rerender="frm" status="status"/> 
+        
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+               </div>
+            </apex:facet>
+        </apex:actionStatus>
+        
+        <apex:pageMessages escape="false" id="showmsg"></apex:pageMessages>
+        
+        <apex:outputPanel id="page11">
+            <apex:pageBlock id="pgblck"> 
+                <apex:outputPanel id="op3">
+                      <TABLE WIDTH="50%"  style="border-collapse: separate; border-spacing: 20px;">
+                        <TR>
+                            <TD style="white-space: nowrap">
+                                <b>Account Name</b>
+                                &nbsp;&nbsp;
+                                <apex:inputField id="accnt" value="{!accountSelection.AccountId}" onkeypress="return disableEnterKey(event);" style="width:400px;"/>
+                                 <div id="accntErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;please select an account</div>
+                            </TD>
+                            <TD WIDTH="5%" style="white-space: nowrap">
+                                <b>ProductLine</b> &nbsp;&nbsp;
+                                <apex:selectList id="prodLine" label="" value="{!selectedProductLine}"  multiselect="false" size="1">
+                                    <apex:selectOptions value="{!ProductLines}" />
+                                </apex:selectList>
+                                <div id="prodLineErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;please select a line item</div>
+                            </TD>
+                            <TD VALIGN="BOTTOM" style="white-space: nowrap">
+                                <apex:outputPanel id="GoBtn">
+                             
+                               <input type='button' id='Go' value=' Go ' onClick='callme();return false' width='10px' class="btn"/>&nbsp;&nbsp;
+                                    <input type='button' id="Reset" value="Reset" onClick="resetBtn();" class="btn"/> 
+                                </apex:outputPanel>
+                            </TD>
+                            <!--<TD>
+                                  <apex:commandButton value=" GO " action="{!pageTwoCompleted}" reRender="lmsTabsPanel,supportOptionPanelInternal" status="status"/>
+                            </TD>-->
+                        </TR>
+                    </TABLE>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        
+       <apex:outputPanel id="content"> 
+        <apex:outputPanel id="page3" >
+            <apex:outputPanel rendered="{!pageBlock == 'page3'}">
+              <!--  <apex:pageMessage rendered="{!isProductKeysEmpty}" severity="Error">This product has no active keys available</apex:pageMessage>-->
+                <apex:pageBlock id="page3a">
+                <!--    <apex:outputText Value="Machine Details" style="font-weight:bold"/>-->
+                                    
+                  AccountId:{!endUserAccountId} 
+                        <TABLE width="100%">
+                    <col width="70%"/>
+                    <col width="30%"/>
+                    <TR>
+                    <TD>
+                    <apex:outputText Value="Machine Details" style="font-weight:bold"/>  
+                    </TD>
+                    <TD style="text-align:right;">
+                    <div id="machineFormErr" style="display:none">
+                        <span class="errorMsg" style="font-weight:bold"><strong>Error:</strong>&nbsp;Please populate highlighted fields</span>
+                    </div> 
+                    </TD>
+                    </TR>
+                    </TABLE>
+                    <hr/>
+
+                    <table style="border-spacing: 10px; border-collapse: separate;">
+                     <col width="30%"/>
+                     <col width="20%"/>
+                     <col width="30%"/>                             
+                        <tr> 
+                        <td>
+                        <span><b>Host Id</b><span style="color:red;"><b>&nbsp;*</b></span><br/><span style="font-size:small;">This value can be retrieved from the IC Setup Assistant. Host Id can also be generated using the GetHostID utility and is available on the Support website.</span>  </span>
+                        </td>
+                        <td>
+                        <apex:inputText value="{!log.MAC_Address__c}" label="" styleClass="mac" id="macId" onKeyUp="checkLength(this)"> 
+                        </apex:inputText> 
+                        </td>
+                        <td>
+                            <div id="hostidErrMsg" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in hostid</div>
+                        </td>
+                        </tr>    
+                        <tr>
+                        <td>
+                        <span><b>Machine Name</b><span style="color:red;"><b>&nbsp;*</b></span></span>
+                        </td>
+                        <td>
+                        <apex:inputText value="{!log.Machine_Name__c}" label="" styleClass="mac">
+                        </apex:inputText>
+                        </td>
+                        <td><div id="machinenameErrMsg" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in machine name</div></td>
+                        </tr>
+                        <tr>
+                        <td>
+                        <!--<span><b>Cloud Deployment</b> <span style="color:red;"><b>&nbsp;*</b></span></span>-->
+                        <span><b>Order </b> <span style="color:red;"><b>&nbsp;*</b></span></span>
+                        </td>
+                        <td>
+                        <!--<apex:inputfield value="{!log.Cloud_Deployment__c}" label="" styleClass="dep" />   --> 
+                        <apex:inputfield id="orderId" value="{!orderOpt.Order__c}" label="" styleClass="dep" />
+                        
+                        </td>
+                        <td><div id="deploymentErrMsg" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please add a deployment</div></td>
+                        </tr>
+                        <tr>
+                        <td>
+                        <span><b>Expiration Date</b> <span style="color:red;"><b>&nbsp;*</b></span></span>
+                        </td>
+                        <td>
+                        <apex:inputfield value="{!log.Expiration_Date__c}" label="" showDatePicker="true" styleClass="mac" />    
+                        </td>
+                        <td><div id="expirationErrMsg" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in expiration date</div></td>
+                        </tr>
+
+                        <tr>
+                        <td>
+                        <span><b>Notes</b></span>
+                        </td>
+                        <td>
+                        <apex:inputtextArea value="{!log.Notes__c}" label="" cols="50" rows="5"/>
+                        </td>
+                        <td></td>
+                        </tr>
+
+                    </table>
+
+                </apex:pageBlock>
+                
+                <apex:outputPanel id="dummy">
+                </apex:outputPanel>
+                
+                <apex:variable var="count" value="{!10001}"/>
+
+                 <apex:outputPanel id="packagepanel" rendered="{!newAPI}">     
+                    <apex:outputPanel id="switch1" style="display:block">
+                            <apex:pageBlock rendered="{!displaySummary}">
+                                <TABLE width="100%">
+                                <col width="70%"/>
+                                <col width="30%"/>
+                                <TR>
+                                <TD>
+                                <apex:outputText Value="Select a package" style="font-weight:bold"/>  
+                                </TD>
+                                <TD style="text-align:right;">
+                                <div id="serverSelectionErr" style="display:none">
+                                    <span class="errorMsg" style="font-weight:bold"><strong>Error:</strong>&nbsp;Please populate a package to proceed!</span>
+                                </div> 
+                                </TD>
+                                </TR>
+                                </TABLE>
+                                <HR/>
+                                
+                                <apex:pageBlockTable value="{!licenseSummaryData}" var="record" id="DataTable1" >
+                                    <apex:column headerValue=" " style="vertical-align:Top" width="5%">
+                                        <div id="plus{!count}" style="display:block">
+                                            <apex:image value="{!$Resource.ArrowCollapse}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;" />
+                                        </div>
+                                        <div id="minus{!count}" style="display:none">
+                                            <apex:image value="{!$Resource.ArrowExpand}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;"/>
+                                        </div>
+                                    </apex:column>
+                                    <apex:column headerValue="Part Number" style="vertical-align:Top">                    
+                                        {!record.partNumber}
+                                        <div id="PartKeys{!count}" name="PartKeys{!count}" style="display:none">
+                                            <TABLE BORDER="0" WIDTH="100%">
+                                                <apex:repeat value="{!record.partKeys}" var="partKey">
+                                                    <TR><TD>&nbsp;&nbsp; {!partKey}</TD></TR>
+                                                </apex:repeat>
+                                            </TABLE>                                    
+                                        </div>
+                                        <apex:variable value="{!count+1}" var="count"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Description" value="{!record.description}" style="vertical-align:Top"/>                    
+                                    <apex:column headerValue="Total" value="{!record.total}" style="vertical-align:Top" />                    
+                                    <apex:column headerValue="Used" value="{!record.used}" style="vertical-align:Top" />                    
+                                    <apex:column headerValue="Available" styleClass="avail" value="{!record.available}" style="vertical-align:Top" /> 
+                                    
+                                <apex:column headerValue="Use">
+                                   <apex:outputPanel rendered="{!(record.partKeys.size>0)&& (record.partKeys[0]!=noKeyStr) && (record.available!=0)}">
+                                    <apex:outputPanel >
+                                        <apex:inputText styleClass="basePackage" value="{!record.orderedQty}" rendered="{!record.available>0}"/> <!-- onChange="javascript:check1(this);return false;"/-->
+                                    
+                                    </apex:outputPanel>
+                                   </apex:outputPanel>
+                                    <apex:outputText value="#NA" rendered="{!((record.partKeys.size==1) && (record.partKeys[0]==noKeyStr)) || record.available==0}"/>    
+                                </apex:column>
+                            </apex:pageBlockTable>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
+                 </apex:outputPanel>      
+
+            <apex:outputpanel rendered="{!!isSIP}">
+                <apex:outputPanel id="switchoverpanel" >     
+                    <table style="margin-left:20px; border-collapse: separate; border-spacing:10px">
+                     <tr> <td>       
+                        <apex:inputCheckbox id="test" styleClass="test" value="{!show}" />  </td> <td>
+                            <h4>Provide Switchover information at another time</h4></td>
+                    </tr>
+                    </table>
+                    <apex:outputPanel id="switch" style="display:block">
+                        <apex:inputHidden value="{!show}" id="showHidden"/>
+                               
+                        <apex:pageBlock id="switchHostInfo" >
+                            <TABLE width="100%">
+                            <TR>
+                            <TD width="70%">
+                            <apex:outputText Value="Switchover Machine" style="font-weight:bold"/>
+                            </TD>
+                            </TR>
+                            </TABLE>
+                            <HR/>
+                            <table style="border-spacing: 10px; border-collapse: separate;">
+                                 <col width="30%"/>
+                                 <col width="20%"/>
+                                 <col width="30%"/>                             
+                                    <tr> 
+                                    <td>
+                                        <span><b>Host Id</b></span><br/><span>This value can be retrieved from the IC Setup Assistant.<br/> Host Id can also be generated using the GetHostID utility and is available on the Support website.  </span>
+                                    </td>
+                                    <td>
+                                        <apex:inputText value="{!switchHostIds}" id="switchHostIds" styleClass="switchmac" onKeyUp="checkLength(this)"/>
+                                    </td>
+                                    <td>
+                                        <div id="switchhostidErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in switchover hostid</div>
+                                    </td>
+                                    </tr>    
+                                    <tr>
+                                    <td><span><b>Machine Name</b></span></td>
+                                    <td><apex:inputText value="{!switchmachineNames}" id="switchmachinenames" styleClass="switchmac"/></td>
+                                    <td><div id="switchmachinenameErr" class="errorMsg" style='display:none'><strong>Error:</strong>&nbsp;Please fill in switchover machine name</div></td>
+                                    </tr>
+                          </table>
+ 
+                    </apex:pageBlock>
+                </apex:outputPanel>            
+            </apex:outputPanel> 
+
+             </apex:outputpanel>
+            
+            <apex:outputPanel id="page3b" rendered="{!hasAddon}">
+                <c:SummaryPagination summary="{!addOnSummaryData}" label="Select Any Subscription Item" NoOfRecords="100" source="{!paginationKey}" id="addOnComponent"/>   
+            </apex:outputPanel>
+            
+            <apex:pageBlock >
+                <apex:pageBlockButtons location="bottom" >
+                    <apex:commandButton value="Generate Subscription File" onclick="javascript:orderedCallout();return false;"/>  
+                    <apex:commandButton value="Cancel" onClick="resetBtn();return false;" styleclass="btn"/>
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:outputPanel>  
+    <apex:outputPanel id="NoServer">
+        <apex:outputPanel rendered="{!pageBlock=='NoServer'}">
+            <p style="text-align:center;font-color:red;font-size:20px;padding-top:3%;padding-bottom:3%;">  There are no server items for this product!</p>
+        </apex:outputPanel>
+    </apex:outputPanel> 
+
+
+<apex:outputPanel rendered="{!pageBlock == 'page4'}">
+    <apex:pageBlock title="New Subscription File">
+         <CENTER> 
+                <p style="font-size:15px;">
+                    Subscription File has been generated successfully.
+                </p>
+                <br/><br/>
+            <input type='button' id="start" value="Create Another Subscription File" onClick="resetBtn();" class="btn"/>
+            <input type="button" class="btn" value="View Subscription File" onClick="window.open('{!urlPrefix}/apex/SubscriptionView?id={!log.Id}','_blank')" />
+            <input type="button" class="btn" value="Download Subscription File" onClick="window.open('{!urlPrefix}/apex/SubscriptionDownload?id={!log.Id}','_blank')" />
+       </CENTER>     
+        <BR/><BR/><BR/><BR/><BR/><BR/> 
+    </apex:pageBlock>
+</apex:outputPanel>
+</apex:outputPanel> <!-- end of content panel-->
+</apex:outputpanel>
+
+</apex:component>

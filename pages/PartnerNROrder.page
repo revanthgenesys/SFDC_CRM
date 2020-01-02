@@ -1,0 +1,94 @@
+<apex:page controller="PartnerNROrderController" showheader="false" sidebar="false">
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="laborder"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+        
+             <apex:pageBlock id="err" rendered="{!!canAccess}">
+                 <apex:pageMessage severity="INFO" strength="3" 
+                     detail="The on-line ordering is not enabled for your organization. If you have questions please contact your account manager." >     
+                 </apex:pageMessage>
+             </apex:pageBlock>  
+
+            <apex:pageBlock rendered="{!canAccess}">
+             
+              <apex:sectionHeader title="Lab Orders" subtitle="" />
+
+              <apex:form id="formId">  
+
+              <apex:pageBlock >
+                 <apex:pageBlockSection columns="1" >  
+                   <apex:outputPanel >
+                       <apex:commandButton value="New Lab Order" action="{!openRequestForm}" />
+                       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                       <apex:outputLink value="{!URLFOR($Resource.GenesysPartnerProductBundles)}" target="_blank">Product Bundles Description </apex:outputLink>  
+                       
+                        <apex:commandLink value="Tutorial Video" onclick="startVideo(900,600)" style="font-size:14px;color:blue;float:right;"/>                                      
+                   </apex:outputPanel>
+                 </apex:pageBlockSection>
+                 <br/>
+                  <apex:pageBlockTable value="{!orderLst}" var="ol" style="width:900px;">   
+                        <apex:column headerValue="Order">                        
+                            <apex:outputText value="{!ol.Name}" rendered="{!IF(OR(ol.status__c !='Completed', ol.status__c==null),true,false)}"/>   
+                     
+                            <apex:commandLink action="{!showDetails}" value="{!ol.Name}" rendered="{!IF(ol.status__c=='Completed',true,false)}" style="text-decoration:underline">                                                       
+                                 <apex:param name="orderId" value="{!ol.Id}" assignTo="{!orderId}" /> 
+                            </apex:commandLink>
+                   
+                       </apex:column>                                      
+                       <apex:column headerValue="Status">                        
+                             <apex:outputText value="{!ol.status__c}"  />    
+                       </apex:column>
+                       <apex:column headerValue="Starter Kits">                        
+                             <apex:outputText value="{!ol.Product_Bundles__c}" />    
+                       </apex:column>
+                        <apex:column headerValue="Product Description">                        
+                             <apex:outputText value="{!ol.Product_Description__c}" />    
+                       </apex:column>  
+                    
+                       <apex:column headerValue="End Date">                        
+                             <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                                 <apex:param value="{!ol.Maintenance_End__c}" />
+                             </apex:outputText>
+                       </apex:column>     
+                       <apex:column headerValue="Created By">                        
+                             <apex:outputText value="{!ol.CreatedBy.Name}"/> 
+                       </apex:column>                   
+                        <apex:column headerValue="Created Date">                        
+                             <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                                 <apex:param value="{!ol.CreatedDate}" />
+                             </apex:outputText>
+                       </apex:column>
+                       
+                        <apex:column rendered="{!IF(ol.status__c=='In Progress' && ol.Order_Completed_by_AE__c==false && ol.CreatedBy.Id==$User.Id,true,false)}">
+                        
+                           <apex:commandLink action="{!editRequestForm}" value="Edit" style=" text-decoration:none; color:blue;">                                                       
+                                <apex:param name="orderId" value="{!ol.Id}" assignTo="{!orderId}" /> 
+                           </apex:commandLink>
+                       </apex:column>
+                        
+                  </apex:pageBlockTable>                    
+               </apex:pageBlock>
+                                           
+              </apex:form>
+             <br/><br/> <br/><br/> 
+             
+            </apex:pageBlock>
+        </apex:define>
+    </apex:composition>
+            <script>
+            function startVideo(w,h) {
+                var left = (screen.width/2)-(w/2);
+                var top = (screen.height/2)-(h/2);
+                window.open ('https://www.youtube.com/embed/y0EGR85DTTU', '_blank', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+            }
+            </script>
+</apex:page>

@@ -1,0 +1,349 @@
+<apex:page controller="DealSupportQueryController" tabstyle="Deal_Support__c" standardStylesheets="false">
+<style>
+
+       /* popup_box DIV-Styles  Start*/
+        #popup_box {
+            display:none; /* Hide the DIV */
+            position:fixed;  
+            _position:absolute; /* hack for internet explorer 6 */  
+            height:700px;
+            width:600px;  
+            background:#FFFFFF;  
+            left: 300px;
+            top: 50px;
+            z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+            margin-left: 15px;  
+           
+            /* additional features, can be omitted */
+            border:2px solid #1797C0;      
+            padding:15px;  
+            font-size:15px;  
+            -moz-box-shadow: 0 0 5px #ff0000;
+            -webkit-box-shadow: 0 0 5px #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+           
+        }
+        
+        #container {
+            background: #d2d2d2; /*Sample*/
+            width:100%;
+            height:100%;
+        }
+        
+        a{ 
+        cursor: pointer; 
+        text-decoration:none; 
+        }
+        
+        /* This is for the positioning of the Close Link */
+        #popupBoxClose {
+            font-size:20px;  
+            line-height:15px;  
+            right:5px;  
+            top:5px;  
+            position:absolute;  
+            color:#6fa5e2;  
+            font-weight:500;      
+        }
+        /* popup_box DIV-Styles  Close*/
+    </style> 
+<script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+  <script type="text/javascript">
+//   var j$ = jQuery.noConflict();   
+//     
+//   j$(document).ready( function() {
+//     var objRT = j$('.clsRequestType');
+//     var objDataType = j$('.clsDataType');
+//     DisableControl(objRT);
+//     DisableQuoteControl(objDataType);
+//     OpportunityOnChange();
+//     AccountOnChange();
+//     j$(".clsBoxClose").click( function() {           
+//        unloadPopupBox();
+//     });
+//   });
+//   
+//
+//    function loadPopupBox(fType) 
+//    {    
+//      j$('[id$=hdnFileType]').val(fType);
+//      
+//      // To Load the Popupbox
+//      j$('#popup_box').fadeIn("slow");
+//      j$("#container").css({ // this is just for style
+//         "opacity": "0.3" 
+//       }); 
+//      return false;       
+//    }      
+//    
+//   function GetAttachmentId(obj)       
+//    {
+//      j$('[id$=hdnFileId]').val(obj);
+//      return true;
+//    }
+//    
+//    function DisableControl(obj)
+//    {
+//       if(j$(obj).val() =='User Access')
+//       {
+//         j$('.clsQuoteId').attr('Disabled',true);
+//        j$('.clsErrMsg').attr('Disabled',true);
+//       } 
+//       else if (j$(obj).val() == 'Data Management')
+//           {              
+//              
+//             j$('.clsQuoteId').attr('Disabled',false);  
+//             j$('.clsErrMsg').attr('Disabled',true);       
+//           }      
+//       else if(j$(obj).val() == 'Opportunity/Quote Error')
+//       {       
+//         j$('.clsQuoteId').attr('Disabled',false);
+//         j$('.clsErrMsg').attr('Disabled',false);
+//       }
+//        else if(j$(obj).val() == 'Partner Request')
+//       {
+//         j$('.clsQuoteId').attr('Disabled',true);
+//         j$('.clsErrMsg').attr('Disabled',true);
+//       }
+//       else if(j$(obj).val() == 'Training')
+//       {
+//         j$('.clsQuoteId').attr('Disabled',true);
+//         j$('.clsErrMsg').attr('Disabled',true);
+//       }
+//       else if(j$(obj).val() == 'General Inquiry')
+//       {
+//         j$('.clsQuoteId').attr('Disabled',true);
+//         j$('.clsErrMsg').attr('Disabled',false);
+//       }
+//     
+//       else
+//       {
+//         j$('.clsQuoteId').attr('Disabled',false);
+//         j$('.clsErrMsg').attr('Disabled',false);
+//       }
+//       return false;
+//    }
+//    function DisableQuoteControl(obj)
+//    {
+//       if(j$(obj).val() == 'Quote' || $(obj).val()=='Opportunity/Quote Error')
+//       {
+//         j$('.clsQuoteId').attr('Disabled',false);         
+//       } 
+//       else
+//       {
+//         j$('.clsQuoteId').attr('Disabled',true);        
+//       }
+//       return false;
+//    }
+//    function unloadPopupBox() 
+//    {    
+//     // TO Unload the Popupbox
+//
+//     j$('#popup_box').fadeOut("slow");
+//     j$("#container").css({ // this is just for style       
+//        "opacity": "1" 
+//     });
+//    return false;
+//    }
+//    
+//    function validation()
+//    {
+//      var objDesc = CKEDITOR.instances[jQuery(".clsDesc").attr("id")].getData();
+//      alert(objDesc);
+//      return false;
+//    }
+//    function AccountOnChange()
+//    {
+//      if(j$('.ifAccount').val()!='' && j$('.ifAccount').val()!=null) 
+//          { 
+//          j$('.ifOpportunity').val('');
+//          //j$('.ifOpportunity').attr('readonly',true);
+//          j$('.ifOpportunity').hide();
+//          }
+//      else
+//          {
+//          //j$('.ifOpportunity').attr('readonly',false);
+//           j$('.ifOpportunity').show();
+//          }    
+//      return false;
+//    }
+//     function OpportunityOnChange()
+//   {
+//    if(j$('.ifOpportunity').val()!='' && j$('.ifOpportunity').val()!=null)
+//        {
+//          j$('.ifAccount').val('');
+//          //j$('.ifAccount').attr('readonly',true);
+//          j$('.ifAccount').hide();
+//         }
+//     else
+//         {
+//         //j$('.ifAccount').attr('readonly',false);
+//         j$('.ifAccount').show();
+//         }    
+//      return false;
+//    }
+    
+  </script>
+    <apex:sectionHeader title="Deal Support" subtitle="{!strRecordName}"/>
+    <apex:form >
+       
+
+        <apex:actionFunction name="doAddPSRDocuments" action="{!AddPSRDocuments}" reRender="PSRDocsList" />
+
+        <apex:inputText style="position:absolute;top:-500px;"/>
+        <apex:pageMessages id="msgs"/>
+        <apex:outputPanel rendered="{!NOT(IsSave)}" >
+            <center>
+                <apex:commandButton value="Return To Account" onclick="location.href='/{!objDS.Account__c}';return false;" rendered="{!NOT(ISBLANK(objDS.Account__c))}"/>
+                &nbsp;&nbsp;
+                <apex:commandButton value="Return To Opportunity" onclick="location.href='/{!objDS.Opportunity__c}';return false;" rendered="{!NOT(ISBLANK(objDS.Opportunity__c))}"/>
+                &nbsp;&nbsp;
+                <!--<apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?id={!objDS.id}';return false;"/>-->
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?objid={!IF(ISBLANK(objDS.Opportunity__c),objDS.Account__c,objDS.Opportunity__c)}';return false;"/>
+                &nbsp;&nbsp;
+                <apex:commandButton value="View Deal Support Request" onclick="location.href='/{!objDS.Id}';return false;" rendered="false"/>
+            </center>
+        </apex:outputPanel>
+        <apex:pageBlock id="mainBlock" rendered="{!IsSave}" >
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Submit" action="{!submit}" />
+                <apex:commandButton value="Cancel" action="{!CancelPSDSR}" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection id="SupportAreaHeader" columns="4" title="Support Area">
+                <apex:inputField id="suppAreaPicklist" value="{!objDS.Support_Area__c}" style="display:none;">
+ 
+                </apex:inputField>
+                <apex:outputLabel value="Professional Services"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection id="mainSection" columns="2" title="Request Details">
+                <apex:pageBlockSectionItem rendered="{!NOT(IsReturnFromPSDSRAttachments)}">
+                    <apex:outputLabel value="Request Type"/>                    
+           <apex:inputField id="ifRequestType" value="{!objDS.Request_Type__c}" required="true" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!(IsReturnFromPSDSRAttachments)}">
+                    <apex:outputLabel value="Request Type"/>                    
+                <apex:outputField value="{!objDS.Request_Type__c}" />
+ 
+                </apex:pageBlockSectionItem>
+                <apex:inputField value="{!objDS.PS_Only_no_license_deal__c}">
+                <!--<apex:actionSupport event="onclick" action="{!wer}"  reRender="pds1123,psSCEngagementRef,wrapper"/> -->
+                </apex:inputField>
+                <apex:outputField value="{!objDS.Requester__c}" />                
+                <apex:pageBlockSectionItem >               
+                <apex:outputLabel value="Status"/>
+                <apex:outputLabel value="New" />
+                <!--<apex:outputField value="{!objDS.Status__c}"/>-->
+                 </apex:pageBlockSectionItem>
+                <apex:inputField value="{!objDS.Request_Due_Date__c}"/>
+                <apex:inputField value="{!objDS.Priority__c}" required="true" styleClass="clsPriority"/>               
+
+                <apex:outputField value="{!objDS.Account__c}" rendered="{!IsOppExist==true}"/>                
+               <apex:inputField value="{!objDS.Account__c}" rendered="{!IsOppExist==false}" onchange="return AccountOnChange();" styleClass="ifAccount"/>
+                <!-- <apex:outputField value="{!objDS.ININ_Account_URL__c }" rendered="{!IsOppExist==true}"/>-->
+
+                <apex:outputField value="{!objDS.Opportunity__c}" rendered="{!objDS.Opportunity__c != null && IsOppExist==true}"/>
+<!--                <apex:inputField value="{!objDS.Opportunity__c}" rendered="{!IsOppExist==false}" styleClass="ifOpportunity" onchange="return OpportunityOnChange();" />-->
+                <apex:outputField value="{!objDS.Region__c}"/>
+<!--                <apex:outputField value="{!objDS.Sub_Region__c}"/>-->
+                <apex:outputField value="{!objDS.Country_Name__c}" rendered="{!objDS.Opportunity__c != null && IsOppExist==true}"/>                
+                
+            <!--    <apex:outputField value="{!objDS.ININ_Opportunity_URL__c}" rendered="{!objDS.ININ_Opportunity_URL__c != null && IsOppExist==true}"/>-->
+                
+                <apex:inputField value="{!objDS.Error_message__c}" rendered="{!objDS.Support_Area__c = 'Sales Ops'}" style="width : 400px" styleClass="clsErrMsg"/>
+            </apex:pageBlockSection>
+
+            <!--Added for PS Specific DSR fields: NikM: Jan 2017-->
+            <apex:pageBlockSection columns="2" title="PS Details"  rendered="{!objDS.Support_Area__c == 'Professional Services'}">
+                <apex:pageBlockSectionItem id="psDeploymentType" rendered="{!objDS.Support_Area__c == 'Professional Services'}">
+                    <apex:outputlabel value="Deployment Type"/>
+                    <apex:inputField value="{!objDS.Deployment_Type__c}" required="true"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="psProjectApplicationInp" rendered="{!NOT(IsReturnFromPSDSRAttachments)}">
+                    <apex:outputlabel value="Project Application"/>
+                    <apex:inputField value="{!objDS.PS_Project_Application__c}" required="true"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="psProjectApplicationOutp" rendered="{!(IsReturnFromPSDSRAttachments)}">
+                    <apex:outputlabel value="Project Application"/>
+                    <apex:outputField value="{!objDS.PS_Project_Application__c}"/>
+                </apex:pageBlockSectionItem>                
+
+                <apex:pageBlockSectionItem id="psPORRef" rendered="{!objDS.Support_Area__c == 'Professional Services'}">
+                    <apex:outputlabel value="POR Reference"/>
+                    <apex:inputField value="{!objDS.PS_POR_Reference__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="psPORRef1" rendered="{!objDS.Support_Area__c == 'Professional Services'}">
+                    <apex:outputlabel value="DSR SC Engagement"/>
+                    <apex:inputField value="{!objDS.DSR_SC_Engagement_Ref__c}"/>
+                </apex:pageBlockSectionItem>
+                
+                      
+                
+
+            </apex:pageBlockSection>
+           <!--  <apex:outputPanel id="wrapper">
+            <apex:pageBlockSection id="pds1123"  >
+            <apex:pageBlockSectionItem id="psSCEngagementRef" rendered="{!objDS.Support_Area__c == 'Professional Services'}">
+            <apex:outputlabel value="DSR SC Engagement"/>
+            <apex:inputField value="{!objDS.DSR_SC_Engagement_Ref__c}"  required="{!objDS.PS_Only_no_license_deal__c = false}"  />
+            </apex:pageBlockSectionItem> 
+            </apex:pageBlockSection>   
+             </apex:outputPanel> -->
+            <apex:pageBlockSection columns="1" title="Request Description">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Subject"/>
+                    <apex:outputPanel layout="block" styleClass="requiredInput">
+                        <apex:outputPanel styleClass="requiredBlock"/>
+                        <apex:inputField value="{!objDS.Subject__c}" style="width : 400px"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                 <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Description"/>
+                    <apex:outputPanel layout="block" styleClass="requiredInput">
+                        <apex:outputPanel styleClass="requiredBlock"/>
+                        <apex:inputField value="{!objDS.Description__c}" styleClass="clsDesc" />
+                        <!--<apex:inputTextarea value="{!objDS.Description__c}" richText="true" styleClass="clsDesc" />-->
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                
+               <!-- <apex:inputField value="{!objDS.Description__c}" />-->
+            </apex:pageBlockSection>
+            
+         <apex:pageBlockSection id="pbsAttachment" columns="1" title="Attachments">
+         <apex:pageBlockSectionItem >
+             <!--<apex:commandButton value="Update Documents" action="{!SetPSDSRReturnParams}" onclick="window.open('/apex/PSDSRAttachment?customPage=true&dsrid={!objDS.Id}', '', 'left=250,top=200,width=1000,height=500,0,status=0');"/>-->
+             <button type="button" onclick="doAddPSRDocuments()">
+                 <span>Update Documents</span>
+             </button>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+             <apex:pageBlock id="PSDSRDocsList" rendered="{!PSDSR_Documents != null}">
+               <table border="1" width="100%">
+                   <tr>
+                       <td style="width:70%;font-weight:700;background-color:#ADD8E6;">
+                           Document Name
+                       </td>
+                       <td style="width:30%;font-weight:700;background-color:#ADD8E6;">
+                           Document Type
+                       </td>
+                   </tr>
+                   <apex:repeat value="{!PSDSR_Documents}" var="PSDocs"> 
+                       <tr>
+                           <td>
+                               <apex:outputField value="{!PSDocs.Name}" />
+                           </td>
+                           <td>
+                               <apex:outputField value="{!PSDocs.Doc_Type__c}" />
+                           </td>
+                       </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+        </apex:pageBlockSectionItem>
+           
+     </apex:pageBlockSection>
+    <!-- Attachment Section End -->  
+        </apex:pageBlock>        
+
+    </apex:form>
+</apex:page>

@@ -1,0 +1,124 @@
+<apex:page controller="CalendarExample_Controller" action="{!pageLoad}" sidebar="false" showHeader="false">
+
+    <apex:stylesheet value="{!URLFOR($Resource.fullCalendar, '/fullcalendar-2.2.6/fullcalendar.css')}" />  
+    <link href="{!URLFOR($Resource.fullCalendar, '/fullcalendar-2.2.6/fullcalendar.print.css')}" media="print"/>  
+    
+    <apex:includeScript value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/js/jquery-1.10.2.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.fullCalendar, '/fullcalendar-2.2.6/lib/moment.min.js')}" />  
+    
+    <apex:includeScript value="{!URLFOR($Resource.fullCalendar, '/fullcalendar-2.2.6/fullcalendar.min.js')}" />  
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+    <apex:stylesheet value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.min.css')}"/>
+     
+    <script>
+        
+        //We need to wrap everything in a doc.ready function so that the code fires after the DOM is loaded
+        //jQuery.noConflict();
+        jQuery(document).ready(function($)  { 
+            
+            //Call the fullCallendar method. You can replace the '#calendar' with the ID of the dom element where you want the calendar to go. 
+            $('#calendar').fullCalendar({
+                
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                editable: false,
+                eventLimit: true,
+                events:
+                [
+                    //At run time, this APEX Repeat will reneder the array elements for the events array
+                    <apex:repeat value="{!events}" var="e">
+                        {
+                            title: "{!e.title}",
+                            start: '{!e.startString}',
+                            end: '{!e.endString}',
+                            description: '{!e.description}',
+                            url: '{!e.url}',
+                            allDay: {!e.allDay},
+                            className: '{!e.className}'
+                        },
+                    </apex:repeat>
+                    
+                ],
+                eventRender: function(event, element) {
+                    
+                    element.attr('href', 'javascript:void(0);');
+                    
+                    element.click(function() {
+                        
+                        jQuery("#startTime").html(moment(event.start).format('MMMM Do YYYY, h:mm:ss a'));
+                        jQuery("#endTime").html(moment(event.end).format('MMMM Do YYYY, h:mm:ss a'));
+                        console.log(event.description);
+                        jQuery("#eventInfo").html(event.description);
+                        jQuery("#eventLink").attr('href', event.url);
+                        jQuery("#eventContent").dialog({modal: true, title: event.title, width:350});
+                    });
+    
+                }
+            });
+             
+        });
+     
+    </script>
+     
+    <!--some styling. Modify this to fit your needs-->
+    <style>
+        #cal-options {float:left;}
+        #cal-legend { float:right;}
+        #cal-legend ul {margin:0;padding:0;list-style:none;}
+        #cal-legend ul li {margin:0;padding:5px;float:left;}
+        #cal-legend ul li span {display:block; height:16px; width:16px; margin-right:4px; float:left; border-radius:4px;}
+        #calendar {margin-top:20px;}
+        #calendar a:hover {color:#fff !important;}
+         
+        .fc-event-inner {padding:3px;}
+        .fc-day-grid-event > .fc-content {white-space:normal;}
+        .event-NA {background:orange;border-color:orange;}
+        .event-LATAM {background:#880500;border-color:#cc9933;}
+        .event-Global {background:green;border-color:green;max-height:50px;white-space:pre-wrap;}
+        .event-EMEA {background:purple;border-color:purple;}
+        .event-APAC {background:blue;border-color:blue;}
+    </style>
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="events"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+            <apex:sectionHeader title="Partner Events"/>
+            Events, whether in-person or virtual, provide valuable opportunities for our partners to generate leads or get trained, as well as network with Genesys experts and fellow partners.
+            <apex:outputPanel >
+                <apex:form >
+                    
+                    <div id="cal-legend">
+                        <ul>
+                            <li><span class="event-NA"></span>NA Events</li>
+                            <li><span class="event-LATAM"></span>LATAM Events</li>
+                            <li><span class="event-Global"></span>Global Events</li>
+                            <li><span class="event-EMEA"></span>EMEA Events</li>
+                            <li><span class="event-APAC"></span>APAC Events</li>
+                        </ul>
+                        <div style="clear:both;"><!--fix floats--></div>
+                    </div>
+                    <div style="clear:both;"><!--fix floats--></div>
+                    <div id="calendar"></div>
+                    <div id="eventContent" title="Event Details" style="display:none;">
+                        Start: <span id="startTime"></span><br/>
+                        End: <span id="endTime"></span><br/><br/>
+                        <p id="eventInfo"></p>
+                        <p><strong><a id="eventLink" target="_blank">Read More</a></strong></p>
+                    </div>
+                </apex:form>
+            </apex:outputPanel>
+        </apex:define>
+    </apex:composition>
+</apex:page>

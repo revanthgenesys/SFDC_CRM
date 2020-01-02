@@ -1,0 +1,496 @@
+<apex:page StandardController="zqu__Quote__c" extensions="ZUsageEstimatorController" sidebar="false" standardStylesheets="false" docType="html-5.0" >
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/> 
+        <title>Usage Estimator</title>   
+        <!-- Bootstrap -->
+        <apex:stylesheet value="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"/>
+        <apex:includeScript value="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" />
+
+        <apex:includescript value="{!URLFOR($Resource.jQueryUI_1_10_4, 'jquery-ui-1.10.4.custom/js/jquery-1.10.2.js')}" />
+        <apex:includescript value="{!URLFOR($Resource.jQueryUI_1_10_4, 'jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.js')}" />
+        <apex:stylesheet value="{!URLFOR($Resource.jQueryUI_1_10_4, 'jquery-ui-1.10.4.custom/css/cupertino/jquery-ui-1.10.4.custom.css')}" />
+        <apex:includescript value="{!$Resource.ZEstimatorScript}" />
+        <apex:includescript value="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.js" />
+
+        <script type="text/javascript">
+            var $j = jQuery.noConflict();
+            var oldQty;
+            var oldDiscount;
+
+            //get charges from JSON
+            var onetimeCharges = {!onetimeChargeItemsJSON};
+            var servicesCharges = {!servicesChargeItemsJSON};
+            var usageCharges = {!usageChargeItemsJSON};
+            var autoDiscounts = {!autoDiscountsJSON};
+            var purecloudVoiceCharges = {!purecloudVoiceChargeItemsJSON};
+            var purecloudVoicePart = {!purecloudVoicePartJSON};
+            var recurringHardwareCharges = {!recurringHardwareChargeItemsJSON};
+            var prePay = {!zqu__Quote__c.Annual_PrePay__c};
+            SetupController();
+
+            $j(document).ready(function () {
+                LogCharges();
+                AddZebraUI();
+                LoadChargesTables();
+                LoadDiscountTable();
+                AddFieldsTabbBehavior();
+                SetupToolTips();
+                $j("input[type=submit]").button();
+            });
+        </script>
+    </head>
+    <body>
+        <apex:composition template="zqu__QuoteWizardTemplateNoForm">
+            <apex:define name="PageBody">
+            <div class="alert alert-danger" role="alert" style="{!IF(zqu__Quote__c.Is_Editable__c, 'display:none','')}">
+                <center>
+                    <h5><strong>This quote is no longer editable due to its approval status.  If you wish to estimate a quote, please create a new quote.</strong></h5>
+                </center>
+            </div>
+            <apex:form id="mainForm" rendered="{!zqu__Quote__c.Is_Editable__c}" >
+                <div class="panel panel-primary" ng-app="EstimatorApp" ng-controller="BaseChargesTableController">
+                    <div class="panel-heading">Estimate Quote</div>
+                    <div class="panel-body">
+                        <div class="alert alert-info" role="alert">
+                            <center>
+                                <h5><strong>This screen helps provide estimates. Changes made here will not update your quote unless you click on the 'Save &amp; Exit' button below.</strong></h5>
+                            </center>
+                        </div>                        
+                        <!--<p>
+                            <apex:pagemessage summary="This screen helps provide estimates. Changes made here will not update your quote unless you click on the 'Save & Exit' button below." severity="info" strength="1" rendered="{!zqu__Quote__c.Is_Editable__c}" />
+                            <apex:pagemessage summary="This quote is no longer editable due to its status.  If you wish to estimate a quote, please create a new quote." severity="warning" strength="1" rendered="{!NOT(zqu__Quote__c.Is_Editable__c)}" />
+                        </p>-->
+                        <div class="row">
+                            <div class="col-md-4 col-md-offset-3">
+                                <table>
+                                    <tr>
+                                        <th>Quote:</th>
+                                        <td><apex:outputlink value="{!URLFOR($Site.Prefix + '/'+ zqu__Quote__c.Id)}">{!zqu__Quote__c.Name}</apex:outputlink></td>                                                                        
+                                    </tr>
+                                    <tr>
+                                        <th>Status:</th>
+                                        <td><apex:outputfield value="{!zqu__Quote__c.zqu__Status__c}" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Account:</th>
+                                        <td><apex:outputfield value="{!zqu__Quote__c.zqu__Account__c}" /></td>
+                                    </tr>
+                                </table>   
+                            </div>
+                            <div class="col-md-4">
+                                <table>
+                                    <tr>
+                                        <th>Number:</th>
+                                        <td><apex:outputfield value="{!zqu__Quote__c.zqu__Number__c}" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Opportunity:</th>
+                                        <td><apex:outputfield value="{!zqu__Quote__c.zqu__Opportunity__c}" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Annual Pre-pay:</th>
+                                        <td><apex:outputfield value="{!zqu__Quote__c.Annual_PrePay__c}" /></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>                      
+                    </div>
+                <!-- One-time Charges -->
+                <div class="panel panel-primary" style="{!IF(onetimeChargesSize = 0, 'display:none', '')}" ng-controller="OnetimeTableController">
+                    <input type="hidden" name="onetimeChargesHf" ng-value="GetJson()" />
+                    <div class="panel-heading">One-time Charges</div>
+                    <table class="table" id='onetimeTable'>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>List Price ({!zqu__Quote__c.zqu__Currency__c})</th>
+                            <th>Discount %</th>
+                            <th>Effective Price ({!zqu__Quote__c.zqu__Currency__c})</th>
+                            <th>Quantity</th>
+                            <th>UOM</th>
+                            <th>List Total</th>
+                            <th>Total</th>
+                        </tr>
+                        <tr ng-repeat="charge in Charges" 
+                            ng-class="{ success : charge.GroupType == 'new', danger : charge.GroupType == 'removed' }"
+                            ng-init="(charge.GroupType == 'removed' ? charge.Quantity = -charge.Quantity : charge.Quantity = charge.Quantity)">
+                            <td class="name">{{charge.Name}}</td>
+                            <td class="listPrice">{{FormatDecimalWithComma(charge.UnitPrice)}}</td>
+                            <td class="discount"><input type="number" step="0.01" ng-model="charge.Discount" ng-change="onDiscountKeyUp($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td class="effectivePrice"><input type="number" step="0.01" ng-model="charge.EffectivePrice" ng-change="onEffectivePriceUp($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td class="quantity">
+                                <input type="number" ng-model="charge.Quantity" ng-keydown="onQuantityKeyDown($event, $index)" ng-change="onQuantityChange($event, $index)" ng-keyup="onQuantityKeyup($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}"/>
+                            </td>
+                            <td class="listPrice" style="text-align:center;">{{charge.UOM}}</td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.ListTotal)}}</span>
+                            </td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.EffectiveTotal)}}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="pull-right">
+                                <table>
+                                    <tr>
+                                        <th>Total One-time Charges ({!zqu__Quote__c.zqu__Currency__c}):</th>
+                                        <th style="padding-right:10px; padding-left:10px">{{FormatDecimalWithComma(GrossOnetimeTotal)}}</th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recurring Hardware Charges -->
+                <div class="panel panel-primary" style="{!IF(recurringHardwareChargesSize = 0, 'display:none', '')}" ng-controller="RecurringHardwareTableController">
+                    <input type="hidden" name="recurringHardwareChargesHF" ng-value="GetJson()" />
+                    <div class="panel-heading">Recurring Hardware Charges</div>
+                    <table class="table" id='recurringHardwareTable'>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Charge Type</th>
+                            <th>List Price</th>
+                            <th>Discount %</th>
+                            <th>Effective Price</th>
+                            <th>Quantity</th>
+                            <th>UOM</th>
+                            <th>List Total</th>
+                            <th>Total</th>
+                        </tr>
+                        <tr ng-repeat="charge in Charges" 
+                            ng-class="{ success : charge.GroupType == 'new', danger : charge.GroupType == 'removed' }"
+                            ng-init="(charge.GroupType == 'removed' ? charge.Quantity = -charge.Quantity : charge.Quantity = charge.Quantity)">
+                            <td class="name">{{charge.Name}}</td>
+                            <td class="type">{{charge.Type}}</td>
+                            <td class="listPrice">{{FormatDecimalWithComma(charge.UnitPrice)}}</td>
+                            <td class="discount"><input type="number" step="0.01" ng-model="charge.Discount" ng-change="onDiscountKeyUp($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td class="effectivePrice"><input type="number" step="0.01" ng-model="charge.EffectivePrice" ng-change="onEffectivePriceUp($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td class="quantity">
+                                <input type="number" ng-model="charge.Quantity" ng-keydown="onQuantityKeyDown($event, $index)" ng-change="onQuantityChange($event, $index)" ng-keyup="onQuantityKeyup($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" />
+                            </td>
+                            <td class="listPrice">{{charge.UOM}}</td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.ListTotal)}}</span>
+                            </td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.EffectiveTotal)}}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="pull-right">
+                                <table>
+                                    <tr>
+                                        <th>Total Recurring Hardware Charges ({!zqu__Quote__c.zqu__Currency__c}):</th>
+                                        <th style="padding-right:10px; padding-left:10px">{{FormatDecimalWithComma(GrossRecurringHardwareTotal)}}</th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+                <!-- Service Charges -->
+                <div class="panel panel-primary" style="{!IF(servicesChargesSize = 0, 'display:none', '')}" ng-controller="ServicesTableController">
+                    <input type="hidden" name="servicesChargesHf" ng-value="GetJson()" />
+                    <div class="panel-heading">Service Charges</div>
+                    <table class="table" id='servicesTable'>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>List Price</th>
+                            <th>Discount %</th>
+                            <th>Effective Price</th>
+                            <th>Quantity</th>
+                            <th>UOM</th>
+                            <th>Period</th>
+                            <th>List Total</th>
+                            <th>Total</th>
+                        </tr>
+                        <tr ng-repeat="charge in Charges" 
+                            ng-class="{ success : charge.GroupType == 'new', danger : charge.GroupType == 'removed' }"
+                            ng-init="(charge.GroupType == 'removed' ? charge.Quantity = -charge.Quantity : charge.Quantity = charge.Quantity)">
+                            <td class="name">{{charge.Name}}</td>
+                            <td class="listPrice">{{FormatDecimalWithComma(charge.UnitPrice)}}</td>
+                            <td class="discount"><input type="number" step="0.01" ng-model="charge.Discount" ng-change="onDiscountKeyUp($event, $index)" ng-disabled="charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'" /></td>
+                            <td class="effectivePrice"><input type="number" step="0.01" ng-model="charge.EffectivePrice" ng-change="onEffectivePriceUp($event, $index)" ng-disabled="{{charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'}}" /></td>
+                            <td class="quantity">
+                                <input type="number" ng-model="charge.Quantity" ng-keydown="onQuantityKeyDown($event, $index)" ng-change="onQuantityChange($event, $index)" ng-keyup="onQuantityKeyup($event, $index)" ng-disabled="{{charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'}}" />
+                            </td>
+                            <td style="text-align:center;" class="listPrice">{{charge.UOM}}</td>
+                            <td class="period"><input type="number" ng-model="charge.Period" step="1" min="1" max="120" ng-keydown="onPeriodKeyDown($event, $index)" ng-keyup="onPeriodKeyUp($event, $index)" ng-change="onPeriodChange($event, $index)" ng-disabled="{{charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'}}" /></td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.TotalListUsage)}}</span>
+                            </td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.TotalUsage)}}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="pull-right">
+                                <table>
+                                    <tr>
+                                        <th>Total Service Charges ({!zqu__Quote__c.zqu__Currency__c}):</th>
+                                        <th style="padding-right:10px; padding-left:10px">{{FormatDecimalWithComma(GrossServicesTotal)}}</th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- PureCloud Voice Charges -->
+                <div class="panel panel-primary" style="{!IF(purecloudVoicePartSize = 0, 'display:none', '')}" ng-controller="PurecloudVoicePartTableController">
+                    <input type="hidden" name="purecloudVoicePartHf" ng-value="GetJson()" />
+                    <div class="panel-heading">PureCloud Voice Charges</div>
+                    <table class="table" id='purecloudVoiceTable'>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>List Price</th>
+                            <th>Discount %</th>
+                            <th>Effective Price</th>
+                            <th>Quantity</th>
+                            <th>UOM</th>
+                            <th>Period</th>
+                            <th>List Total</th>
+                            <th>Total</th>
+                        </tr>                                       
+                        <tr ng-repeat="charge in Charges"> 
+                            <td class="name">{{charge.Name}}</td>
+                            <td class="listPrice">{{FormatDecimalWithComma(charge.UnitPrice)}}</td>
+                            <td class="discount">{{charge.discount}}</td>
+                            <td class="effectivePrice">{{charge.EffectivePrice}}</td>
+                            <td class="quantity">{{charge.Quantity}}</td>
+                            <td style="text-align:center;" class="listPrice">{{charge.UOM}}</td>
+                            <td class="period">{{charge.Period}}</td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.ListTotal)}}</span>
+                            </td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.EffectiveTotal)}}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="panel panel-primary" style="{!IF(purecloudVoiceChargesSize = 0, 'display:none', '')}" ng-controller="PurecloudVoiceTableController">
+                    <input type="hidden" name="PurecloudVoiceChargesHf" ng-value="GetJson()" />
+                    <div class="panel-heading">PureCloud Voice Charges</div>
+                    <table class="table" id='purecloudVoiceTable'>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>List Price</th>
+                            <th>Discount %</th>
+                            <th>Effective Price</th>
+                            <th>Quantity</th>
+                            <th>UOM</th>
+                            <th>Period</th>
+                            <th>List Total</th>
+                            <th>Total</th>
+                        </tr>
+                        <tr ng-repeat="charge in Charges" 
+                            ng-class="{ success : charge.GroupType == 'new', danger : charge.GroupType == 'removed' }"
+                            ng-init="(charge.GroupType == 'removed' ? charge.Quantity = -charge.Quantity : charge.Quantity = charge.Quantity)">
+                            <td class="name">{{charge.Name}}</td>
+                            <td class="listPrice">{{FormatDecimalWithComma(charge.UnitPrice)}}</td>
+                            <td class="discount"><input type="number" step="0.01" ng-model="charge.Discount" ng-change="onDiscountKeyUp($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td class="effectivePrice"><input type="number" step="0.01" ng-model="charge.EffectivePrice" ng-change="onEffectivePriceUp($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td class="quantity"><input type="number" ng-model="charge.Quantity" ng-keydown="onQuantityKeyDown($event, $index)" ng-change="onQuantityChange($event, $index)" ng-keyup="onQuantityKeyup($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td style="text-align:center;" class="listPrice">{{charge.UOM}}</td>
+                            <td class="period"><input type="number" ng-model="charge.Period" step="1" min="1" max="120" ng-keydown="onPeriodKeyDown($event, $index)" ng-keyup="onPeriodKeyUp($event, $index)" ng-change="onPeriodChange($event, $index)" ng-disabled="{{charge.GroupType != 'new'}}" /></td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.ListTotal)}}</span>
+                            </td>
+                            <td class="total">
+                                <span>{{FormatDecimalWithComma(charge.EffectiveTotal)}}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="pull-right">
+                                <table>
+                                    <tr>
+                                        <th>Total Recurring PureCloud Voice Charges ({!zqu__Quote__c.zqu__Currency__c}):</th>
+                                        <th style="padding-right:10px; padding-left:10px">{{FormatDecimalWithComma(GrossPurecloudVoiceTotal)}}</th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+                <!-- Usage Charges -->
+                <div class="panel panel-primary" style="{!IF(usagechargesSize = 0, 'display:none', '')}" ng-controller="UsageTableController">                    
+                    <input type="hidden" name="usageChargesHf" ng-value="GetJson()" />
+                    <div class="panel-heading">Subscription Charges</div>
+                    <!--<div class="row" style="{!IF(zqu__Quote__c.Annual_PrePay__c, '', 'display:none')}">
+                        <div class="col-md-2"> 
+                            <strong>Qualified Discount:</strong>&nbsp;{{qualifiedDiscount}}%&nbsp;
+                            <button type="button" ng-click="applyDiscount()">Apply Discount</button>
+                        </div>
+                    </div>-->
+                    <table id='usageTable' class="table">
+                        <tr>
+                            <th>Product Name</th>
+                            <th>List Price</th>
+                            <th>Discount %</th>
+                            <th>Effective Price</th>
+                            <th>Quantity</th>
+                            <th>UOM</th>
+                            <th>Period</th>
+                            <th>List Total</th>
+                            <th>Total Usage</th>
+                            <th>Discounted Total</th>
+                            <th>Discounted Total Usage</th>
+                        </tr>
+                        <tr ng-repeat="charge in Charges" 
+                            ng-if="({!zqu__Quote__c.Annual_PrePay__c} || (!{!zqu__Quote__c.Annual_PrePay__c} && charge.QuoteCharge.zqu__Period__c == 'Month') || charge.GroupType != 'new')" 
+                            ng-class="{ success : charge.GroupType == 'new', danger : charge.GroupType == 'removed' }"
+                            ng-init="(charge.GroupType == 'removed' ? charge.Quantity = -charge.Quantity : charge.Quantity = charge.Quantity)">
+                            <td class="name">{{charge.Name}}</td>
+                            <td class="listPrice">{{FormatDecimalWithComma(charge.UnitPrice)}}</td>
+                            <td class="discount">
+                                <input type="number" step="0.01" ng-model="charge.Discount" ng-change="onDiscountKeyUp($event, $index)" ng-disabled="charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'" />                                        
+                            </td>
+                            <td class="effectivePrice"><input type="number" step="0.01" ng-model="charge.EffectivePrice" ng-change="onEffectivePriceUp($event, $index)" ng-disabled="charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'" /></td>
+                            <td class="quantity">
+                                <input type="number" ng-model="charge.Quantity" ng-keydown="onQuantityKeyDown($event, $index)" ng-change="onQuantityChange($event, $index)" ng-keyup="onQuantityKeyup($event, $index)" ng-disabled="charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'" />    
+                            </td>
+                            <td style="text-align:center;" class="listPrice">{{charge.UOM}}</td>
+                            <td class="period"><input type="number" ng-model="charge.Period" step="1" min="1" max="120" ng-keydown="onPeriodKeyDown($event, $index)" ng-keyup="onPeriodKeyUp($event, $index)" ng-change="onPeriodChange($event, $index)" ng-disabled="charge.GroupType != 'new' || charge.QuoteCharge.zqu__Model__c == 'Discount-Percentage'" /></td>
+                            <td class="total">
+                                {{FormatDecimalWithComma(charge.ListTotal)}}
+                            </td>
+                            <td class="total">
+                                {{ charge.Name.indexOf('Usage') == -1 ? (FormatDecimalWithComma(charge.TotalListUsage)) : "--"}}
+                            </td>
+                            <td class="total">
+                                {{FormatDecimalWithComma(charge.EffectiveTotal)}}
+                            </td>
+                            <td class="total"> 
+                                {{FormatDecimalWithComma(charge.TotalUsage)}}
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="pull-right">
+                                <table>
+                                    <tr>
+                                        <th>Total Subscription Charges ({!zqu__Quote__c.zqu__Currency__c}):</th>
+                                        <th style="padding-right:10px; padding-left:10px">{{FormatDecimalWithComma(GrossUsageTotal)}}</th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>  
+                <div class="panel-footer">
+                    <div class="row">
+                        <div class="col-md-6 col-md-offset-3">
+                            <table id='totalTable' class="table">
+                                <thead>
+                                    <tr class="info">
+                                        <th>Totals</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th>
+                                            Total One-time Fees ({!zqu__Quote__c.zqu__Currency__c}):
+                                        </th>
+                                        <td>
+                                            {{FormatDecimalWithComma(GetOnetimeTotal())}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Total Monthly Fees ({!zqu__Quote__c.zqu__Currency__c})
+                                        </th>
+                                        <td>
+                                            {{FormatDecimalWithComma(GetMonthlyEffectiveTotal())}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Total Annualized Monthly Fees ({!zqu__Quote__c.zqu__Currency__c})
+                                        </th>
+                                        <td>
+                                            {{FormatDecimalWithComma(GetMonthlyEffectiveTotal() * 12)}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Annual Commitment Subscription Discount ({!zqu__Quote__c.zqu__Currency__c})
+                                        </th>
+                                        <td>
+                                            {{FormatDecimalWithComma({!IF(ISBLANK(zqu__Quote__c.zqu__Previewed_Discount__c), 0, zqu__Quote__c.zqu__Previewed_Discount__c)})}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Total Contract Cost ({!zqu__Quote__c.zqu__Currency__c})
+                                        </th>
+                                        <td >
+                                            {{FormatDecimalWithComma(GetGrandTotal() + {!IF(ISBLANK(zqu__Quote__c.zqu__Previewed_Discount__c), 0, zqu__Quote__c.zqu__Previewed_Discount__c)})}}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!--<div class="col-md-6">
+                            <table id='prepayTable' class="table">
+                                <thead>
+                                    <tr class="info">
+                                        <th>Annual Prepay Option</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th>
+                                            Year 1 Cost ({!zqu__Quote__c.zqu__Currency__c})
+                                        </th>
+                                        <td>
+                                            {{FormatDecimalWithComma(GetPrePayYearOneCost())}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>
+                                            Annual Subscription Cost ({!zqu__Quote__c.zqu__Currency__c})
+                                        </th>
+                                        <td>
+                                            {{FormatDecimalWithComma(GetPrePayAnnualSubscriptionCost())}}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>-->
+                    </div>
+                    <div class="row">
+                        <center>
+                            <!--<apex:commandlink styleClass="btn" target="_blank" action="{!ViewPdf}"><apex:image value="{!$Resource.AdobePDFIcon}" />View as PDF</apex:commandlink>-->
+                            <apex:commandlink styleClass="btn" target="_blank" action="{!ViewPdf}" value="View as PDF" />
+                            <apex:commandbutton styleClass="btn" value="Save" action="{!Save}"  />
+                            <apex:commandbutton styleClass="btn" value="Save & Exit" action="{!SaveAndExit}"  />                    
+                            <apex:commandbutton styleClass="btn" value="Save as PDF" action="{!SavePdfAsAttachment}" disabled="{!attachmentSaved}" />
+                            <apex:commandbutton styleClass="btn" value="Cancel" action="{!Cancel}"/>
+                        </center>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Make sure these fields are available in the controller -->
+            <apex:inputHidden value="{!zqu__Quote__c.zqu__SubscriptionType__c}" />
+            <apex:inputHidden value="{!zqu__Quote__c.zqu__InitialTerm__c}" />
+            <apex:inputHidden value="{!zqu__Quote__c.zqu__Primary__c}" />
+            
+        </apex:form>
+        </apex:define>
+    </apex:composition>
+  </body>
+</apex:page>

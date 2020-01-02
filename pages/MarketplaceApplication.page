@@ -1,0 +1,322 @@
+<!-- <apex:page controller="MarketplaceApplicationController" title="Technology Marketplace Application" tabStyle="Technology_Market_place_Application__c" id="thempa" action="{!redirectToDetailPage}"> -->
+<apex:page controller="MarketplaceApplicationController" title="Technology Marketplace Application" tabStyle="Technology_Market_place_Application__c" id="thempa" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+
+    <style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+        
+        .tableAlign{
+            width: auto;
+            margin-right: 0px;
+            margin-left: 175px;
+        }
+    </style>
+    
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="performance"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+            <apex:form id="fm" >
+                <div style="height:15px;">
+                    <apex:actionStatus id="status">
+                        <apex:facet name="start">    
+                            <apex:outputPanel >
+                                <apex:outputPanel styleClass="popupBackground" layout="block" style="position:absolute;"/>
+                                <apex:outputPanel layout="block" style="text-align:center;">
+                                    <apex:image value="/img/loading.gif"/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:facet>                           
+                    </apex:actionStatus>
+                </div>
+                <apex:outputPanel id="pgblk">
+                <apex:pageMessages id="pgmsg" />
+                <apex:pageMessage rendered="{!appBeingEditedByOther}" summary="AppFoundry Application is being edited by another contact." strength="3" severity="info"></apex:pageMessage>
+                
+                <apex:pageBlock rendered="{!hideDetails}" title="AppFoundry Program Application">
+                        <apex:outputLabel value="You have successfully submitted the application." />
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="AppFoundry Program Application" rendered="{!AND(NOT(hideDetails),OR(step == 0 , step == 1),appBeingEditedByOther == false)}">
+                    <apex:pageBlockButtons location="both">
+                        <apex:commandButton value="Save For Later" action="{!save}" status="status" rendered="{!OR(step == 0 , AND(step == 1,hasAttachment == false))}"/>
+                        <apex:commandButton value="Next" action="{!next}" status="status" rendered="{!step == 0}"/>
+                        <apex:commandButton value="Submit Application" action="{!submit}" status="status" rendered="{!step == 1}"/>
+                        <apex:commandButton value="Cancel" action="{!cancelAction}" status="status" immediate="true" rendered="{!OR(step == 0 , step == 1)}"/>
+                        <!--
+                        <apex:commandButton value="Cancel" onclick="location.href='/partner/Home';" reRender="pgblk, pgmsg" status="status" immediate="true" rendered="{!OR(step == 0 , step == 1)}"/>
+                        -->
+                    </apex:pageBlockButtons>
+                    <apex:pageBlockSection columns="1"  title="AppFoundry Application Status" collapsible="false" rendered="{!appAlreadySubmitted}">
+                        <apex:outputField value="{!newApplication.Status__c}"/>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection columns="1"  title="Company Profile and Partner Details" collapsible="false" rendered="{!step == 0}">
+                        <apex:outputField value="{!newApplication.Company_Name__c}"/>
+                        <apex:outputField value="{!newApplication.Primary_contact_Name__c}"/>
+                        <apex:outputField value="{!newApplication.Primary_Contact_e_mail__c}"/>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection columns="1" title="Application Details" rendered="{!step == 0}">
+                        <apex:inputField value="{!newApplication.Solution_Name__c}" required="true"/>
+                        <apex:inputField value="{!newApplication.Problem_Statement__c}" style="width:400px; height:60px;" required="true"/>
+                        <apex:inputField value="{!newApplication.Elevator_Pitch__c}" style="width:400px; height:60px;" required="true"/>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection columns="1" id="built" rendered="{!step == 0}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Is the application already built and available in production? " for="file"/>
+                            <apex:actionRegion >  
+                                <apex:inputField value="{!newApplication.Is_App_already_built_available_in_Prod__c}" required="true">  
+                                    <apex:actionSupport event="onchange" reRender="built" status="actStatusId">
+                                        <apex:actionStatus id="actStatusId" >
+                                            <apex:facet name="start" >
+                                                <img src="/img/loading.gif" />                    
+                                            </apex:facet>
+                                        </apex:actionStatus>
+                                    </apex:actionSupport>
+                                </apex:inputField> 
+                            </apex:actionRegion> 
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!newApplication.Is_App_already_built_available_in_Prod__c ==false}" helpText="Please provide an expected release date for your application">
+                            <apex:outputLabel value="Expected Release Date" for="file"/>
+                            <apex:inputField value="{!newApplication.If_not_what_is_the_expected_GA_Date__c}" label="If not, what is the expected GA (general availability) date?" required="true" rendered="{!newApplication.Is_App_already_built_available_in_Prod__c ==false}" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Technology_Market_place_Application__c.fields.Describe_the_point_of_Integration__c.InlineHelpText}">
+                            <apex:outputLabel value="Describe the point of Integration with Genesys" for="file"/>
+                            <apex:inputField value="{!newApplication.Describe_the_point_of_Integration__c}" style="width:400px; height:60px;" label="Describe the point of Integration with Genesys" required="true"/>
+                        </apex:pageBlockSectionItem>
+                        <!--<apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Supported Offering"/>
+                            <apex:inputField value="{!newApplication.Supported_Offering__c}" required="true"/>
+                        </apex:pageBlockSectionItem>-->
+                        
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Type of Application"/>
+                            <apex:inputField value="{!newApplication.Type_of_Application__c}" required="true"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection id="vertical" columns="1" rendered="{!step == 0}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Is your solution aimed at a particular vertical(s)? " for="file"/>
+                            <apex:actionRegion >  
+                                <apex:inputField value="{!newApplication.Is_your_sol_aimed_at_a_part_verticals__c}" required="true">  
+                                    <apex:actionSupport event="onchange" reRender="vertical" status="solStatusId">
+                                        <apex:actionStatus id="solStatusId" >
+                                            <apex:facet name="start" >
+                                                <img src="/img/loading.gif" />                    
+                                            </apex:facet>
+                                        </apex:actionStatus>
+                                    </apex:actionSupport>
+                                </apex:inputField> 
+                            </apex:actionRegion> 
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!newApplication.Is_your_sol_aimed_at_a_part_verticals__c ==true}" >
+                            <apex:outputLabel value="Please Describe" for="file"/>
+                            <apex:inputField value="{!newApplication.Please_Describe__c}" label="Please Describe" required="true" style="width:400px; height:60px;" rendered="{!newApplication.Is_your_sol_aimed_at_a_part_verticals__c ==true}" />
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                     <apex:pageBlockSection rendered="{!step == 0}">    
+                                    
+                            <apex:repeat value="{!$ObjectType.Technology_Market_place_Application__c.FieldSets.MarketPlaceApplication_Part_2}" var="f">                       
+                                <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}" />
+                                <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                                                              
+                            </apex:repeat>
+                    </apex:pageBlockSection>
+                    
+                    
+                    <!-- New Section 'Please describe information about size and time in service' Added by Debora Lane on 13th Feb 2018 Start -->
+                      <apex:pageBlockSection title="Please describe information about size and time in service" columns="1" rendered="{!step == 0}"> 
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Supported Genesys Platform"/>
+                            <apex:inputField value="{!newApplication.Supported_Genesys_Platform__c}" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Application Sales Type"/>
+                            <apex:inputField value="{!newApplication.Application_Sales_Type__c}"   />
+                        </apex:pageBlockSectionItem>
+                      
+                      </apex:pageBlockSection> 
+                      
+                    <!-- 'Please describe information about size and time in service' section close -->
+                    
+                    
+                    
+                    <apex:outputPanel id="GenesysCustomerSolution" rendered="{!step == 0}">
+                            <apex:actionRegion >
+                            <apex:variable value="{!0}" var="rowNum"/>
+                                <apex:pageBlockSection columns="2" title="Which Genesys customers are using this solution? Please describe information about size and time in service">             
+                                    <apex:outputPanel >
+                                    <apex:pageBlockTable value="{!customerSolution}" var="eachRecord" styleClass="tableAlign"> 
+                                    <apex:column headerValue="Action">
+                                        <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromcustomerSolutionList}" rendered="{!rowNum > 0}" rerender="GenesysCustomerSolution"  immediate="true">
+                                            <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                        </apex:commandLink>
+                                        <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Customer Name">
+                                        <apex:inputField value="{!eachRecord.record.Customer_Name__c}"  required="true" />
+                                    </apex:column>
+                                    <apex:column headerValue="Customer Use Case">
+                                        <apex:inputField value="{!eachRecord.record.Implementation__c}"  required="true" style="width:250px;height:100px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Time in Service (months)">
+                                        <apex:inputField value="{!eachRecord.record.Time_in_Service__c}"  required="true" />
+                                    </apex:column>                      
+                                </apex:pageBlockTable>
+                                    </apex:outputPanel>
+                                </apex:pageBlockSection>
+                                <br/>
+                                <apex:commandButton value="Add More" action="{!addNewRowTocustomerSolutionList}" rerender="GenesysCustomerSolution" Status="status" style="margin-left: 185px;"/>
+                             <br/> <br/>
+                             </apex:actionRegion> 
+                        </apex:outputPanel>
+                    
+                    <apex:pageBlockSection columns="1" rendered="{!step == 0}">
+                            <apex:repeat value="{!$ObjectType.Technology_Market_place_Application__c.FieldSets.MarketPlaceApplication_Part_3}" var="f">                       
+                                <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}" />
+                                <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                                                              
+                            </apex:repeat>
+                    </apex:pageBlockSection>
+                    
+                    <apex:outputPanel id="Competitors" rendered="{!step == 0}">
+                        <apex:actionRegion >
+                            <apex:variable value="{!0}" var="rowNum"/>
+                            <apex:pageBlockSection columns="2" title="Who are your competitors for this product?">             
+                                <apex:pageBlockTable value="{!competitors}" var="eachRecord" styleClass="tableAlign"> 
+                                    <apex:column headerValue="Action">
+                                        <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromCompetitorList}" rendered="{!rowNum > 0}" rerender="Competitors"  immediate="true">
+                                            <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                        </apex:commandLink>
+                                        <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Competitor">
+                                        <apex:inputField value="{!eachRecord.record.Competitor__c}"  required="true" />
+                                    </apex:column>
+                                    <apex:column headerValue="Comments">
+                                        <apex:inputField value="{!eachRecord.record.Comments__c}"  required="true" style="width:250px;height:100px;"/>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                            <br/>
+                            <apex:commandButton value="Add More" action="{!addNewRowToCompetitorList}" rerender="Competitors" Status="status" style="margin-left: 185px;"/>
+                            <br/> <br/>
+                        </apex:actionRegion> 
+                    </apex:outputPanel>
+                    
+                     <apex:outputPanel id="LicensedUsers" rendered="{!step == 0}">
+                        <apex:actionRegion >
+                            <apex:variable value="{!0}" var="rowNum"/>
+                            <apex:pageBlockSection columns="2" title="Licensed User Details:">             
+                                <apex:pageBlockTable value="{!licensedUsers}" var="eachRecord" styleClass="tableAlign"> 
+                                    <apex:column headerValue="Action">
+                                        <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromLicensedUserList}" rendered="{!rowNum > 0}" rerender="LicensedUsers"  immediate="true">
+                                            <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                        </apex:commandLink>
+                                        <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="User Profile">
+                                        <apex:inputField value="{!eachRecord.record.User_Profile__c}"  required="true" />
+                                    </apex:column>
+                                    <apex:column headerValue="Describe user experience">
+                                        <apex:inputField value="{!eachRecord.record.Describe_user_experience__c}"  required="true" style="width:250px;height:100px;"/>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                            <br/>
+                            <apex:commandButton value="Add More" action="{!addNewRowToLicensedUserList}" rerender="LicensedUsers" Status="status" style="margin-left: 185px;"/>
+                            <br/> <br/>
+                        </apex:actionRegion> 
+                    </apex:outputPanel>
+                    
+                    <apex:pageBlockSection columns="1" rendered="{!step == 0}">
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Technology_Market_place_Application__c.fields.Describe_planned_end_user_pricing__c.InlineHelpText}">
+                            <apex:outputLabel value="Describe planned end user pricing structure and licensing model" for="file"/>
+                            <apex:inputField value="{!newApplication.Describe_planned_end_user_pricing__c}" style="width:400px; height:60px;" label="Describe planned end user pricing structure and licensing model" required="true"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection columns="1" rendered="{!step == 0}">
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Technology_Market_place_Application__c.fields.Average_deal_size__c.InlineHelpText}">
+                        <apex:outputLabel value="Average expected deal size <br/> Post discount" escape="false"/>
+                            <apex:inputField value="{!newApplication.Average_deal_size__c}"  label="Average expected deal size Post discount" required="true"/>
+                        </apex:pageBlockSectionItem>
+                        
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Technology_Market_place_Application__c.fields.average_sales_cycle_to_close_a_deal__c.InlineHelpText}">
+                            <apex:outputLabel value="How long is the average sales cycle to close a deal?" for="file"/>
+                            <apex:inputField value="{!newApplication.average_sales_cycle_to_close_a_deal__c}"  label="How long is the average sales cycle to close a deal?" required="true"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!newApplication.Licensing_examples__c}" style="width:400px;height:70px;"/> 
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection columns="1" rendered="{!step == 0}">
+                            <apex:repeat value="{!$ObjectType.Technology_Market_place_Application__c.FieldSets.MarketPlaceApplication_Part_5}" var="f">                       
+                                <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}" />
+                                <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                                                              
+                            </apex:repeat>
+                    </apex:pageBlockSection>
+                    <!-- Attachment Section -->    
+                    <apex:outputPanel id="attachmentSection" rendered="{!AND(NOT(hideDetails),step == 1)}">
+                    <apex:pageBlockSection title="Architecture" rendered="{!hasAttachment == false}" columns="1">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$Label.AppFoundry_ArchitectureDetails}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Architecture Drawing" for="file"/>
+                            <apex:inputFile value="{!appFoundryAttachment[0].body}" filename="{!appFoundryAttachment[0].name}" id="file"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Architecture" rendered="{!AND(hasAttachment == true,appFoundryAttachment.size > 0)}" collapsible="false">
+                        <apex:pageBlockSectionItem >
+                        <apex:pageBlockTable value="{!appFoundryAttachment}" var="eachRecord" styleClass="tableAlign"> 
+                            <apex:column >
+                                <apex:outputLink value="/servlet/servlet.FileDownload?file={!eachRecord.Id}" style="color:red" target="_blank">View</apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Architecture Attachment Name">
+                                <apex:outputField value="{!eachRecord.Name}" />
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        </apex:pageBlockSectionItem>    
+                        <br/> 
+                     </apex:pageBlockSection>
+                            
+                    </apex:outputPanel>
+                    
+                    
+                    <!--<apex:pageBlockSection id="uploadAttach">
+                            <apex:commandButton value="Update Architecture" rerender="uploadAttach" Status="status" style="margin-left: 185px;" action="{!instantiateAttachment}">
+                                <apex:param value="true" name="updateAttachment" assignTo="{!updateAttachment}"/>
+                            </apex:commandButton>
+                            <br/> <br/>
+                            <apex:outputLabel value="Architecture" rendered="{!updateAttachment}"/>
+                            <apex:inputFile value="{!AttachmentToUpdate.body}" filename="{!AttachmentToUpdate.name}" rendered="{!updateAttachment}"/>    
+                     </apex:pageBlockSection> -->
+                </apex:pageBlock>
+                </apex:outputPanel>
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+</apex:page>

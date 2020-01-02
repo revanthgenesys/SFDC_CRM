@@ -1,0 +1,147 @@
+<apex:page showHeader="false" sidebar="false" controller="RebateAwardLetterController" renderAs="PDF">
+    <Table BORDER="0" ALIGN="CENTER" WIDTH="100%" style="font-size:15px;">
+        <TR>
+            <TD ALIGN="LEFT" >
+                <apex:image url="{!$Resource.GenesysPartnerLogo}" width="130px" height="60px" />
+            </TD>
+        </TR>
+    </Table>
+    <apex:outputPanel rendered="{!IF(rebate != NULL, false, true)}">
+        <Table BORDER="0" ALIGN="CENTER" WIDTH="100%" style="font-size:15px;">
+            <TR>
+                <TD ALIGN="LEFT" >
+                    Hello: 
+                    <p align="justify">
+                        For year {!rebateYear}, either you dont have Rebate Award or there is a problem with Rebate Award, please contact your channel manager.  
+                    </p>
+                    <p>
+                        Sincerely
+                    </p>    
+                    <p>
+                        The Genesys Partner Network Program Team
+                    </p>  
+                </TD>
+            </TR>
+         </Table>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!IF(rebate != NULL, true, false)}">
+    <Table BORDER="0" ALIGN="CENTER" WIDTH="100%" style="font-size:15px;">
+        <TR>
+            <TD ALIGN="LEFT" >
+                Hello {!pUser.Name}:
+                <p align="justify">
+                    Congratulations on achieving your target goal(s) for the {!rebate.Rebate_Year__c} 
+                    <apex:outputPanel rendered="{!(rebate.Earned_License_Amount__c != NULL && rebate.Earned_License_Amount__c > 0 && rebate.Earned_SaaS_Amount__c != NULL && rebate.Earned_SaaS_Amount__c > 0)}">
+                        License and SaaS
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!((rebate.Earned_License_Amount__c != NULL && rebate.Earned_License_Amount__c > 0) && (rebate.Earned_SaaS_Amount__c == NULL || rebate.Earned_SaaS_Amount__c <= 0)) }">
+                        and License
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!((rebate.Earned_SaaS_Amount__c != NULL && rebate.Earned_SaaS_Amount__c > 0) && (rebate.Earned_License_Amount__c == NULL || rebate.Earned_License_Amount__c <= 0))}">
+                        and SaaS
+                    </apex:outputPanel>
+                    Rebate!  
+                    
+                    As part of the incentive, {!rebate.Partner_Name__r.Name} is eligible for a rebate that can be applied toward Genesys University training, 
+                    Professional Services or Genesys marketing activities in the future (See specific stipulations below).  This rebate was earned 
+                    for performance through December 31<sup>st</sup>, {!rebate.Rebate_Year__c}.  
+                </p>
+                <p>
+                    <B>{!rebate.Partner_Name__r.Name}</B>
+                </p>
+                <apex:outputPanel rendered="{!rebate.Earned_License_Amount__c != NULL && rebate.Earned_License_Amount__c > 0}">
+                    <B>{!rebate.Rebate_Year__c} LICENSE REBATE TARGET: </B>
+                    <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                        <apex:param value="{!rebate.License_Amount__c}" />
+                    </apex:outputText>
+                    <BR />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!rebate.Earned_License_Amount__c != NULL && rebate.Earned_License_Amount__c > 0 && BLANKVALUE(solutionMultiplier,0) > 0}">
+                    <B>{!rebate.Rebate_Year__c} SOLUTION MULTIPLIER: </B>
+                    <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                        <apex:param value="{!solutionMultiplier}" />
+                    </apex:outputText>
+                    <BR />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!rebate.Earned_License_Amount__c != NULL && rebate.Earned_License_Amount__c > 0}">
+                    <B>{!rebate.Rebate_Year__c} LICENSE EARNED REBATE: </B>
+                    <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                        <apex:param value="{!rebate.Earned_License_Amount__c}" />
+                    </apex:outputText>
+                    <BR /><BR />
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!rebate.Earned_SaaS_Amount__c != NULL && rebate.Earned_SaaS_Amount__c > 0}">
+                    <B>{!rebate.Rebate_Year__c} SaaS REBATE TARGET: </B>
+                    <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                        <apex:param value="{!rebate.SaaS_Amount__c}" />
+                    </apex:outputText>
+                    <BR />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!rebate.Earned_SaaS_Amount__c != NULL && rebate.Earned_SaaS_Amount__c > 0 && BLANKVALUE(solutionMultiplier,0) > 0}">
+                    <B>{!rebate.Rebate_Year__c} SOLUTION MULTIPLIER: </B>
+                    <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                        <apex:param value="{!solutionMultiplier}" />
+                    </apex:outputText>
+                    <BR />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!rebate.Earned_SaaS_Amount__c != NULL && rebate.Earned_SaaS_Amount__c > 0}">
+                    <B>{!rebate.Rebate_Year__c} SaaS EARNED REBATE: </B>
+                    <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                        <apex:param value="{!rebate.Earned_SaaS_Amount__c}" />
+                    </apex:outputText>
+                </apex:outputPanel>
+            </TD>
+        </TR>
+        <TR>
+            <TD>
+                <p align="justify">
+                    To recognize your success, Genesys has set aside a credit in the amount of
+                    &nbsp;
+                    <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                        <apex:param value="{!rebate.Total_Earned_Rebate__c}" />
+                    </apex:outputText>
+                    for {!rebate.Partner_Name__r.Name}’s account.  
+                    The credit may be applied to Genesys University training, Professional Services or approved marketing expenditures by December 31<sup>st</sup>, {!rebateNextYear}.  
+                    In order to allow you to use this credit before the expiry date {!rebate.Partner_Name__r.Name} must submit a rebate request via the Partner Portal 
+                    with all required details to be processed (i.e. purchase order, SOW, etc.) by December 1<sup>st</sup>, {!rebateNextYear}.  For the avoidance of doubt, if this 
+                    allocated credit is not processed by Genesys by December 31<sup>st</sup>, {!rebateNextYear}, the unused portion of {!rebate.Partner_Name__r.Name} credit will expire and 
+                    any unused portion will be forfeited.
+                </p>
+                <p>
+                    <B>HOW IT WORKS</B>
+                    <br />
+                    In order to redeem the credit, please take the following steps so that Genesys can correctly apply your rebate:
+                    <OL>
+                        <LI>Ensure that any new Purchase Order issued reflects the full amount for any purchase you are making to Genesys.</LI>
+                        <LI>Submit a Rebate Request via the Partner Portal.</LI>
+                        <LI>Once your Rebate Request has been processed, pay the associated invoice less the processed Rebate Request amount as a result of #2 above.</LI>
+                        <LI>Indicate on the payment advice, check stub, wire advice, etcetera the amount of credit you are applying.</LI>
+                        <LI>Current exchange rates will apply for currency conversion purposes.</LI>
+                        <LI>Contact your Channel Manager if there are any questions regarding processing of your rebate credit.</LI>
+                    </OL>
+                </p>
+                <p align="justify">
+                    If you have any further questions regarding the rebate program, please contact your channel manager.  Thank you for your participation in the Genesys Rebate Program.  
+                    We congratulate you on your outstanding performance in {!rebate.Rebate_Year__c} and wish you continued success.
+                </p>    
+                <p>
+                    Sincerely
+                    <br />
+                    The Genesys Partner Network Program Team
+                </p>    
+            </TD>
+        </TR>
+    </Table>
+    </apex:outputPanel>
+    <Table BORDER="0" ALIGN="CENTER" WIDTH="100%" bgcolor="#B40404">
+        <TR>
+            <TD ALIGN="LEFT" WIDTH="75%" style="padding-left: 15px; padding-top: 6px; padding-bottom: 6px; font-size:12px; color:white;">
+                    2001 Junipero Serra Blvd., Daly City, CA 94014, USA | t +1 650 466 1100 | f +1 650 466 1260
+            </TD>
+            <TD ALIGN="RIGHT" WIDTH="25%" style="padding-right: 15px; padding-top: 6px; padding-bottom: 6px; font-size:12px; color:white;">
+                    www.genesys.com
+            </TD>
+        </TR>
+    </Table>
+</apex:page>

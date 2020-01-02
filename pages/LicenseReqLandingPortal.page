@@ -1,0 +1,91 @@
+<apex:page Controller="SupportAccesscController" sidebar="false" showheader="false">
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="actfilereq"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+
+
+			<div style="color:#cc192b;font-size:16px;" >
+			 <b>Welcome to the Genesys Activation File Request Tool</b>
+			</div>
+			<br/>
+			<div style="font-size:12px; " >
+			<br/>
+			<p>Please use this tool to communicate with the Genesys Licensing Team about licensing-related issues.</p>
+			<p>Select the End User/Sold To Account for which you wish to submit the request and click 'Request Activation File'.</p>
+			<br/>
+					<a><strong>Step 1 – Complete Request Details</strong></a> 
+					<br/>
+					<a>The Activation File Request Tool will open and the account information will be pre-populated based on your End User/Sold To selection.</a>
+					<br/>
+					<a>You can then choose to submit either a 'Question' or an 'Activation File Request.'</a>
+						 <p>If choosing an Activation File Request, select a 'Category':</p>
+							 <ul>
+							   <li>Genesys Environment</li>
+							   <li>Third-Party Products</li>
+							   <li>Pay-Per-Use or Hosted Environments</li>
+							 </ul>
+						 <p>You can then choose the 'File Type' you need (ie. New Deployment, Evaluation, etc.).
+			 Based on your selections,<br/> the system will guide you to complete the important details the Licensing Team will need to process your request.</p>    
+					  
+			 <br/>       
+				<a><strong>Step 2 – Add Attachments</strong></a>
+			 <br/><br/>
+				  <a>The system will suggest you include certain attachments based on the Request Details you have entered.</a>        
+
+			 </div> 
+			 <br/> 
+			<apex:form >
+			<apex:variable var="origin" value="{!IF($Site.Name='Partner','prtnr','custcare')}"/>
+
+				<apex:pageBlock >
+					 <apex:pageBlockTable value="{!supAccessListUnique}" var="sl" style="width:700px; font-size:12px;" rendered="{!supAccessListUnique.size >0}">  
+												 
+					  <apex:column value="{!sl.End_User_Account__r.Name}" style="width:40px">
+						  <apex:facet name="header">
+								 <apex:commandLink value="End User Account" onclick="sortRecordsAF('End_User_Account__r.Name'); return false;" style="font-weight:bold;"/>                                  
+						   </apex:facet>
+					  </apex:column> 
+									
+					 <apex:column value="{!sl.End_User_Account__r.City__c}, {!sl.End_User_Account__r.Country__r.Name}" headerValue="End User Location" style="width:40px"/>                          
+											  
+					 <apex:column value="{!sl.Sold_To_Account__r.Name}" style="width:40px" >        
+							<apex:facet name="header"> 
+							   <apex:commandLink value="Sold To Account" onclick="sortRecordsAF('Sold_To_Account__r.Name'); return false;" style="font-weight:bold;"/>                             
+						   </apex:facet>
+					 </apex:column>  
+									
+					 <apex:column value="{!sl.Sold_To_Account__r.City__c}, {!sl.Sold_To_Account__r.Country__r.Name}" headerValue="Sold To Location" style="width:40px"/>  
+											 
+					 <apex:column value="{!sl.Service_Contract_Status__c}" style="width:40px" >        
+					   <apex:facet name="header"> 
+						   <apex:commandLink value="Contract Status" onclick="sortRecordsAF('Service_Contract_Status__c'); return false;" style="font-weight:bold;"/>                             
+					   </apex:facet>
+					</apex:column>                          
+					  
+					<apex:column style="width:40px; text-decoration:underline">   
+						<apex:commandLink action="{!$Label.ActivationFileSite}/ActivationFileRequest?fnm={!URLENCODE($User.FirstName)}&lst={!URLENCODE($User.LastName)}&em={!$User.Email}&eusr={!URLENCODE(sl.End_User_Account__r.Name)}&sldto={!URLENCODE(sl.Sold_To_Account__r.Name)}&empl={!URLENCODE(sl.Contact__r.Employer__r.Name)}&garn={!sl.End_User_Account__r.SAP_Account_Code__c}&src={!origin}" 
+										value="Request Activation File" target="_blank"/>         
+					</apex:column>       
+				  </apex:pageBlockTable>
+				
+			   </apex:pageBlock>
+
+			   <br/>
+			   <p><strong>NOTE</strong>: If the End User/Sold To Account you wish to submit a request for is not visible, please &nbsp;
+			   <apex:commandLink action="{!$Label.ActivationFileSite}/ActivationFileRequest?fnm={!URLENCODE($User.FirstName)}&lst={!URLENCODE($User.LastName)}&em={!$User.Email}&src={!origin}" value="click here" target="_blank" style="text-decoration:underline; color:blue; font-weight:bold;"/> 
+			   to access the Activation File Request Tool, follow the steps noted above and simply include the Account information in the fields provided.</p>
+
+			</apex:form>
+		</apex:define>
+	</apex:composition>
+	
+</apex:page>

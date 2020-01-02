@@ -1,0 +1,94 @@
+<apex:page controller="SMLExcelController" sideBar="false" showHeader="false" contentType="application/vnd.ms-excel#Customer-Engagement-Map.xls" cache="true">
+    <table>
+        <tr>
+            <th colspan="5">
+            </th>
+            <th style="background-color:#eebbff;">
+                Business Optimization
+            </th>
+            <th colspan="16" style="background-color:#bbccff;">
+                Customer Engagement
+            </th>
+            <th colspan="4" style="background-color:#ffbbcc;">
+                Employee Engagement
+            </th>
+            <th colspan="3" style="background-color:#ffccbb;">
+                Multimedia Communication
+            </th>
+            <th colspan="2" style="background-color:#bbeeff;">
+                Omnichannel Analytics
+            </th>
+            <th colspan="2" style="background-color:#ccffbb;">
+                Omnichannel Journey Management
+            </th>
+        </tr>
+        <tr>
+            <th>
+                Focus Acct
+            </th>
+            <th>
+                Account Name
+            </th>
+            <th>
+                Region/Country
+            </th>
+            <th>
+                Assigned SE
+            </th>
+            <th>
+                Engage Score
+            </th>            
+            <apex:repeat value="{!solutionCategories1}" var="eachCategory">
+                <th>
+                    <apex:outputText escape="true" value="{!mapCategoryHTMLVsCategory[eachCategory]}" />                                                                                                
+                    <br/>
+                    <span style="color:{!mapCategoryVsScoreColor[eachCategory]};">
+                        {!mapCategoryVsScores[eachCategory]}%
+                    </span>                                                                                                
+                </th>
+            </apex:repeat>
+        </tr>
+        <apex:repeat value="{!smlRecords}" var="eachRecord">
+            <tr>
+                <td>
+                    <apex:outputtext value="{!eachRecord.orgClass}" escape="false" />
+                </td>
+                <td>
+                    {!eachRecord.accountNameFull}
+                </td>
+                <td>
+                    {!eachRecord.country}
+                </td>
+                <td>
+                    {!eachRecord.assignedAEFull}
+                </td>
+                <td>
+                    {!eachRecord.engagementScore}%
+                </td>
+                <apex:repeat value="{!solutionCategories1}" var="eachCategory" rendered="{!showResult}">
+                    <td class="{!eachRecord.smlCategoryData[eachCategory].Status1__c}" style="text-align:center;background-color:{!eachRecord.smlCategoryData[eachCategory].Cell_Color__c}">
+                        <div>
+                            <apex:outputText rendered="{!AND(eachRecord.smlCategoryData[eachCategory].Status__c != 'Whitespace', eachRecord.smlCategoryData[eachCategory].Status__c != 'Next Best Action',eachRecord.smlCategoryData[eachCategory].Status__c != '')}">                                                                                                                                     
+                                {!eachRecord.smlCategoryData[eachCategory].Status__c}                                   
+                            </apex:outputText>
+                            <apex:outputText rendered="{!eachRecord.smlCategoryData[eachCategory].Status__c == 'Next Best Action'}">                                                                                                                                     
+                                {!eachRecord.smlCategoryData[eachCategory].Status__c} - {!eachRecord.smlCategoryData[eachCategory].Confidence_Level_Formula__c}                                   
+                            </apex:outputText>                                                                                                            
+                            <apex:outputPanel rendered="{!eachRecord.smlCategoryData[eachCategory].Status__c == 'Whitespace'}" style="color:#FBD4D4;cursor:pointer;">
+                                <span data-tooltip ="two{!eachRecord.smlCategoryData[eachCategory].id}">
+                                    <div class="whitespaceTable">
+                                        <div class="whitespaceTR">
+                                            <div class="whitespaceTDLeft">
+                                                {!eachRecord.smlCategoryData[eachCategory].Whitespace_Days__c}                                                                                                                     
+                                            </div>
+                                        </div>
+                                    </div> 
+                                </span>
+                            </apex:outputPanel>
+                        </div>
+                     </td>                     
+                </apex:repeat>
+            </tr>
+        </apex:repeat>
+    </table>
+</apex:page>

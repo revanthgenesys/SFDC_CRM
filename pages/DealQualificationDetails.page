@@ -1,0 +1,42 @@
+<apex:page StandardController="Opportunity" extensions="DealQualificationDetailController">
+    <apex:form >                  
+        <apex:pageBlock title="Deal Qualifications">
+            <apex:pageBlockButtons location="top">
+                <!--<apex:commandButton value="Deal Qualification" rendered="{!AND(blnIsOppApproved, NOT(blnPortalUser))}"
+                   onclick="window.top.location='{!strBaseURL}/OptyQuoteCategory?&oppId={!strOppId}&redirectTo=DQ'; return false;"/>                
+                <apex:outputText value="Deal Qualification can not be created. Opportunity is not yet approved." rendered="{!NOT(blnIsOppApproved)}" />-->
+                <apex:commandButton value="Deal Qualification"  style="display:{!IF($User.Id == '005U0000001uZTvIAM', 'block', 'none')};" 
+                   onclick="window.open('{!strBaseURL}/OptyQuoteCategory?&oppId={!strOppId}&redirectTo=DQ'); return false;" rendered="{!AND(blnIsOppApproved, blnShowDQButton)}" />                
+            </apex:pageBlockButtons>
+            <apex:pageMessage strength="3" severity="INFO" rendered="{!list_OfDQs.size == 0}">
+                There are currently no Deal Qualifications associated with this Opportunity.
+            </apex:pageMessage>
+            <apex:pageBlockTable value="{!list_OfDQs}" var="eachDQ" rendered="{!list_OfDQs.size > 0}">
+                <apex:column headerValue="Name">
+                    <a href="#" onclick="window.open('{!strBaseURL}/{!eachDQ.DQ_Page_Name__c}?id={!eachDQ.id}&NO_REDIRECT=true');">{!eachDQ.Name}</a>
+                </apex:column>
+                <apex:column headerValue="Pricing Type">
+                    {!IF((eachDQ.Offering_Type__c == 'Business Edition' || eachDQ.Offering_Type__c == 'PureEngage Subscription' || eachDQ.Offering_Type__c == 'PureConnect Subscription'),'',eachDQ.Pricing_Type__c)}
+                </apex:column>
+                <apex:column headerValue="Approval Status">                    
+                    {!eachDQ.Status__c}                    
+                </apex:column>                
+                <!--
+                <apex:column headerValue="Pricing Model">
+                    {!eachDQ.Pricing_Model__c}
+                </apex:column>
+                -->
+                <apex:column headerValue="Offering Type">
+                    <apex:outputText value="PureConnect" rendered="{!OR(eachDQ.Offering_Type__c == 'PureConnect On Premise', eachDQ.Offering_Type__c == 'PureConnect Cloud')}" />
+                    <apex:outputText value="PureEngage" rendered="{!OR(eachDQ.Offering_Type__c == 'Business Edition', eachDQ.Offering_Type__c == 'On Premise')}" />                                     
+                    <apex:outputText value="{!eachDQ.Offering_Type__c}" rendered="{!AND(eachDQ.Offering_Type__c != 'PureConnect On Premise', eachDQ.Offering_Type__c != 'PureConnect Cloud', eachDQ.Offering_Type__c != 'Business Edition', eachDQ.Offering_Type__c != 'On Premise')}" />                    
+                    <!--DO NOT REMOVE BELOW OFFERING TYPE PRINT IN WHITE - NEED IT IN DEBUGGING -->
+                    <span style="display:none;"> - {!eachDQ.Offering_Type__c}</span>
+                </apex:column>
+                <apex:column headerValue="Platform Type">
+                    {!eachDQ.Platform_Type__c}
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

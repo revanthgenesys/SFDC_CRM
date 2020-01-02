@@ -1,0 +1,102 @@
+<apex:page id="pc" controller="CreatePureCloudOrderController" title="" tabStyle="zqu__Quote__c" docType="html-5.0">
+    
+    <apex:form >
+        <apex:outputPanel layout="none" id="mainPanel">            
+            <apex:pageMessages />
+            <apex:pageMessage severity="ERROR" strength="1" rendered="{!blnShowExportScreeningMsg}">
+                <input type="button" class="btn" value="Export Screening Checklist" 
+                    onclick="alert('Please re-submit the order once the check-list is saved.');window.open('{!URLFOR($Page.Compliance_new_edit_redirect)}?retURL=/{!objQuote.zqu__Account__c}');"/> 
+            </apex:pageMessage>
+            <apex:pageMessage severity="ERROR" strength="1" rendered="{!blnShowExportScreeningExpireMsg}">
+                <input type="button" class="btn" value="Export Screening Checklist" 
+                    onclick="alert('Please re-submit the order once the check-list is saved.');window.open('../{!expScrnChkLstId}');"/> 
+            </apex:pageMessage>
+            <apex:outputPanel layout="none" rendered="{!intNoOfOrders=0}">
+            <!-- rendered="{!(objQuote.zqu__ApprovalStatus__c = 'Approved' || objQuote.zqu__ApprovalStatus__c = 'Quote Approved') && IsOrderInfoAvailable}"> -->
+                <apex:pageBlock >
+                    <apex:pageBlockButtons >                        
+                        <apex:commandButton value="Save" action="{!saveOrderBtn}"/>
+                        <apex:commandButton value="Submit Order" action="{!submitOrderBtn}" disabled="{!IF(list_NewParentOrders.size=0,false,true)}" />
+                        <apex:commandButton value="Return To Quote" action="{!cancelOrderBtn}"/>
+                    </apex:pageBlockButtons>                    
+            
+                    <apex:pageBlockSection title="PO details" collapsible="false" columns="2">
+                        <apex:pageBlockSectionItem > 
+                            <apex:outputLabel value="PO#"/>
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:inputField value="{!objQuote.Order_PO_Number__c}"/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>                        
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Attach PO (if not already attached)"/>
+                            <apex:inputFile value="{!objAttachment.body}" filename="{!objAttachment.name}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="PO Date"/>
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:inputField value="{!objQuote.Order_PO_Date__c}"/>
+                            </apex:outputPanel>                            
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objQuote.Customer_PO_Not_Required__c}"/>                          
+                        <apex:inputField value="{!objQuote.Order_PO_Received_Date__c}"/>
+                        <apex:inputField value="{!objQuote.Order_Special_Instructions__c}"/>                        
+                        <apex:pageBlockSectionItem rendered="{!list_NewParentOrders.size>0}"> 
+                            <apex:outputLabel value="Order"/>
+                            <apex:outputLink value="{!URLFOR($Action.Order__c.View, list_NewParentOrders[0].Id, null, true)}" target="_blank">{!list_NewParentOrders[0].Name}</apex:outputLink>
+                        </apex:pageBlockSectionItem>   
+                        <apex:pageBlockSectionItem />  
+                        <apex:outputField value="{!objQuote.zqu__PaymentTerm__c}"/>                                            
+                    </apex:pageBlockSection>
+                    
+                </apex:pageBlock>
+            </apex:outputPanel>
+            
+             <!--Read Mode --> 
+            <apex:outputPanel layout="none" rendered="{!intNoOfOrders>0}" >
+                <apex:pageBlock >
+                    <apex:pageBlockButtons >      
+                        <apex:commandButton value="Back" action="{!cancelOrderBtn}"/>
+                    </apex:pageBlockButtons> 
+                    <apex:pageBlockSection title="PO details" collapsible="false" columns="2">
+                        <apex:outputField value="{!objQuote.Order_PO_Number__c}"/>             
+                        <apex:outputField value="{!objQuote.Customer_PO_Not_Required__c}"/>  
+                        <apex:outputField value="{!objQuote.Order_PO_Date__c}"/>                               
+                        <apex:outputField value="{!objQuote.Order_Special_Instructions__c}"/>
+                        <apex:outputField value="{!objQuote.Order_PO_Received_Date__c}"/>
+                        <apex:outputField value="{!objQuote.zqu__PaymentTerm__c}"/>
+                        <apex:pageBlockSectionItem rendered="{!list_NewParentOrders.size>0}"> 
+                            <apex:outputLabel value="Order"/>
+                            <apex:outputLink value="{!URLFOR($Action.Order__c.View, list_NewParentOrders[0].Id, null, true)}" target="_blank">{!list_NewParentOrders[0].Name}</apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                        
+                    </apex:pageBlockSection>  
+                </apex:pageBlock>              
+            </apex:outputPanel>           
+        </apex:outputPanel>
+    </apex:form>
+    
+    <apex:outputPanel id="pages">
+        <apex:include pageName="OrderAddressPureCloud"/>
+        <apex:include pageName="CreateOrderMultipleShipPureCloud"/>
+    </apex:outputPanel>
+    
+    <apex:relatedList subject="{!objQuote}" list="CombinedAttachments" />
+
+    <div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">    
+            <apex:outputPanel id="popPanel">
+                <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:center;">
+                        Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            </apex:facet>                           
+        </apex:actionStatus>
+    </div>
+    
+</apex:page>

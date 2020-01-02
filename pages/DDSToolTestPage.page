@@ -1,0 +1,223 @@
+<apex:page controller="DDSToolTestPage">
+  
+<apex:form id="frm">  
+   <apex:pageBlock >     
+       <apex:pageBlockButtons location="top">
+  
+             <apex:actionStatus id="saveStatus">
+                 <apex:facet name="stop">
+                 <apex:outputPanel >
+                     <apex:commandButton action="{!getScore}" value="Get Score" reRender="frm, outblk, detblk" status="saveStatus"/>                                     
+                 </apex:outputPanel>    
+                    </apex:facet>
+                        <apex:facet name="start">
+                        <apex:outputPanel >
+                            <apex:commandButton value="Processing..." disabled="true" />
+                        </apex:outputPanel>                    
+                    </apex:facet>                    
+               </apex:actionStatus>   
+
+            <apex:commandButton action="{!clear}" value="Clear" reRender="frm, frstblk, outblk, detblk"/>   
+       </apex:pageBlockButtons>
+       
+       <apex:pageBlockSection columns="1">       
+             <apex:selectList label="Log Level" value="{!logLevel}"  size="1" >
+                  <apex:selectOption itemValue="2" itemLabel="Finer"/>   
+                  <apex:selectOption itemValue="1" itemLabel="Detail"/>                             
+                  <apex:selectOption itemValue="0" itemLabel="Info"/>   
+             </apex:selectList>
+        
+           <apex:inputField value="{!qte.Parent_Quote__c}" label="Quote"/>
+       </apex:pageBlockSection>   
+     </apex:pageBlock>
+
+   <apex:pageBlock id="outblk" >   
+     <apex:pageBlockSection columns="1" >  
+ 
+            <apex:outputLabel value="Score: " style="font-weight:bold"> 
+             <apex:outputText value="{!Score}"/> 
+            </apex:outputLabel>
+            
+            <apex:outputText value="{!errorMsg}"/> 
+             
+            <apex:outputPanel rendered="{!AND(showScore, !isThirdPrtHW)}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Deal Discount: " rendered="{!showDealDisc}" style="font-weight:bold"> 
+                         <apex:outputText value="{!quoteDiscount}"/> 
+                    </apex:outputLabel>
+                 </apex:pageBlockSectionItem>
+           
+                 <apex:pageBlockSectionItem rendered="{!!showDealDisc}" >
+                    <apex:outputLabel value="DDS Discount (non-Contractual,non-EAP): " style="font-weight:bold"> 
+                         <apex:outputText value="{!discount}"/> 
+                    </apex:outputLabel>
+                 </apex:pageBlockSectionItem>
+              
+                 <apex:pageBlockTable value="{!iterator}" var="it" style="width:20%">
+                       <apex:column value="{!it}" headerValue="Score" />  
+                       <apex:column value="{!QuoteDiscAdjusted[it]}" headerValue="Score Cutoff" />
+                 </apex:pageBlockTable>
+           </apex:outputPanel>
+         
+         <apex:pageBlockSection columns="1" title="Quote Line Items" rendered="{!Score=='Error'}" collapsible="false" > 
+            <apex:pageBlockTable value="{!qteData}" var="qline" >
+                 <apex:column value="{!qline.name}" headerValue="Product"/>
+                 <apex:column value="{!qline.type}" headerValue="Type"/>               
+                 <apex:column value="{!qline.ListPriceLocal}" headerValue="List Price (Local)"/>
+                 <apex:column value="{!qline.NetPriceLocal}" headerValue="Net Price (Local)"/>                
+                 <apex:column value="{!qline.ListPrice}" headerValue="List Price (DDS)"  style="background-color:LavenderBlush"/>
+                 <apex:column value="{!qline.NetPrice}" headerValue="Net Price (DDS)"  style="background-color:LavenderBlush"/>               
+                 <apex:column value="{!qline.localDisc}" headerValue="Discount (Local)"/>                
+                 <apex:column value="{!qline.weight}" headerValue="BP Weightage"/>
+                 <apex:column value="{!qline.ThirdParty}" headerValue="3rd Party" />
+                 <apex:column value="{!qline.Hware}" headerValue="Hardware"/>
+                 <apex:column value="{!qline.isCntrctDisc}" headerValue="Contractual"/>
+                 <apex:column value="{!qline.isEAP}" headerValue="EAP"/>
+             </apex:pageBlockTable>    
+         </apex:pageBlockSection>
+         
+         <apex:pageBlockSection columns="2" title="Node Assignment Variables" rendered="{!AND(Score='Error',!isThirdPrtHW)}" collapsible="false" >
+              <apex:pageBlockTable value="{!nodeVars}" var="ndvar" >
+                 <apex:column value="{!ndvar}" headerValue="Node Variable Name" />
+                 <apex:column value="{!nodeVars[ndvar]}" headerValue="Variable Value" /> 
+              </apex:pageBlockTable>   
+          </apex:pageBlockSection>
+           
+     </apex:pageBlockSection> 
+          
+   </apex:pageBlock>
+
+     <apex:pageBlock id="detblk" rendered="{!showScore}">  
+         <apex:pageBlockSection columns="2" title="Quote Information" collapsible="false">     
+             <apex:outputText value="{!offering}" label="Offering"/> 
+             <apex:outputText value="{!priceBook}" label="priceBook"/> 
+             <apex:outputText value="{!isSubscrpt}" label="Subscription"/> 
+             <apex:outputText value="{!directSales}" label="Direct Sales"/> 
+             <apex:outputText value="{!offer}" label="Offer"/> 
+             <apex:outputText value="{!isAmendment}" label="Amendment" rendered="{!isSubscrpt}"/> 
+                  <br/>
+             <apex:outputText value="{!AmendScoringPath}" label="Amendment Scoring Path" rendered="{!isAmendment}"/>   
+        </apex:pageBlockSection>  
+         
+        <apex:pageBlockSection columns="1" title="Quote Products Excluded from Scoring" rendered="{!showExcl}" collapsible="false" > 
+            <apex:pageBlockTable value="{!excldData}" var="qline" >
+                 <apex:column value="{!qline.Product}" headerValue="Product"/>
+                 <apex:column value="{!qline.APN}" headerValue="APN Number"/>               
+                 <apex:column value="{!qline.Disc}" headerValue="Discount(Local)/Qty"/>
+             </apex:pageBlockTable>    
+        </apex:pageBlockSection>
+              
+     <apex:pageBlockSection columns="1" title="Quote Line Items" collapsible="false" > 
+        <apex:pageBlockTable value="{!qteData}" var="qline" >
+             <apex:column value="{!qline.name}" headerValue="Product"/>
+             <apex:column value="{!qline.type}" headerValue="Type"/>
+             <apex:column value="{!qline.Category}" headerValue="Category"/>
+             <apex:column value="{!qline.ListPriceLocal}" headerValue="List Price (Local)"/>
+             <apex:column value="{!qline.NetPriceLocal}" headerValue="Net Price (Local)"/>            
+             <apex:column value="{!qline.ListPrice}" headerValue="List Price (DDS)" rendered="{!showDDSPrice}" style="background-color:Lavender"/>
+             <apex:column value="{!qline.NetPrice}" headerValue="Net Price (DDS)" rendered="{!showDDSPrice}" style="background-color:Lavender"/>                
+             <apex:column value="{!qline.localDisc}" headerValue="Discount (Local)"/>                
+             <apex:column value="{!qline.maxDict}" headerValue="MAX Discount"/>
+             <apex:column value="{!qline.ThirdParty}" headerValue="3rd Party" />  
+             <apex:column value="{!qline.Hware}" headerValue="Hardware" />    
+            <apex:column value="{!qline.weight}" headerValue="BP Weightage" rendered="{!isSubscrpt}"/>
+            <apex:column value="{!qline.isCntrctDisc}" headerValue="Contractual"/>
+            <apex:column value="{!qline.isEAP}" headerValue="EAP"/>
+         </apex:pageBlockTable>
+     </apex:pageBlockSection>  
+
+  <!---NOT ThirdParty- HW only --> 
+  <apex:outputPanel rendered="{!!isThirdPrtHW}">
+     <br/>
+     <apex:pageBlockSection columns="2" title="Scoring Details" collapsible="false" > 
+         <apex:outputPanel >
+             <apex:pageBlockTable value="{!adjustVars}" var="ajvar" >
+                 <apex:column value="{!ajvar}" headerValue="Pricing Details" />
+                 <apex:column value="{!adjustVars[ajvar]}" headerValue="Value" />
+             </apex:pageBlockTable>
+       <br/>
+              <apex:pageBlockTable value="{!nodeVars}" var="ndvar" >
+                 <apex:column value="{!ndvar}" headerValue="Node Variable Name" />
+                <apex:column value="{!nodeVars[ndvar]}" headerValue="Variable Value" /> 
+             </apex:pageBlockTable>            
+          </apex:outputPanel>
+          
+          <apex:pageBlockTable value="{!postPrVars}" var="pstvar" >
+                 <apex:column value="{!pstvar}" headerValue="Scoring Bands Adjustment Factors" />
+                 <apex:column value="{!postPrVars[pstvar]}" headerValue="Value" />
+           </apex:pageBlockTable>
+     </apex:pageBlockSection>  
+     
+     <br/>
+     <apex:pageBlockSection columns="2" title="Scoring Bands" collapsible="false">
+           <apex:outputLabel value="DDS Discount (non-contractual): " style="font-weight:bold">
+               <apex:outputText value="{!discount}" />
+                <apex:pageBlockTable value="{!iterator}" var="it" style="width:60%">  
+                    <apex:column value="{!it}" headerValue="Score" />    
+                    <apex:column value="{!AddMaxDiscts[it]}" headerValue="DDS Cutoff" />
+              </apex:pageBlockTable>              
+           </apex:outputLabel>
+ 
+           <apex:outputLabel value="Deal Discount: " style="font-weight:bold">
+               <apex:outputText value="{!quoteDiscount}" />
+               <apex:pageBlockTable value="{!iterator}" var="it" style="width:60%">  
+                  <apex:column value="{!it}" headerValue="Score" />    
+                  <apex:column value="{!QuoteDiscAdjusted[it]}" headerValue="Adjusted to Deal Discount" />
+              </apex:pageBlockTable> 
+           </apex:outputLabel>      
+      </apex:pageBlockSection>
+      
+     <apex:pageBlockSection columns="1" title="Original Scoring Bands" collapsible="false" >
+           <apex:outputLabel value="Node Assignment: " style="font-weight:bold" >
+                <apex:outputText value="{!node}" />
+          </apex:outputLabel> 
+          
+          <apex:pageBlockTable value="{!iterator}" var="it" style="width:40%">
+                <apex:column value="{!it}" headerValue="Score" />
+                <apex:column value="{!nodeCutoffs[it]}" headerValue="Node Cutoff" />
+                <apex:column value="{!NormDiscount[it]}" headerValue="PureEngage Normalized Discount" rendered="{!offering == 'PureEngage'}"/>               
+           </apex:pageBlockTable>
+     </apex:pageBlockSection>  
+      
+      <apex:pageBlockSection columns="1" title="Scoring Adjustments" collapsible="false"> 
+          <apex:pageBlockTable value="{!iterator}" var="it" >
+                <apex:column value="{!it}" headerValue="Score" />           
+                <apex:column value="{!AddSubscript[it]}" headerValue="Subscription" rendered="{!isSubscrpt}"/>
+                <apex:column value="{!AddCare[it]}" headerValue="Care" />
+                <apex:column value="{!AddPS[it]}" headerValue="PS" />
+                <apex:column value="{!AddGU[it]}" headerValue="GU" />
+                <apex:column value="{!AddMaxDiscts[it]}" headerValue="MAX Discounts" />
+           </apex:pageBlockTable>
+     </apex:pageBlockSection>  
+     
+      <apex:pageBlockSection columns="1" title="Historical Opportunities" collapsible="false" > 
+        <apex:pageBlockTable value="{!HistoricalOppts}" var="hst">
+           <apex:column value="{!hst.num}" headerValue="Number" />     
+           <apex:column value="{!hst.oppName}" headerValue="Opportunity Name" />  
+                      <apex:column value="{!hst.WinLost}" headerValue="Won/Lost" />  
+        </apex:pageBlockTable>
+      </apex:pageBlockSection> 
+ 
+   </apex:outputPanel>  
+   <!--- END of NOT ThirdParty- HW only -->
+   
+    <!--- ThirdParty- HW only --> 
+   <apex:outputPanel rendered="{!isThirdPrtHW}">
+   
+        <apex:pageBlockSection columns="1" title="Scoring Details"  collapsible="false" > 
+            <apex:pageBlockTable value="{!thirdPrtHWData}" var="ln" >
+                 <apex:column value="{!ln.name}" headerValue="Product"/>
+                 <apex:column value="{!ln.discntPct}" headerValue="Discount"/>
+                 <apex:column value="{!ln.maxDisc}" headerValue="MAX Discount"/>
+                 <apex:column value="{!ln.appliedDisc}" headerValue="Target MAX Discount"/>
+                 <apex:column value="{!ln.score}" headerValue="Score"/>
+                 <apex:column value="{!ln.weightedScore}" headerValue="Weighted Score"/>               
+             </apex:pageBlockTable>    
+         </apex:pageBlockSection>
+   
+   </apex:outputPanel>  
+   <!--- END of ThirdParty- HW only -->
+       
+</apex:pageBlock>  
+ </apex:form>   
+</apex:page>

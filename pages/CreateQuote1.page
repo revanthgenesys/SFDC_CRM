@@ -1,0 +1,1404 @@
+<apex:page id="pg" title="Quote : {!quote.Name}" controller="CreateQuote1Controller" tabStyle="BigMachines__Quote__c" sidebar="false" action="{!syncQuoteProducts}">       
+    <c:CreateQuoteHeader />
+    <apex:form id="form" >
+        <apex:inputText style="position:absolute;top:-1000px;"/>
+        <apex:sectionHeader title="Quote Edit" subtitle="{!quote.Name}"/>
+        <c:QuoteTabPanel QuoteId="{!quote.id}" selectedTab="Quote Details" showHeader="false" rendered="{!quote.Id != ''}"/>
+        <apex:pageBlock title="Quoting Tool" id="pgblk">
+            <apex:pageMessages id="msgs"/>
+            <apex:pageMessage severity="ERROR" strength="1" rendered="{!blnShowExportScreeningMsg}">
+                Please complete Export Screening Check-list for the End User Account.&nbsp;
+                <input type="button" class="btn" value="Export Screening Checklist" onclick="alert('Please re-submit the order once the check-list is saved.');window.open('/apex/Compliance_new_edit_redirect?retURL=/{!quote.End_User_ID__c}');"/> 
+            </apex:pageMessage>
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="CO-TERM" onclick="location.href='/apex/BMCoTerm?id={!quote.id}&retURL=/apex/CreateQuote?id={!quote.id}'; return false;" rendered="{!quote.id != '' && NOT(quote.Is_FYM_Quote__c) && IsQuoteUnLocked}"/>
+                <apex:commandButton value="Save" action="{!save}" status="status" reRender="msgs" rendered="{!(quote.BigMachines__Status__c != 'Order Submitted' 
+                    && quote.BigMachines__Status__c != 'Order Accepted' && quote.BigMachines__Status__c != 'Order Rejected')|| quote.Revise_Minor__c}"/>
+                <!-- <apex:commandButton value="Cancel" rendered="{!quote.id = ''}" onclick="location.href='/{!Opp.Id}';return false;"/> -->
+                <apex:commandButton value="Cancel" rendered="{!quote.id = ''}" onclick="location.href='/{!quote.BigMachines__Opportunity__c}';return false;"/>
+                <apex:commandButton value="Submit for Approval" action="{!submitForApprovalBtnHandler}" rendered="{!quote.BigMachines__Status__c == 'Quote In Progress' || quote.BigMachines__Status__c == 'Quote Rejected'}"/>
+                <apex:commandButton value="Submit Order" action="{!submitOrderBtnHandler}" rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || quote.BigMachines__Status__c == 'Revision Pending' || quote.BigMachines__Status__c == 'Order Rejected'}"/>
+                <!-- Revise -->
+                <apex:commandButton value="Revise Current" action="{!reviseBtnHandler}" status="status" rendered="{!(NOT(IsQuoteUnLocked) || quote.BigMachines__Status__c == 'Quote Rejected') && 
+                        quote.BigMachines__Status__c != 'Order Accepted' && quote.BigMachines__Status__c != 'Order Submitted'}"/>
+                <!-- Revise Major -->
+                <apex:commandButton value="New Revision" action="{!reviseMajorBtnHandler}" status="status" reRender="quoteInfo" rendered="{!(NOT(IsQuoteUnLocked) || quote.BigMachines__Status__c == 'Quote Rejected') && quote.BigMachines__Status__c != 'Order Accepted'}"/>
+                <!-- Revise Minor -->
+                <apex:commandButton value="Revise Comments" action="{!reviseMinorBtnHandler}" rendered="{!quote.BigMachines__Status__c == 'Quote Approved' || quote.BigMachines__Status__c == 'Order Submitted'}"/>
+                <apex:commandButton value="Clone" action="{!cloneBtnHandler}" status="status" reRender="quoteInfo" rendered="{!quote.id != '' && quote.BigMachines__Status__c != 'Order Accepted'}"/>
+                <apex:commandButton value="Future Quote" action="{!futureQuoteBtnHandler}" status="status" reRender="msgs" rendered="{!quote.BigMachines__Status__c == 'Quote Approved' || quote.BigMachines__Status__c == 'Order Submitted' || quote.BigMachines__Status__c = 'Revision Pending' || quote.BigMachines__Status__c == 'Order Accepted'}"/>
+                <apex:commandButton value="CPR" onclick="window.open('https://genesys.my.salesforce.com/apex/licaudit'); return false;" />&nbsp;
+                <apex:commandButton value="Refresh Selected" action="{!refreshSelected}" rendered="{!quote.id != '' && NOT(quote.Is_FYM_Quote__c) && IsQuoteUnLocked}"/>
+                <apex:commandButton value="Recalculate and Save" action="{!doCalculations}" rendered="{!quote.id != ''  && IsQuoteUnLocked}"/>
+                <apex:commandButton value="Re-Import" action="{!reimportBtnHandler}" rendered="{!quote.id != ''  && IsQuoteUnLocked && quote.Is_FYM_Quote__c}" disabled="{!blnIsReImportBtnDisabled}"/>
+                <apex:outputLink title="Export To Excel" value="/apex/ExportToExcel?id={!quote.id}" target="_blank" rendered="{!quote.id != ''}">
+                    <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px"/>(Invoice)
+                </apex:outputLink>
+                <apex:outputLink title="Export To Excel" value="/apex/ExportToExcelProduct?id={!quote.id}" target="_blank" rendered="{!quote.id != ''}">
+                    <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px"/>(Product)
+                </apex:outputLink>
+     
+           
+            </apex:pageBlockButtons>
+            
+            <!--<div style="width:1300px;">-->
+                <apex:pageBlockSection id="quoteInfo" title="Quote Information">
+
+                    <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked && quote.Id != ''}">
+                        <apex:outputLabel value="Opportunity"/>
+                        <apex:outputPanel >
+                            <apex:inputField value="{!quote.BigMachines__Opportunity__c}">
+                            </apex:inputField>
+                            &nbsp;
+                            <apex:commandLink action="{!viewOpportunity}" value="View" target="_blank" id="viewLink" rendered="{!NOT(ISBLANK(quote.BigMachines__Opportunity__c))}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:outputField value="{!quote.BigMachines__Opportunity__c}" rendered="{!NOT(IsQuoteUnLocked) || quote.Id = ''}"/>
+                    
+                    <apex:outputField value="{!quote.Name}" rendered="{!quote.Id != ''}"/>
+                    <apex:outputField value="{!quote.BigMachines__Status__c}" rendered="{!quote.Id != ''}"/>
+                    <apex:outputField value="{!quote.Revision_No__c}"/>
+                    
+                    <apex:outputField value="{!quote.Quote_Created_Date__c}" rendered="{!quote.Id != ''}"/>
+                    
+                    <apex:inputField value="{!quote.Expiration_Date__c}" rendered="{!IsQuoteUnLocked || quote.Revise_Minor__c}"/>
+                    <apex:outputField value="{!quote.Expiration_Date__c}" rendered="{!NOT(IsQuoteUnLocked || quote.Revise_Minor__c)}"/>
+                    
+                    <apex:inputField value="{!quote.Sold_To_Name__c}" rendered="{!IsQuoteUnLocked && quote.Id != ''}"/>
+                    <apex:inputField value="{!quote.End_User_ID__c}" rendered="{!IsQuoteUnLocked && quote.Id != ''}"/>
+                    
+                    <apex:outputField value="{!quote.Sold_To_Name__c}" rendered="{!NOT(IsQuoteUnLocked) || quote.Id = ''}"/>
+                    <apex:outputField value="{!quote.End_User_ID__c}" rendered="{!NOT(IsQuoteUnLocked) || quote.Id = ''}"/>
+                    
+                    <apex:inputField value="{!quote.Support_Owner__c}" rendered="{!IsQuoteUnLocked || quote.Revise_Minor__c}"/>
+                    
+                    <apex:outputField value="{!quote.Support_Owner__c}" rendered="{!NOT(IsQuoteUnLocked || quote.Revise_Minor__c)}"/>
+ 
+                    <apex:pageBlockSectionItem rendered="{!quote.Id != ''}">
+                        <apex:outputLabel value="Future Quote"/>
+                        <apex:outputPanel >
+                            <apex:outputField value="{!quote.Future_Quote__c}"/>
+                            <apex:outputPanel layout="none" rendered="{!quote.Future_Quote__c && NOT(ISBLANK(quote.Quote_Cloned_Revised__c))}">
+                                &nbsp;
+                                (<apex:outputLink value="/apex/CreateQuote?id={!quote.Quote_Cloned_Revised__c}" target="_blank" title="Original Quote">{!quote.Quote_Cloned_Revised__r.Name} </apex:outputLink>)
+                            </apex:outputPanel>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:outputField value="{!quote.Approval_Submission_Date__c}" rendered="{!quote.Id != ''}"/>
+                    <apex:outputField value="{!quote.Approval_Date__c}" rendered="{!quote.Id != ''}"/>
+                    
+                    <apex:outputField value="{!quote.Maintenance_Start_Date__c}" rendered="{!quote.Id != ''}"/>
+                    
+                    <apex:inputField value="{!quote.Maintenance_End_Date__c}" required="true" rendered="{!IsQuoteUnLocked && quote.id != ''}"/>
+                    <apex:outputField value="{!quote.Maintenance_End_Date__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    
+                    <apex:outputField value="{!quote.Order_Date_Submitted__c}" rendered="{!NOT(ISBLANK(quote.Order_Date_Submitted__c))}"/>
+                    <apex:outputText rendered="{!NOT(ISBLANK(quote.Order_Date_Submitted__c))}"/>
+                    
+                    <apex:pageBlockSectionItem rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || quote.Revise_Minor__c}"> 
+                        <apex:outputLabel value="PO#"/>
+                        <apex:outputPanel layout="block" styleClass="requiredInput" >
+                            <apex:outputPanel styleClass="requiredBlock"/>
+                            <apex:inputField value="{!quote.Order_PO_Number__c}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || quote.Revise_Minor__c}">
+                        <apex:outputLabel value="PO Date"/>
+                        <apex:outputPanel layout="block" styleClass="requiredInput" >
+                            <apex:outputPanel styleClass="requiredBlock"/>
+                            <apex:inputField value="{!quote.Order_PO_Date__c}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || quote.Revise_Minor__c}">
+                        <apex:outputLabel value="PO Received Date"/>
+                        <apex:outputPanel layout="block" styleClass="requiredInput" >
+                            <apex:outputPanel styleClass="requiredBlock"/>
+                            <apex:inputField value="{!quote.Order_PO_Received_Date__c}"/>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked && quote.Id != ''}">
+                        <apex:outputPanel >
+                            Currency<br/>
+                            <apex:outputText style="font-size:80%" value="(Currency change : Performs conversions,recalculates and saves)" rendered="{!quote.id != ''}"/>
+                        </apex:outputPanel>
+                        <apex:inputField value="{!quote.CurrencyISOCode}">
+                            <apex:actionSupport event="onchange" action="{!changeQuoteCurrency}" rendered="{!quote.id != ''}"/>
+                        </apex:inputField>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:outputField value="{!quote.Order_PO_Number__c}" rendered="{!(quote.BigMachines__Status__c = 'Order Submitted' || 
+                        quote.BigMachines__Status__c = 'Order Accepted' || quote.BigMachines__Status__c = 'Order Rejected') && NOT(quote.Revise_Minor__c)}"/>
+                    <apex:outputField value="{!quote.Order_PO_Date__c}" rendered="{!(quote.BigMachines__Status__c = 'Order Submitted' || 
+                        quote.BigMachines__Status__c = 'Order Accepted' || quote.BigMachines__Status__c = 'Order Rejected') && NOT(quote.Revise_Minor__c)}"/>
+                    <apex:outputField value="{!quote.Order_PO_Received_Date__c}" rendered="{!(quote.BigMachines__Status__c = 'Order Submitted' || 
+                        quote.BigMachines__Status__c = 'Order Accepted' || quote.BigMachines__Status__c = 'Order Rejected') && NOT(quote.Revise_Minor__c)}"/>
+                    
+                    <apex:outputField value="{!quote.CurrencyISOCode}" rendered="{!NOT(IsQuoteUnLocked) || quote.Id = ''}"/>
+                    
+                    <apex:outputField value="{!quote.Tax_Rate__c}" rendered="{!quote.Id != '' && (quote.End_User_ID__r.Country__r.Name != 'Brazil' && quote.End_User_ID__r.Country__r.Name != 'Japan') || !IsQuoteUnLocked}"/>
+                    <apex:inputField value="{!quote.Tax_Rate__c}" rendered="{!quote.Id != '' && NOT((quote.End_User_ID__r.Country__r.Name != 'Brazil' && quote.End_User_ID__r.Country__r.Name != 'Japan') || !IsQuoteUnLocked)}"/>
+                    
+                    <apex:inputField value="{!quote.BigMachines__Description__c}" rendered="{!IsQuoteUnLocked || quote.Revise_Minor__c}"/>
+                    <apex:outputField value="{!quote.BigMachines__Description__c}" rendered="{!NOT(IsQuoteUnLocked || quote.Revise_Minor__c)}"/>
+                    
+                    <apex:inputField value="{!quote.Sent_to_Customer__c}" rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || quote.Revise_Minor__c}"/>
+                    <apex:outputField value="{!quote.Sent_to_Customer__c}" rendered="{!quote.BigMachines__Status__c = 'Order Submitted' && NOT(quote.Revise_Minor__c)}"/>
+
+                    <apex:inputField value="{!quote.Eligible_for_AE_Compensation__c}" rendered="{!IsQuoteUnLocked && quote.id != ''}"/>
+                    <apex:outputField value="{!quote.Eligible_for_AE_Compensation__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    
+                    <apex:inputField value="{!quote.Order_Special_Instructions__c}" rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || quote.Revise_Minor__c}"/>
+                    <apex:outputField value="{!quote.Order_Special_Instructions__c}" rendered="{!(quote.BigMachines__Status__c = 'Order Submitted' || 
+                        quote.BigMachines__Status__c = 'Order Accepted' || quote.BigMachines__Status__c = 'Order Rejected') && NOT(quote.Revise_Minor__c)}"/>
+                    
+                    <apex:inputField value="{!quote.No_Currency_Conversion__c}" rendered="{!ISBLANK(quote.Id)}"/>
+                    <apex:outputField value="{!quote.No_Currency_Conversion__c}" rendered="{!NOT(ISBLANK(quote.Id)) && quote.No_Currency_Conversion__c}"/>
+                
+                </apex:pageBlockSection>                
+                <apex:pageBlockSection title="Genesys Care" columns="2" rendered="{!quote.id != ''}">
+                    
+                    <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked}">
+                        <apex:outputLabel value="Calculate Maintenance Due using" />
+                        <apex:selectList id="calculationType" value="{!quote.Increase_type__c}" size="1">
+                            <apex:selectOption itemValue="Genesys Care Rate" itemLabel="Genesys Care Rate"/>
+                            <apex:selectOption itemValue="Increased Percentage" itemLabel="Increased Percentage"/>
+                            <apex:actionSupport event="onchange"/>
+                        </apex:selectList> 
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!NOT(IsQuoteUnLocked)}">
+                        <apex:outputLabel value="Calculate Maintenance Due using" />
+                        <apex:outputField value="{!quote.Increase_type__c}"/>
+                    </apex:pageBlockSectionItem>
+                    
+                    <apex:inputField value="{!quote.LDA_Uplift__c}" rendered="{!IsQuoteUnLocked}"/>
+                    <apex:outputField value="{!quote.LDA_Uplift__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    
+                    <apex:inputField value="{!quote.Extended_End_of_Support_Percent__c}" rendered="{!IsQuoteUnLocked && blnHasExtendedEOSFee}"/>
+                    <apex:outputField value="{!quote.Extended_End_of_Support_Percent__c}" rendered="{!NOT(IsQuoteUnLocked) && blnHasExtendedEOSFee}"/>
+                    
+                    <apex:inputField value="{!quote.Extended_End_of_Support_Date__c}" rendered="{!IsQuoteUnLocked && blnHasExtendedEOSFee}"/>
+                    <apex:outputField value="{!quote.Extended_End_of_Support_Date__c}" rendered="{!NOT(IsQuoteUnLocked) && blnHasExtendedEOSFee}"/>
+                    
+                    <apex:inputField value="{!quote.Reinstatement__c}" rendered="{!IsQuoteUnLocked && blnHasReinstatementFee}"/>
+                    <apex:inputField value="{!quote.Reinstated_Date__c}" rendered="{!IsQuoteUnLocked && blnHasReinstatementFee}"/>
+                    <apex:outputField value="{!quote.Reinstatement__c}" rendered="{!NOT(IsQuoteUnLocked) && blnHasReinstatementFee}"/>
+                    <apex:outputField value="{!quote.Reinstated_Date__c}" rendered="{!NOT(IsQuoteUnLocked) && blnHasReinstatementFee}"/>
+                    
+                    <apex:inputField value="{!quote.LRA_Uplift__c}" rendered="{!IsQuoteUnLocked}"/>
+                    <apex:inputField value="{!quote.Apply_LRA_Uplift_Selectively__c}" rendered="{!IsQuoteUnLocked}">
+                        <apex:actionSupport event="onchange"/>
+                    </apex:inputField>
+                    <apex:outputField value="{!quote.LRA_Uplift__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    <apex:outputField value="{!quote.Apply_LRA_Uplift_Selectively__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    <apex:inputField value="{!quote.Partner_Direct__c}" rendered="{!IsQuoteUnLocked}"/>
+                    <apex:inputField value="{!quote.Apply_Revised_Net_Uplift_Selectively__c}" rendered="{!IsQuoteUnLocked}">
+                        <apex:actionSupport event="onchange"/>
+                    </apex:inputField>
+                    <apex:outputField value="{!quote.Partner_Direct__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    <apex:outputField value="{!quote.Apply_Revised_Net_Uplift_Selectively__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    
+                    <apex:inputField value="{!quote.Calculate_KPI_Using_Maintenance_Due__c}" rendered="{!IsQuoteUnLocked}"/>
+                    <apex:outputField value="{!quote.Calculate_KPI_Using_Maintenance_Due__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                    <apex:outputField value="{!quote.Actual_Maint_Rate__c}"/>
+                    
+                    <apex:outputField value="{!quote.Previous_Maint_Rate__c}"/>
+                    <apex:outputField value="{!quote.Current_Maint_Rate__c}"/> 
+                    <apex:outputField value="{!quote.Total_Increase__c}"/>
+                    <apex:outputField value="{!quote.Total_Decrease_Split__c}"/>
+                    <apex:outputField value="{!quote.Total_Decrease__c}"/>
+                    <apex:outputField value="{!quote.Previous_Maint_Rate__c}"/>
+                    
+                    
+                    
+                    <apex:outputPanel rendered="{!quote.Id != null}">
+                        <!-- Quote period Table -->
+                        <apex:pageBlock title="Quote Periods" id="QPBlock">
+                            <apex:pageBlockButtons location="top">
+                                <apex:commandButton value="Modify Quote Periods" action="{!editofQuotePeriod}" rendered="{!NOT(blnEditQuotePeriod) && IsQuoteUnLocked}" rerender="QPBlock" status="status"/>
+                                <apex:commandButton value="Apply Default Rates" action="{!applyRates}" rendered="{!NOT(blnEditQuotePeriod) && IsQuoteUnLocked}" title="Overwrites the default rates on lines,recalculates and saves."/>
+                                <apex:commandButton value="Save" action="{!saveQuotePeriod}" rendered="{!blnEditQuotePeriod}"/>
+                                <apex:commandButton value="Cancel" action="{!cancelEditofQuotePeriod}" rendered="{!blnEditQuotePeriod}" rerender="QPBlock" status="status"/>
+                            </apex:pageBlockButtons>
+                            <apex:outputPanel rendered="{!quote.Increase_type__c = 'Genesys Care Rate' && 
+                                                            NOT(ISBLANK(decDefaultCareRate))}">
+                                <b>Default Care Rate : </b>{!decDefaultCareRate}%
+                                <br/><br/>
+                            </apex:outputPanel>
+                            
+                            <apex:outputPanel rendered="{!NOT(blnEditQuotePeriod)}">
+                                <apex:pageBlockTable value="{!list_QuotePeriods}" var="objQuotePeriod">
+                                    <apex:column value="{!objQuotePeriod.Start_Date__c}"/>
+                                    <apex:column value="{!objQuotePeriod.End_Date__c}"/>
+                                    <apex:column value="{!objQuotePeriod.Months__c}"/>
+                                    <apex:column value="{!objQuotePeriod.Default_Period_Care_Rate__c}" rendered="{!quote.Increase_type__c = 'Genesys Care Rate'}"/>
+                                    <apex:column value="{!objQuotePeriod.Default_Increase__c}" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                    <apex:column value="{!objQuotePeriod.Quarterly_Semi_Annual_Fee__c}"/>
+                                    <apex:column value="{!objQuotePeriod.Partner_to_Partner_Uplift_Fee__c}"/>
+                                    <apex:column value="{!objQuotePeriod.KPI1__c}"/>
+                                    <apex:column value="{!objQuotePeriod.KPI2__c}"/>
+                                </apex:pageBlockTable>
+                            </apex:outputPanel>
+                            
+                            <apex:outputPanel rendered="{!blnEditQuotePeriod}" id="QPEditPanel">
+                                <apex:pageMessage severity="error" strength="1" rendered="{!blnHasPeriodErrors}">
+                                    {!strPeriodErrorMsg}
+                                </apex:pageMessage>
+                                <apex:variable var="rowNum" value="{!0}"/>
+                                <apex:pageBlockTable value="{!list_QuotePeriodsBeingEdited}" var="objQuotePeriod">
+                                    <apex:column headerValue="Action">
+                                        <apex:commandlink action="{!removeQuotePeriod}" rerender="QPEditPanel" title="Remove Quote Period" status="status">
+                                            <apex:param name="strQPIndex" assignTo="{!strQPIndex}" value="{!rowNum}" />
+                                            <apex:image url="{!$Resource.MinusSign}" width="20px" height="20px"/>    
+                                        </apex:commandlink>
+                                        <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Start Date">
+                                        <apex:inputField value="{!objQuotePeriod.Start_Date__c}" style="width:75px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="End Date">
+                                        <apex:inputField value="{!objQuotePeriod.End_Date__c}" style="width:75px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Default Care Rate" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}">
+                                        <apex:facet name="header">
+                                            Default<br/>Care Rate
+                                        </apex:facet>
+                                        <apex:inputField value="{!objQuotePeriod.Default_Period_Care_Rate__c}" style="width:60px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Default Increase %" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}">
+                                        <apex:facet name="header">
+                                            Default<br/>Increase %
+                                        </apex:facet>
+                                        <apex:inputField value="{!objQuotePeriod.Default_Increase__c}" style="width:60px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Quarterly Semi Annual Fee">
+                                        <apex:facet name="header">
+                                            Quarterly Semi<br/>Annual Fee
+                                        </apex:facet>
+                                        <apex:inputField value="{!objQuotePeriod.Quarterly_Semi_Annual_Fee__c}" style="width:60px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Partner to Partner Uplift Fee">
+                                        <apex:facet name="header">
+                                            Partner to Partner<br/>Uplift Fee
+                                        </apex:facet>
+                                        <apex:inputField value="{!objQuotePeriod.Partner_to_Partner_Uplift_Fee__c}" style="width:60px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="KPI1">
+                                        <apex:inputField value="{!objQuotePeriod.KPI1__c}" style="width:60px;"/>
+                                    </apex:column>
+                                    <apex:column headerValue="KPI2">
+                                        <apex:inputField value="{!objQuotePeriod.KPI2__c}" style="width:60px;"/>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                                <br/>
+                                <apex:commandLink action="{!addQuotePeriod}" reRender="QPEditPanel" title="Add Quote Period" status="status">
+                                    <apex:image value="{!$Resource.PlusSign}" width="25px" height="25px"/>
+                                </apex:commandLink>
+                            </apex:outputPanel>
+                        </apex:pageBlock>
+                        <br/>
+                        <!-- Quote Product Upgrades Table -->
+                        <apex:pageBlock title="Product Upgrades" rendered="{!list_ProductUpgrades.size > 0}">
+                            <apex:pageBlockTable value="{!list_ProductUpgrades}" var="objProdUpgradeHistory">
+                                <apex:column headerValue="Old Product : From">
+                                    <apex:outputField value="{!objProdUpgradeHistory.From__c}"/>
+                                    &nbsp;
+                                    (<apex:outputField value="{!objProdUpgradeHistory.From__r.Description}"/>)
+                                </apex:column>
+                                <apex:column headerValue="Upgraded Product : To">
+                                    <apex:outputField value="{!objProdUpgradeHistory.To__c}"/>
+                                    &nbsp;
+                                    (<apex:outputField value="{!objProdUpgradeHistory.To__r.Description}"/>)
+                                </apex:column>
+                            </apex:pageBlockTable>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
+                    <!-- Totals Table -->
+                    <apex:pageBlock title="Totals" rendered="{!quote.Id != null}" id="TotalsBlock">
+                        <table class="list " border="0" cellpadding="0" cellspacing="0">
+                            <tr class="headerRow">
+                              <th class="headerRow"></th>
+                              <th class="headerRow">Amount</th>
+                            </tr>
+                            <tr class="dataRow">
+                                <th class="dataCell">Total Revised Net</th>
+                                <td class="dataCell">
+                                    <apex:outputField value="{!quote.Total_Revised_Net_License_Value_Formula__c}"/>
+                                </td>
+                            </tr>
+                            <!-- Period 1-->
+                            <apex:outputPanel rendered="{!intNumOfPeriods > 0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 1 Maintenance Due</th>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!quote.Period1_Maintenance_Due_Formula__c}"/>
+                                    </td>
+                                </tr>
+                                <apex:outputPanel rendered="{!quote.Period1_KPI1_Amount__c != null && quote.Period1_KPI1_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 KPI1 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_KPI1_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period1_KPI2_Amount__c != null && quote.Period1_KPI2_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 KPI2 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_KPI2_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period1_Flex_Care_Amount__c != null && quote.Period1_Flex_Care_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 Flex Care Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_Flex_Care_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period1_P2P_Uplift_Fee__c != null && quote.Period1_P2P_Uplift_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 Partner to Partner Uplift Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_P2P_Uplift_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period1_Quaterly_Semi_Annual_Fee__c != null && quote.Period1_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 Quarterly Semi Annual Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_Quaterly_Semi_Annual_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period1_EOS_Fee__c != null && quote.Period1_EOS_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 EOS Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_EOS_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period1_Reinstatement_Fee__c != null && quote.Period1_Reinstatement_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 Reinstatement Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_Reinstatement_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period1_Shelving_Fee__c != null && quote.Period1_Shelving_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 1 Shelving Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period1_Shelving_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 1 Total</th>
+                                    <th class="dataCell" style="background-color: #FFFF66">
+                                        <apex:outputField value="{!quote.Total_Due_Period1__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <!-- Period 2-->
+                            <apex:outputPanel rendered="{!intNumOfPeriods > 1}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 2 Maintenance Due</th>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!quote.Period2_Maintenance_Due__c}"/>
+                                    </td>
+                                </tr>
+                                <apex:outputPanel rendered="{!quote.Period2_KPI1_Amount__c != null && quote.Period2_KPI1_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 KPI1 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_KPI1_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period2_KPI2_Amount__c != null && quote.Period2_KPI2_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 KPI2 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_KPI2_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period2_Flex_Care_Amount__c != null && quote.Period2_Flex_Care_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 Flex Care Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_Flex_Care_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period2_P2P_Uplift_Fee__c != null && quote.Period2_P2P_Uplift_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 Partner to Partner Uplift Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_P2P_Uplift_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period2_Quaterly_Semi_Annual_Fee__c != null && quote.Period2_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 Quarterly Semi Annual Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_Quaterly_Semi_Annual_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period2_EOS_Fee__c != null && quote.Period2_EOS_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 EOS Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_EOS_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period2_Reinstatement_Fee__c != null && quote.Period2_Reinstatement_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 Reinstatement Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_Reinstatement_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period2_Shelving_Fee__c != null && quote.Period2_Shelving_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 2 Shelving Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period2_Shelving_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 2 Total</th>
+                                    <th class="dataCell" style="background-color: #FFFF66">
+                                        <apex:outputField value="{!quote.Total_Due_Period2__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <!-- Period 3-->
+                            <apex:outputPanel rendered="{!intNumOfPeriods > 2}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 3 Maintenance Due</th>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!quote.Period3_Maintenance_Due__c}"/>
+                                    </td>
+                                </tr>
+                                <apex:outputPanel rendered="{!quote.Period3_KPI1_Amount__c != null && quote.Period3_KPI1_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 KPI1 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_KPI1_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period3_KPI2_Amount__c != null && quote.Period3_KPI2_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 KPI2 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_KPI2_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period3_Flex_Care_Amount__c != null && quote.Period3_Flex_Care_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 Flex Care Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_Flex_Care_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period3_P2P_Uplift_Fee__c != null && quote.Period3_P2P_Uplift_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 Partner to Partner Uplift Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_P2P_Uplift_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period3_Quaterly_Semi_Annual_Fee__c != null && quote.Period3_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 Quarterly Semi Annual Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_Quaterly_Semi_Annual_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period3_EOS_Fee__c != null && quote.Period3_EOS_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 EOS Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_EOS_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period3_Reinstatement_Fee__c != null && quote.Period3_Reinstatement_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 Reinstatement Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_Reinstatement_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period3_Shelving_Fee__c != null && quote.Period3_Shelving_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 3 Shelving Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period3_Shelving_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 3 Total</th>
+                                    <th class="dataCell" style="background-color: #FFFF66">
+                                        <apex:outputField value="{!quote.Total_Due_Period3__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <!-- Period 4-->
+                            <apex:outputPanel rendered="{!intNumOfPeriods > 3}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 4 Maintenance Due</th>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!quote.Period4_Maintenance_Due__c}"/>
+                                    </td>
+                                </tr>
+                                <apex:outputPanel rendered="{!quote.Period4_KPI1_Amount__c != null && quote.Period4_KPI1_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 KPI1 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_KPI1_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period4_KPI2_Amount__c != null && quote.Period4_KPI2_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 KPI2 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_KPI2_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period4_Flex_Care_Amount__c != null && quote.Period4_Flex_Care_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 Flex Care Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_Flex_Care_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period4_P2P_Uplift_Fee__c != null && quote.Period4_P2P_Uplift_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 Partner to Partner Uplift Fee</th>
+
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_P2P_Uplift_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period4_Quaterly_Semi_Annual_Fee__c != null && quote.Period4_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 Quarterly Semi Annual Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_Quaterly_Semi_Annual_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period4_EOS_Fee__c != null && quote.Period4_EOS_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 EOS Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_EOS_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period4_Reinstatement_Fee__c != null && quote.Period4_Reinstatement_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 Reinstatement Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_Reinstatement_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period4_Shelving_Fee__c != null && quote.Period4_Shelving_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 4 Shelving Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period4_Shelving_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 4 Total</th>
+                                    <th class="dataCell" style="background-color: #FFFF66">
+                                        <apex:outputField value="{!quote.Total_Due_Period4__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <!-- Period 5-->
+                            <apex:outputPanel rendered="{!intNumOfPeriods > 4}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 5 Maintenance Due</th>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!quote.Period5_Maintenance_Due__c}"/>
+                                    </td>
+                                </tr>
+                                <apex:outputPanel rendered="{!quote.Period5_KPI1_Amount__c != null && quote.Period5_KPI1_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 KPI1 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_KPI1_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period5_KPI2_Amount__c != null && quote.Period5_KPI2_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 KPI2 Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_KPI2_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period5_Flex_Care_Amount__c != null && quote.Period5_Flex_Care_Amount__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 Flex Care Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_Flex_Care_Amount__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period5_P2P_Uplift_Fee__c != null && quote.Period5_P2P_Uplift_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 Partner to Partner Uplift Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_P2P_Uplift_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period5_Quaterly_Semi_Annual_Fee__c != null && quote.Period5_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 Quarterly Semi Annual Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_Quaterly_Semi_Annual_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period5_EOS_Fee__c != null && quote.Period5_EOS_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 EOS Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_EOS_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period5_Reinstatement_Fee__c != null && quote.Period5_Reinstatement_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 Reinstatement Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_Reinstatement_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!quote.Period5_Shelving_Fee__c != null && quote.Period5_Shelving_Fee__c != 0.0}">
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Period 5 Shelving Fee</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Period5_Shelving_Fee__c}"/>
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <tr class="dataRow">
+                                    <th class="dataCell">Period 5 Total</th>
+                                    <th class="dataCell" style="background-color: #FFFF66">
+                                        <apex:outputField value="{!quote.Total_Due_Period5__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_KPI1_Amount__c)) && quote.Total_KPI1_Amount__c > 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total KPI1 Amount</th>
+                                    <th class="dataCell">
+                                        <apex:outputField value="{!quote.Total_KPI1_Amount__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_KPI2_Amount__c)) && quote.Total_KPI2_Amount__c > 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total KPI2 Amount</th>
+                                    <th class="dataCell">
+                                        <apex:outputField value="{!quote.Total_KPI2_Amount__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_Flex_Care__c)) && quote.Total_Flex_Care__c > 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total Flex Care</th>
+                                    <th class="dataCell">
+                                        <apex:outputField value="{!quote.Total_Flex_Care__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Extended_End_of_Support_Formula__c > 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total Extended End of Support Fee</th>
+                                    <th class="dataCell">
+                                        <apex:outputField value="{!quote.Extended_End_of_Support_Formula__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Reinstatement_Fee_Formula__c > 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total Reinstatement Fee</th>
+                                    <th class="dataCell">
+                                        <apex:outputField value="{!quote.Reinstatement_Fee_Formula__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Total_Shelving_Fee__c != null && quote.Total_Shelving_Fee__c > 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total Shelving Fee</th>
+                                    <th class="dataCell">
+                                        <apex:outputField value="{!quote.Total_Shelving_Fee__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_Taxes__c)) && quote.Total_Taxes__c > 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total Taxes</th>
+                                    <th class="dataCell">
+                                        <apex:outputField value="{!quote.Total_Taxes__c}"/>
+                                    </th>
+                                </tr>
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total Maintenance Due (Including Taxes)</th>
+                                    <th class="dataCell" style="background-color: #FFA319">
+                                        <apex:outputField value="{!quote.Grand_Total__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!ISBLANK(quote.Total_Taxes__c) || quote.Total_Taxes__c = 0.0}">
+                                <tr class="dataRow">
+                                    <th class="dataCell">Total Maintenance Due (Excluding Taxes)</th>
+                                    <th class="dataCell" style="background-color: #FFA319">
+                                        <apex:outputField value="{!quote.Total_Renewal_Without_Tax__c}"/>
+                                    </th>
+                                </tr>
+                            </apex:outputPanel>
+                       </table>
+                    </apex:pageBlock>
+                </apex:pageBlockSection>
+                <!-- Upgrade Product -->
+                <apex:panelGrid columns="3" rendered="{!showQuoteLines && (IsQuoteUnLocked || quote.Revise_Minor__c)}">           
+                    <apex:panelGroup >
+                        <b>From :</b> &nbsp;<apex:inputField value="{!objFromProduct.BigMachines__Product__c}"/>
+                    </apex:panelGroup>
+                    <apex:panelGroup >
+                        <b>To :</b> &nbsp;<apex:inputField value="{!objToProduct.BigMachines__Product__c}"/>
+                    </apex:panelGroup>
+                    <apex:commandButton value="Upgrade Product" action="{!upgradeProduct}"/>
+                </apex:panelGrid>
+                <div align="right">
+                    <apex:commandButton value="Select (LRA)" action="{!applyLRAUpliftToLines}" rendered="{!IsQuoteUnLocked && quote.Apply_LRA_Uplift_Selectively__c}"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Unselect (LRA)" action="{!removeLRAUpliftFromLines}" rendered="{!IsQuoteUnLocked && quote.Apply_LRA_Uplift_Selectively__c}"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Select (Revised Net)" action="{!applyRevisedNetUpliftToLines}" rendered="{!IsQuoteUnLocked && quote.Apply_Revised_Net_Uplift_Selectively__c}"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Unselect (Revised Net)" action="{!removeRevisedNetUpliftFromLines}" rendered="{!IsQuoteUnLocked && quote.Apply_Revised_Net_Uplift_Selectively__c}"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Finalize Revised Net Override" action="{!finalizeRevisedNet}" rendered="{!quote.id != '' && IsQuoteUnLocked}"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Recalculate and Save" action="{!doCalculations}" rendered="{!quote.id != '' && IsQuoteUnLocked}"/>
+                </div>
+            <!--</div>-->
+            <br/>           
+            <apex:outputPanel id="pgblkSection" rendered="{!(intTotalNoOfRecords != NULL && intTotalNoOfRecords > 0) || NOT(ISBLANK(objServiceLevel)) || list_FlexCare.size > 0 || list_Fees.size > 0}">
+                <!-- Pagination Information -->
+                <apex:outputPanel rendered="{!intTotalNoOfRecords > intPageSize}">
+                    <center>
+                        <b>Total Records : {!intTotalNoOfRecords}&nbsp;&nbsp;</b>
+                        <apex:commandLink action="{!first}" rendered="{!HasPrevious}" style="text-decoration:none">
+                            First
+                        </apex:commandLink>
+                        <apex:outputText value="First" rendered="{!NOT(HasPrevious)}" style="color:gray"/>
+                        &nbsp;
+                        <apex:commandLink action="{!previous}" rendered="{!HasPrevious}" style="text-decoration:none">
+                            <apex:image url="/img/search_prevarrow.gif" title="Previous" styleClass="prevArrow"/>
+                            &nbsp;
+                            Previous
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasPrevious)}" style="color:gray">
+                            <apex:image url="/img/search_prevarrow_disabled.gif"/>
+                            &nbsp;
+                            Previous
+                        </apex:outputPanel>
+                        &nbsp;
+                        ({!PageNumStr})
+                        &nbsp;
+                        <apex:commandLink action="{!next}" rendered="{!HasNext}" style="text-decoration:none">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow.gif" title="Next" styleClass="nextArrow"/>
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasNext)}" style="color:gray">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow_disabled.gif"/>
+                        </apex:outputPanel>
+                        &nbsp;
+                        <apex:commandLink action="{!last}" title="Last" rendered="{!HasNext}" style="text-decoration:none">
+                            Last
+                        </apex:commandLink>
+                        <apex:outputText value="Last" rendered="{!NOT(HasNext)}" style="color:gray"/>
+                    </center>
+                    <br/>
+                </apex:outputPanel>
+                <table class="list " border="0" cellpadding="0" cellspacing="0" id="quoteProdGrid">
+                    <thead>
+                        <tr class="headerRow">
+                            <th class="headerRow" style="width: 15px;"></th>
+                            <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                <th class="headerRow" style="width: 10px;">
+                                    <apex:inputCheckBox id="check" value="{!blnIsHeaderChecked}">
+                                        <apex:actionSupport event="onchange" action="{!checkUncheckAll}"/>
+                                    </apex:inputCheckBox>
+                                </th>
+                                <th class="headerRow" style="width: 70px;">Action</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(quote.Is_FYM_Quote__c)}">
+                                <th class="headerRow" style="width: 50px;">SC Line</th>
+                            </apex:outputPanel>
+                            <th class="headerRow" style="width: 50px;">Original<br/>Qty</th>
+                            <th class="headerRow" style="width: 50px;">Current<br/>Qty</th>
+                            <th class="headerRow" style="width: {!IF(IsQuoteUnLocked,'150','250')}px;">Product</th>
+                            <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                <th class="headerRow">Extended<br/>End of<br/>Support</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                <th class="headerRow">Rein-<br/>statement<br/>
+                                    <apex:inputCheckBox value="{!blnIsReinstatementForAll}" title="Select/Unselect Reinstatement for all Lines" rendered="{!IsQuoteUnLocked}">
+                                        <apex:actionSupport event="onchange" action="{!checkUncheckAllReinstatement}"/>
+                                    </apex:inputCheckBox>
+                                </th>
+                            </apex:outputPanel>
+                            <th class="headerRow" style="width: 40px;">Unit</th>
+                            <th class="headerRow" style="width: 80px;">Original<br/>Net License<br/>({!quote.CurrencyISOCode})</th>
+                            <th class="headerRow" style="width: 80px;">
+                                Revised<br/>Net License<br/>({!quote.CurrencyISOCode})
+                            </th>
+                            <th class="headerRow" style="width: 10px;">
+                                <apex:inputCheckBox value="{!blnIsOverrideAllRevisedNet}" title="Override All Revised Net License Values" disabled="{!NOT(IsQuoteUnLocked)}">
+                                    <apex:actionSupport event="onchange" action="{!toggleOverrideAllRevisedNet}"/>
+                                </apex:inputCheckBox>
+                            </th>
+                            <th class="headerRow" style="width: 70px;">Start Date</th>
+                            <th class="headerRow" style="width: 70px;">End Date</th>
+                            <!--<th class="headerRow" style="width: 100px;">Previous<br/>Line Value<br/>({!quote.CurrencyISOCode})</th>-->
+                            <th class="headerRow" style="width: 100px;">Previous<br/>Annualized<br/>Maintenance<br/>({!quote.CurrencyISOCode})</th>
+                            <th class="headerRow" style="width: 10px;">
+                                <apex:inputCheckBox value="{!blnIsOverrideAllPreviousMaintenance}" title="Override All Previous Annualized Maintenance Values" disabled="{!NOT(IsQuoteUnLocked)}">
+                                    <apex:actionSupport event="onchange" action="{!toggleOverrideAllPreviousMaintenance}"/>
+                                </apex:inputCheckBox>
+                            </th>
+                            <th class="headerRow" style="width: 220px;">
+                                <table border="0" cellpadding="0" cellspacing="0" style="font-size:110%">
+                                    <tr>
+                                        <td style="border-right: 1px solid;text-align:center;">
+                                            <apex:outputPanel rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}">
+                                                <apex:outputText value="Care Rate (%)"/>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                            </apex:outputPanel>
+                                            <apex:outputText value="Increase Rate (%)" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                        </td>
+                                        <td style="text-align:left;">Maintenance<br/>Due&nbsp;&nbsp;({!quote.CurrencyISOCode})</td>
+                                    </tr>
+                                </table>
+                            </th>
+                            <th class="headerRow" style="width: 10px;">
+                                <apex:inputCheckBox value="{!blnIsOverrideAll}" title="Override All Maintenance Dues" disabled="{!NOT(IsQuoteUnLocked)}">
+                                    <apex:actionSupport event="onchange" action="{!toggleOverrideAll}"/>
+                                </apex:inputCheckBox>
+                            </th>
+                            <th class="headerRow" style="width: 100px;">Comments</th>
+                            <th class="headerRow" style="width: 100px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(objServiceLevel))}">
+                            <tr>
+                                <td colspan="100" style="background-color:rgba(212, 212, 207, 0.50)">
+                                    <b>Service Level : </b>&nbsp;
+                                    {!objServiceLevel.Product_Description__c}
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                        <!-- Flex Care Products -->
+                        <apex:outputPanel rendered="{!list_FlexCare.size > 0}">
+                            <tr>
+                                <td colspan="100" style="background-color:rgba(212, 212, 207, 0.50)">
+                                    <b>Flex Care</b>
+                                </td>
+                            </tr>
+                            <apex:repeat value="{!list_FlexCare}" var="objFlexCareProduct">
+                                <tr class="dataRow" style="background-color:rgba(255, 249, 179, 0.75)">
+                                    <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                        <td class="dataCell" colspan="2">&nbsp;</td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell" colspan="{!1 + IF(NOT(quote.Is_FYM_Quote__c),1,0)}">&nbsp;</td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFlexCareProduct.Original_Qty__c}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFlexCareProduct.Current_Qty__c}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFlexCareProduct.Product_Description__c}"/>
+                                    </td>
+                                    <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                        <td class="dataCell">&nbsp;</td>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                        <td class="dataCell">&nbsp;</td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell" colspan="3">&nbsp;</td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFlexCareProduct.Maintenance_Start_Date__c}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFlexCareProduct.Maintenance_End_Date__c}"/>
+                                    </td>
+                                    <td class="dataCell" colspan="2">&nbsp;</td>
+                                    <td class="dataCell">
+                                        <b>Amount : </b>&nbsp;
+                                        <apex:outputField value="{!objFlexCareProduct.Sales_Price_Display__c}"/>
+                                    </td>
+                                    <td class="dataCell" colspan="3">&nbsp;</td>
+                                </tr>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                        <!-- Fees -->
+                        <apex:outputPanel rendered="{!list_Fees.size > 0}">
+                            <tr>
+                                <td colspan="100" style="background-color:rgba(212, 212, 207, 0.50)">
+                                    <b>Fees</b>
+                                </td>
+                            </tr>
+                            <apex:repeat value="{!list_Fees}" var="objFeesProduct">
+                                <tr class="dataRow" style="background-color:rgba(255, 249, 179, 0.75)">
+                                    <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                        <td class="dataCell" colspan="2">&nbsp;</td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell" colspan="{!1 + IF(NOT(quote.Is_FYM_Quote__c),1,0)}">&nbsp;</td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFeesProduct.Original_Qty__c}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFeesProduct.Current_Qty__c}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFeesProduct.Product_Description__c}"/>
+                                    </td>
+                                    <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                        <td class="dataCell">&nbsp;</td>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                        <td class="dataCell">&nbsp;</td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell" colspan="3">&nbsp;</td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFeesProduct.Maintenance_Start_Date__c}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objFeesProduct.Maintenance_End_Date__c}"/>
+                                    </td>
+                                    <td class="dataCell" colspan="2">&nbsp;</td>
+                                    <td class="dataCell">
+                                        <b>Amount : </b>&nbsp;
+                                        <apex:outputField value="{!objFeesProduct.Sales_Price_Display__c}"/>
+                                    </td>
+                                    <td class="dataCell" colspan="3">&nbsp;</td>
+                                </tr>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    <apex:inputHidden value="{!strToDelete}" id="strToDelete"/>
+                    <apex:variable value="{!((intPageNum-1) * intPageSize) + 1}" var="rowNumLevel1"/>
+                    <!-- Changing Grouping from using Sales Order Number to Invoice Number -->
+                    <apex:repeat value="{!list_SalesOrerNum}" var="strInvoiceNumber">
+                        <apex:variable value="{!0}" var="rowNumLevel2"/>
+                        <apex:repeat value="{!map_SalesOrderNumToQuoteProdWrapper[strInvoiceNumber]}" var="objQuoteProductWrapper">
+                            <apex:outputPanel rendered="{!rowNumLevel2 == 0 && NOT(quote.Is_FYM_Quote__c)}">
+                            <tr>
+                                <!-- Setting a number higher than actual number of columns -->
+                                <td colspan="100" class="headerColumn">
+                                    <!-- Group By Information -->
+                                    <table style="width:1300px;border-collapse: collapse;border: 1px solid rgba(237, 237, 237, 0)" border="0" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="width:300px">
+                                                <b>Lic Invoice : </b><apex:outputField value="{!objQuoteProductWrapper.record.Lic_Invoice__c}"/>
+                                            </td>
+                                            <td style="width:300px">
+                                                <b>Sold To : </b><apex:outputField value="{!objQuoteProductWrapper.record.Sold_To_Name__c}"/>
+                                            </td>
+                                            <td style="width:300px">
+                                                <b>Original PO : </b><apex:outputField value="{!objQuoteProductWrapper.record.Original_PO__c}"/>
+                                            </td>
+                                            <td style="width:300px">
+                                                <b>Invoice Rate : </b><apex:outputField value="{!objQuoteProductWrapper.record.Invoice_Rate__c}"/>
+                                            </td>
+                                            <td style="width:300px">
+                                                <b>Total Revise Net : </b><apex:outputField value="{!objQuoteProductWrapper.record.Total_Invoice_Revise_Net__c}"/>
+                                            </td>
+                                            <td style="width:100px" ROWSPAN="2">
+                                                <b>ELA :</b> 
+                                                    <apex:inputCheckbox value="{!invoicesELA[strInvoiceNumber]}">
+                                                        <apex:actionSupport event="onchange" action="{!applyELAChange}" reRender="elaPanelDummy">
+                                                            <apex:param name="currentInvoiceForELA" assignto="{!currentInvoiceForELA}" value="{!strInvoiceNumber}"/>
+                                                        </apex:actionSupport>
+                                                    </apex:inputCheckbox>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width:300px">
+                                                <b>Original License Invoice Date : </b><apex:outputField value="{!objQuoteProductWrapper.record.Original_License_Invoice_Date__c}"/>
+                                            </td>
+                                            <td style="width:300px">
+                                                <b>End User : </b><apex:outputField value="{!objQuoteProductWrapper.record.End_User_Name__c}"/>
+                                            </td> 
+                                            <td style="width:300px">
+                                                <b>Sales Order : </b><apex:outputField value="{!objQuoteProductWrapper.record.Sales_Order__c}"/>
+                                            </td>
+                                           <td style="width:300px">
+                                                <b>Solution Name : </b><apex:outputField value="{!objQuoteProductWrapper.record.Solution_Names_Covered1__c}"/>
+                                            </td>
+                                             <td style="width:300px">
+                                                <b>Annualized Maintenance Due : </b><apex:outputField value="{!objQuoteProductWrapper.record.Total_Invoice_Maint__c}"/>
+                                            </td>
+                                          
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                           </apex:outputPanel>
+                            <apex:variable value="{!1}" var="rowNumLevel2"/>
+                            <!-- Quote Product Rows -->
+                            <!--<tr class="dataRow" style="{!IF(objQuoteProductWrapper.color == 'newRow','background-color:#85E085','')}">-->
+                            <tr class="dataRow">
+                                <td class="dataCell" style="width: 15px;">{!rowNumLevel1}</td>
+                                <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                    <td class="dataCell" style="width: 10px;">
+                                        <apex:inputCheckBox id="check" value="{!objQuoteProductWrapper.selected}"/>
+                                    </td>
+                                    <td class="dataCell" style="width: 70px;">
+                                        <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons, '/Icons/pencil-small-icon.png')}" title="Edit" onclick="location.href='/{!objQuoteProductWrapper.record.id}/e?nooverride=1&retURL=/apex/CreateQuote?id={!quote.id}'" style="cursor:pointer;"/>
+                                        &nbsp;&nbsp;
+                                        <apex:commandlink action="{!deleteQuoteProduct}" title="Remove Quote Product" onclick="deleteQP('{!$Component.strToDelete}');" rendered="{!(objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c == 'Drop' || objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c == 'Downsize' || objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c == 'Shelved' || quote.Future_Quote__c)}">
+                                            <apex:param name="quoteProductIdToBeDeleted" assignTo="{!quoteProductIdToBeDeleted}" value="{!objQuoteProductWrapper.record.id}" />
+                                            <apex:param name="strSCLIIdBeingDeleted" assignTo="{!strSCLIIdBeingDeleted}" value="{!objQuoteProductWrapper.record.Service_Contract_Line_ID__c}" />
+                                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons, '/Icons/trash.png')}"/>   
+                                        </apex:commandlink>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!NOT(quote.Is_FYM_Quote__c)}">
+                                    <td class="dataCell" style="width: 50px;">
+                                        <apex:outputLink target="_blank" 
+                                                value="/{!objQuoteProductWrapper.record.Service_Contract_Line_ID__c}"
+                                                rendered="{!NOT(ISBLANK(objQuoteProductWrapper.record.Service_Contract_Line_ID__c))}"> 
+                                            View 
+                                        </apex:outputLink>
+                                    </td>
+                                </apex:outputPanel>
+                                <td class="dataCell" style="width: 50px;">
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Original_Qty__c}"/>
+                                </td>
+                                <td class="dataCell" style="width: 50px;">
+                                    <apex:inputField value="{!objQuoteProductWrapper.record.Current_Qty__c}" style="width:45px;" rendered="{!IsQuoteUnLocked}"/>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Current_Qty__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                </td>
+                                <td class="dataCell" style="width: 150px;
+                                            {!IF(objQuoteProductWrapper.record.Is_Product_Upgraded__c,'background-color:#85E085','')}">
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Product_Description__c}"/><br/>
+                                    <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                        <br/>
+                                        <apex:inputField value="{!objQuoteProductWrapper.record.BigMachines__Product__c}" />
+                                    </apex:outputPanel>
+                                    <apex:outputLink value="/{!objQuoteProductWrapper.record.BigMachines__Product__c}" target="_blank" rendered="{!NOT(IsQuoteUnLocked)}">
+                                        <apex:outputText value="{!objQuoteProductWrapper.record.BigMachines__Product__r.Name}"/>  
+                                    </apex:outputLink>
+                                    <apex:outputPanel rendered="{!NOT(ISBLANK(objQuoteProductWrapper.record.BigMachines__Product__r.End_of_Support__c))}" style="font-size:90%">
+                                        <br/>
+                                        (<apex:outputText value="{!objQuoteProductWrapper.record.BigMachines__Product__r.End_of_Support__c}" style="color:red" title="End Of Support Info"/>)
+                                    </apex:outputPanel>
+                                </td>
+                                <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                    <td class="dataCell">
+                                        <apex:inputCheckbox value="{!objQuoteProductWrapper.record.Extended_End_of_Support__c}" rendered="{!IsQuoteUnLocked}" disabled="{!ISBLANK(objQuoteProductWrapper.record.BigMachines__Product__r.End_of_Support_Date__c)}"/>
+                                        <apex:outputField value="{!objQuoteProductWrapper.record.Extended_End_of_Support__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                    <td class="dataCell">
+                                        <apex:inputField value="{!objQuoteProductWrapper.record.Reinstatement__c}" rendered="{!IsQuoteUnLocked}"/>
+                                        <apex:outputField value="{!objQuoteProductWrapper.record.Reinstatement__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                    </td>
+                                </apex:outputPanel>
+                                <td class="dataCell" style="width: 40px;">
+                                    <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Product_Type__c}"/>
+                                </td>
+                               
+                               
+                                <td class="dataCell" style="width: 80px;">
+                                    <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Original_Net_Display__c}"/>
+                                </td>
+                                <td class="dataCell" style="width: 80px;">
+                                    <apex:outputPanel id="RevisedNetValue">
+                                        <apex:outputPanel rendered="{!NOT(objQuoteProductWrapper.record.Revised_Net_Override__c) || NOT(IsQuoteUnLocked)}">
+                                            <apex:outputPanel style="{!IF((quote.Apply_Revised_Net_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_Revised_Net_Uplift__c) || (quote.Apply_LRA_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_LRA_Uplift__c),'background-color:#D3D9B0;','')}">
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Revised_Net_License_Value__c}"/>
+                                                <apex:outputText value="▲" rendered="{!(quote.Apply_Revised_Net_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_Revised_Net_Uplift__c) || (quote.Apply_LRA_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_LRA_Uplift__c)}"/>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!(quote.Apply_Revised_Net_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_Revised_Net_Uplift__c) || (quote.Apply_LRA_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_LRA_Uplift__c)}" style="font-size:85%;font-weight:bold;color:blue;">
+                                                <br/>
+                                                <apex:outputText value="(L)" rendered="{!(quote.Apply_LRA_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_LRA_Uplift__c)}" title="LRA Uplift has been applied"/>
+                                                <apex:outputText value="(R)" rendered="{!(quote.Apply_Revised_Net_Uplift_Selectively__c && objQuoteProductWrapper.record.Apply_Revised_Net_Uplift__c)}" title="Revised Net Uplift has been applied"/>
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                        <apex:inputField value="{!objQuoteProductWrapper.record.Revised_Net_License_Value__c}" rendered="{!objQuoteProductWrapper.record.Revised_Net_Override__c && IsQuoteUnLocked}" style="width:75px;"/>
+                                    </apex:outputPanel>
+                                </td>
+                                <td class="dataCell" style="width: 10px;">
+                                    <apex:inputCheckBox value="{!objQuoteProductWrapper.record.Revised_Net_Override__c}" title="Override Revised Net" rendered="{!IsQuoteUnLocked}">
+                                        <apex:actionSupport event="onchange" reRender="RevisedNetValue" status="status"/>
+                                    </apex:inputCheckBox>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Revised_Net_Override__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                </td>
+                                <td class="dataCell" style="width: 70px;">
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Maintenance_Start_Date__c}"/>
+                                    <apex:image url="{!$Resource.RedFlag}" width="10px" height="10px" rendered="{!objQuoteProductWrapper.record.Start_Date_Flag__c}" title="Start Date falls outside of initial quote period(s)."/> 
+                                </td>
+                                <td class="dataCell" style="width: 70px;">
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Maintenance_End_Date__c}"/>
+                                </td>
+                                <td class="dataCell" style="width: 100px;">
+                                    <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                    <apex:outputPanel id="PreviousLineValue">
+                                        <apex:outputField value="{!objQuoteProductWrapper.record.Previous_Line_Display__c}" rendered="{!NOT(objQuoteProductWrapper.record.Previous_Line_Maintenance_Override__c) || NOT(IsQuoteUnLocked)}"/>
+                                        <apex:inputField value="{!objQuoteProductWrapper.record.Previous_Line_Maintenance_Value__c}" rendered="{!objQuoteProductWrapper.record.Previous_Line_Maintenance_Override__c && IsQuoteUnLocked}" style="width:75px;"/>
+                                    </apex:outputPanel>
+                                </td>
+                                <td class="dataCell" style="width: 10px;">
+                                    <apex:inputCheckBox value="{!objQuoteProductWrapper.record.Previous_Line_Maintenance_Override__c}" title="Override Previous Annualized Maintenance" rendered="{!IsQuoteUnLocked}">
+                                        <apex:actionSupport event="onchange" reRender="PreviousLineValue" status="status"/>
+                                    </apex:inputCheckBox>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Previous_Line_Maintenance_Override__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                </td>
+                                <!-- Care Rate/Increase Rate and Maintenance Due column -->
+                                <td class="dataCell" style="width: 200px;">
+                                    <apex:panelGrid columns="2" id="AmountDue">
+                                    
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 0}">
+                                            P1 :&nbsp;
+                                            <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Genesys_Care_Rate__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year1_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!NOT(IsQuoteUnLocked)}">
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Genesys_Care_Rate__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year1_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 0}">
+                                            <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Maintenance_Due_Display__c}" rendered="{!NOT(objQuoteProductWrapper.record.Amount_Due_Override__c) || NOT(IsQuoteUnLocked)}" style="width:70px"/>
+                                            <apex:inputField value="{!objQuoteProductWrapper.record.Maintenance_Due__c}" rendered="{!objQuoteProductWrapper.record.Amount_Due_Override__c && IsQuoteUnLocked}" style="width:70px"/>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 1}">
+                                            P2 :&nbsp;
+                                            <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year2_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year2_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!NOT(IsQuoteUnLocked)}">
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year2_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year2_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 1}">
+                                            <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year2_Maintenance_Due_Display__c}" rendered="{!NOT(objQuoteProductWrapper.record.Amount_Due_Override__c) || NOT(IsQuoteUnLocked)}" style="width:70px"/>
+                                            <apex:inputField value="{!objQuoteProductWrapper.record.Year2_Maintenance_Due__c}" rendered="{!objQuoteProductWrapper.record.Amount_Due_Override__c && IsQuoteUnLocked}" style="width:70px"/>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 2}">
+                                            P3 :&nbsp;
+                                            <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year3_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year3_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!NOT(IsQuoteUnLocked)}">
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year3_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year3_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 2}">
+                                            <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year3_Maintenance_Due_Display__c}" rendered="{!NOT(objQuoteProductWrapper.record.Amount_Due_Override__c) || NOT(IsQuoteUnLocked)}" style="width:70px"/>
+                                            <apex:inputField value="{!objQuoteProductWrapper.record.Year3_Maintenance_Due__c}" rendered="{!objQuoteProductWrapper.record.Amount_Due_Override__c && IsQuoteUnLocked}" style="width:70px"/>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 3}">
+                                            P4 :&nbsp;
+                                            <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year4_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year4_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!NOT(IsQuoteUnLocked)}">
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year4_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year4_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 3}">
+                                            <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year4_Maintenance_Due_Display__c}" rendered="{!NOT(objQuoteProductWrapper.record.Amount_Due_Override__c) || NOT(IsQuoteUnLocked)}" style="width:70px"/>
+                                            <apex:inputField value="{!objQuoteProductWrapper.record.Year4_Maintenance_Due__c}" rendered="{!objQuoteProductWrapper.record.Amount_Due_Override__c && IsQuoteUnLocked}" style="width:70px"/>
+                                        </apex:panelGroup>
+                                        
+                                         <apex:panelGroup rendered="{!intNumOfPeriods > 4}">
+                                            P5 :&nbsp;
+                                            <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year5_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:inputField value="{!objQuoteProductWrapper.record.Year5_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!NOT(IsQuoteUnLocked)}">
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year5_CareRatePercent__c}" style="width:60px" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                                <apex:outputField value="{!objQuoteProductWrapper.record.Year5_Increase__c}" style="width:60px" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                            </apex:outputPanel>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 4}">
+                                            <!-- Displaying formula field so as not to show currency code and still keep number formatting -->
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year5_Maintenance_Due_Display__c}" rendered="{!NOT(objQuoteProductWrapper.record.Amount_Due_Override__c) || NOT(IsQuoteUnLocked)}" style="width:70px"/>
+                                            <apex:inputField value="{!objQuoteProductWrapper.record.Year5_Maintenance_Due__c}" rendered="{!objQuoteProductWrapper.record.Amount_Due_Override__c && IsQuoteUnLocked}" style="width:70px"/>
+                                        </apex:panelGroup>
+                                        
+                                    </apex:panelGrid>
+                                </td>
+                                <td class="dataCell" style="width: 10px;">
+                                    <apex:inputCheckBox value="{!objQuoteProductWrapper.record.Amount_Due_Override__c}" title="Override Maintenance Due" rendered="{!IsQuoteUnLocked}">
+                                        <apex:actionSupport event="onchange" reRender="AmountDue" status="status"/>
+                                    </apex:inputCheckBox>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Amount_Due_Override__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                </td>
+                                <td class="dataCell" style="width: 100px;">
+                                    <apex:inputField value="{!objQuoteProductWrapper.record.Comment__c}" style="width: 80px;" rendered="{!IsQuoteUnLocked || quote.Revise_Minor__c}"/>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Comment__c}" style="width: 80px;" rendered="{!NOT(IsQuoteUnLocked || quote.Revise_Minor__c)}"/>
+                                </td>
+                                <td class="dataCell" style="width: 100px;
+                                            {!CASE(objQuoteProductWrapper.Record.Contract_Line_Update_Status__c,
+                                                                        'Drop','background-color:#FF5C5C',
+                                                                        'Retired','background-color:#FF5C5C',
+                                                                        'Downsize','background-color:#FF5C5C',
+                                                                        'Split','background-color:#FFB84D',
+                                                                        'Shelved','background-color:#FFB84D',
+                                                                        'Reinstate','background-color:#99cc00',                                                            
+                                                                        '')}">
+                                    <!--
+                                    <apex:selectList id="splitType" value="{!objQuoteProductWrapper.Record.Contract_Line_Update_Status__c}" size="1" rendered="{!IsQuoteUnLocked}">
+                                        <apex:selectOption itemValue="" itemLabel="--None--"/>
+                                        <apex:selectOption itemValue="Downsize" itemLabel="Downsize"/>
+                                        <apex:selectOption itemValue="Drop" itemLabel="Drop"/>
+                                        <apex:selectOption itemValue="Retired" itemLabel="Retired"/>
+                                        <apex:selectOption itemValue="Shelved" itemLabel="Shelved"/>
+                                        <apex:selectOption itemValue="Split" itemLabel="Split"/>
+                                    </apex:selectList>
+                                    -->
+                                    <apex:selectList id="splitType" value="{!objQuoteProductWrapper.Record.Contract_Line_Update_Status__c}" size="1" rendered="{!IsQuoteUnLocked && objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c != 'Drop' && objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c != 'Downsize' && objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c != 'Shelved'}">
+                                        <apex:selectOption itemValue="" itemLabel="--None--"/>
+                                        <apex:selectOption itemValue="Downsize" itemLabel="Downsize" />
+                                        <apex:selectOption itemValue="Drop" itemLabel="Drop"/>
+                                        <apex:selectOption itemValue="Retired" itemLabel="Retired"/>
+                                        <apex:selectOption itemValue="Shelved" itemLabel="Shelved"/>
+                                        <apex:selectOption itemValue="Split" itemLabel="Split"/>
+                                        <apex:selectOption itemValue="Upgrade" itemLabel="Upgrade"/>
+                                    </apex:selectList>
+                                    
+                                    <apex:selectList id="splitTypeReinstate" value="{!objQuoteProductWrapper.Record.Contract_Line_Update_Status__c}" size="1" rendered="{!IsQuoteUnLocked && (objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c == 'Drop' || objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c == 'Downsize' || objQuoteProductWrapper.record.Service_Contract_Line__r.ServiceContract.Agreement_Status__c == 'Shelved')}">
+                                        <apex:selectOption itemValue="Reinstate" itemLabel="Reinstate"/>
+                                    </apex:selectList>
+
+                                    
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Contract_Line_Update_Status__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                </td>
+                            </tr>
+                            <apex:variable value="{!rowNumLevel1 + 1}" var="rowNumLevel1"/>
+                        </apex:repeat>
+                    </apex:repeat>
+                    </tbody>
+                </table>
+                <!-- Pagination Information -->
+                <apex:outputPanel rendered="{!intTotalNoOfRecords > intPageSize}">
+                    <br/>
+                    <center>
+                        <b>Total Records : {!intTotalNoOfRecords}&nbsp;&nbsp;</b>
+                        <apex:commandLink action="{!first}" rendered="{!HasPrevious}" style="text-decoration:none">
+                            First
+                        </apex:commandLink>
+                        <apex:outputText value="First" rendered="{!NOT(HasPrevious)}" style="color:gray"/>
+                        &nbsp;
+                        <apex:commandLink action="{!previous}" rendered="{!HasPrevious}" style="text-decoration:none">
+                            <apex:image url="/img/search_prevarrow.gif" title="Previous" styleClass="prevArrow"/>
+                            &nbsp;
+                            Previous
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasPrevious)}" style="color:gray">
+                            <apex:image url="/img/search_prevarrow_disabled.gif"/>
+                            &nbsp;
+                            Previous
+                        </apex:outputPanel>
+                        &nbsp;
+                        ({!PageNumStr})
+                        &nbsp;
+                        <apex:commandLink action="{!next}" rendered="{!HasNext}" style="text-decoration:none">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow.gif" title="Next" styleClass="nextArrow"/>
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasNext)}" style="color:gray">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow_disabled.gif"/>
+                        </apex:outputPanel>
+                        &nbsp;
+                        <apex:commandLink action="{!last}" title="Last" rendered="{!HasNext}" style="text-decoration:none">
+                            Last
+                        </apex:commandLink>
+                        <apex:outputText value="Last" rendered="{!NOT(HasNext)}" style="color:gray"/>
+                    </center>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            
+        </apex:pageBlock>
+        <apex:outputPanel id="elaPanelDummy"></apex:outputPanel>
+    </apex:form>    
+    <div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">    
+            <apex:outputPanel id="popPanel">
+                <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:center;">
+                        Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            </apex:facet>                           
+        </apex:actionStatus>
+    </div>
+</apex:page>

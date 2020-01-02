@@ -1,0 +1,72 @@
+<apex:page sidebar="false" standardStylesheets="false" docType="html-5.0" standardController="Demo_Request__c" extensions="DemoRequestAssignExtension">
+    <apex:composition template="DemoRequestNavigation">
+        <apex:define name="content">
+            <html lang="en">
+              <head>
+                <meta charset="utf-8"/>
+                <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            
+                <title>Assign a Demo</title>
+              </head>
+              <body>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="page-header">
+                                <h2>Accept or Assign Demo</h2>
+                            </div>                  
+                        </div>
+                    </div>
+                </div>    
+                  <apex:outputPanel id="pageBody">   
+                    <apex:pageBlock rendered="{!showNotAbleToAssign}" >
+                        <div class="container">
+                            <div class="row">
+                                This demo can no longer be assigned or accepted.  <br/>
+                                <a class="btn btn-default" href="{!URLFOR('/'+Id)}">Return to Demo</a>
+                            </div>
+                        </div>
+                    </apex:pageBlock>
+                    <apex:pageBlock rendered="{!showAssignSelection}">
+                        <apex:form styleClass="container">
+                        <div class="row">
+                            <div class="col-md-8 col-sm-10 col-xs-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <apex:outputLink value="/{!Demo_Request__c.Id}"><apex:outputField value="{!Demo_Request__c.Name}"></apex:outputField></apex:outputLink>
+                                    </div>
+                                    <table class="table">
+                                        <c:DemoRequestSmallInfo Demo_Request__c="{!Demo_Request__c}"></c:DemoRequestSmallInfo>
+                                    </table><br/><br/>
+                                            <div style="display:{!if(canAccept,"block","none")};">
+                                               &nbsp;&nbsp;&nbsp; <apex:commandButton styleClass="btn btn-default" action="{!submitSelf}" value="Accept Demo" />
+                                    </div><br/><br/>
+                                    &nbsp;&nbsp;&nbsp;Assign to:&nbsp;
+                                    <apex:selectList size="1" value="{!selectedPerson}" title="Select a Person to Assign to">
+                                        <apex:selectOptions value="{!displayedPresenters}"></apex:selectOptions>
+                                    </apex:selectList>&nbsp;&nbsp;&nbsp;
+                                    <apex:commandButton styleClass="btn btn-default" action="{!submitAssign}" value="Assign" />&nbsp;&nbsp;&nbsp;
+                                    <a class="btn btn-default" href="{!URLFOR('/'+Id)}">Return to Demo</a>
+                                    </div>
+                                </div>
+                            </div>              
+                        </apex:form>
+                    </apex:pageBlock>
+                      <apex:pageBlock rendered="{!showPreviousEventWarning}">
+                          <apex:form styleClass="container">
+                              <div class="row">
+                                  <c:DemoRequestConflict events="{!conflicts}" personName="{!selectedPerson}"></c:DemoRequestConflict>
+                              </div>
+                              <div class="row">
+                                  <a class="btn btn-default" href="{!URLFOR('/apex/DemoRequestAssignVF?id='+Id)}" >Change Person</a>&nbsp;
+                                  <apex:commandButton action="{!submitFinal}" value="Submit Anyway"></apex:commandButton>
+                              </div>
+                          </apex:form>
+                      </apex:pageBlock>
+               </apex:outputPanel>
+            </body>
+            </html>
+        </apex:define>
+    </apex:composition>
+</apex:page>

@@ -1,0 +1,228 @@
+<apex:page controller="PartnerSetupController">
+<style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+</style>
+    <apex:form id="theForm">
+        <div style="height:15px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    <apex:outputPanel >
+                        <apex:outputPanel styleClass="popupBackground" layout="block" style="position:absolute;"/>
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>
+        <apex:pageMessages escape="false"/>
+        <apex:pageBlock title="Partner Setup">
+            
+            <apex:pageBlockButtons >
+                <apex:outputPanel rendered="{!blnIsReadMode}">
+                    <apex:commandButton value="Edit" action="{!changeToEditMode}" reRender="theForm"/>
+                    <apex:commandButton value="Back To Contract" action="/{!objContract.Id}" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!NOT(blnIsReadMode)}">
+                    <apex:commandButton value="Save" action="{!saveBtnHandler}" reRender="theForm"/>
+                    <apex:commandButton value="Quick Save" action="{!quickSaveBtnHandler}" reRender="theForm" status="status"/>
+                    <apex:commandButton value="Cancel" action="{!cancelBtnHandler}" reRender="theForm" immediate="true"/>
+                </apex:outputPanel>                 
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection columns="1"> 
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel >Name</apex:outputLabel>
+                    <apex:outputField value="{!objContract.Application__r.Account__r.Name}"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!objCategoryAndTier.Tier__c}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Category" for="categoryList"/>
+                    <apex:selectList id="categoryList" value="{!strSelectedCategory}" multiselect="false" size="1">
+                        <apex:selectOptions value="{!list_CategoryOptions}"/>
+                        <apex:actionSupport event="onchange" action="{!refresh}" reRender="theForm" status="status"/>
+                    </apex:selectList>          
+                </apex:pageBlockSectionItem>  
+                 <apex:pageBlockSectionItem rendered="{!NOT(blnIsReadMode)}">
+                 <apex:outputLabel >Status</apex:outputLabel>
+                 <apex:selectList id="categoryList" value="{!strStatus}" multiselect="false" size="1">
+                 <apex:selectOptions value="{!Status_List}"/>
+                 </apex:selectList> 
+                 </apex:pageBlockSectionItem>  
+                 
+                 <apex:pageBlockSectionItem rendered="{!blnIsReadMode}">
+                 <apex:outputLabel >Status</apex:outputLabel>
+                 <apex:outputText value="{!strStatus}" rendered="{!blnIsReadMode}"/>
+                 </apex:pageBlockSectionItem>  
+
+
+            </apex:pageBlockSection>
+            <apex:outputPanel id="requirementsPanel">
+                
+                <apex:outputPanel rendered="{!strSelectedCategory = 'Value Added Reseller (VAR)'}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.VAR_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!strSelectedCategory = 'Specialized Reseller'}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.Specialized_Reseller_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!(strSelectedCategory = 'Cloud Partner' || strSelectedCategory = 'Cloud Solution Provider' || strSelectedCategory = 'Cloud Reseller')}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.Cloud_Partner_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!strSelectedCategory = 'Managed Service Provider (MSP)'}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.MSP_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!strSelectedCategory = 'SP as Subcontractor to Genesys' ||
+                                            strSelectedCategory = 'SP who Hires Genesys Prof Services' ||
+                                            strSelectedCategory = 'SP (non-Subcontractor to Genesys)' ||
+                                            strSelectedCategory = 'Services Partner Who Offers Own Services' ||
+                                            strSelectedCategory = 'Subcontractor to Genesys'}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.Services_Partner_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!strSelectedCategory = 'Technology Partner'}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.Technology_Partner_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!strSelectedCategory = 'OEM Partner' || strSelectedCategory = 'OEM Partner (outbound)'}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.OEM_Partner_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!strSelectedCategory = 'Cloud Referral Partner'}">
+                    <apex:pageBlockTable value="{!$ObjectType.Country_Requirements__c.FieldSets.Cloud_Referral_Partner_Requirements}" var="f">
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Country_Requirements__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Country_Requirements__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        <apex:repeat value="{!list_CountryRequirements}" var="objCountryRequirement">
+                            <apex:column headerValue="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}">
+                                <apex:facet name="header">
+                                    <apex:outputText value="{!map_CountryIdToColumnHeader[objCountryRequirement.Country__c]}" escape="false"/>
+                                </apex:facet>
+                                <apex:outputField value="{!objCountryRequirement[f]}" rendered="{!blnIsReadMode}"/>
+                                <apex:inputField value="{!objCountryRequirement[f]}" rendered="{!NOT(blnIsReadMode)}" required="true"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                
+            </apex:outputPanel>
+                
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

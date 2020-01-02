@@ -1,0 +1,68 @@
+<apex:component controller="CaseCommentAddArticles">
+	<apex:attribute name="caseUpdateId" type="String" required="true" assignto="{!caseId}" description="caseID"/>
+	<apex:includeScript value="/support/console/24.0/integration.js"/>
+	<apex:includeScript value="{!$Resource.pkb_jquery_1_6_2}"/>
+	<apex:stylesheet value="{!$Resource.ChatterCore}"/>
+	<apex:stylesheet value="{!$Resource.zencontainer}"/>
+	
+	<apex:pageBlockSection columns="1"  title="KB Articles" >
+
+	<apex:outputPanel id="articlesDisplay" rendered="{!ISPICKVAL($User.UserType,'Standard')}">
+	    <apex:outputText rendered="{!Articles.size == 0}">
+			No Results
+		</apex:outputText>
+	    <apex:pageBlockTable value="{!Articles}" var="currArticle" rows="50" rendered="{!Articles.size > 0 }" >
+	        <apex:column headerValue="Include" id="selected" styleClass="actionColumn"  > 
+				<apex:outputText rendered="{!currArticle.TheArticle.IsVisibleInCsp = True}">
+					<div class="zen">
+						<div class="followUnfollowElement" >
+							<span class="zen-media zen-mediaExt" >
+								<a href="javascript:void(0);" class="zen-mrs zen-img SelectedArticle" id="{!currArticle.TheArticle.knowledgeArticleId}" name="{!currArticle.TheArticle.knowledgeArticleId}" kbUrl="{!currArticle.TheUrl}" kbTitle="{!currArticle.TheArticle.title}">
+									<img src="/s.gif" alt="Add article to the description." width="1" height="1" class="chatter-iconSmall chatter-followIcon" title="Add article to the description."/>
+								</a>
+							</span>
+						</div>
+					</div>
+				</apex:outputText>
+	        </apex:column> 
+	        <apex:column headerValue="Title" ><label for="{!currArticle.TheArticle.knowledgeArticleId}"/>
+				<apex:outputLink target="_blank" title="{!currArticle.TheArticle.Summary}" value="/articles/{!currArticle.theType}/{!currArticle.TheArticle.urlname}?popup=true&id={!currArticle.TheArticle.knowledgeArticleId}&isdtp=vw&isWsVw=true&">{!currArticle.TheArticle.Title}</apex:outputLink>				        
+	        </apex:column>
+	        <apex:column headerValue="Type" value="{!currArticle.theTypeLabel}"/>
+	        <apex:column headerValue="Number" value="{!currArticle.TheArticle.ArticleNumber}"/>
+	        <apex:column headerValue="Internal" value="{!currArticle.TheArticle.IsVisibleInApp}"/>
+	        <apex:column headerValue="Portal" value="{!currArticle.TheArticle.IsVisibleInCsp}"/>
+	        <apex:column headerValue="Public" value="{!currArticle.TheArticle.IsVisibleInPkb}"/>
+	        <apex:column headerValue="Publish Status" value="{!currArticle.TheArticle.PublishStatus}"/>
+	    </apex:pageBlockTable>
+	    
+	    <script type="text/javascript">
+		   
+		    var embeddedAnchor = '<br/><a href="{fqdnUrl}" target="_blank" title="{name}">{name}</a>';
+		        
+		    var ck;
+		    
+		    for(var k in CKEDITOR.instances) {
+		        if(CKEDITOR.instances.hasOwnProperty(k)) {
+		            ck = CKEDITOR.instances[k];
+		        }
+		    }
+		    
+		    function injectArticleLink(url, title) {
+		        var s = embeddedAnchor.replace(/{fqdnUrl}/gim, url);
+		        s = s.replace(/{name}/gim, title);
+				ck.insertHtml(s);
+		    }
+		
+			$(".SelectedArticle").click(function(){
+				//push the initial message
+				var x_this = this;
+				injectArticleLink(jQuery(x_this).attr('kbUrl'), jQuery(x_this).attr('kbTitle'));
+			});
+		
+		</script>
+	    
+	</apex:outputPanel>
+	</apex:pageBlockSection>
+
+</apex:component>

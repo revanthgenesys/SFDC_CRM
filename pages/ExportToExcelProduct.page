@@ -1,0 +1,853 @@
+<apex:page id="pg" title="Quote" controller="ExportToExcelController" showheader="false" sidebar="false" contentType="application/vnd.ms-excel#{!quote.Name}{!IF(NOT(ISBLANK(quote.Revision_No__c)),'-' & TEXT(quote.Revision_No__c),'')}.xls" cache="true">
+    <h1>{!quote.Name}</h1>
+        <apex:pageBlock >
+            <apex:pageBlockSection id="quoteInfo" title="Quote Information" collapsible="false">
+                <apex:outputField value="{!quote.BigMachines__Opportunity__c}"/>
+                <apex:outputField value="{!quote.Name}"/>
+                <apex:outputField value="{!quote.Quote_Created_Date__c}"/>
+                <apex:outputField value="{!quote.Expiration_Date__c}"/>
+                <apex:outputField value="{!quote.Sold_To_Name__c}"/>
+                <apex:outputField value="{!quote.End_User_ID__c}"/>
+                <apex:outputField value="{!quote.Support_Owner__c}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Future Quote"/>
+                    <apex:outputText value="{!quote.Future_Quote__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Order_Date_Submitted__c}"/>
+                <apex:outputField value="{!quote.Approval_Date__c}"/>
+                <apex:outputField value="{!quote.BigMachines__Status__c}"/>
+                <apex:outputField value="{!quote.Revision_No__c}"/>
+                <apex:outputField value="{!quote.Maintenance_Start_Date__c}"/>
+                <apex:outputField value="{!quote.Maintenance_End_Date__c}"/>
+                <apex:outputField value="{!quote.BigMachines__Description__c}"/>
+                <apex:outputText />
+                <apex:outputField value="{!quote.Order_PO_Number__c}" />
+                <apex:outputField value="{!quote.Order_PO_Date__c}" />
+                <apex:outputField value="{!quote.CurrencyISOCode}"/>
+                <apex:outputField value="{!quote.Tax_Rate__c}"/>
+            </apex:pageBlockSection>                
+            <apex:pageBlockSection title="Genesys Care" columns="2" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Calculate Maintainence Due using" />
+                    <apex:outputField value="{!quote.Increase_type__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputText />
+                <apex:outputField value="{!quote.Extended_End_of_Support_Percent__c}"/>
+                <apex:outputField value="{!quote.Extended_End_of_Support_Date__c}"/>
+                <apex:outputField value="{!quote.Reinstatement__c}"/>
+                <apex:outputField value="{!quote.Reinstated_Date__c}"/>
+                <apex:outputField value="{!quote.Previous_Maint_Rate__c}"/>
+                <apex:outputField value="{!quote.Current_Maint_Rate__c}"/>
+                <apex:outputField value="{!quote.Actual_Maint_Rate__c}"/>
+                <apex:outputText />             
+                <apex:outputField value="{!quote.LRA_Uplift__c}"/>
+                <apex:outputField value="{!quote.Partner_Direct__c}" />
+                <apex:outputField value="{!quote.Total_Increase__c}"/>
+                <apex:outputField value="{!quote.Total_Decrease_Split__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Quote Periods" columns="2" collapsible="false">
+                <apex:outputPanel rendered="{!quote.Increase_type__c = 'Genesys Care Rate' && 
+                                                NOT(ISBLANK(decDefaultCareRate))}">
+                    <b>Default Care Rate : </b>{!decDefaultCareRate}%
+                </apex:outputPanel>
+                <apex:outputText />
+                <apex:pageBlockTable value="{!list_QuotePeriods}" var="objQuotePeriod">
+                    <apex:column value="{!objQuotePeriod.Start_Date__c}"/>
+                    <apex:column value="{!objQuotePeriod.End_Date__c}"/>
+                    <apex:column value="{!objQuotePeriod.Months__c}"/>
+                    <apex:column value="{!objQuotePeriod.Default_Period_Care_Rate__c}" rendered="{!quote.Increase_type__c = 'Genesys Care Rate'}"/>
+                    <apex:column value="{!objQuotePeriod.Default_Increase__c}" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                    <apex:column value="{!objQuotePeriod.Quarterly_Semi_Annual_Fee__c}"/>
+                    <apex:column value="{!objQuotePeriod.Partner_to_Partner_Uplift_Fee__c}"/>
+                    <apex:column value="{!objQuotePeriod.KPI1__c}"/>
+                    <apex:column value="{!objQuotePeriod.KPI2__c}"/>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Product Upgrades" columns="2" collapsible="false">
+                <apex:pageBlockTable title="Product Upgrades" value="{!list_ProductUpgrades}" var="objProdUpgradeHistory" rendered="{!list_ProductUpgrades.size > 0}">
+                    <apex:column headerValue="Old Product : From">
+                        <apex:outputField value="{!objProdUpgradeHistory.From__c}"/>
+                        
+                        (<apex:outputField value="{!objProdUpgradeHistory.From__r.Description}"/>)
+                    </apex:column>
+                    <apex:column headerValue="Upgraded Product : To">
+                        <apex:outputField value="{!objProdUpgradeHistory.To__c}"/>
+                        
+                        (<apex:outputField value="{!objProdUpgradeHistory.To__r.Description}"/>)
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+                <apex:pageBlockSection title="Totals" columns="2" collapsible="false">
+                    <apex:outputPanel >
+                    <table border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <th style="text-align:left">Total Revised Net</th>
+                            <td>
+                                <apex:outputField value="{!quote.Total_Revised_Net_License_Value_Formula__c}"/>
+                            </td>
+                        </tr>
+                        <!-- Period 1-->
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 0}">
+                            <tr>
+                                <th style="text-align:left">Period 1 Maintenance Due</th>
+                                <td>
+                                    <apex:outputField value="{!quote.Period1_Maintenance_Due_Formula__c}"/>
+                                </td>
+                            </tr>
+                            <apex:outputPanel rendered="{!quote.Period1_KPI1_Amount__c != null && quote.Period1_KPI1_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 1 KPI1 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_KPI1_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period1_KPI2_Amount__c != null && quote.Period1_KPI2_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 1 KPI2 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_KPI2_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period1_Flex_Care_Amount__c != null && quote.Period1_Flex_Care_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 1 Flex Care Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_Flex_Care_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period1_P2P_Uplift_Fee__c != null && quote.Period1_P2P_Uplift_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 1 Partner to Partner Uplift Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_P2P_Uplift_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period1_Quaterly_Semi_Annual_Fee__c != null && quote.Period1_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 1 Quarterly Semi Annual Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_Quaterly_Semi_Annual_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period1_EOS_Fee__c != null && quote.Period1_EOS_Fee__c != 0.0}">
+                                <tr class="dataRow">
+                                    <th style="text-align:left">Period 1 EOS Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_EOS_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period1_Reinstatement_Fee__c != null && quote.Period1_Reinstatement_Fee__c != 0.0}">
+                                <tr class="dataRow">
+                                    <th style="text-align:left">Period 1 Reinstatement Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_Reinstatement_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <!--<apex:outputPanel rendered="{!quote.Period1_Shelving_Fee__c != null && quote.Period1_Shelving_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 1 Shelving Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period1_Shelving_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>-->
+                            <tr>
+                                <th style="text-align:left">Period 1 Total</th>
+                                <th style="background-color: #FFFF66">
+                                    <apex:outputField value="{!quote.Total_Due_Period1__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <!-- Period 2-->
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 1}">
+                            <tr>
+                                <th style="text-align:left">Period 2 Maintenance Due</th>
+                                <td>
+                                    <apex:outputField value="{!quote.Period2_Maintenance_Due__c}"/>
+                                </td>
+                            </tr>
+                            <apex:outputPanel rendered="{!quote.Period2_KPI1_Amount__c != null && quote.Period2_KPI1_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 KPI1 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_KPI1_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period2_KPI2_Amount__c != null && quote.Period2_KPI2_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 KPI2 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_KPI2_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period2_Flex_Care_Amount__c != null && quote.Period2_Flex_Care_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 Flex Care Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_Flex_Care_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period2_P2P_Uplift_Fee__c != null && quote.Period2_P2P_Uplift_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 Partner to Partner Uplift Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_P2P_Uplift_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period2_Quaterly_Semi_Annual_Fee__c != null && quote.Period2_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 Quarterly Semi Annual Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_Quaterly_Semi_Annual_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period2_EOS_Fee__c != null && quote.Period2_EOS_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 EOS Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_EOS_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period2_Reinstatement_Fee__c != null && quote.Period2_Reinstatement_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 Reinstatement Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_Reinstatement_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <!--<apex:outputPanel rendered="{!quote.Period2_Shelving_Fee__c != null && quote.Period2_Shelving_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 2 Shelving Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period2_Shelving_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>-->
+                            <tr>
+                                <th style="text-align:left">Period 2 Total</th>
+                                <th style="background-color: #FFFF66">
+                                    <apex:outputField value="{!quote.Total_Due_Period2__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <!-- Period 3-->
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 2}">
+                            <tr>
+                                <th style="text-align:left">Period 3 Maintenance Due</th>
+                                <td>
+                                    <apex:outputField value="{!quote.Period3_Maintenance_Due__c}"/>
+                                </td>
+                            </tr>
+                            <apex:outputPanel rendered="{!quote.Period3_KPI1_Amount__c != null && quote.Period3_KPI1_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 KPI1 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_KPI1_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period3_KPI2_Amount__c != null && quote.Period3_KPI2_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 KPI2 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_KPI2_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period3_Flex_Care_Amount__c != null && quote.Period3_Flex_Care_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 Flex Care Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_Flex_Care_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period3_P2P_Uplift_Fee__c != null && quote.Period3_P2P_Uplift_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 Partner to Partner Uplift Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_P2P_Uplift_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period3_Quaterly_Semi_Annual_Fee__c != null && quote.Period3_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 Quarterly Semi Annual Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_Quaterly_Semi_Annual_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period3_EOS_Fee__c != null && quote.Period3_EOS_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 EOS Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_EOS_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period3_Reinstatement_Fee__c != null && quote.Period3_Reinstatement_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 Reinstatement Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_Reinstatement_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <!--<apex:outputPanel rendered="{!quote.Period3_Shelving_Fee__c != null && quote.Period3_Shelving_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 3 Shelving Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period3_Shelving_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>-->
+                            <tr>
+                                <th style="text-align:left">Period 3 Total</th>
+                                <th style="background-color: #FFFF66">
+                                    <apex:outputField value="{!quote.Total_Due_Period3__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <!-- Period 4-->
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 3}">
+                            <tr>
+                                <th style="text-align:left">Period 4 Maintenance Due</th>
+                                <td>
+                                    <apex:outputField value="{!quote.Period4_Maintenance_Due__c}"/>
+                                </td>
+                            </tr>
+                            <apex:outputPanel rendered="{!quote.Period4_KPI1_Amount__c != null && quote.Period4_KPI1_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 KPI1 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_KPI1_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period4_KPI2_Amount__c != null && quote.Period4_KPI2_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 KPI2 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_KPI2_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period4_Flex_Care_Amount__c != null && quote.Period4_Flex_Care_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 Flex Care Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_Flex_Care_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period4_P2P_Uplift_Fee__c != null && quote.Period4_P2P_Uplift_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 Partner to Partner Uplift Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_P2P_Uplift_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period4_Quaterly_Semi_Annual_Fee__c != null && quote.Period4_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 Quarterly Semi Annual Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_Quaterly_Semi_Annual_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period4_EOS_Fee__c != null && quote.Period4_EOS_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 EOS Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_EOS_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period4_Reinstatement_Fee__c != null && quote.Period4_Reinstatement_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 Reinstatement Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_Reinstatement_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <!--<apex:outputPanel rendered="{!quote.Period4_Shelving_Fee__c != null && quote.Period4_Shelving_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 4 Shelving Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period4_Shelving_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>-->
+                            <tr>
+                                <th style="text-align:left">Period 4 Total</th>
+                                <th style="background-color: #FFFF66">
+                                    <apex:outputField value="{!quote.Total_Due_Period4__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <!-- Period 5-->
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 4}">
+                            <tr>
+                                <th style="text-align:left">Period 5 Maintenance Due</th>
+                                <td>
+                                    <apex:outputField value="{!quote.Period5_Maintenance_Due__c}"/>
+                                </td>
+                            </tr>
+                            <apex:outputPanel rendered="{!quote.Period5_KPI1_Amount__c != null && quote.Period5_KPI1_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 KPI1 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_KPI1_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period5_KPI2_Amount__c != null && quote.Period5_KPI2_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 KPI2 Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_KPI2_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period5_Flex_Care_Amount__c != null && quote.Period5_Flex_Care_Amount__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 Flex Care Amount</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_Flex_Care_Amount__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period5_P2P_Uplift_Fee__c != null && quote.Period5_P2P_Uplift_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 Partner to Partner Uplift Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_P2P_Uplift_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period5_Quaterly_Semi_Annual_Fee__c != null && quote.Period5_Quaterly_Semi_Annual_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 Quarterly Semi Annual Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_Quaterly_Semi_Annual_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period5_EOS_Fee__c != null && quote.Period5_EOS_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 EOS Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_EOS_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!quote.Period5_Reinstatement_Fee__c != null && quote.Period5_Reinstatement_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 Reinstatement Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_Reinstatement_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            <!--<apex:outputPanel rendered="{!quote.Period5_Shelving_Fee__c != null && quote.Period5_Shelving_Fee__c != 0.0}">
+                                <tr>
+                                    <th style="text-align:left">Period 5 Shelving Fee</th>
+                                    <td>
+                                        <apex:outputField value="{!quote.Period5_Shelving_Fee__c}"/>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>-->
+                            <tr>
+                                <th style="text-align:left">Period 5 Total</th>
+                                <th style="background-color: #FFFF66">
+                                    <apex:outputField value="{!quote.Total_Due_Period5__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_KPI1_Amount__c)) && quote.Total_KPI1_Amount__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total KPI1 Amount</th>
+                                <th>
+                                    <apex:outputField value="{!quote.Total_KPI1_Amount__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_KPI2_Amount__c)) && quote.Total_KPI2_Amount__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total KPI2 Amount</th>
+                                <th>
+                                    <apex:outputField value="{!quote.Total_KPI2_Amount__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_Flex_Care__c)) && quote.Total_Flex_Care__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total Flex Care</th>
+                                <th>
+                                    <apex:outputField value="{!quote.Total_Flex_Care__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!quote.Extended_End_of_Support_Formula__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total Extended End of Support Fee</th>
+                                <th>
+                                    <apex:outputField value="{!quote.Extended_End_of_Support_Formula__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!quote.Reinstatement_Fee_Formula__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total Reinstatement Fee</th>
+                                <th>
+                                    <apex:outputField value="{!quote.Reinstatement_Fee_Formula__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <!--<apex:outputPanel rendered="{!quote.Total_Shelving_Fee__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total Shelving Fee</th>
+                                <th>
+                                    <apex:outputField value="{!quote.Total_Shelving_Fee__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>-->
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Total_Taxes__c)) && quote.Total_Taxes__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total Taxes</th>
+                                <th>
+                                    <apex:outputField value="{!quote.Total_Taxes__c}"/>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th style="text-align:left">Total Maintenance Due (Including Taxes)</th>
+                                <th style="background-color: #FFA319">
+                                    <apex:outputField value="{!quote.Grand_Total__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!ISBLANK(quote.Total_Taxes__c) || quote.Total_Taxes__c = 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total Maintenance Due (Excluding Taxes)</th>
+                                <th style="background-color: #FFA319">
+                                    <apex:outputField value="{!quote.Total_Renewal_Without_Tax__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                         <apex:outputPanel rendered="{!NOT(ISBLANK(quote.Maintenance_Due_Discount_Amount__c)) && quote.Maintenance_Due_Discount_Amount__c > 0.0}">
+                            <tr>
+                                <th style="text-align:left">Total Discount</th>
+                                <th style="background-color: #FFA319">
+                                    <apex:outputField value="{!quote.Maintenance_Due_Discount_Amount__c}"/>
+                                </th>
+                            </tr>                      
+                            <tr>
+                                <th style="text-align:left">Maintenance Due (After Discount)</th>
+                                <th style="background-color: #FFA319">
+                                    <apex:outputField value="{!quote.Total_Maintenance_Due_After_Discount__c}"/>
+                                </th>
+                            </tr>
+                        </apex:outputPanel>
+                   </table>
+                   </apex:outputPanel>
+                </apex:pageBlockSection>
+                <br/>
+            <apex:outputPanel rendered="{!list_QuoteProducts.size > 0}">
+                <table border="1" cellpadding="0" cellspacing="0">
+                    <thead>
+                        <tr style="background-color:#504A4B;color:white">
+                            <th ></th>
+                            <th>Original Qty</th>
+                            <th>Current Qty</th>
+                            <th >Product</th>
+                            <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                <th>Extended EOS</th>
+                                <th>EOS Fees</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                <th >Reinstatement</th>
+                            </apex:outputPanel>
+                            <th>Original Net ({!quote.CurrencyISOCode})</th>
+                            <th>
+                                Revised Net({!quote.CurrencyISOCode})
+                            </th>
+                            <th>
+                             Invoice
+                            </th>
+                         
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Previous Line ({!quote.CurrencyISOCode})</th>
+                            <th>
+                                <table border="0" cellpadding="0" cellspacing="0" style="font-size:110%;color:white;font-weight:bold">
+                                    <tr>
+                                        <td>
+                                            <apex:outputText value="Care Rate %" rendered="{!quote.Increase_type__c = 'Genesys Care Rate'}"/>
+                                            <apex:outputText value="Increase Rate %" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                        </td>
+                                        <td style="text-align:left;">Maintenance Due({!quote.CurrencyISOCode})</td>
+                                    </tr>
+                                </table>
+                            </th>
+                            <th>Comments</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:outputPanel rendered="{!NOT(ISBLANK(objServiceLevel))}">
+                            <tr>
+                                <td colspan="15" style="background-color:#D1D0CE">
+                                    <b>Service Level : </b>
+                                    {!objServiceLevel.Product_Description__c}
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                        <!-- Flex Care Products -->
+                        <apex:outputPanel rendered="{!list_FlexCare.size > 0}">
+                            <tr>
+                                <td colspan="15" style="background-color:#D1D0CE">
+                                    <b>Flex Care</b>
+                                </td>
+                            </tr>
+                            <apex:repeat value="{!list_FlexCare}" var="objFlexCareProduct">
+                                <tr  style="background-color:#FFF380">
+                                    <td colspan="1"></td>
+                                    <td>
+                                        <apex:outputField value="{!objFlexCareProduct.Original_Qty__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!objFlexCareProduct.Current_Qty__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!objFlexCareProduct.Product_Description__c}"/>
+                                    </td>
+                                    <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                        <td colspan="2"></td>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                        <td></td>
+                                    </apex:outputPanel>
+                                    <td colspan="3"></td>
+                                   
+                                 
+
+                                    
+                                    <td>
+                                        <apex:outputField value="{!objFlexCareProduct.Maintenance_Start_Date__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!objFlexCareProduct.Maintenance_End_Date__c}"/>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        <b>Amount : </b>
+                                        <apex:outputField value="{!objFlexCareProduct.Sales_Price_Display__c}"/>
+                                    </td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                        <!-- Fees -->
+                        <apex:outputPanel rendered="{!list_Fees.size > 0}">
+                            <tr>
+                                <td colspan="14" style="background-color:#D1D0CE">
+                                    <b>Fees</b>
+                                </td>
+                            </tr>
+                            <apex:repeat value="{!list_Fees}" var="objFeesProduct">
+                                <tr  style="background-color:#FFF380">
+                                    <td colspan="1"></td>
+                                    <td>
+                                        <apex:outputField value="{!objFeesProduct.Original_Qty__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!objFeesProduct.Current_Qty__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!objFeesProduct.Product_Description__c}"/>
+                                    </td>
+                                    <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                        <td colspan="2"></td>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                        <td></td>
+                                    </apex:outputPanel>
+                                    <td colspan="3"></td>
+                                    <td>
+                                        <apex:outputField value="{!objFeesProduct.Maintenance_Start_Date__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!objFeesProduct.Maintenance_End_Date__c}"/>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        <b>Amount : </b>
+                                        <apex:outputField value="{!objFeesProduct.Sales_Price_Display__c}"/>
+                                    </td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    <apex:variable value="{!1}" var="rowNumLevel1"/>
+                    <!-- Changing Grouping from using Sales Order Number to Invoice Number -->
+                   <!-- <apex:repeat value="{!list_SalesOrerNum}" var="strSalesOrder"> -->
+                   <apex:repeat value="{!list_QuoteProd}" var="strInvoiceNumber">
+                        <apex:variable value="{!0}" var="rowNumLevel2"/>
+                     
+                       <!--<apex:repeat value="{!map_SalesOrderNumToQuoteProdWrapper[strSalesOrder]}" var="objQuoteProductWrapper">-->
+                        <apex:repeat value="{!map_ProductQuoteWrapper[strInvoiceNumber.record.Product_Description__c]}" var="objQuoteProductWrapper">
+                            <apex:outputPanel rendered="{!rowNumLevel2 == 0}">
+                            
+                           </apex:outputPanel>
+                            <apex:variable value="{!1}" var="rowNumLevel2"/>
+                            <tr>
+                                <td >{!rowNumLevel1}</td>
+                                <td>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Original_Qty__c}"/>
+                                </td>
+                                <td>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Current_Qty__c}"/>
+                                </td>
+                                <td style="width: 150px;
+                                            {!IF(objQuoteProductWrapper.record.Is_Product_Upgraded__c,'background-color:#85E085','')}">
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Product_Description__c}"/>
+                                </td>
+                                <apex:outputPanel rendered="{!blnHasExtendedEOSFee}">
+                                    <td>
+                                        <apex:outputText value="{!objQuoteProductWrapper.record.Extended_End_of_Support__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:panelGrid columns="1" rendered="{!objQuoteProductWrapper.record.Extended_End_of_Support__c}">
+                                            <!--<apex:outputField value="{!objQuoteProductWrapper.record.Period1_EOS_Fee__c}" rendered="{!intNumOfPeriods > 0}"/>-->
+                                            <c:myOutputText myValue="{!objQuoteProductWrapper.record.Period1_EOS_Fee__c}" hideDecimals="false" rendered="{!intNumOfPeriods > 0}"/>
+                                            <c:myOutputText myValue="{!objQuoteProductWrapper.record.Period2_EOS_Fee__c}" hideDecimals="false"  rendered="{!intNumOfPeriods > 1}"/>
+                                            <c:myOutputText myValue="{!objQuoteProductWrapper.record.Period3_EOS_Fee__c}" hideDecimals="false"  rendered="{!intNumOfPeriods > 2}"/>
+                                            <c:myOutputText myValue="{!objQuoteProductWrapper.record.Period4_EOS_Fee__c}" hideDecimals="false"  rendered="{!intNumOfPeriods > 3}"/>
+                                            <c:myOutputText myValue="{!objQuoteProductWrapper.record.Period5_EOS_Fee__c}" hideDecimals="false"  rendered="{!intNumOfPeriods > 4}"/>
+                                        </apex:panelGrid>
+                                    </td>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!blnHasReinstatementFee}">
+                                    <td>
+                                        <apex:outputText value="{!objQuoteProductWrapper.record.Reinstatement__c}"/>
+                                    </td>
+                                </apex:outputPanel>
+                                
+                                <td>
+                                  <apex:outputText value="{0,number,#,##0}">
+                                       <apex:param value="{!objQuoteProductWrapper.record.Original_Net_License_Value__c }"/>
+                                    </apex:outputText>
+                                   
+                                </td>
+                                
+                                <td>
+                                     <apex:outputText value="{0,number,#,##0}">
+                                       <apex:param value="{!objQuoteProductWrapper.record.Revised_Net_License_Value__c }"/>
+                                    </apex:outputText>
+                                    
+                                   
+                                </td>
+                                <td>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Lic_Invoice__c}"/>
+                                </td>
+                                
+                                <td>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Maintenance_Start_Date__c}"/>
+                                </td>
+                                <td>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Maintenance_End_Date__c}"/>
+                                </td>
+                                <td>
+                                    <apex:outputText value="{0,number,#,##0}">
+                                       <apex:param value="{!objQuoteProductWrapper.record.Previous_Line_Maintenance_Value__c }"/>
+                                    </apex:outputText>
+                                                                     
+                                </td>
+                                <td>
+                                    <apex:panelGrid columns="2">
+                                    
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 0}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Genesys_Care_Rate__c}" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year1_Increase__c}" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 0}">
+                                            <apex:outputText value="{0,number,#,##0}">
+                                       <apex:param value="{!objQuoteProductWrapper.record.Maintenance_Due__c}"/>
+                                    </apex:outputText>
+                                         
+                                         
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 1}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year2_CareRatePercent__c}" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year2_Increase__c}" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 1}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year2_Maintenance_Due__c}"/>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 2}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year3_CareRatePercent__c}" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year3_Increase__c}" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 2}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year3_Maintenance_Due__c}"/>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 3}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year4_CareRatePercent__c}" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year4_Increase__c}" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 3}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year4_Maintenance_Due__c}"/>
+                                        </apex:panelGroup>
+                                        
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 4}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year5_CareRatePercent__c}" rendered="{!quote.Increase_type__c == 'Genesys Care Rate'}"/>
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year5_Increase__c}" rendered="{!quote.Increase_type__c != 'Genesys Care Rate'}"/>
+                                        </apex:panelGroup>
+                                        <apex:panelGroup rendered="{!intNumOfPeriods > 4}">
+                                            <apex:outputField value="{!objQuoteProductWrapper.record.Year5_Maintenance_Due_Display__c}"/>
+                                        </apex:panelGroup>
+                                    </apex:panelGrid>
+                                </td>
+                                <td>
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Comment__c}"/>
+                                </td>
+                                <td style="width: 100px;
+                                            {!CASE(objQuoteProductWrapper.Record.Contract_Line_Update_Status__c,
+                                                                        'Drop','background-color:#FF5C5C',
+                                                                        'Retired','background-color:#FF5C5C',
+                                                                        'Downsize','background-color:#FF5C5C',
+                                                                        'Split','background-color:#FFB84D',
+                                                                        'Shelved','background-color:#FFB84D',
+                                                                        '')}">
+                                    <apex:outputField value="{!objQuoteProductWrapper.record.Contract_Line_Update_Status__c}"/>
+                                </td>
+                            </tr>
+                            <apex:variable value="{!rowNumLevel1 + 1}" var="rowNumLevel1"/>
+                        </apex:repeat>
+                    </apex:repeat>
+                  
+                    </tbody>
+                </table>
+            </apex:outputPanel>
+        </apex:pageBlock>
+</apex:page>

@@ -1,0 +1,47 @@
+<apex:page showHeader="false" sidebar="false" controller="CasesListViewPortal" >   
+   <apex:stylesheet value="{!$Resource.GenesysExtendedExternalCss}"/> 
+   
+    <apex:outputPanel id="casesPanel">    
+     <apex:form >
+        
+            <apex:actionFunction rerender="casesPanel" name="lazyLoad"
+                action="{!lazyLoad}" />
+            <apex:actionStatus startText=" Processing the stuff "
+                stopText="" id="counterStatus">
+                <apex:facet name="start">Processing...
+                            <img src="/apexpages/devmode/img/saveStatus.gif" />
+                </apex:facet>
+                <apex:facet name="stop">
+          
+                </apex:facet>
+            </apex:actionStatus>
+            
+            <apex:pageBlock id="mycases">
+                <apex:outputPanel rendered="{!!activated}">
+                    <apex:image value="/img/loading.gif" />
+                    Loading... 
+                </apex:outputPanel>
+                
+              <apex:outputPanel rendered="{!activated}">
+                 <apex:pageBlockTable value="{!HomePageCases}" var="case" style="font-size: .9em;">
+                      <apex:column style="text-decoration:underline" headerValue="Case Number">  
+                       
+                         <apex:outputLink value="/customercare/CaseDetailAdminPortal?id={!case.Id}" target="_blank" rendered="{!case.RecordType.DeveloperName=='Genesys_Admin_Case'}" >{!case.CaseNumber}</apex:outputLink> 
+                         
+                         <apex:outputLink value="/customercare/CaseDetail?id={!case.Id}" target="_blank" rendered="{!OR(case.RecordType.DeveloperName=='Genesys_Product_Case', case.RecordType.DeveloperName=='Premises_Service_Request')}" >{!case.CaseNumber}</apex:outputLink>        
+                         
+                         <apex:outputLink value="/customercare/CaseDetailCloudPortal?id={!case.Id}" target="_blank" rendered="{!BEGINS(case.RecordType.DeveloperName,'Genesys_Cloud_')}" >{!case.CaseNumber}</apex:outputLink>                 
+                    
+                     </apex:column>
+                     <apex:column value="{!case.Subject}" headerValue="Subject"/>
+                     <apex:column value="{!case.Date_Modified_Closed__c}" headerValue="Date Modified"/>
+                 </apex:pageBlockTable>                       
+                </apex:outputPanel>
+            </apex:pageBlock>
+        
+        </apex:form>
+    </apex:outputPanel>
+    <script>
+        setTimeout(lazyLoad, 1000);
+    </script>
+</apex:page>

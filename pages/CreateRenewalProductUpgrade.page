@@ -1,0 +1,124 @@
+<apex:page id="pg" title="Quote : {!quote.Name}" controller="CreateRenewalProductUpgrade" tabStyle="BigMachines__Quote__c" sidebar="false">       
+
+
+ <c:CreateQuoteHeader />
+  <apex:form >
+ 
+        <apex:sectionHeader title="Quote Edit" subtitle="{!quote.Name}"/><apex:inputText style="position:absolute;top:-1000px;"/>
+       
+ 
+ <!-- Import Necessary Jquery js File and StyleSheets-->  
+   <apex:includeScript value="{!URLFOR($Resource.jQueryn, 'js/jquery-1.6.2.min.js')}"/>  
+   <apex:includeScript value="{!URLFOR($Resource.jQueryn, 'js/jquery-ui-1.8.16.custom.min.js')}"/>  
+   <apex:includeScript value="{!URLFOR($Resource.jqPlugin1, '/jquery.blockUI.js')}"/>  
+   <apex:stylesheet value="{!URLFOR($Resource.jQueryn, 'css/ui-lightness/jquery-ui-1.8.16.custom.css')}"/>  
+     
+     <script type="text/javascript">
+        function selectAllCheckboxes(obj,receivedInputID){
+            var inputCheckBox = document.getElementsByTagName("input");                  
+            for(var i=0; i<inputCheckBox.length; i++){          
+                if(inputCheckBox[i].id.indexOf(receivedInputID)!=-1){                                     
+                    inputCheckBox[i].checked = obj.checked;
+                }
+            }
+        }
+    </script>
+
+
+   <script>  
+     $j = jQuery.noConflict();  
+     //function to block the whole page  
+     function blockPage(){   
+       $j.blockUI({ message: '<img src="/img/loading32.gif" /><h1> Loading...</h1>',   
+         css: {   
+          border: 'none',   
+          padding: '15px',   
+          '-webkit-border-radius': '10px',   
+          '-moz-border-radius': '10px',   
+          opacity: .9  
+         }   
+       });   
+       return false;  
+     }  
+     //function to unblock the page  
+     function unblockPage(){  
+       $j.unblockUI();  
+     }  
+   </script>   
+  
+  
+   
+    <c:QuoteTabPanel QuoteId="{!quote.id}" selectedTab="Products Upgrade" showHeader="false" rendered="{!quote.Id != ''}"/>
+    
+    <apex:actionStatus onstart="blockPage()" onstop="unblockPage()" id="blockUI"/> 
+    <apex:pageBlock title="Available Upgrades (Select the Products)" id="pgblk"> 
+     
+      <apex:pageBlockButtons >
+         <apex:commandButton value="Upgrade" action="{!processSelected}" rerender="table1,table" status="blockUI"/>
+      </apex:pageBlockButtons>
+ 
+
+      <apex:pageBlockTable value="{!productList}" var="eachRecord"   id="table">
+            
+             <apex:column >
+                <apex:facet name="header">
+                   <apex:inputCheckbox onclick="selectAllCheckboxes(this,'inputId')"/>
+                </apex:facet>
+              
+                <apex:inputCheckbox value="{!eachRecord.selected}" id="inputId"/>
+             </apex:column>
+                     
+            <apex:column value="{!eachRecord.product.APN_Number__c}">
+                <apex:facet name="header">From Part Number</apex:facet>
+             </apex:column>
+            
+            <apex:column value="{!eachRecord.product.Product_Description__c}">
+               <apex:facet name="header">From Part Description</apex:facet>
+             </apex:column>
+   
+            <apex:column value="{!eachRecord.product.BigMachines__Product__r.Product_Upgrade__r.APN_Number__c}" style="background-color:#7FFFD4">
+              <apex:facet name="header">Upgrade Part Number</apex:facet>
+            </apex:column>
+                 
+            <apex:column value="{!eachRecord.product.BigMachines__Product__r.Product_Upgrade__r.description}"  style="background-color:#7FFFD4">
+              <apex:facet name="header">Upgrade Part Description</apex:facet>
+            </apex:column>
+    
+    
+    
+    
+    
+      </apex:pageBlockTable>
+     
+     
+      <br/>
+      <br/>
+             
+     </apex:pageBlock>
+      </apex:form>
+    
+     <apex:pageBlock title="Products Upgraded" id="pgblk1"> 
+     
+     <apex:pageBlockTable value="{!selectedProducts}" var="eachRecord1" id="table1">
+             
+            <apex:column />
+              <apex:column value="{!eachRecord1.APN_Number__c}">
+                <apex:facet name="header">From Part Number</apex:facet>
+             </apex:column>
+            
+            <apex:column value="{!eachRecord1.Product_Description__c}">
+               <apex:facet name="header">From Part Description</apex:facet>
+             </apex:column>
+   
+            <apex:column value="{!eachRecord1.BigMachines__Product__r.Product_Upgrade__r.APN_Number__c}" style="background-color:#7FFFD4">
+              <apex:facet name="header">Upgrade Part Number</apex:facet>
+            </apex:column>
+                 
+            <apex:column value="{!eachRecord1.BigMachines__Product__r.Product_Upgrade__r.description}"  style="background-color:#7FFFD4">
+              <apex:facet name="header">Upgrade Part Description</apex:facet>
+            </apex:column>
+              
+          </apex:pageBlockTable>
+         </apex:pageBlock>
+       
+          </apex:page>

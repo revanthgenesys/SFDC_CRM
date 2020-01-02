@@ -1,0 +1,70 @@
+<apex:page controller="LookupController" sidebar="false" showheader="false">
+      <apex:form id="form" >  
+    <script language="javascript">
+   window.onload = new function() 
+   { 
+        var winMain=window.opener;
+      // bring popup window to front
+      window.focus(); 
+      var ele=document.getElementById('{!$Component.form.block.section.searchText}');
+        //      alert(ele);
+      if (ele)
+      {
+         ele.focus();
+      }
+   }
+   
+   function fillIn(name, id)
+   {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      var ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield}');
+      ele.value=name;
+      ele=winMain.document.getElementById('{!$CurrentPage.parameters.idfield}');
+      ele.value=id;
+      CloseWindow();
+   }
+
+   function CloseWindow()
+   {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      window.opener.test();
+      winMain.closeLookupPopup();
+   }
+</script>
+    <apex:messages />
+     <div style="width 100%">
+        <apex:pageBlock title="Lookup" id="block">
+           
+          <apex:pageBlockSection id="section">
+              Enter search text and click Go<br/>
+              <apex:inputText value="{!searchStr}" id="searchText"/>
+              <apex:commandButton value="Go" reRender="results"/>
+          </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock id="results">
+          <apex:pageBlockSection columns="1">
+              <apex:pageBlockTable value="{!objects}" var="res">
+                <apex:column headerValue="{!fieldNames[1]}">
+                  <apex:outputLink value="#" onclick="fillIn('{!JSENCODE(res[fieldAPINames[1]])}', '{!res[fieldAPINames[0]]}')">{!res[fieldAPINames[1]]}</apex:outputLink>       
+                </apex:column>
+                <apex:column headerValue="{!fieldNames[2]}" value="{!res[fieldAPINames[2]]}" rendered="{!fieldNames.size >= 3}"/>
+                <apex:column headerValue="{!fieldNames[3]}" value="{!res[fieldAPINames[3]]}" rendered="{!fieldNames.size >= 4}"/>
+                <apex:column headerValue="{!fieldNames[4]}" value="{!res[fieldAPINames[4]]}" rendered="{!fieldNames.size >= 5}"/> 
+                <apex:column headerValue="{!fieldNames[5]}" value="{!res[fieldAPINames[5]]}" rendered="{!fieldNames.size >= 6}"/> 
+              </apex:pageBlockTable>    
+          </apex:pageBlockSection>
+        </apex:pageBlock>
+        <button type="button" onclick="CloseWindow();">Close Window</button>
+     </div> 
+
+    </apex:form> 
+</apex:page>

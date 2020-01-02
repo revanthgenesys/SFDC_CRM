@@ -1,0 +1,1432 @@
+<apex:page controller="clsPOCEngagementRequest" tabStyle="Opportunity" sidebar="false">
+<script>function setFocusOnLoad() {}</script>
+    <style>
+       /* popup_box DIV-Styles  Start*/
+        #popup_box {
+            display:none; /* Hide the DIV */
+            position:fixed;  
+            _position:absolute; /* hack for internet explorer 6 */  
+            height:700px;
+            width:600px;  
+            background:#FFFFFF;  
+            left: 300px;
+            top: 50px;
+            z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+            margin-left: 15px;  
+           
+            /* additional features, can be omitted */
+            border:2px solid #1797C0;      
+            padding:15px;  
+            font-size:15px;  
+            -moz-box-shadow: 0 0 5px #ff0000;
+            -webkit-box-shadow: 0 0 5px #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+           
+        }
+        
+        #container {
+            background: #d2d2d2; /*Sample*/
+            width:100%;
+            height:100%;
+        }
+        
+        a{ 
+        cursor: pointer; 
+        text-decoration:none; 
+        }
+        
+        /* This is for the positioning of the Close Link */
+        #popupBoxClose {
+            font-size:20px;  
+            line-height:15px;  
+            right:5px;  
+            top:5px;  
+            position:absolute;  
+            color:#6fa5e2;  
+            font-weight:500;      
+        }
+        
+        /* popup_box DIV-Styles  Close*/
+        /*to hide user type*/
+        .clsUser select{
+            visibility: hidden !important;
+            display: block !important;
+            }
+            div.tooltip {
+            width: 20px;
+            float: right;
+            display:inline;
+        }
+        
+        .clsSolutionCon select{
+            visibility: hidden !important;
+            display: block !important;
+            }
+            
+            
+         div.tooltip span {
+            display: none;
+            font-weight:normal;
+            text-align:left;
+            padding: 3px 5px;
+            margin-left: 8px;
+            width: 250px;
+        }
+        
+        div.tooltip:hover span {
+            display: inline;
+            position: absolute;
+            border: 1px solid #cccccc;
+            background: #FFC;
+            color: #000000;
+            z-index:10000;
+        }
+        .Mylinks
+        {
+            color:#000000;            
+        }
+        a:visited
+        {
+            color:Blue;           
+        }
+        .pbTitle {
+        white-space: nowrap;
+    }   
+    </style> 
+  <script>
+    function colorPageBlock(pageblock, color) {
+    if (pageblock != null) pageblock.firstChild.style.cssText = "background-color: " + color + ";";
+    }
+  </script>
+  
+  <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+  <script type="text/javascript">
+   var j$ = jQuery.noConflict();
+   var sAssignTo;
+   var sWowType; 
+   var isPOCattachment = '{!blnPOCAttachment}';  
+   var list_MainProduct = '{!list_mainProducts}';
+   var scopeDoc = '{!blnIsAttachment}';  
+   
+   j$(document).ready( function() {
+   
+    //alert(list_MainProduct);
+     sAssignTo = '{!sAssignTo}';
+     sWowType= '{!sWowStatus}';  
+     
+     /*Check Status for Virtual Team*/
+     if('{!SelectedStatusType}' == 'Approve')
+     {
+       j$('.clsRejectedStatus').css('display','none');
+       VisibilityVirtualSection('Approve');
+     }
+     else
+       VisibilityVirtualSection('Reject');  
+       
+          
+     // When site loaded, load the Popupbox First
+     //loadPopupBox();
+
+     j$(".clsBoxClose").click( function() {           
+        unloadPopupBox();
+     });
+   
+     j$('#container').click( function() {
+        //unloadPopupBox();
+     });
+      if('{!SelectedStatusType}' == 'Approve')
+       j$('.clsRejectedStatus').css('display','none');
+       
+      if(isFnUsecase == 'true')
+        j$('.clsFnUseCaseAct_RO').css('display','block');
+      else
+        j$('.clsFnUseCaseAct_RO').css('display','none');  
+       
+    });
+    /* function SelectedStatusType(obj)
+    {
+      var oType = j$(obj).val();
+      
+      if(oType == 'Reject')
+        j$('.clsRejectedStatus').css('display','block');
+      else
+        j$('.clsRejectedStatus').css('display','none');  
+    }*/   
+    function CheckOwnerSelection()
+    {    
+      var isRetrn = true;            
+      var ExpectedDiscoveryStart =j$('.clsExpectedDiscoveryStart');
+      var KeyBusinessObjective=j$('.clsKeyBusinessObjective');
+      var VTUsersList = j$('[id$=hdnVirUsr]'); 
+     // var POCApproved= j$('.clsPOCApproved').is(':checked'); 
+      var POCApproved= j$(".clsSelectedStatus input[type='radio']:checked").val();        
+      var ReasonforRejecting=j$('.clsReasonforRejecting');
+      var POCSuccess=j$('.clsPOCSuccess').is(':checked');
+      var Comment=j$('.clsComment');      
+      var ReviewPOC=j$('.sclsReviewPOC').is(':checked');
+      var ListSolProd = j$('[id$=hdnSolProd]'); 
+      if(ExpectedDiscoveryStart.val()=='') 
+          { 
+             alert("Please enter Expected Start date."); 
+             isRetrn = false;
+         } 
+      else if (KeyBusinessObjective.val()=='') 
+          {  
+          alert("Please enter Key Business Objective.");
+          isRetrn = false;
+          }
+      else if(sAssignTo == '' && j$('.clsHghLvlReq').val() == '')
+          {
+            alert('Please fill High Level Details of your Request.');
+            isRetrn = false;
+          }
+      else if(sAssignTo == '' && j$('.clsTypeofPOCReq').val() == '')
+      {
+        alert('Please select Type of POC.');
+        isRetrn = false;
+      }
+      else if(sAssignTo == '' && ReviewPOC != true)
+      {
+        alert('Please confirm that you have reviewed the POC Guide and Approval Process in Game.');
+        isRetrn = false;
+      }
+        else if(sAssignTo == '' && ListSolProd.length==0)
+      {
+        alert('Please select atleast one Solution Type and Main Product.');
+        isRetrn = false;
+      }
+      /*else if(sAssignTo =='' && isPOCattachment == 'false')
+          {
+            alert('Please attach Scope document.');
+            isRetrn = false;
+          }  */  
+          
+      else if(scopeDoc == 'false')                     
+         {
+           alert("Please add your POC and Success Criteria docs where the button says 'Attach Scope Documents'");
+           isRetrn = false; 
+         }         
+      else if(sAssignTo == '')
+          {  
+           alert("POC Engagement Form has been submitted successfully.");
+           isRetrn = true;
+           }       
+      //else if ((sAssignTo =='Lead Assign'|| sAssignTo =='Virtual Team') && VTUsersList.length==0) 
+      else if ((sAssignTo =='Lead Assign') && VTUsersList.length==0 && j$(".clsSelectedStatus input[type='radio']:checked").val()=='Approve') 
+          {   
+           alert('Please assign Virtual team.');
+           isRetrn = false;
+           } 
+      /*else if(sAssignTo =='Virtual Team' && isPOCattachment == 'false')
+          {
+            alert('Please attach Scope document.');
+            isRetrn = false;
+          }*/      
+      else if (sAssignTo =='Lead Assign' && POCApproved=='Reject' && ReasonforRejecting.val()=='') 
+          {
+          alert('Please insert Reason for Rejecting POC.');
+          isRetrn = false;
+          }           
+     //else if (sAssignTo =='Virtual Team for Result' && POCSuccess==false && Comment.val()=='')
+     else if (sAssignTo =='Virtual Team' && Comment.val()=='')
+         {
+         alert("Please insert Comment.");
+         isRetrn = false; 
+         } 
+         
+         
+      return isRetrn ;
+    }       
+    
+    function ValidationForSCVT() {       
+     var isExist = true;    
+     var arrUserList =j$('.clsSolutionCon');
+     var arrVTList =j$('.clsSolutionCon'); 
+     
+      if(j$('.clsSolutionCon').children('.lookupInput').children().val() == '')
+       {
+         isExist= false;
+         alert('Please select Vitual team.');
+       }
+       else if (j$('.clsSolutionConType').val()==''){
+         alert('Please select Type of Vitual team');
+         isExist= false;
+     }
+     
+     // check duplicate user in virtual team list 
+     var VTUsersList = j$('[id$=hdnVirUsr]');//array of users
+     var selectUserVT = j$('.clsSolutionCon').children('[id*=lkid]').val();//single user
+     for(var i=0;i<VTUsersList.length;i++)
+     {
+       if(j$(VTUsersList[i]).val().trim().indexOf(selectUserVT.trim())>-1)
+       {
+         // selected user alreday exist in the Virtual List
+         isExist= false;
+         alert('Selected user already present in the list.');
+       }
+     }       
+      return isExist;
+    }
+       
+    
+    function loadPopupBox(fType) 
+    {    
+      // To Load the Popupbox
+      
+      //afFileDescription(fType);
+      //j$('[id$=hdnFileType]').val(fType);     
+      
+      
+          if(fType == 'POC Scope' || fType == 'Custom Use Case'){
+          j$('[id$=hdnFileType]').val(fType);
+          }
+          j$('#popup_box').fadeIn("slow");
+          j$("#container").css({ // this is just for style
+             "opacity": "0.3" 
+           }); 
+     
+      return false;       
+    } 
+    function unloadPopupBox() 
+    {    
+     // TO Unload the Popupbox
+     j$('#popup_box').fadeOut("slow");
+     j$("#container").css({ // this is just for style       
+        "opacity": "1" 
+     });
+     return false;
+    }
+    function ValidationForSolutionProduct() {       
+     var isExist = true;     
+      if(j$('.clsSolutionType').val() == '')
+       {
+         isExist= false;
+         alert('Please select Solution Type.');
+       }
+     
+      return isExist;
+    }
+    function SelectedStatusType(obj)
+    {
+      var oType = j$(obj).val();
+      
+      if(oType == 'Reject')
+      {
+        j$('.clsRejectedStatus').css('display','block');
+        VisibilityVirtualSection('Reject');
+        
+        afDeleteVTUsr();
+      }  
+      else
+      {
+        j$('.clsRejectedStatus').css('display','none');
+        VisibilityVirtualSection('Approve');
+      }  
+    }
+    function VisibilityVirtualSection(sType)
+        {
+          if(sType == 'Reject')
+          {
+            var objChildArraySE = j$('.clsSolutionCon').children('.lookupInput').children();
+            j$(objChildArraySE[2]).hide();
+            j$(objChildArraySE[0]).attr('disabled',true);
+            j$('.clsSolutionConType').attr('disabled',true);
+            j$(objChildArraySE[0]).val('');
+            j$('.clsSolutionConType').val('');
+            j$('[id$= btnAddVTUsers]').hide();
+          }
+          if(sType == 'Approve')
+          {
+            var objChildArraySE = j$('.clsSolutionCon').children('.lookupInput').children();
+            j$(objChildArraySE[2]).show();
+            j$(objChildArraySE[0]).attr('disabled',false);
+            j$('.clsSolutionConType').attr('disabled',false);
+            j$('[id$= btnAddVTUsers]').show();
+          }
+        }
+
+    /*function CheckMainProduct()
+    {
+      //alert('1');
+      var retrn = true;
+      var objSolutionType = j$('.clsSolutionType').val();
+      
+      alert(list_MainProduct);
+      
+     var orgList = list_MainProduct.substring(1,list_MainProduct.length-1);
+
+    
+      var arrSavedProd = orgList.split(',');
+      //alert(arrSavedProd )
+      var listPrd  = j$('[id$=idMainProduct_selected]').children();
+      
+
+      for(var i=0;i<arrSavedProd.length;i++)
+      {
+        //alert(arrSavedProd[i]);
+        var arrPrds = arrSavedProd[i].split(';');
+        //alert(arrPrds[0]);
+        //alert(arrPrds[1]);
+        
+        alert(listPrd.length);
+        for(var j=1;j <= listPrd.length;j++)
+        {
+          //alert(listPrd);
+          var lstPrd2 = j$(listPrd).children()[j]; 
+          j$(lstPrd2).text();
+          
+          //alert(j$(lstPrd2).text());
+          //alert(arrPrds[1]);
+          
+          if(objSolutionType == arrPrds[0] && j$(lstPrd2).text() == arrPrds[1])
+          {
+            alert('There are duplicate values.');
+            retrn = false;
+          }
+        }
+        
+
+      }
+
+      return retrn;
+    }*/
+    
+       function CheckFnUseCaseInput()
+        {
+          var isReturn = true;
+          var arrLinks = j$('.clsFNUseCaseInput');
+          var arrAsIs = j$('.clsAsIsFnUseCase');
+          var arrDesc = j$('.clsDescFnUseCase');
+          
+          for(var i=0;i<arrLinks.length;i++)
+          {
+            if(j$(arrLinks[i]).val() == '')
+              isReturn = false;
+          }
+          if(isReturn == false)
+           alert('Please select functional use case.');
+           
+          for(var i=0;i<arrLinks.length;i++)
+          {
+              if(j$(arrAsIs[i]).val() == '100')
+                  j$(arrDesc[i]).val('');
+             //if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).is(':checked') == false && j$(arrDesc[i]).val() == '')
+             if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).val() != '100' && j$(arrDesc[i]).val() == '')
+             {
+               isReturn = false;
+               alert('Please fill short description of changes in Functional Use Case.');
+             }
+          }
+           
+          return isReturn; 
+        }
+        
+        
+        function CheckFnUseCase(obj)
+        {
+          if(j$(obj).is(':checked') == true)
+          {
+            j$('.clsFnUseCaseAct').css('display','block');         
+          }
+          else
+            j$('.clsFnUseCaseAct').css('display','none');
+        }
+    function GetAttachmentId(obj)       
+    {
+      //alert(obj);
+      j$('[id$=hdnFileId]').val(obj);
+      //return false;
+    }
+  </script>
+ <apex:form > 
+ 
+  <apex:pagemessages rendered="{!blnShowErrorMsg}" />
+  <apex:pagemessages rendered="{!blnErrorMsRequFld}" />
+  <apex:inputHidden value="{!sAttachmentId}" id="hdnFileId" />
+  <apex:actionFunction name="afDeleteVTUsr" action="{!DeleteVirtualUsers}"  status="FileType" >
+     
+    </apex:actionFunction>   
+   <!-- Hidden field to get the Select file type for Attachment -->
+   <apex:inputHidden value="{!FileDescType}" id="hdnFileType" />
+    
+  <div id="popup_box" style="height:200px;margin-top:200px;">   <!-- OUR PopupBox DIV-->
+    <!--<APEX:PAGEMESSAGES />-->
+    <apex:pageBlock id="pbLive">
+      <div style="float:left;width:10px;color:black;"><a id="popupBoxClose" class="clsBoxClose">X</a></div>
+        <table style="width:100%;margin-top:30px">
+          <tr><td>
+            
+            <apex:outputPanel id="Panel"> 
+        
+          <div id="upload" class="upload">
+            <table><tr>
+              <td><apex:inputFile id="fileToUpload" value="{!fileBody}" filename="{!fileName}" styleClass="input-file"/></td> 
+              <td><apex:commandButton value="Upload Attachment" action="{!uploadFile}" onclick="j$(this).hide();"/></td>
+            </tr></table>
+          </div>   
+     </apex:outputPanel> 
+          </td></tr>
+        </table>
+    </apex:pageBlock>
+   </div><!-- Close PopupBox DIV-->
+  
+  <!-- POC Reuqest Form Start -->
+  <apex:pageblock title="POC Engagement Request" rendered="{!blnMain}">
+    <apex:pageBlockButtons >
+       <apex:commandButton value="Save" action="{!SaveWowDetails}" disabled="{!btnSave}"/>
+       <apex:commandButton value="Close/Submit" action="{!SubmitWowDetails}" disabled="{!btnSubmit}" onClick="return CheckOwnerSelection();"/>
+       </apex:pageBlockButtons>
+    <apex:pageBlockSection id="pbsOpportunityDtl" title="Opportunity Details" columns="2" >
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Opportunity Owner" />
+       <apex:outputText value="{!objWrapPOC.AEName}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Opportunity Name" />
+       <apex:outputText value="{!objWrapPOC.OpportunityName}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Stage" />
+       <apex:outputText value="{!objWrapPOC.Stage}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Platform Type" />
+       <apex:outputText value="{!objWrapPOC.PlatformType}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Account Name" />
+       <apex:outputText value="{!objWrapPOC.CustomerName}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Business Partner" />
+       <apex:outputText value="{!objOpportunity.BusinessPartner__r.Name}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Industry" />
+       <apex:outputText value="{!objWrapPOC.Industry}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem />
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Primary Solution Category" />
+       <apex:outputText value="{!objWrapPOC.PrimarySolution}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Closed Date" />
+       <apex:outputText value="{!objWrapPOC.ExpectedClosedDate}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Offer Type" />
+       <apex:outputText value="{!objOpportunity.Lines_of_Businesses__c}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Market Segment" />
+       <apex:outputText value="{!objOpportunity.Owner.Segment__c}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Key Account Type" />
+       <apex:outputText value="{!objOpportunity.Account.Key_Account_Group__c}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       
+     </apex:pageBlockSectionItem>
+     
+    <apex:pageBlockSectionItem >
+       <apex:pageBlockSection id="pbsOnPremiseAmt" title="On-Premise Opportunity Amounts" columns="1" collapsible="false">
+    </apex:pageBlockSection>
+    </apex:pageBlockSectionItem>
+    <apex:pageBlockSectionItem >
+       <apex:pageBlockSection id="pbsCloudAmt" title="Cloud Opportunity Amounts"  columns="1" collapsible="false">
+     </apex:pageBlockSection>
+    </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Total Amount" />
+          <apex:outputField value="{!objPOCReqFrm.Total_Amount__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Bookings" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Annual_Contract_Value_new__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="License Amount" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_License_Amount__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Annual Contract Value" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Annual_Contract_Value__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Hardware (Business Edition -Premise)" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Hardware_Total__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Total Contract Value (TCV)" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Total_Annual_Contract_Value__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Professional Service Amount (RDP)" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Professional_Service_Amount_RDP__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Professional Services-Cloud" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Total_PS_Support__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Genesys Care Amount" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Genesys_Care_Amount__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Committed Monthly Recurring Rev (CMRR)" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Monthly_Commitment__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Term License Amount (ACV)" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Term_License__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Estimated Usage Agreements (EUA)" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Estimated_Usage_Agreements_EUA__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Term License Amount (TCV)" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Term_License_Amount_TCV__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Potential Pipeline" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_Potential_Pipeline__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="License Equivalency" />
+          <apex:outputField value="{!objPOCReqFrm.Opp_License_Equivalency__c}" />
+         </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+     <apex:pageBlockSection id="pbsWowSubRegionalLeader" title="Sub Regional Leaders">
+        <apex:pageBlockSectionItem >
+         <apex:pageBlockSection columns="1"  > 
+               <apex:pageBlockSectionItem >
+               <apex:outputLabel ></apex:outputLabel>
+                 <apex:pageBlockTable value="{!list_AssignedLeaders}" var="Leader" style="width:25%" >     
+                  <apex:column headerValue="Sub Regional Leaders">
+                     <apex:OutputField value="{!Leader.User_Name__c}"/>
+                  </apex:column>
+                  <apex:column headerValue="Region">
+                     <apex:OutputField value="{!Leader.Region__c}"/>
+                  </apex:column>
+                  <apex:column headerValue="Sub Region">
+                     <apex:OutputField value="{!Leader.SubRegion__c}"/>
+                  </apex:column>   
+                  <apex:column headerValue="Segment">
+                     <apex:OutputField value="{!Leader.Segment__c}"/>
+                  </apex:column> 
+                 </apex:pageblockTable>
+                </apex:pageBlockSectionItem>
+           </apex:pageBlockSection>
+           </apex:pageBlockSectionItem> 
+    </apex:pageBlockSection>
+    <apex:pageBlockSection id="pbsWowReqData" title="POC Request" rendered="{!AESection}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Expected Start Date" />
+       <apex:inputField value="{!objPOCReqFrm.Expected_Discovery_Start__c}" required="true" styleClass="clsExpectedDiscoveryStart"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Key Business Objective" />
+       <apex:inputField value="{!objPOCReqFrm.Primary_Business_Objectives__c}" required="true" styleClass="clsKeyBusinessObjective" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="High Level Details of your Request" />
+       <apex:inputField value="{!objPOCReqFrm.High_Level_Request_details__c }" required="true" style="width:400px;height:100px;" styleClass="clsHghLvlReq"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem />
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Type of POC" />            
+         <apex:inputField value="{!objPOCReqFrm.POC_Types__c}" required="true" styleClass="clsTypeofPOCReq"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Please confirm that you have reviewed the POC Guide and Approval Process in Game" />            
+         <apex:inputField value="{!objPOCReqFrm.Review_POC_Guide__c}"  styleClass="sclsReviewPOC" required="true"/>
+     </apex:pageBlockSectionItem>    
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="PS Involvement Required?" />            
+         <apex:inputField value="{!objPOCReqFrm.PS_Involvement_Required__c}" styleClass="sclsPSInvolve" />
+     </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem >
+         <apex:outputLabel value="PS Billable?"/>            
+         <apex:inputField value="{!objPOCReqFrm.PS_Billable__c}"  styleClass="sclsPSBill" required="true"/>
+     </apex:pageBlockSectionItem> 
+     
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Targeted End Date"/>            
+         <apex:inputField value="{!objPOCReqFrm.TargetedEndDate__c}"  styleClass="clsTrgEndDate" />
+     </apex:pageBlockSectionItem> 
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="POC Owner"/>            
+         <apex:inputField value="{!objPOCReqFrm.POCOwner__c}"  styleClass="clsPOCOwner" />
+     </apex:pageBlockSectionItem> 
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="POC Funding"/>            
+         <apex:inputField value="{!objPOCReqFrm.POCFunding__c}"  styleClass="clsPOCFund"/>
+     </apex:pageBlockSectionItem> 
+     <apex:pageBlockSectionItem >
+         
+     </apex:pageBlockSectionItem>
+     
+    <apex:pageBlockSectionItem >
+        <apex:pageBlockSection columns="2">
+           <apex:pageBlockSectionItem >
+                <apex:pageBlockSection columns="3">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Solution Type" />
+                        <apex:inputField value="{!objPOCReqFrm.Primary_Solution__c}" styleClass="clsSolutionType" required="true">                         
+                        </apex:inputField>                
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Main Product" />
+                        <apex:inputField id="idMainProduct" value="{!objPOCReqFrm.Main_Product__c}" styleClass="clsMainProduct" required="true">                        
+                        </apex:inputField>
+                    </apex:pageBlockSectionItem> 
+                    <apex:pageBlockSectionItem dataStyle="width:20px">
+                     <apex:commandlink value="Add" action="{!GetSolutionProductList}" styleClass="btn" onClick="return ValidationForSolutionProduct();"> 
+                   </apex:commandlink>
+            </apex:pageBlockSectionItem>  
+                 </apex:pageBlockSection>   
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem >
+          </apex:pageBlockSectionItem>            
+        </apex:pageBlockSection>
+     </apex:pageBlockSectionItem> 
+     <apex:pageBlockSectionItem />
+      <apex:pageBlockSectionItem rendered="{!list_SolProdList != null}">
+     <apex:pageBlockTable value="{!list_SolProdList}" var="Sol" >
+         <apex:inputHidden value="{!Sol.Id}"/>
+         <apex:column headerValue="Solution Type">
+         <apex:inputHidden id="hdnSolProd" value="{!Sol.Primary_Solution__c}" />       
+         <apex:OutputField value="{!Sol.Primary_Solution__c}"/>
+         </apex:column>   
+         <apex:column headerValue="Main Product">
+         <apex:OutputField value="{!Sol.Products__c}"/>
+         </apex:column>              
+         <apex:column headerValue="Remove">
+         <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveSolutionProduct}" >
+         <apex:param name="CurrentId" value="{!Sol.Id}" assignTo="{!CurrentId}"  /> 
+         <apex:param name="CurrentSolution" value="{!Sol.Primary_Solution__c}" assignTo="{!CurrentSolution}"  /> 
+         <apex:param name="CurrentProduct" value="{!Sol.Products__c}" assignTo="{!CurrentProduct}"  />                
+         </apex:commandLink>
+         </apex:column>        
+         </apex:pageBlockTable>
+             
+    </apex:pageBlockSectionItem>   
+       <apex:pageBlockSectionItem />
+      <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="2">
+         <apex:pageBlockSection columns="1"> 
+             <apex:pageBlockSectionItem >
+               <apex:commandButton value="Attach Scope Documents" onclick="return loadPopupBox('POC Scope');">
+                  <div class="helpOrb tooltip"  style="right:inherit;">
+                <span>
+                  POC and Success Criteria Docs are required for submission.
+                </span>
+              </div>
+               </apex:commandButton>
+             </apex:pageBlockSectionItem>         
+             <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="1">     
+                 <apex:pageBlock title="Attach Scope Document" rendered="{!list_AttachScope != null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                   <apex:repeat value="{!list_AttachScope}" var="adp"> 
+                   <tr ><td > 
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                       </td>
+                      <td>
+                        <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/>
+                      </td>
+                 </tr>
+                 </apex:repeat>
+                </table>
+               </apex:pageBlock>
+            </apex:pageBlockSection>
+         </apex:pageBlockSectionItem>
+         </apex:pageBlockSection> 
+       </apex:pageBlockSection> 
+       </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+
+    <apex:pageBlockSection id="pbsWowReqData_RO" title="POC Request" rendered="{!AESection_RO}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Expected Start Date" />
+       <apex:outputField value="{!objPOCReqFrm.Expected_Discovery_Start__c}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Key Business Objective" />
+       <apex:outputLabel value="{!objPOCReqFrm.Primary_Business_Objectives__c}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="High Level Details of your Request" />
+       <apex:outputField value="{!objPOCReqFrm.High_Level_Request_details__c }"  />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem />
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Type of POC" />            
+         <apex:outputField value="{!objPOCReqFrm.POC_Types__c}"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Please confirm that you have reviewed the POC Guide and Approval Process in Game" />            
+         <apex:outputField value="{!objPOCReqFrm.Review_POC_Guide__c}"  />
+     </apex:pageBlockSectionItem>     
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="PS Involvement Required?" />            
+         <apex:outputField value="{!objPOCReqFrm.PS_Involvement_Required__c}"  />
+     </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem >
+         <apex:outputLabel value="If yes, will PS be billable?" />            
+         <apex:outputField value="{!objPOCReqFrm.PS_Billable__c}" />
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Targeted End Date"/>            
+         <apex:outputField value="{!objPOCReqFrm.TargetedEndDate__c}"  styleClass="clsTrgEndDate" />
+     </apex:pageBlockSectionItem> 
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="POC Owner"/>            
+         <apex:outputField value="{!objPOCReqFrm.POCOwner__c}"  styleClass="clsPOCOwner" />
+     </apex:pageBlockSectionItem> 
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="POC Funding"/>            
+         <apex:outputField value="{!objPOCReqFrm.POCFunding__c}"  styleClass="clsPOCFund"/>
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+     </apex:pageBlockSectionItem>
+     
+    <apex:pageBlockSectionItem rendered="{!list_SolProdList != null}">
+        <apex:pageBlockTable value="{!list_SolProdList}" var="Sol" rendered="{!list_SolProdList!=null}">              
+         <apex:column headerValue="Primary Solution">      
+         <apex:OutputField value="{!Sol.Primary_Solution__c}"/>
+         </apex:column>   
+         <apex:column headerValue="Main Product">
+         <apex:OutputField value="{!Sol.Products__c}"/>
+         </apex:column> 
+         </apex:pageBlockTable>
+        <!--<apex:pageBlockSection columns="4">
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Solution Type" />
+                <apex:outputField value="{!objPOCReqFrm.Primary_Solution__c}" />                   
+            </apex:pageBlockSectionItem>            
+             <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Main product" />
+                <apex:outputField value="{!objPOCReqFrm.Main_Product__c}" />  
+            </apex:pageBlockSectionItem>               
+        </apex:pageBlockSection>-->
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem />
+       <apex:pageBlockSectionItem rendered="{!AttScope}">  
+      <apex:pageBlockSection columns="2" >
+         <apex:pageBlockSection columns="1"> 
+             <apex:pageBlockSectionItem >
+               <apex:commandButton value="Attach Scope Document" onclick="return loadPopupBox('POC Scope');"/>
+             </apex:pageBlockSectionItem>         
+             <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="1">     
+                 <apex:pageBlock title="Attach Scope Document" rendered="{!list_AttachScope != null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                   <apex:repeat value="{!list_AttachScope}" var="adp"> 
+                   <tr ><td > 
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                       </td>
+                      <td>
+                        <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/>
+                      </td>
+                 </tr>
+                 </apex:repeat>
+                </table>
+               </apex:pageBlock>
+            </apex:pageBlockSection>
+         </apex:pageBlockSectionItem>
+         </apex:pageBlockSection> 
+       </apex:pageBlockSection> 
+       </apex:pageBlockSectionItem>
+       
+      <apex:pageBlockSectionItem rendered="{!AttScope!=true}">
+     <apex:pageBlockSection columns="2">
+         <apex:pageBlockSection columns="1">                      
+             <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="1">     
+                 <apex:pageBlock title="Attach Scope Document" rendered="{!list_AttachScope != null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                   <apex:repeat value="{!list_AttachScope}" var="adp"> 
+                   <tr ><td > 
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                       </td>                     
+                 </tr>
+                 </apex:repeat>
+                </table>
+               </apex:pageBlock>
+            </apex:pageBlockSection>
+         </apex:pageBlockSectionItem>
+         </apex:pageBlockSection> 
+       </apex:pageBlockSection> 
+       </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    <!--<apex:pageBlockSection id="pbsWowReqStatus_RO" title="POC Engagement Status" columns="1" rendered="{!StatusSection_RO}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="POC Engagement Status" />
+       <apex:outputField value="{!objPOCReqFrm.POC_Status__c}" />
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>-->
+    
+    
+    <!-- Function Use Case Start -->
+    <apex:pageBlockSection id="pbsAttachmentFnUseCase" title="Business Design – Functional Use-Cases (all offers)" columns="2" rendered="{!VTSection}">
+      
+      <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Use Case Summary" />
+            <apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=40816557" type="image/png" target="_blank">
+            <apex:image value="{!$Resource.Document}" width="30" height="30"/>
+            </apex:outputLink> 
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem />      
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Predefined Use Case">{!list_POCAttachmentsFnUseCase}
+       </apex:outputLabel> 
+       <apex:inputfield value="{!objPOCReqFrm.Is_Functional_Use_Case__c}" styleclass="clsFnUseCaseCHK" onclick="CheckFnUseCase(this);"/>
+      </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem / >     
+      <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsFnUseCaseAct">
+      <apex:pageBlockSection columns="1" rendered="true" collapsible="false"> 
+         <apex:pageBlockSectionItem >
+          <apex:pageBlockSection columns="2" >
+             <apex:pageBlockSectionItem rendered="{!list_POCAttachmentsFnUseCase!=null}"> 
+             <apex:pageBlockTable value="{!list_POCAttachmentsFnUseCase}" var="fun" styleClass="clsFnUseCase">
+              <apex:column headerValue="Functional Use Case">
+                  <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Select the standard functional use cases for this opportunity.">
+                      Functional Use Case
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!fun.FnUseCase__c}" styleClass="clsFNUseCaseInput"/>
+              </apex:column>
+              <apex:column headerValue="Fit %">
+              <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Check if the functional use case is used without any change.">
+                     Fit % 
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!fun.Fit__c}" styleClass="clsAsIsFnUseCase" />
+              </apex:column>
+              <apex:column headerValue="Short description of changes">
+             <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="If the use case could not be used As Is, please provide a short description of require changes.">
+                      Short description of changes
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!fun.Description__c}" styleClass="clsDescFnUseCase" style="width:300px;height:50px;"/>
+              </apex:column> 
+              <apex:column >
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveFunctionalUseCase}" >
+                   <!--<apex:param name="rowIndex" assignTo="{!FnUseCaseRowNumber}" value="{!FnrowNumber}" />--> 
+                   <apex:param name="fncaseid" assignTo="{!FunUseCaseId}" value="{!fun.id}"/>
+                   <apex:param name="fncase" assignTo="{!CurrentFunUseCase}" value="{!fun.Row_Number__c}"/>               
+                 </apex:commandLink>
+              </apex:column> 
+               
+             </apex:pageBlockTable> 
+             </apex:pageBlockSectionItem> 
+             <apex:pageBlockSectionItem >
+             <apex:commandbutton value="Add" action="{!AddFunctionUseCase}" onClick="return CheckFnUseCaseInput();" immediate="true">
+              <div class="helpOrb tooltip"  style="right:inherit;">
+                <span>
+                  Click button to add another functional use case.
+                </span>
+              </div>
+            </apex:commandbutton>
+             </apex:pageBlockSectionItem>
+           </apex:pageBlockSection> 
+        </apex:pageBlockSectionItem>    
+        
+        <!-- Custom Use Case-->
+        
+       </apex:pageBlockSection>
+       </apex:outputPanel>       
+       </apex:pageBlockSectionItem> 
+       <apex:pageBlockSectionItem /> 
+        
+       <apex:pageBlockSectionItem >
+        <!--<apex:pageBlockSection columns="2">         
+           <apex:pageBlockSectionItem >-->
+             <apex:outputLabel value="Custom Use Case ">
+       <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if a custom use case has been used.
+                    </span>
+                </div>  
+              </apex:outputLabel>  
+              <apex:inputField value="{!objPOCReqFrm.Custom_Use_Case__c}" styleClass="clsIsCustUseCase"/>     
+           </apex:pageBlockSectionItem>  
+            
+           <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="1">
+                 <apex:pageBlockSectionItem dataStyle="width:20px">
+              <!--<apex:commandButton value="Attach SC Toolkit" onclick="return loadPopupBox('SCToolkit');"/>-->
+              <apex:commandButton value="Attach Custom Functional Use Case" onclick="return loadPopupBox('Custom Use Case');">
+                <div class="helpOrb tooltip"  style="right:inherit;">
+                        <span>
+                            Press button to upload custom use case description
+                        </span>
+                </div>
+              </apex:commandButton>
+           </apex:pageBlockSectionItem> 
+                 <apex:pageBlockSectionItem >
+                 <apex:pageBlock title="Custom Functional Use Case" rendered="{!list_AttachCustomUseCase!= null}" >
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;width:100%"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                   <apex:repeat value="{!list_AttachCustomUseCase}" var="ast"> 
+                    <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Description} ({!ast.Name})</a><br></br>
+                   </td>
+                             <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!ast.id}');"/></td>
+                     </tr>
+                   </apex:repeat>
+                    </table>
+                   </apex:pageBlock>
+                   </apex:pageBlockSectionItem>
+                 <!--</apex:pageBlockSection>-->
+                 </apex:pageBlockSection>
+              </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+     <!-- Functional Use case End -->
+    
+        
+    
+    
+    <!-- Virtual Team Start-->
+     <apex:pageBlockSection id="pbsAssignment" title="Virtual Team" columns="1" rendered="{!LeadSection}">    
+      <apex:pageBlockSectionItem >
+          <apex:pageBlockSection columns="3" rendered="{!LeadSection}" >
+           <apex:pageBlockSectionItem dataStyle="width:20px">
+           <apex:outputLabel value="Virtual User" />            
+            <apex:inputField value="{!objPOCVT.Solution_Consultant__c}" required="false" styleClass="clsSolutionCon" style="margin-top: -14pt;"/>
+          </apex:pageBlockSectionItem>   
+          <apex:pageBlockSectionItem dataStyle="width:20px">
+           <apex:outputLabel value="Virtual User Type" />
+          <apex:inputField value="{!objPOCVT.Virtual_User_type__c}" styleClass="clsSolutionConType"/>
+          </apex:pageBlockSectionItem>       
+          <apex:pageBlockSectionItem dataStyle="width:20px">
+             <apex:commandlink value="Add" action="{!GetVTUserList}" onclick="return ValidationForSCVT();" styleClass="btn" >   
+                    
+             </apex:commandlink>
+            </apex:pageBlockSectionItem> 
+         </apex:pageBlockSection> 
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="3" rendered="{!blnIsVTListExist}"  >
+         <apex:pageBlockSectionItem >
+             <apex:pageBlockTable value="{!list_VTUserList}" var="VT" styleClass="clsVTList" rendered="{!list_VTUserList != null}">           
+                 <apex:column headerValue="Virtual User">
+                 <apex:inputHidden id="hdnVirUsr" value="{!VT.Solution_Consultant__c}" />
+                 <apex:OutputField value="{!VT.Solution_Consultant__c}"/>
+                 </apex:column>   
+                 <apex:column headerValue="Virtual User Type">
+                 <apex:OutputField value="{!VT.Virtual_User_type__c}"/>
+                 </apex:column>              
+                 <apex:column headerValue="Remove">
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveVTUser}" >
+                 <apex:param name="CurrentVT" value="{!VT.Solution_Consultant__c}" assignTo="{!CurrentVT}"  /> 
+                 <apex:param name="CurrentVTType" value="{!VT.Virtual_User_type__c}" assignTo="{!CurrentVTType}"  />                  
+                 </apex:commandLink>
+                 </apex:column>        
+             </apex:pageBlockTable>
+         </apex:pageBlockSectionItem>
+     </apex:pageBlockSection>
+     </apex:pageBlockSectionItem>
+
+     <apex:pageBlockSectionItem /> 
+     <apex:pageBlockSectionItem >
+              <apex:selectRadio value="{!SelectedStatusType}"  onclick="SelectedStatusType(this);"  styleClass="clsSelectedStatus">
+               <apex:selectOptions value="{!StatusTypes}">
+               </apex:selectOptions>
+              </apex:selectRadio>                         
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem />
+          <apex:pageBlockSectionItem >
+              <apex:outputPanel styleClass="clsRejectedStatus" style="vertical-align:top;">
+                  <apex:outputLabel value="Reason for rejecting POC " style="vertical-align:top"/>
+                  <apex:inputField value="{!objPOCReqFrm.POC_Rejection_Reason__c}"  styleClass="clsReasonforRejecting" style="width:500px" />  
+              </apex:outputPanel>                       
+          </apex:pageBlockSectionItem>   
+     </apex:pageBlockSection>     
+  <!-- Virtual Team End-->
+    <apex:pageBlockSection id="pbsAssignment_RO" title="Virtual Team" columns="1" rendered="{!LeadSection_RO}">
+      <apex:pageBlockSectionItem >
+         <apex:pageBlockSection columns="3" rendered="{!blnIsVTListExist}" >
+          <apex:pageBlockSectionItem >
+              <apex:pageBlockTable value="{!list_VTUserList}" var="VT" >           
+                 <apex:column headerValue="Virtual User">          
+                 <apex:OutputField value="{!VT.Solution_Consultant__c}"/>
+                 </apex:column>   
+                  <apex:column headerValue="Virtual User Type">
+                  <apex:outputField value="{!VT.Virtual_User_type__c}"/>
+                 </apex:column>              
+             </apex:pageBlockTable>
+         </apex:pageBlockSectionItem> 
+        </apex:pageBlockSection>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+               <apex:selectRadio value="{!SelectedStatusType}" disabled="true">
+               <apex:selectOptions value="{!StatusTypes}"  >
+               </apex:selectOptions>
+              </apex:selectRadio>                          
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem >
+            <apex:outputPanel styleClass="clsRejectedStatus" style="vertical-align:top;">
+              <apex:outputLabel value="Reason for rejecting POC" />
+              <apex:outputField value="{!objPOCReqFrm.POC_Rejection_Reason__c}"  />   
+             </apex:outputPanel>                         
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection> 
+    
+    <!--<apex:pageBlockSection id="pbsPOCRequest" title="POC Request" columns="1" rendered="{!VTSection}">
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Type of POC" />            
+         <apex:inputField value="{!objPOCReqFrm.POC_Types__c}"  />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Please confirm that you have reviewed the POC Guide and Approval Process in Game" />            
+         <apex:inputField value="{!objPOCReqFrm.Review_POC_Guide__c}"  styleClass="sclsReviewPOC" />
+     </apex:pageBlockSectionItem>    
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="PS Involvement Required?" />            
+         <apex:inputField value="{!objPOCReqFrm.PS_Involvement_Required__c}" styleClass="sclsPSInvolve" />
+     </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem >
+         <apex:outputLabel value="PS Billable?"/>            
+         <apex:inputField value="{!objPOCReqFrm.PS_Billable__c}"  styleClass="sclsPSBill" required="true"/>
+     </apex:pageBlockSectionItem> 
+    <apex:pageBlockSectionItem >
+        <apex:pageBlockSection columns="2">
+           <apex:pageBlockSectionItem >
+                <apex:pageBlockSection columns="3">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Solution Type" />
+                        <apex:inputField value="{!objPOCReqFrm.Primary_Solution__c}" styleClass="clsSolutionType">                         
+                        </apex:inputField>                
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Main Product" />
+                        <apex:inputField id="idMainProduct" value="{!objPOCReqFrm.Main_Product__c}" styleClass="clsMainProduct">                        
+                        </apex:inputField>
+                    </apex:pageBlockSectionItem> 
+                    <apex:pageBlockSectionItem dataStyle="width:20px">
+                     <apex:commandlink value="Add" action="{!GetSolutionProductList}" styleClass="btn" onClick="return ValidationForSolutionProduct();"> 
+                   </apex:commandlink>
+            </apex:pageBlockSectionItem>  
+                 </apex:pageBlockSection>   
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem >
+          </apex:pageBlockSectionItem>            
+        </apex:pageBlockSection>
+     </apex:pageBlockSectionItem> 
+      <apex:pageBlockSectionItem rendered="{!list_SolProdList != null}">
+     <apex:pageBlockTable value="{!list_SolProdList}" var="Sol" >
+         <apex:inputHidden value="{!Sol.Id}"/>       
+         <apex:column headerValue="Solution Type">      
+         <apex:OutputField value="{!Sol.Primary_Solution__c}"/>
+         </apex:column>   
+         <apex:column headerValue="Main Product">
+         <apex:OutputField value="{!Sol.Products__c}"/>
+         </apex:column>              
+         <apex:column headerValue="Remove">
+         <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveSolutionProduct}" >
+         <apex:param name="CurrentId" value="{!Sol.Id}" assignTo="{!CurrentId}"  /> 
+         <apex:param name="CurrentSolution" value="{!Sol.Primary_Solution__c}" assignTo="{!CurrentSolution}"  /> 
+         <apex:param name="CurrentProduct" value="{!Sol.Products__c}" assignTo="{!CurrentProduct}"  />                
+         </apex:commandLink>
+         </apex:column>        
+         </apex:pageBlockTable>
+             
+    </apex:pageBlockSectionItem>  -->    
+             
+    <!--<apex:pageBlockSectionItem >
+        <apex:pageBlockSection columns="2">
+           <apex:pageBlockSectionItem >
+                <apex:pageBlockSection columns="3">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Solution Type" />
+                        <apex:selectList multiselect="true" value="{!selctedPickValSolution}">
+                         <apex:selectOptions value="{!set_PickVal}" >
+                         </apex:selectOptions>
+                        </apex:selectList>                
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:commandButton value="Get Product" action="{!GetProducts}"/>
+                     </apex:pageBlockSectionItem> 
+                    <apex:pageBlockSectionItem rendered="{!list_ProductsOptions!=null}">
+                        <apex:outputLabel value="Main Product" />
+                        <apex:selectList multiselect="true" value="{!selctedPickValProduct}" style="height:200px" >
+                        <apex:selectOptions value="{!list_ProductsOptions}">
+                        </apex:selectOptions>
+                        </apex:selectList>
+                    </apex:pageBlockSectionItem>  
+                 </apex:pageBlockSection>   
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem >
+          </apex:pageBlockSectionItem>            
+        </apex:pageBlockSection>
+     </apex:pageBlockSectionItem>--> 
+      
+    <!--  <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="2">
+         <apex:pageBlockSection columns="1"> 
+             <apex:pageBlockSectionItem >
+               <apex:commandButton value="Attach Scope Document" onclick="return loadPopupBox('POC Scope');"/>
+             </apex:pageBlockSectionItem>         
+             <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="1">     
+                 <apex:pageBlock title="Attach Scope Document" rendered="{!list_AttachScope != null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                   <apex:repeat value="{!list_AttachScope}" var="adp"> 
+                   <tr ><td > 
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                       </td>
+                      <td>
+                        <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/>
+                      </td>
+                 </tr>
+                 </apex:repeat>
+                </table>
+               </apex:pageBlock>
+            </apex:pageBlockSection>
+         </apex:pageBlockSectionItem>
+         </apex:pageBlockSection> 
+       </apex:pageBlockSection> 
+       </apex:pageBlockSectionItem>
+      
+      </apex:pageBlockSection> -->
+     <!--<apex:pageBlockSection id="pbsPOCRequest_RO" title="POC Request" columns="1" rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Type of POC" />            
+         <apex:outputField value="{!objPOCReqFrm.POC_Types__c}"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Please confirm that you have reviewed the POC Guide and Approval Process in Game" />            
+         <apex:outputField value="{!objPOCReqFrm.Review_POC_Guide__c}"  />
+     </apex:pageBlockSectionItem>     
+     <apex:pageBlockSectionItem >
+         <apex:outputLabel value="PS Involvement Required?" />            
+         <apex:outputField value="{!objPOCReqFrm.PS_Involvement_Required__c}"  />
+     </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem >
+         <apex:outputLabel value="If yes, will PS be billable?" />            
+         <apex:outputField value="{!objPOCReqFrm.PS_Billable__c}" />
+     </apex:pageBlockSectionItem>
+    <apex:pageBlockSectionItem rendered="{!list_SolProdList != null}">
+        <apex:pageBlockTable value="{!list_SolProdList}" var="Sol" rendered="{!list_SolProdList!=null}">              
+         <apex:column headerValue="Primary Solution">      
+         <apex:OutputField value="{!Sol.Primary_Solution__c}"/>
+         </apex:column>   
+         <apex:column headerValue="Main Product">
+         <apex:OutputField value="{!Sol.Products__c}"/>
+         </apex:column> 
+         </apex:pageBlockTable>-->
+        <!--<apex:pageBlockSection columns="4">
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Solution Type" />
+                <apex:outputField value="{!objPOCReqFrm.Primary_Solution__c}" />                   
+            </apex:pageBlockSectionItem>            
+             <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Main product" />
+                <apex:outputField value="{!objPOCReqFrm.Main_Product__c}" />  
+            </apex:pageBlockSectionItem>               
+        </apex:pageBlockSection>-->
+       <!--</apex:pageBlockSectionItem> 
+      
+      <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="2">
+         <apex:pageBlockSection columns="1">                      
+             <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="1">     
+                 <apex:pageBlock title="Attach Scope Document" rendered="{!list_AttachScope != null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                   <apex:repeat value="{!list_AttachScope}" var="adp"> 
+                   <tr ><td > 
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                       </td>                     
+                 </tr>
+                 </apex:repeat>
+                </table>
+               </apex:pageBlock>
+            </apex:pageBlockSection>
+         </apex:pageBlockSectionItem>
+         </apex:pageBlockSection> 
+       </apex:pageBlockSection> 
+       </apex:pageBlockSectionItem>
+      
+      </apex:pageBlockSection> -->
+      <!--<apex:pageBlockSection id="pbsPOCApproval" title="POC Approval" columns="2" rendered="{!ApprovalSection}" >
+          <apex:pageBlockSectionItem >-->
+              <!--<apex:outputLabel value="POC Approved" />-->
+              <!--<apex:inputField value="{!objPOCReqFrm.POC_Approved__c}"  styleClass="clsPOCApproved"/>-->
+              <!--<apex:selectRadio value="{!SelectedStatusType}"  onclick="SelectedStatusType(this);"  styleClass="clsSelectedStatus">
+               <apex:selectOptions value="{!StatusTypes}">
+               </apex:selectOptions>
+              </apex:selectRadio>                         
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem />
+          <apex:pageBlockSectionItem >
+              <apex:outputPanel styleClass="clsRejectedStatus" style="vertical-align:top;">
+                  <apex:outputLabel value="Reason for rejecting POC " style="vertical-align:top"/>
+                  <apex:inputField value="{!objPOCReqFrm.POC_Rejection_Reason__c}"  styleClass="clsReasonforRejecting" style="width:500px" />  
+              </apex:outputPanel>                       
+          </apex:pageBlockSectionItem>           
+       </apex:pageBlockSection>
+  <apex:pageBlockSection id="pbsPOCApproval_RO" title="POC Approval" columns="2" rendered="{!ApprovalSection_RO}">
+          <apex:pageBlockSectionItem >-->
+              <!--<apex:outputLabel value="POC Approved" />
+              <apex:outputField value="{!objPOCReqFrm.POC_Approved__c}"  />-->
+               <!--<apex:selectRadio value="{!SelectedStatusType}" disabled="true">
+               <apex:selectOptions value="{!StatusTypes}"  >
+               </apex:selectOptions>
+              </apex:selectRadio>                          
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem >
+            <apex:outputPanel styleClass="clsRejectedStatus" style="vertical-align:top;">
+              <apex:outputLabel value="Reason for rejecting POC" />
+              <apex:outputField value="{!objPOCReqFrm.POC_Rejection_Reason__c}"  />   
+             </apex:outputPanel>                         
+          </apex:pageBlockSectionItem>           
+       </apex:pageBlockSection>-->
+   <apex:pageBlockSection id="pbsPOCResult" title="POC Result" columns="2" rendered="{!ResultSection}">
+          <apex:pageBlockSectionItem >
+              <apex:outputLabel value="POC Success Criteria Achieved?"/>
+              <apex:inputField value="{!objPOCReqFrm.Success_Criteria_Achived__c}" styleClass="clsPOCSuccess" />                         
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem >
+              <apex:outputLabel value="Comment" />
+              <apex:inputField value="{!objPOCReqFrm.Comment__c}" styleClass="clsComment" style="width:500px" required="true"/>                         
+          </apex:pageBlockSectionItem>           
+       </apex:pageBlockSection>
+   <apex:pageBlockSection id="pbsPOCResult_RO" title="POC Result" columns="2" rendered="{!ResultSection_RO}">
+          <apex:pageBlockSectionItem >
+              <apex:outputLabel value="POC Success Criteria Achieved?" />
+              <apex:outputField value="{!objPOCReqFrm.Success_Criteria_Achived__c}"  />                         
+          </apex:pageBlockSectionItem> 
+          <apex:pageBlockSectionItem >
+              <apex:outputLabel value="Comment" />
+              <apex:outputField value="{!objPOCReqFrm.Comment__c}"  />                         
+          </apex:pageBlockSectionItem>           
+       </apex:pageBlockSection>
+      
+   <apex:pageBlockSection id="pbsWowReqStatus" title="POC Engagement Status" columns="1" rendered="{!StatusSection}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="POC Engagement Status" />
+       <apex:inputField value="{!objPOCReqFrm.POC_Status__c}" />
+     </apex:pageBlockSectionItem>
+      </apex:pageBlockSection>
+    <apex:pageBlockSection id="pbsWowReqStatus_RO" title="POC Engagement Status" columns="1" rendered="{!StatusSection_RO}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="POC Engagement Status" />
+       <apex:outputField value="{!objPOCReqFrm.POC_Status__c}" />
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+    <!-- Functional Use case Start -->
+     <apex:pageblockSection id="pbsAttachmentFnUseCase_RO" title="Business Design – Functional Use-Cases (all offers)" columns="1"  rendered="{!VTSection_RO}">
+              <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Use Case Summary" />
+                <apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=40816557" type="image/png" target="_blank">
+                  <apex:image value="{!$Resource.Document}" width="30" height="30"/>
+                </apex:outputLink> 
+              </apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                 <apex:outputLabel value="Predefined Use Case">
+                 </apex:outputLabel> 
+                 <apex:outputfield value="{!objPOCReqFrm.Is_Functional_Use_Case__c}" styleclass="clsFnUseCaseCHK_RO" />
+              </apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                 <apex:outputPanel styleClass="clsFnUseCaseAct_RO">
+                  <apex:pageBlockSection columns="1" rendered="true" collapsible="false">
+                    <apex:pageBlockSectionItem >
+                      <apex:pageBlockSection columns="3">
+                        <apex:pageBlockTable value="{!list_POCAttachmentsFnUseCase}" var="fun" styleClass="clsFnUseCase">
+                          <apex:column headerValue="Functional Use Case">
+                            <apex:outputField value="{!fun.FnUseCase__c}"/>
+                          </apex:column>
+                          <apex:column headerValue="Fit %">
+                            <apex:outputField value="{!fun.Fit__c}" styleClass="clsAsIsFnUseCase" />
+                          </apex:column>
+                          <apex:column headerValue="Short description of changes">
+                            <apex:outputField value="{!fun.Description__c}" styleClass="clsDescFnUseCase"/>
+                          </apex:column>  
+                         </apex:pageBlockTable> 
+                       </apex:pageBlockSection> 
+                    </apex:pageBlockSectionItem>    
+                 </apex:pageBlockSection>
+               </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+               <apex:outputLabel value="Custom Use Case" />
+               <apex:outputField value="{!objPOCReqFrm.Custom_Use_Case__c}"/>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+              <apex:pageBlockSection columns="2" >
+                 <apex:pageBlockSectionItem >
+                     <apex:pageBlock title="Custom Functional Use Case" rendered="{!list_AttachCustomUseCase!= null}">
+                       <table border="1" width="100%">
+                           <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                           <apex:repeat value="{!list_AttachCustomUseCase}" var="ast"> 
+                                <tr><td><a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Description} ({!ast.Name})</a><br></br></td></tr>
+                           </apex:repeat>
+                        </table>
+                      </apex:pageBlock>
+                  </apex:pageBlockSectionItem>
+              </apex:pageBlockSection> 
+           </apex:pageBlockSectionItem>
+     </apex:pageblockSection>
+    <!-- Functional Use case End -->        
+  
+  </apex:pageblock>
+  <apex:pageBlock rendered="{!list_POCHistory != null}">
+   <apex:pageBlockSection id="pbsWowHistory" title="POC Engagement History" columns="1" rendered="{!list_POCHistory != null}">
+     <apex:pageBlockSectionItem >
+      <apex:pageBlock >
+       <apex:pageBlockTable value="{!list_POCHistory}" var="POC">
+        <apex:column value="{!POC.Action__c}"/>
+        <apex:column value="{!POC.Attachment_Type__c}"/>
+        <apex:column value="{!POC.UserId__c}"/>
+        <apex:column value="{!POC.POC_User_Type__c}" headerValue="POC User Type"/>
+        <apex:column value="{!POC.POC_Stage__c}" headerValue="POC Stage"/>
+        <apex:column value="{!POC.POC_Engagement_Status__c }" headerValue="POC Engagement Status"/>
+        <apex:column value="{!POC.Action_Date__c}"/>
+      </apex:pageBlockTable>
+     </apex:pageBlock> 
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+
+</apex:pageBlock>
+<!-- POC Rejected History Section Start -->
+   <apex:pageBlock rendered="{!list_POCRejectHistryDtls != null}" >
+    <apex:pageBlockSection id="pbsPOCRejectedHistory" title="POC Rejected History" columns="1" >
+     <apex:pageBlockSectionItem >
+      <apex:pageBlock >
+       <apex:pageBlockTable value="{!list_POCRejectHistryDtls}" var="whr">
+        <apex:column value="{!whr.Action__c}"/>
+        <apex:column value="{!whr.POC_Request_Id__r.POC_Rejection_Reason__c}"  headerValue="Rejected Reason"/>
+        <apex:column value="{!whr.UserId__c}"/>
+        <apex:column value="{!whr.POC_User_Type__c}" headerValue="POC User Type"/>
+        <apex:column value="{!whr.POC_Stage__c}" headerValue="POC Stage"/>
+        <apex:column value="{!whr.POC_Engagement_Status__c}" headerValue="POC Engagement Status"/>
+        <apex:column value="{!whr.Action_Date__c}"/>
+      </apex:pageBlockTable>
+     </apex:pageBlock> 
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+   </apex:pageBlock>
+  <!-- Wow Rejected History Section Close-->
+ </apex:form> 
+</apex:page>

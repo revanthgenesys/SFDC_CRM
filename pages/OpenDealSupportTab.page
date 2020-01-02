@@ -1,0 +1,107 @@
+<apex:page standardController="Deal_Support__c" extensions="OpenDealSupportTabController" recordSetVar="dsRecords" showHeader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" >
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="dealsupport"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+            <!--<apex:sectionHeader subtitle="Home" title="{!$objectType.Opportunity.LabelPlural}"/>-->
+            <apex:form >
+                <apex:pageBlock title="Deal Support List" id="ds_list">
+                    <h6>View:</h6>&nbsp;&nbsp;
+                    <apex:selectList value="{! filterId }" size="1">
+                        <apex:selectOptions value="{! listViewOptions }"/>
+                        <apex:actionSupport event="onchange" reRender="ds_list">
+                            <apex:param name="listds" assignTo="{!dsListVisible}" value="true"/>
+                        </apex:actionSupport>
+                    </apex:selectList>&nbsp;&nbsp;
+                    <apex:commandButton value="Go" style="font-size: 1.5em; font-weight: 400" reRender="ds_list" rendered="{!NOT(dsListVisible)}">
+                        <apex:param name="gobtn" assignTo="{!dsListVisible}" value="true"/>
+                    </apex:commandButton>
+                    <apex:pageBlockTable value="{! dsRecords }" var="ds" rendered="{!dsRecords!=null && dsListVisible}">
+                        <apex:column headerValue="Deal Support Name">
+                            <apex:outputLink target="_parent" value="/partner/PartnerPortalDSDetail?Id={!ds.Id}">
+                            {!ds.Name }
+                            </apex:outputLink>
+                        </apex:column>
+                        <apex:column value="{! ds.CreatedDate }" headerValue="Created Date"/>
+                        <apex:column value="{! ds.Status__c }" headerValue="Status"/>
+                        <apex:column headerValue="Account Name">
+                            <apex:outputLink target="_parent" value="/partner/PartnerPortalAcctDetail?Id={!ds.Account__c}">
+                                {!ds.Account__r.Name }
+                            </apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Opportunity">
+                            <apex:outputLink target="_parent" value="/partner/PartnerPortalOptyDetail?Id={!ds.Opportunity__c}">
+                            {! ds.Opportunity__r.Name }
+                            </apex:outputLink>
+                        </apex:column>
+                        <apex:column value="{! ds.Subject__c }" headerValue="Subject"/>
+                    </apex:pageBlockTable>
+                    <apex:outputPanel id="pagenav" rendered="{!dsRecords!=null && dsListVisible}">
+                        <table style="width: 100%">
+                            <tr>
+                                <td>
+                                    Page: <apex:outputText value=" {!PageNumber} of {! CEILING(ResultSize / PageSize) }"/>
+                                </td>            
+                                <td align="center">
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <apex:commandLink action="{! Previous }" value="« Previous" rendered="{! HasPrevious }"/>
+                                    <apex:outputText style="color: #ccc;" value="« Previous" rendered="{! NOT(HasPrevious) }"/>
+                                    &nbsp;&nbsp;  
+                                    <apex:commandLink action="{! Next }" value="Next »" rendered="{! HasNext }"/>
+                                    <apex:outputText style="color: #ccc;" value="Next »" rendered="{! NOT(HasNext) }"/>
+                                </td>
+                                
+                                <td align="right">
+                                    Records per page:
+                                    <apex:selectList value="{! PageSize }" size="1">
+                                        <apex:selectOption itemValue="5" itemLabel="5"/>
+                                        <apex:selectOption itemValue="20" itemLabel="20"/>
+                                        <apex:selectOption itemValue="50" itemLabel="50"/>
+                                        <apex:selectOption itemValue="100" itemLabel="100"/>
+                                        <apex:actionSupport event="onchange" reRender="ds_list"/>
+                                    </apex:selectList>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                      <br/><br/>
+                    <apex:outputText rendered="{!dsRecords==null && dsListVisible}">No records to display.</apex:outputText> 
+                      
+                    <apex:pageBlockSection title="Recent Deal Support" collapsible="false" columns="1" rendered="{!NOT(dsListVisible)}">
+                        <apex:pageblockTable value="{!recentDS}" var="recntDS" rendered="{!recentDS.size>0}">
+                            <apex:column headerValue="Deal Support Name">
+                                <apex:outputLink target="_parent" value="/partner/PartnerPortalDSDetail?Id={!recntDS.Id}" >
+                                    {!recntDS.Name}
+                                </apex:outputLink>
+                            </apex:column>
+                        </apex:pageblockTable>
+                        <apex:outputText rendered="{!recentDS.size==0}">No recent records. Click Go or select a view from the dropdown to display records.</apex:outputText>
+                    </apex:pageBlockSection>
+
+                      
+                      <apex:pageBlockButtons location="top">
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          
+                        <apex:commandButton value="New" action="{!create}"/>
+                      </apex:pageBlockButtons>
+                </apex:pageBlock>
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+    <!--<style type="text/css">
+        bPageBlock {
+            border-top-width: 0px;
+        }
+    </style>-->
+</apex:page>

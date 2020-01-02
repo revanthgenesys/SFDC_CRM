@@ -1,0 +1,176 @@
+<apex:page standardController="Partner_Business_Terms_and_Conditions__c" extensions="PartnerBusinessTermsController">
+<style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+</style>
+    <apex:form id="theForm">
+        <div style="height:15px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    <apex:outputPanel >
+                        <apex:outputPanel styleClass="popupBackground" layout="block" style="position:absolute;"/>
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>
+        <apex:pageMessages />
+        <apex:outputPanel rendered="{!blnIsReadMode}">
+            <apex:pageBlock title="Partner Business Terms" >
+                <div style="width:600px;">
+                <apex:pageBlockButtons >
+                    <apex:commandButton value="Edit" action="{!changeToEditMode}" rendered="{!objPartnerBusinessTandC.Approval_Status__c != 'SVP Approved' && $Profile.Name != 'Custom Potential Partner User'}"/>
+                    <apex:commandButton value="Back To Application" action="{!backToApplication}" />
+                    <apex:commandButton value="Submit" action="{!submitForApproval}" rendered="{!(objPartnerBusinessTandC.Approval_Status__c = 'In Review' || objPartnerBusinessTandC.Approval_Status__c = 'RCL Rejected' || objPartnerBusinessTandC.Approval_Status__c = 'SVP Rejected') && $Profile.Name != 'Custom Potential Partner User'}"/>
+                    <apex:commandButton value="Contract Request" action="{!contractRequest}" rendered="{!objPartnerBusinessTandC.Approval_Status__c = 'SVP Approved' && $Profile.Name != 'Custom Potential Partner User'}"/>
+                    <apex:commandButton value="Acknowledge Terms" action="{!partnerAcknowledgement}" rendered="{!objPartnerBusinessTandC.Approval_Status__c = 'RCL Approved' && $Profile.Name = 'Custom Potential Partner User'}"/>
+                    <!--<apex:commandButton value="Click to Sign the Contract" onclick="window.open('https://www.docusign.net/Member/EmailStart.aspx?r={!docuSignRecipientExtId}'); return false;" rendered="{!showSignContractButton}" />-->
+                    <apex:commandButton value="Reject Terms" action="{!rejectTerms}" rendered="{!objPartnerBusinessTandC.Approval_Status__c = 'RCL Approved' && $Profile.Name = 'Custom Potential Partner User'}"/>
+                    <apex:commandButton value="View Contract" action="{!viewContract}" rendered="{!(objContract.Status__c == 'Approved' || objContract.Status__c == 'Approved by Partner') && $Profile.Name = 'Custom Potential Partner User' }"/>
+                    <apex:commandButton value="Approve Contract" action="{!approveContract}" rendered="{!objContract.Status__c == 'Approved' &&  $Profile.Name == 'Custom Potential Partner User'}"/>
+
+                </apex:pageBlockButtons>
+                <apex:pageBlockSection columns="1">
+                    <apex:outputField value="{!objPartnerBusinessTandC.Partner_Application__r.Account__c}" rendered="{!isNew == false}"/>
+                	<apex:outputField value="{!pa.Account__c}" rendered="{!isNew == true}"/>
+                    <apex:pageBlockSectionItem >
+						<apex:outputLabel value="Approval Status"/>
+                        <apex:outputText value="{!objPartnerBusinessTandC.Approval_Status__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:outputField value="{!objPartnerBusinessTandC.Date_Acknowledged__c}"/>
+                    <apex:inputField value="{!objPBTC.Tier__c}" rendered="{!$Profile.Name != 'Custom Potential Partner User'}"/>
+                        <apex:outputField value="{!objPBTC.Tier__c}" rendered="{!$Profile.Name == 'Custom Potential Partner User'}"/>
+                        <apex:repeat value="{!$ObjectType.Partner_Business_Terms_Category__c.FieldSets.Partner_Business_Terms_Top_Section}" var="f">
+                            <apex:outputField value="{!objPBTC[f]}"/>
+                        </apex:repeat>
+                </apex:pageBlockSection>
+               
+                	
+                    <apex:pageBlockTable value="{!map_catgoryAndCountries}" var="key" rendered="{!hasCC == true}" columnsWidth="200Px">
+                            <apex:column headerValue="Country" >
+                            	<apex:outputText value="{!key}"/>	
+                            </apex:column>
+                            <apex:column headerValue="Categories">
+                                <apex:outputText value="{!map_catgoryAndCountries[key]}"/>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </div>
+                    <apex:pageBlockSection title="MLB and Discounts"></apex:pageBlockSection>
+                    <apex:pageBlockTable value="{!$ObjectType.Partner_Business_Terms_Country__c.FieldSets.Partner_Business_Terms_Bottom_Section}" var="f" >
+                        <apex:column >
+                            <apex:outputText value="{!IF(ISBLANK($ObjectType.Partner_Business_Terms_Country__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Partner_Business_Terms_Country__c.Fields[f].inlineHelpText)}"/>
+                        </apex:column>
+                        
+                        <apex:repeat value="{!list_PBTCCountriesToCreate}" var="objPBTCountry">  
+                            <!--
+                                {!map_CountryIdToCountryName[objPBTCountry.Country__c]} 
+                             -->
+                            <apex:column headerValue="{!map_CountryIdToCountryName[objPBTCountry.Country__c]}">
+                            <!-- <apex:column headerValue="United States"> -->
+                                <apex:outputField value="{!objPBTCountry[f]}"/>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        
+        
+        <apex:pageBlock title="Partner Business Terms" rendered="{!NOT(blnIsReadMode)}" >
+            <div style="width:600px;">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveBtnHandler}" reRender="theForm" status="status"/>
+                <apex:commandButton value="Quick Save" action="{!quickSaveBtnHandler}" reRender="theForm" status="status"/>
+                <apex:commandButton value="Cancel" action="{!backToApplication}" immediate="true"/>                
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1">
+                <apex:outputField value="{!objPartnerBusinessTandC.Partner_Application__r.Account__c}" rendered="{!isNew == false}"/>
+                <apex:outputField value="{!pa.Account__c}" rendered="{!isNew == true}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Approval Status" for="approvalStatusList"/>
+                    <apex:outputText value="{!objPartnerBusinessTandC.Approval_Status__c}"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            
+            <!--<apex:outputPanel id="termSheetPanel"> -->
+
+                
+                <apex:pageBlockSection showHeader="false" columns="1">
+                    <apex:outputField value="{!objPBTC.Tier__c}"/>
+                    <apex:repeat value="{!$ObjectType.Partner_Business_Terms_Category__c.FieldSets.Partner_Business_Terms_Top_Section}" var="f">
+                        <apex:inputField value="{!objPBTC[f]}"/>
+                    </apex:repeat>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockTable value="{!map_catgoryAndCountries}" var="key" rendered="{!hasCC == true}" columnsWidth="200Px">
+                    <apex:column headerValue="Country" >
+                        <apex:outputText value="{!key}"/>	
+                    </apex:column>
+                    <apex:column headerValue="Categories">
+                        <apex:outputText value="{!map_catgoryAndCountries[key]}"/>
+                    </apex:column>
+                </apex:pageBlockTable>
+                </div>    
+                <apex:pageBlockSection title="MLB and Discounts"></apex:pageBlockSection>
+                <apex:pageBlockTable value="{!$ObjectType.Partner_Business_Terms_Country__c.FieldSets.Partner_Business_Terms_Bottom_Section}" var="f">
+                    <apex:column >
+                        <apex:outputText value="{!IF(ISBLANK($ObjectType.Partner_Business_Terms_Country__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Partner_Business_Terms_Country__c.Fields[f].inlineHelpText)}"/>
+                    </apex:column>
+                    
+                    <apex:repeat value="{!list_PBTCCountriesToCreate}" var="objPBTCountry">
+                         <!-- 
+                         {!map_CountryIdToCountryName[objPBTCountry.Country__c]}
+                         -->
+                        <apex:column headerValue="{!map_CountryIdToCountryName[objPBTCountry.Country__c]}">
+                        <!-- <apex:column headerValue="United States" > --> 
+                            <apex:inputField value="{!objPBTCountry[f]}"  required="{!IF(f.Label == 'Comments',false,true)}" />
+                        </apex:column>
+                        
+                    </apex:repeat>
+                </apex:pageBlockTable>
+                
+            <!-- </apex:outputPanel> -->
+            
+        </apex:pageBlock>
+    </apex:form>
+    
+    <apex:relatedList list="ProcessSteps" rendered="{!blnIsReadMode && $Profile.Name != 'Custom Potential Partner User'}"></apex:relatedList>
+    <!-- <apex:relatedList list="Application_Comments__r" rendered="{!blnIsReadMode}"></apex:relatedList> --->
+    <apex:outputPanel rendered="{!objPartnerBusinessTandC.Approval_Status__c != 'Submitted'}">
+        <script>
+        /* 
+        function backToApplication()
+        {
+            alert('test');
+            location.href="{!IF($Profile.Name != 'Custom Potential Partner User','/apex/Partner_ApplicationDetail?id=' & applicationId,'/partner/Partner_ApplicationDetail?id=' & applicationId)}";
+        }*/
+        var toHideButton = document.getElementsByName("piSubmit");
+        for(var i=0;i<toHideButton.length;i++)
+        {
+            toHideButton[i].style.display='none';
+        } 
+        </script>
+    </apex:outputPanel>
+</apex:page>

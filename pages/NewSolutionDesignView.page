@@ -1,0 +1,1229 @@
+<apex:page standardController="New_Solution_Design__c" title="{!nsdObj.Name}" extensions="NewSolutionDesignControllerClone1" sidebar="false" tabStyle="New_Solution_Design__c">
+    <apex:sectionHeader title="CAP" subtitle="{!nsdObj.Name}"/>
+    <chatter:feed entityId="{!nsdObj.Id}"/>
+    <apex:form id="formId">
+        <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <head>
+                <apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            </head>
+        </html>
+        <style>
+            .spinnerBg{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-color: #000;
+                opacity: 0.2;
+                z-index: 999999;
+            }
+            .spinner{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-image: url("/img/loading32.gif");
+                background-size: 16px;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-position: center;
+                z-index: 9999999;
+                opacity: 1;
+            }
+        </style>
+        <apex:pageBlock ><!-- title="Solution Design Edit">             -->
+            <apex:pageMessages id="pgMsjBlk" />
+            <b><apex:commandLink action="{!backToPage}" value="Back to Technical Design"/></b>
+            <body>
+                <apex:actionStatus id="spinnerStatus">
+                    <apex:facet name="start">
+                        <div class="spinnerBg" />
+                        <div class="spinner" ></div>
+                    </apex:facet>
+                </apex:actionStatus>
+                <div style="text-align:center; margin: 10px 0;">
+                    <apex:commandButton value="Edit" action="{!editRecord}" rendered="{!AND(nsdObj.Status__c != 'Submitted for Approval' , nsdObj.Status__c != 'Approved')}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                    <apex:commandButton value="Revise" action="{!reviseRecord}" rendered="{!nsdObj.Status__c == 'Submitted for Approval'}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Submit for Approval" action="{!SubmitApproval}" rendered="{!AND(nsdObj.Status__c != 'Submitted for Approval', nsdObj.Status__c != 'Approved')}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Request a SOW" action="{!sendSoWRequest}" style="font-weight: bolder;" rendered="{!AND(nsdObj.Status__c == 'Approved',designOffering == 'PureEngage Cloud')}" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>&nbsp;&nbsp;
+                   <!-- <apex:commandButton value="Clone" action="{!redirectToClonePage}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" status="spinnerStatus"/> -->
+                </div>
+                <apex:pageBlockSection title="Opportunity" columns="1" collapsible="true">
+                    <apex:outputPanel >
+                        <table style="width:90%">
+                            <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>CAP Name : </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                  <apex:outputField value="{!nsdObj.CAP_Name__c}"/>
+                                </td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Owner : </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                  <apex:outputField value="{!nsdObj.OwnerId}"/>
+                                </td>
+                                
+                                
+                                
+                                 
+                                <td style="width:1%"></td>
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                <!--<td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Architecture Diagram Snapshot : </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                </td>-->
+                            
+                              <!--  <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Architecture Diagram : </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:outputPanel rendered="{!attId != null}">
+                                            <a href="/servlet/servlet.FileDownload?file={!attId}" target="_blank">View</a>
+                                        </apex:outputPanel> 
+                                        <!--
+                                        <apex:outputPanel rendered="{!attId == null}">
+                                            <apex:inputfile value="{!newAttachment.body}" filename="{!newAttachment.Name}" />
+                                            <apex:commandbutton value="Upload" action="{!uploadAttachment}"/>
+                                        </apex:outputPanel>
+                                        -->
+                               <!-- </td> -->
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Customer Architecture Diagram: </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                  <apex:outputField value="{!nsdObj.Architecture_Diagram_URL__c}"/>
+                                </td>
+                            </tr>  
+                                
+                            <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Design Offer/Platform :</b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:outputText value="{!designOffering}" />
+                                </td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Account : </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:outputField value="{!dsrObj.Account_ID__c}"/>
+                                </td>
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> <!--<apex:outputText value="Outbound Only :" rendered="{!designOffering == 'PureEngage Cloud'}"/> --></b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;"> <!--<apex:outputField value="{!nsdObj.Outbound_Only__c}" rendered="{!designOffering == 'PureEngage Cloud'}"/> --></td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity : </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:outputField value="{!dsrObj .Opportunity_ID__c}"/>
+                                </td>
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> <apex:outputText value="Sales Region :" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:outputText value="{!dsrObj .Opportunity_ID__r.Country_Region__c}" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/>
+                                </td>   
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity Stage : </b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:outputField value="{!dsrObj .Opportunity_ID__r.stageName}"/>
+                                </td>  
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b><apex:outputText value="Legacy SolutionDesign Id : " rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;"><!--<apex:outputText value="{!dsrObj.id}" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/> --></td>
+                                
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity Forecast Status : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj .Opportunity_ID__r.ForecastStatus__c}"/></td>
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;"> 
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Type : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.Opportunity_ID__r.Type}"/></td>
+                            </tr>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b><apex:outputText value="Primary Design :" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;"> <apex:outputField value="{!dsrObj.Primary_Design_ID__r.IsPrimary__c}" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Currency : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!nsdObj.CurrencyIsoCode}"/></td>                            
+                            <tr>
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;">  
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;">
+                                    &nbsp;
+                                    <!-- <b><apex:outputText value="Quick Review :" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b> -->
+                                </td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;"><!--<apex:outputField value="{!dsrObj.id}" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/> --></td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Annual Contract Value (ACV) : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputText value="{!dsrObj.Opportunity_ID__r.Annual_Contract_Value__c}"/></td>
+                            </tr><tr class="slds-hint-parent"  style="width: auto;">
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>                      
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Total Contract Value (TCV + PS) : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputText value="{!dsrObj.Opportunity_ID__r.TCV_PS__c}"/></td>
+                            </tr><tr class="slds-hint-parent"  style="width: auto;">  
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>TAM Service Element : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!nsdObj.TAM_Service_Element__c}"/></td>
+                            </tr><tr class="slds-hint-parent"  style="width: auto;">    
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Status : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!nsdObj.Status__c}"/></td>
+                            </tr><tr class="slds-hint-parent"  style="width: auto;">    
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td style="width:1%"></td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Approval/Rejection Reason : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.Rejected_Reason__c}"/></td>
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;"> 
+                            <td></td>
+                                <td></td>
+                                <td></td>
+                                   <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;vertical-align: middle;"><b>Approved/Rejected Date: </b></td>
+                                    <td style="width:1%"></td>
+                                 <td data-label="RoomNumber" style="width:10%;text-align:left;vertical-align: middle;"> <apex:outputField value="{!nsdObj.Approved_Rejected_Date__c}" id="requiAction" ></apex:outputField></td></tr>
+
+                            <tr class="slds-hint-parent"  style="width: auto;"> 
+                            <td></td>
+                                <td></td>
+                                <td></td>
+                                   <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;vertical-align: middle;"><b>Partial Saving : </b></td>
+                                    <td style="width:1%"></td>
+                                 <td data-label="RoomNumber" style="width:10%;text-align:left;vertical-align: middle;"> <apex:inputField value="{!nsdObj.Partial_Saving__c}" id="reqAction" ></apex:inputField></td></tr>
+                             <tr class="slds-hint-parent"  style="width: auto;"> 
+                                 <td></td>
+                                 <td></td>
+                                 <td></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;vertical-align: middle;"><apex:outputLabel rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}">Conditionally Rejected :  </apex:outputLabel></td>
+                                    <td style="width:1%"></td>
+                                 <td data-label="RoomNumber" style="width:10%;text-align:left;vertical-align: middle;"> <apex:inputField value="{!nsdObj.Conditionally_Rejected__c}" rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}" id="requAction" ></apex:inputField></td></tr>
+
+
+                            <tr class="slds-hint-parent"  style="width: 80%;">    
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> <apex:outputText value="Implementation Complexity : " rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/></b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:outputField value="{!nsdObj.Implementation_Complexity__c}" rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/>
+                                </td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Created Date : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.CreatedDate}"/></td>
+                            </tr>
+                            <tr class="slds-hint-parent"  style="width: auto;">    
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> <apex:outputText value="Short Summary of Customer Business Needs : " rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/></b></td>
+                                <td style="width:1%"></td>
+                                <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:outputField value="{!nsdObj.Short_Summary_of_Customer_Business_Needs__c}" rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/>
+                                </td>
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Last Modified Date : </b></td>
+                                <td style="width:1%"></td>
+                                <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.LastModifiedDate}"/></td>
+                            </tr>                             
+                        </table>
+                    </apex:outputPanel>
+                </apex:pageBlockSection><br />
+                <apex:pageBlockSection title="Standard Use cases" columns="1" collapsible="true">
+                    <apex:outputPanel >
+                        <table style="width:100%;">
+                            <tr>
+                                <td>
+                                    <apex:outputPanel id="pnlAllActivity">   
+                                        <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color:#0070d2">
+                                                    <th style="">
+                                                        <b style="color: white;">Short Code</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Use Case Name</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Fit%</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Fit Category</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Short Change Description</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Detailed Change Description</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Version Used</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Notes</b>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody style="width:100%;table-layout: fixed;">
+                                                <apex:repeat value="{!lstDsrUseCase}" var="vi">
+                                                    <tr class="slds-hint-parent" >
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.Fit__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.FitCategory__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.VersionUsed__c}</td>
+                                                        <td style="max-width:200px;white-space: inherit;">{!vi.Notes__c}</td>
+                                                    </tr>
+                                                </apex:repeat>   
+                                            </tbody>
+                                        </table>
+                                    </apex:outputPanel> 
+                                </td>
+                            </tr>            
+                        </table>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>
+                <br />
+                <apex:pageBlockSection title="Custom Use Cases - Interaction Flows" columns="1" collapsible="true">
+                    <apex:outputPanel >
+                        <table style="width:100%;">
+                            <tr>
+                                <td>
+                                    <apex:outputPanel id="pnlAllActivity1">   
+                                        <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color:#0070d2">
+                                                    <th style="">
+                                                        <b style="color: white;">Short Code</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Use Case Name</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Short Description</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Detailed Description</b>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody style="width:100%;table-layout: fixed;">
+                                                <apex:repeat value="{!lstDsrUseCaseInteraction}" var="vi">
+                                                    <tr class="slds-hint-parent" >
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                    </tr>
+                                                </apex:repeat>   
+                                            </tbody>
+                                        </table>
+                                    </apex:outputPanel> 
+                                </td>
+                            </tr>            
+                        </table>
+                    </apex:outputPanel>
+                </apex:pageBlockSection><br />
+                
+                <apex:pageBlockSection title="Custom IVR Flow" columns="1" collapsible="true" >
+                    <apex:outputPanel >
+                        <table style="width:100%;">
+                            <tr>
+                                <td>
+                                    <apex:outputPanel id="pnlAllActivity2">   
+                                        <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color:#0070d2">
+                                                    <th style="">
+                                                        <b style="color: white;">Short Code</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Use Case Name</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Short Description</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Detailed Description</b>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody style="width:100%;table-layout: fixed;">
+                                                <apex:repeat value="{!lstDsrUseCaseIVR}" var="vi">
+                                                    <tr class="slds-hint-parent" >
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                    </tr>
+                                                </apex:repeat>   
+                                            </tbody>
+                                        </table>
+                                    </apex:outputPanel> 
+                                </td>
+                            </tr>            
+                        </table>
+                    </apex:outputPanel>
+                </apex:pageBlockSection><br />
+                <apex:pageBlockSection title="Custom Use Cases - Other" columns="1" collapsible="true">
+                    <apex:outputPanel >
+                        <table style="width:100%;">
+                            <tr>
+                                <td>
+                                    <apex:outputPanel id="pnlAllActivity3">   
+                                        <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color:#0070d2">
+                                                    <th style="">
+                                                        <b style="color: white;">Short Code</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Use Case Name</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Short Description</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Detailed Description</b>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody style="width:100%;table-layout: fixed;">
+                                                <apex:repeat value="{!lstDsrUseCaseOther}" var="vi">
+                                                    <tr class="slds-hint-parent" >
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                        <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                    </tr>
+                                                </apex:repeat>   
+                                            </tbody>
+                                        </table>
+                                    </apex:outputPanel> 
+                                </td>
+                            </tr>            
+                        </table>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>
+                <br />
+                <apex:pageBlockSection title="{!designOffering} Capabilities" collapsible="false" rendered="{!designOffering == 'PureConnect Cloud'}">                  
+                    <apex:outputField value="{!nsdObj.Product_Type__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.CRM__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.WFM__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.DB_Data_Access__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.Dev_Server__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.Voice_Storage__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.VS_calls_recorded__c}" />
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.VS_Est_storage_size_voice_GBs__c}" />
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.VS_Retention_for_call_recs_days__c}" />
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.Screen_Storage__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.SS_calls_recorded__c}" />
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.SS_Est_storage_size_voice_GB__c}" />
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.SS_Retention_for_call_recs_days__c}"  />
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.Short_Summary_of_Customer_Business_Needs__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.PureConnect_Cloud_Capabilities_Phase_1__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.PureConnect_Cloud_Capabilities_Phase_2__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.PureConnect_Cloud_Capabilities_Phase_3__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="{!designOffering} Capabilities" collapsible="false" rendered="{!designOffering == 'PureEngage Cloud' && !nsdObj.Outbound_Only__c}">
+                    <apex:outputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_1__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_2__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_3__c}"/>
+                </apex:pageBlockSection>
+                
+            <!--   <apex:pageBlockSection title="Outbound Solution Configuration" collapsible="false" rendered="{!designOffering == 'PureEngage Cloud' && nsdObj.Outbound_Only__c}">
+                    <apex:outputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_11__c}" />
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_22__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_33__c}"/>
+                </apex:pageBlockSection> -->
+                
+                <apex:pageBlockSection title="Customizations" collapsible="false">
+                        <apex:outputField value="{!nsdObj.Customizations_Phase_1__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                        <apex:outputField value="{!nsdObj.Customizations_Phase_11__c}" rendered="{!designOffering == 'PureEngage Cloud'}"/>
+                        <apex:outputField value="{!nsdObj.Details_of_Customizations_Requested__c}"/>
+                        <apex:outputField value="{!nsdObj.Customizations_Phase_2__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                        <apex:outputField value="{!nsdObj.Customizations_Phase_22__c}" rendered="{!designOffering == 'PureEngage Cloud'}"/>
+                        <apex:outputField value="{!nsdObj.Details_of_Customization_Phase_2__c}"/>
+                        <apex:outputField value="{!nsdObj.Customizations_Phase_3__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                        <apex:outputField value="{!nsdObj.Customizations_Phase_33__c}" rendered="{!designOffering == 'PureEngage Cloud'}"/>
+                        <apex:outputField value="{!nsdObj.Details_of_Customization_Phase_3__c}"/>
+                    </apex:pageBlockSection>
+                <apex:outputPanel rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                    <apex:pageBlockSection title="Configurations" collapsible="false">
+                        <apex:outputField value="{!nsdObj.CaaS_Region__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Agents__c}"/>
+                        <apex:outputField value="{!nsdObj.PCI_Environment__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Supervisors__c}"/>
+                        <apex:outputField value="{!nsdObj.Deployment_Model__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Workgroups_ACD_Queue__c}"/>
+                        <apex:outputField value="{!nsdObj.Deploy_initially_with_IO_Internet_Voi__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Workgroups_General_Non_ACD__c}"/>
+                        <apex:outputField value="{!nsdObj.Redundancy_Model__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Telephony_Trunks__c}"/>
+                        <apex:outputField value="{!nsdObj.Network_MPLS_Service__c}" />
+                        <apex:outputField value="{!nsdObj.Total_Customer_Sites__c}"/>
+                        <apex:outputField value="{!nsdObj.Internet_Egress__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Business_Users__c}"/>
+                        <apex:outputField value="{!nsdObj.SSO__c}"/>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}">
+                    <apex:pageBlockSection title="Configurations" collapsible="false">
+                        <apex:outputField value="{!nsdObj.Total_Contact_Center_Agents__c}"/>
+                        <apex:outputField value="{!nsdObj.of_Post_Call_Surveys__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Enterprise_Agents__c}"/>
+                        <apex:outputField value="{!nsdObj.of_DTMF_Questions_in_Surveys__c}"/>
+                        <apex:outputField value="{!nsdObj.Total_Lines_of_Business__c}"/>
+                        <apex:outputField value="{!nsdObj.of_Free_Form_Questions_in_Surveys__c}"/>
+                        <apex:outputField value="{!nsdObj.of_Genesys_Provided_DIDs_TFNs__c}"/>
+                        <apex:outputtext value=""/>
+                        <apex:outputField value="{!nsdObj.Supported_Languages_in_IVR_TTS__c}"/>
+                        <apex:outputField label="# of Organizations/Business Units responsible for WFM" value="{!nsdObj.of_Organizations_Business_Units_respon__c}"/>
+                        <apex:outputField value="{!nsdObj.Supported_Languages_in_IVR_ASR__c}"/>
+                        <apex:outputField value="{!nsdObj.Advanced_Geo_Redundancy__c}"/>                        
+                        <apex:outputField label="Supported Languages to Analyze – Speech Analytics (GIA)" value="{!nsdObj.Supported_Languages_to_Analyze_Speech__c}"/>
+                        <apex:outputField label="MPLS Connectivity with Customer Network(for Voice Only, Recording UI excluded as not supported)" value="{!nsdObj.MPLS_Connectivity_with_Customer_Network__c}"/>
+                        <apex:outputField label="Number of Business Units to Configure – Speech Analytics (GIA)" value="{!nsdObj.Number_of_Business_Units_to_Configure__c}"/>
+                        <apex:outputField value="{!nsdObj.Provider_of_Inter_Region_MPLS_for_Voice__c}"/>
+                        <apex:outputField label="Specific KPI for Each Business Unit to Configure – Speech Analytics (GIA)" value="{!nsdObj.Specific_KPI_for_Each_Business_Unit_to_C__c}"/>
+                        <apex:panelGrid />
+                        <apex:outputField label="Specify Turnaround Time – Speech Analytics (GIA)" value="{!nsdObj.Specify_Turnaround_Time_Speech_Analyti__c}"/>
+                        <apex:panelGrid />
+                        <apex:outputField value="{!nsdObj.of_Pulse_Widgets__c}"/>
+                        <apex:panelGrid />
+                        <apex:outputField value="{!nsdObj.of_Group_Voicemail_Mailboxes__c}"/>
+                        <apex:panelGrid />
+                        <apex:outputField value="{!nsdObj.of_Personal_Voicemail_Mailboxes__c}"/>
+                        <apex:panelGrid />
+                        <apex:outputField value="{!nsdObj.Blended_Agents__c}"/>
+                        <apex:panelGrid />
+                        <apex:outputField value="{!nsdObj.Outbound_Agents__c}"/>
+                        <apex:outputField value="{!nsdObj.SSO__c}"/>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+                
+                <apex:outputPanel id="dialerPanel" rendered="{!if((designOffering == 'PureConnect Cloud' && nsdObj.Status__c == 'Approved' ),true,false)}">
+                    <apex:pageBlockSection title="Outbound Solution Configuration" collapsible="false" columns="1">
+                        <apex:outputField value="{!nsdObj.Dialer__c}" />
+                        <apex:outputField value="{!nsdObj.Type_of_Campaigns__c}"/>
+                        <apex:outputField value="{!nsdObj.Type_of_Client_Script__c}"/>
+                        <apex:outputField value="{!nsdObj.Type_of_Contact_List_Management__c}"/>
+                    </apex:pageBlockSection>
+                    
+                
+                </apex:outputPanel>
+                <apex:outputPanel id="dialerPanel1" rendered="{!if((designOffering == 'PureConnect Cloud' && nsdObj.Status__c != 'Approved'),true,false)}">
+                        <apex:pageBlockSection title="Outbound Solution Configuration" collapsible="false" columns="1">
+                            <!-- <apex:inputField value="{!nsdObj.Dialer__c}" onchange="reqDialCheck();" />  -->
+                          <!--   <apex:inputField value="{!nsdObj.Dialer__c}">
+                            <apex:actionSupport event="onchange" />
+                            </apex:inputField>
+                           <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Campaigns__c}"/>
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Client_Script__c}"/>
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Contact_List_Management__c}"/> -->
+                            
+                            
+                             <apex:outputField value="{!nsdObj.Dialer__c}" />
+                        <apex:outputField value="{!nsdObj.Type_of_Campaigns__c}"/>
+                        <apex:outputField value="{!nsdObj.Type_of_Client_Script__c}"/>
+                        <apex:outputField value="{!nsdObj.Type_of_Contact_List_Management__c}"/>
+                            
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                    
+                         <apex:outputPanel id="InteractionAnalyticsPanel" rendered="{!if((designOffering == 'PureConnect Cloud' && nsdObj.Status__c == 'Approved' ),true,false)}">
+                    <apex:pageBlockSection title="Interaction Analytics" collapsible="false" columns="1">
+                        <apex:outputField value="{!nsdObj.Interaction_Analytics__c  }" />
+                        <apex:outputField value="{!nsdObj.Recording_Type__c}"/>
+                        <apex:outputField value="{!nsdObj.Quality_Management__c}"/>
+                        <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Number of Interaction Analytics Recognizer Servers" />
+                        <apex:outputField value="{!nsdObj.of_Interaction_Analytics_Recognizer_Se__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!nsdObj.Calculator_attached__c}"/>
+
+                    </apex:pageBlockSection>
+                    
+                
+                </apex:outputPanel>
+                <apex:outputPanel id="InteractionAnalyticsPanel1" rendered="{!if((designOffering == 'PureConnect Cloud' && nsdObj.Status__c != 'Approved'),true,false)}">
+                        <apex:pageBlockSection title="Interaction Analytics" collapsible="false" columns="1">                        
+                              <apex:outputField value="{!nsdObj.Interaction_Analytics__c    }" />
+                        <apex:outputField value="{!nsdObj.Recording_Type__c}"/>
+                        <apex:outputField value="{!nsdObj.Quality_Management__c}"/>
+                        <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Number of Interaction Analytics Recognizer Servers" />
+                        <apex:outputField value="{!nsdObj.of_Interaction_Analytics_Recognizer_Se__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!nsdObj.Calculator_attached__c}"/>
+
+                            
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>                 
+<!--
+                <apex:outputPanel rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                    <apex:pageBlockSection title="Deal Clinic" collapsible="false" >
+                        <apex:outputField value="{!nsdObj.Problem_Statement__c}"/>
+                        <apex:outputField value="{!nsdObj.Customer_s_Goals__c}"/>
+                        <apex:outputField value="{!nsdObj.Compelling_Event__c}"/>
+                        <apex:outputField value="{!nsdObj.Pain_Points__c}"/>
+                        <apex:outputField value="{!nsdObj.Competitors__c}"/>
+                        <apex:outputField value="{!nsdObj.Current_Environment__c}"/>
+                        <apex:outputField value="{!nsdObj.Competition_Notes__c}"/>
+                        <apex:outputField value="{!nsdObj.Additional_Team_Members__c}"/>
+                        <apex:outputField value="{!nsdObj.Chain_of_Command__c}"/>
+                        <apex:outputField value="{!nsdObj.Discovery__c}"/>
+                        <apex:outputField value="{!nsdObj.Next_Steps__c}"/>    
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+                -->
+                
+                <apex:outputPanel rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}">
+                    <apex:pageBlockSection title="CX Contact Configuration" collapsible="false" >
+                      <!--  <apex:outputField label="Number of Genesys provided Inbound phone numbers " value="{!nsdObj.Number_of_Genesys_provided_Inbound_phone__c}"/>
+                        <apex:outputField value="{!nsdObj.SMS_Delivery_Receipts__c}"/>
+                        <apex:outputField value="{!nsdObj.Number_of_OB_calls_max_hour__c}"/>
+                        <apex:outputField value="{!nsdObj.Number_of_Outbound_Agents__c}"/>
+                        <apex:outputField value="{!nsdObj.Number_of_OB_calls_avg_hour__c}"/>
+                        <apex:outputField label="Number of Genesys provided agent dial-in phone numbers" value="{!nsdObj.Number_of_Genesys_provided_agent_dial_in__c}"/>
+                        <apex:outputField value="{!nsdObj.Supported_languages__c}"/>
+                        <apex:outputField value="{!nsdObj.Number_of_custom_agent_scripts__c}"/>
+                        <apex:outputField value="{!nsdObj.Supported_Countries__c}"/> 
+                        <apex:outputField value="{!nsdObj.of_Outbound_Campaigns__c}"/>
+                        <apex:outputField value="{!nsdObj.Email_messaging_volume_max_per_hour__c}"/>
+                        <apex:outputField value="{!nsdObj.of_Outbound_Basic_Treatments__c}"/>
+                        <apex:outputField value="{!nsdObj.Number_of_SMS_max_per_hour__c}"/>
+                        <apex:outputField label="# of Outbound Lists Automatically Loaded via FTP" value="{!nsdObj.of_Outbound_Lists_Automatically_Loaded__c}"/>  -->  
+                        <apex:outputField value="{!nsdObj.Number_of_Outbound_Agents__c}"/>
+                           <apex:outputField label="Number of Outbound Campaigns " value="{!nsdObj.Number_of_Outbound_Campaigns__c}"/>
+                            <apex:outputField value="{!nsdObj.Number_of_Outbound_Basic_Treatments__c}"/>
+                            <apex:outputField label="Number of Outbound Lists automatically loaded via FTP" value="{!nsdObj.Number_of_Outbound_Lists_automatically_l__c}"/>
+                            <apex:outputField label="Total number of call/messaging flows  - Voice/SMS/Email" value="{!nsdObj.Total_number_of_call_messaging_flows__c}"/>
+                            <apex:outputField label="Number of Low Complexity Call Flows – Voice/SMS/Email" value="{!nsdObj.Number_of_Low_Complexity_Call_Flows__c}"/>
+                            <apex:outputField label="Number of Medium Complexity Call Flows – Voice/SMS/Email" value="{!nsdObj.Number_of_Medium_Complexity_Call_Flows__c}"/>
+                            <apex:outputField label="Number of High Complexity Call Flows – Voice/SMS/Email" value="{!nsdObj.Number_of_High_Complexity_Call_Flows__c}"/>
+                            <apex:outputField value="{!nsdObj.Supported_Character_Sets_File_Encoding__c}"/>
+                            <apex:outputField value="{!nsdObj.Number_of_OB_calls_max_per_min_per_hour__c}"/>                     
+                            <apex:outputField value="{!nsdObj.Number_of_OB_calls_avg_day__c}"/>
+                            <apex:outputField value="{!nsdObj.Supported_UI_languages__c}"/>
+                            <apex:outputField value="{!nsdObj.Supported_Countries__c}"/>
+                            <apex:outputField value="{!nsdObj.Email_messaging_volume_max_per_min__c}"/> 
+                            <apex:outputField value="{!nsdObj.Number_of_SMS_max_per_min__c}"/>   
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                <apex:pageBlockSection title="ASR" collapsible="false" >
+                    <apex:outputField value="{!nsdObj.Speech_Recognition__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.ISR__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.Nuance_Recognizer__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.Intelligent_Automation_Nuance__c}"/>
+                    <apex:panelGrid />
+                  <!--  <apex:outputField value="{!nsdObj.Voicebot_Google_Dialogflow__c}"/>   -->               
+                   
+                </apex:pageBlockSection>
+                </apex:outputPanel>
+                 <apex:outputPanel rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                <apex:pageBlockSection title="TTS" collapsible="false" >
+                    <apex:outputField value="{!nsdObj.Text_to_Speech__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.iTTS__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField value="{!nsdObj.Nuance_Vocalizer__c}"/> 
+                    <apex:panelGrid />
+                   <!-- <apex:outputField value="{!nsdObj.Voicebot_Google_TTS__c}"/>      -->            
+                   
+                </apex:pageBlockSection>
+                </apex:outputPanel>
+                
+                <apex:pageBlockSection title="Telecom Requirements" collapsible="false" >
+                    <apex:outputField label="Is Genesys providing Telecom for any of the call legs?" value="{!nsdObj.Is_Genesys_providing_Telecom__c}"/>
+                    <apex:outputField value="{!nsdObj.Required_Phase__c}"/>
+                    <apex:outputField value="{!nsdObj.Type_Genesys_Telecom__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField label="Is Customer providing Telecom for any of the call legs?" value="{!nsdObj.Is_Customer_providing_Telecom__c}"/>
+                    <apex:outputField value="{!nsdObj.Required_Phase_Customer_Telecom__c}"/>
+                    <apex:outputField value="{!nsdObj.Type_Customer_Telecom__c}"/>
+                    <apex:panelGrid />
+                    <apex:outputField label="Does Customer want to put the data traffic (UIs, APIs, etc.) over the MPLS" value="{!nsdObj.Does_Customer_want_to_put_the_data_traff__c}"/>
+                    <apex:outputField value="{!nsdObj.Required_Phase_Customer_data_traffic__c}"/>
+                    <apex:outputField label="If using MPLS, will customer provide their own hardware for termination?" value="{!nsdObj.If_customer_provide_their_own_hardware__c}"/>
+                    <apex:outputField value="{!nsdObj.Required_Phase_MPLS__c}"/>
+                    <apex:outputField value="{!nsdObj.Type_Phase_MPLS__c}"/>  
+                    <apex:panelGrid />
+                    <apex:outputField label="Is VPN required for Application traffic?" value="{!nsdObj.Is_VPN_required_for_Agent_traffic__c}"/>
+                    <apex:outputField value="{!nsdObj.Required_Phase_Agent_traffic__c}"/>
+                    <!--  <apex:outputField value="{!nsdObj.Type_Agent_traffic__c}"/>  -->
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Projected Timelines" collapsible="false" >
+                    <apex:outputField value="{!nsdObj.PureEngage_Cloud_Submission_date__c}" label="{!designOffering} Submission Date"/> 
+                    <apex:outputField value="{!nsdObj.Contracts_signed_MSLA_Service_Order__c}"/> 
+                    <apex:outputField value="{!nsdObj.SOW_signed__c}"/> 
+                    <apex:outputField value="{!nsdObj.Customer_Project_Kickoff__c}"/> 
+                    <apex:outputField value="{!nsdObj.Discovery_Phase_Complete__c}"/> 
+                    <apex:outputField value="{!nsdObj.Design_Phase_Completed__c}"/> 
+                    <apex:outputField value="{!nsdObj.Customer_Project_Plan_Committed__c}"/> 
+                    <apex:outputField value="{!nsdObj.UAT_start_Phase_1__c}"/> 
+                    <apex:outputField value="{!nsdObj.Go_Live_Date_Phase_1__c}"/> 
+                    <apex:outputField value="{!nsdObj.Phase_2_Go_Live__c}"/> 
+                    <apex:outputField value="{!nsdObj.Phase_3_Go_Live__c}"/> 
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Solution Assumptions" collapsible="false" >
+                    <apex:outputField value="{!nsdObj.Design_Assumptions__c}"/>    
+                </apex:pageBlockSection>
+                
+                <br />                  
+                <apex:pageBlockSection title="Customer Sites" columns="1" collapsible="false">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="sites">
+                                    <div style="text-align:center; margin:-5px 0px 3px;">
+                                        <apex:commandButton disabled="{!nsdObj.Status__c == 'Submitted for Approval'}" value="New Customer Site" onclick="navigateToUrl('/aJd/e?CF00N0d000003OD5K={!nsdobj.Name}&CF00N0d000003OD5K_lkid={!nsdobj.Id}&CF00N0B000005yT2I={!solDesign.Name}&CF00N0B000005yT2I_lkid={!solDesign.Id}&RecordType=0120B000000t7wP&ent=01I0B000000nQvZ&retURL=/{!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" rendered="{!designOffering == 'PureEngage Cloud'}" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                                        <apex:commandButton disabled="{!nsdObj.Status__c == 'Submitted for Approval'}" value="New Customer Site" onclick="navigateToUrl('/setup/ui/recordtypeselect.jsp?ent=01I0B000000nQvZ&retURL=%2F{!nsdObj.Id}&save_new_url=%2FaJd%2Fe%3FCF00N0d000003OD5K%3D{!nsdobj.Name}%26CF00N0d000003OD5K_lkid%3D{!nsdobj.Id}%26CF00N0B000005yT2I%3D{!solDesign.Name}%26CF00N0B000005yT2I_lkid%3D{!solDesign.Id}%26retURL%3D%252F{!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" rendered="{!designOffering == 'PureConnect Cloud'}" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                                    </div>
+                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color:#0070d2">
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Action</b>
+                                                </th>
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">**Customer Site<br/>Name</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Country</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;"># of Agents in CC</b>
+                                                </th>
+                                               <!-- <th  style="vertical-align: middle;">
+                                                    <b style="color: white;"># of Work From<br/>Home (WFH)<br/>Agents</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;"># of Corporate<br/>Remote Agents</b>
+                                                </th> -->
+                                                 <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Site # Agents</b>
+                                                </th>
+                                                 <th  style="vertical-align: middle;">
+                                                    <b style="color: white;"> Site # Biz Users</b>
+                                                </th>
+                                                 <th  style="vertical-align: middle;">
+                                                    <b style="color: white;"> Site # Supervisors</b>
+                                                </th>
+                                                 <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Site # Telcom Trunks</b>
+                                                </th>
+                                                <!--<th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Location of Callers<br/>(Inbound Calls)</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Location of Consumers<br/>(Outbound Calls from<br/>Genesys Cloud or Agents)</b> 
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Is Data<br/>Sovereignty<br/>needed for this location?</b>
+                                                </th>-->
+                                                <!--<th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Additional Notes</b>
+                                                </th> 
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Phase</b>
+                                                </th>-->
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Street</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">City</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">State</b>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="width:100%;table-layout: fixed;">
+                                            <apex:repeat value="{!nsdObj.Sites__r}" var="fccr">
+                                                <tr class="slds-hint-parent" >
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;">
+                                                        <a href="/{!fccr.Id}/e?retURL={!nsdObj.Id}">Edit</a>&nbsp;|&nbsp;
+                                                        <apex:outputLink value="{!URLFOR($Action.EmailMessage.Delete, fccr.id, [retURL=URLFOR($Action.New_Solution_Design__c.View,nsdObj.Id)],true )}" onclick="return window.confirm('Are you sure?');">Del</apex:outputLink>
+                                                    </td>
+                                                    <!--<td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputText >{!fccr.Name}<br/></apex:outputText></td>-->
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;">
+                                                        <apex:outputText rendered="{!IF((fccr.Genesys_Site_Name__c != null), true, false)}"  >{!fccr.Genesys_Site_Name__c}<br/></apex:outputText>
+                                                        <apex:outputText rendered="{!IF((fccr.Customer_Site_Name__c != null), true, false)}"   >{!fccr.Customer_Site_Name__c}<br/></apex:outputText></td>
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Country__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Site_Agents__c }"/></td>
+                                                    <!--<td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.of_Work_From_Home_WFH_Agents__c}"/></td> 
+                                                    <td style="max-width:10%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.of_Corporate_Remote_Agents__c}"/></td>-->
+                                                    <!--<td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Location_of_Caller_Inbound_Calls__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Location_of_Consumers_Outbound_Calls_fr__c}"/></td> -->
+                                                   <!-- <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Is_Data_Sovereignty_needed_for_this_loca__c}"/></td> -->
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Site_Agents__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Site_Biz_Users__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Site_Supervisors__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Site_Telcom_Trunks__c}"/></td>
+                                                   <!-- <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Additional_Notes__c}"/></td> 
+                                                    <td style="max-width:10%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Phase__c}"/></td>-->
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.Street__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.City__c}"/></td>
+                                                    <td style="max-width:10%;white-space: inherit;vertical-align: middle;"><apex:outputField value="{!fccr.State_Providence__c}"/></td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>            
+                    </table>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Application" columns="1" collapsible="false" rendered="{!designOffering == 'PureConnect Cloud'}">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="sc">
+                                    <div style="text-align:center; margin:-5px 0px 3px;">
+                                      <!--  <apex:commandButton value="New Application" disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}"   onclick="navigateToUrl('/setup/ui/recordtypeselect.jsp?ent=01I0B000000nQvc&retURL=/{!nsdObj.Id}&save_new_url=/aJg/e?CF00N0t000001VSxt={!nsdobj.Name}&CF00N0t000001VSxt_lkid={!nsdObj.Id}&CF00N0B000005yT2L={!solDesign.Name}&CF00N0B000005yT2L_lkid={!solDesign.Id}&retURL=/{!nsdObj.Id}' ,'RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/> -->
+                                    <apex:commandButton value="New Application" disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}" onclick="navigateToUrl('/aJf/e?CF00N1T00000AhHnZ={!nsdObj.Name}&CF00N1T00000AhHnZ_lkid={!nsdObj.Id}&CF00N0B000005yT2K={!solDesign.Name}&CF00N0B000005yT2K_lkid={!solDesign.Id}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                                    </div>
+                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color:#0070d2">
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Action</b>
+                                                </th>
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Application Name</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Solution Description</b>
+                                                </th>    
+                                                <!--<th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Application Resource Guide</b>
+                                                </th> --> 
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Customer Site</b>
+                                                </th> 
+                                                
+                                            </tr>
+                                        </thead>
+                                        <tbody style="width:100%;table-layout: fixed;">
+                                            <apex:repeat value="{!nsdObj.ININ_Applications__r}" var="Appl">
+                                                <tr class="slds-hint-parent" >
+                                                    <td style="max-width:20%;white-space: inherit;">
+                                                        <a href="/{!Appl.Id}/e?retURL={!nsdObj.Id}">Edit</a>&nbsp;|&nbsp;
+                                                        <apex:outputLink value="{!URLFOR($Action.EmailMessage.Delete, Appl.id, [retURL=URLFOR($Action.New_Solution_Design__c.View,nsdObj.Id)],true )}" onclick="return window.confirm('Are you sure?');">Del</apex:outputLink>
+                                                    </td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!Appl.PureConnect_Cloud_Application_Name__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!Appl.Solution_Description__c}"/></td>
+                                                    <!--<td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!Appl.Application_Resource_Guide__c }"/></td>-->
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!Appl.Customer_Site__c}"/></td>                                                     
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>            
+                    </table>
+                    
+                </apex:pageBlockSection>
+                <br />  
+                <apex:pageBlockSection title="Solution Components" columns="1" collapsible="false" rendered="{!designOffering == 'PureConnect Cloud'}">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="sc">
+                                    <div style="text-align:center; margin:-5px 0px 3px;">
+                                       <!-- <apex:commandButton value="New Solution Component" disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}" onclick="navigateToUrl('/aJg/e?CF00N56000002nxiJ={!nsdObj.Name}&CF00N56000002nxiJ_lkid={!nsdObj.Id}&CF00N0B000005yT2L={!solDesign.Name}&CF00N0B000005yT2L_lkid={!solDesign.Id}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/> -->
+                                             <!--<apex:commandButton value="New Solution Component" disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}" onclick="navigateToUrl('/aJg/e?CF00N0t000001VSxt={!nsdObj.Name}&CF00N0t000001VSxt_lkid={!nsdObj.Id}&CF00N0B000005yT2L={!solDesign.Name}&CF00N0B000005yT2L_lkid={!solDesign.Id}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/> -->
+                                             <apex:commandButton value="New Solution Component" disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}"   onclick="navigateToUrl('/setup/ui/recordtypeselect.jsp?ent=01I0B000000nQvc&retURL=/{!nsdObj.Id}&save_new_url=/aJg/e?CF00N0d000003OD5Q={!nsdobj.Name}&CF00N0d000003OD5Q={!nsdObj.Id}&CF00N0B000005yT2L={!solDesign.Name}&CF00N0B000005yT2L_lkid={!solDesign.Id}&retURL=/{!nsdObj.Id}' ,'RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/> 
+
+                                    </div>
+                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color:#0070d2">
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Action</b>
+                                                </th>
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Component Function</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Solution Category</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Component Type</b>
+                                                </th>
+                                               <!-- <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Component Function</b>
+                                                </th> -->
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Model</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Quantity</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Providing Party</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Customer Site</b>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="width:100%;table-layout: fixed;">
+                                            <apex:repeat value="{!nsdObj.ININ_Solution_Components__r}" var="fccr">
+                                                <tr class="slds-hint-parent" >
+                                                    <td style="max-width:20%;white-space: inherit;">
+                                                        <a href="/{!fccr.Id}/e?retURL={!nsdObj.Id}">Edit</a>&nbsp;|&nbsp;
+                                                        <apex:outputLink value="{!URLFOR($Action.EmailMessage.Delete, fccr.id, [retURL=URLFOR($Action.New_Solution_Design__c.View,nsdObj.Id)],true )}" onclick="return window.confirm('Are you sure?');">Del</apex:outputLink>
+                                                    </td>
+                                                   <!-- <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Component_Function_Cloud__c}"/></td>-->
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Component_Function_Cloud__c}"/>
+                                                    <apex:outputField value="{!fccr.Component_Function__c}" /></td>
+                                                    
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Solution_Category__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Component_Type__c }"/></td>
+                                                   <!-- <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Component_Function__c}"/></td>-->
+                                                    <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!fccr.Model_Cloud__c}" /><apex:outputField value="{!fccr.Model__c}" /></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Quantity__c}"/></td>
+                                                     
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Providing_Party__c}"  rendered="{!fccr.RecordType.Name == "OnPremise"}"/><apex:outputField value="{!fccr.Providing_Party_Cloud__c}"  rendered="{!fccr.RecordType.Name == "Cloud"}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;">
+                                                        <!--<apex:outputText value="{!fccr.Customer_Site__r.PCC_DataCenter_Airport_Code__c}" /> -->
+                                                        <apex:outputText value="{!fccr.Customer_Site__r.Customer_Site_Name__c}" /> 
+                                                         <apex:outputText value="{!fccr.Customer_Site__r.Genesys_Site_Name__c}" /> 
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>            
+                    </table>
+                    <br />
+                </apex:pageBlockSection>
+                
+                
+                <apex:pageBlockSection title="Bandwidth Calculations" columns="1" collapsible="false" rendered="{!designOffering == 'PureConnect Cloud'}">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="bandCal">
+                                    <div style="text-align:center; margin:-5px 0px 3px;">
+                                        <apex:commandButton value="New Bandwidth Calculation" disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}" onclick="navigateToUrl('/aJb/e?CF00N0d000003OD5F={!nsdObj.Name}&CF00N0d000003OD5F_lkid={!nsdObj.Id}&CF00N0B000005yT4R={!solDesign.Name}&CF00N0B000005yT4R_lkid={!solDesign.Id}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                                    </div>
+                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color:#0070d2">
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Action</b>
+                                                </th>
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Bandwidth Calculation Name</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Model</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Local Control Bandwidth Mbps</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">RC Voip @G.711 plus Apps Mbps</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">RC Voip @G.729 plus Apps Mbps</b>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="width:100%;table-layout: fixed;">
+                                            <apex:repeat value="{!nsdObj.Bandwidth_Calculations__r}" var="fccr">
+                                                <tr class="slds-hint-parent" >
+                                                    <td style="max-width:20%;white-space: inherit;">
+                                                        <a href="/{!fccr.Id}/e?retURL={!nsdObj.Id}">Edit</a>&nbsp;|&nbsp;
+                                                        <apex:outputLink value="{!URLFOR($Action.EmailMessage.Delete, fccr.id, [retURL=URLFOR($Action.New_Solution_Design__c.View,nsdObj.Id)],true )}" onclick="return window.confirm('Are you sure?');">Del</apex:outputLink>
+                                                    </td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Name}"/></td>
+                                                    <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!fccr.Model__c}"/></td>
+                                                     <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!fccr.Local_Control_Bandwidth_Mbps__c}"/></td>
+                                                     <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!fccr.RC_VOIP_G_711_plus_Apps_Mbps__c}"/></td>
+                                                     <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!fccr.RC_VOIP_G_729_plus_Apps_Mbps__c}"/></td>   
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>            
+                    </table>
+                    <br />
+                </apex:pageBlockSection>
+                  
+                <apex:pageBlockSection title="MPLS/RVA/Data Center Quote Requests" columns="1" collapsible="false" rendered="{!designOffering == 'PureConnect Cloud'}">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="mpls">
+                                    <div style="text-align:center; margin:-5px 0px 3px;">
+                                        <apex:commandButton value="New MPLS/RVA/Data Center Quote Request" disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}" onclick="navigateToUrl('/aJi/e?CF00N0d000003OD5R={!nsdObj.Name}&CF00N0d000003OD5R_lkid={!nsdObj.Id}&CF00N0B000005yT7B={!solDesign.Name}&CF00N0B000005yT7B_lkid={!solDesign.Id}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                                    </div>
+                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color:#0070d2">
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">Action</b>
+                                                </th>
+                                                <th style="vertical-align: middle;">
+                                                    <b style="color: white;">MPLS/RVA/Data Center Quote Request Name</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Backup Circuit</b>
+                                                </th>
+                                                <th  style="vertical-align: middle;">
+                                                    <b style="color: white;">Bandwidth Calculation</b>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="width:100%;table-layout: fixed;">
+                                            <apex:repeat value="{!nsdObj.MPLS_RVA_Data_Center_Quote_Requests__r}" var="fccr">
+                                                <tr class="slds-hint-parent" >
+                                                    <td style="max-width:20%;white-space: inherit;">
+                                                        <a href="/{!fccr.Id}/e?retURL={!nsdObj.Id}">Edit</a>&nbsp;|&nbsp;
+                                                        <apex:outputLink value="{!URLFOR($Action.EmailMessage.Delete, fccr.id, [retURL=URLFOR($Action.New_Solution_Design__c.View,nsdObj.Id)],true )}" onclick="return window.confirm('Are you sure?');">Del</apex:outputLink>
+                                                    </td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Name}"/></td>
+                                                    <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!fccr.Backup_Circuit__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputText value="{!fccr.Bandwidth_Calculation__r.Name}"/></td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>            
+                    </table>
+                    <br />
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="Field Customer Commit Request" columns="1" collapsible="false" rendered="{!designOffering == 'PureEngage Cloud'}">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="SDOCommunication"> 
+                                    <div style="text-align:center; margin:-5px 0px 3px;">
+                                        <apex:commandButton disabled="{!(nsdObj.Status__c == 'Submitted for Approval' || nsdObj.Status__c == 'Approved')}" value="New FCCR" onclick="navigateToUrl('/aGh/e?CF00N0t000001VRxG={!nsdObj.Name}&CF00N0t000001VRxG_lkid={!nsdObj.Id}&CF00N0B0000065tto_lkid={!dsrObj.Opportunity_ID__c}&CF00N0B0000065tto={!dsrObj.Opportunity_ID__r.Name}&00N0B0000065ttf={!dsrObj.Opportunity_ID__r.Annual_Contract_Value__c}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                                    </div>
+                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color:#0070d2">
+                                                <th>
+                                                    <b style="color: white;">Action</b>
+                                                </th>
+                                                <th style="">
+                                                    <b style="color: white;">Commitment #</b>
+                                                </th>
+                                                <th style="">
+                                                    <b style="color: white;">Commitment Stage</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">Priority</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">Product/Service</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">Estimated ACV</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">Requested Delivery Date</b>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="width:100%;table-layout: fixed;">
+                                            <apex:repeat value="{!nsdObj.Field_Customer_Commit_Requests__r}" var="fccr">
+                                                <tr class="slds-hint-parent" >
+                                                    <td style="max-width:20%;white-space: inherit;vertical-align: middle;">
+                                                        <a href="/{!fccr.Id}/e?retURL={!nsdObj.Id}">Edit</a>&nbsp;|&nbsp;
+                                                        <apex:outputLink value="{!URLFOR($Action.EmailMessage.Delete, fccr.id, [retURL=URLFOR($Action.New_Solution_Design__c.View,nsdObj.Id)],true )}" onclick="return window.confirm('Are you sure?');">Del</apex:outputLink>
+                                                    </td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Name}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Commitment_Progress__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Priority__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Product_Service__c }"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!fccr.Commitment_Value__c}"/></td>
+                                                    <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!fccr.Commitment_Delivery_Date__c}"/></td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>            
+                    </table>
+                </apex:pageBlockSection>
+                <br />  
+                
+                <apex:pageBlockSection title="CAP Communication" columns="1" collapsible="false">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="SDOCommunication"> 
+                                    <div style="text-align:center; margin:-5px 0px 3px;">
+                                       <!-- <apex:commandButton value="Send an Email" onclick="navigateToUrl('/_ui/core/email/author/EmailAuthor?p3_lkid={!nsdObj.Id}&p6={!nsdObj.Name}&p4={!$Label.SDO_Inbound_Service_Email_Address}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/> -->
+                                       <!--<apex:commandButton value="Send an Email" onclick="navigateToUrl('/_ui/core/email/author/EmailAuthor?p3_lkid={!nsdObj.Id}&p6={!nsdObj.Name}&p4={!$Label.SDO_Inbound_Service_Email_Address}&retURL={!nsdObj.Id}','RELATED_LIST','email');" style="font-weight: bolder;"  styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>-->
+                                        <apex:commandButton value="Send an Email" onclick="window.open('/_ui/core/email/author/EmailAuthor?p3_lkid={!nsdObj.Id}&p6={!nsdObj.Name}&p4={!$Label.SDO_Inbound_Service_Email_Address}&retURL={!nsdObj.Id}','_blank','RELATED_LIST','email');" style="font-weight: bolder;"  styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                                    
+                                    </div>
+                                    <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color:#0070d2">
+                                                <th style="">
+                                                    <b style="color: white;">Action</b>
+                                                </th>
+                                                <th style="">
+                                                    <b style="color: white;">Deal Support Communication Name</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">Subject</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">Body</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">From</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">To</b>
+                                                </th>
+                                                <th  style="">
+                                                    <b style="color: white;">Created Date</b>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style="width:100%;table-layout: fixed;">
+                                            <apex:repeat value="{!lstSDOCommunication}" var="vi">
+                                                <tr class="slds-hint-parent" >
+                                                    <td style="max-width:10%;white-space: inherit;padding-bottom: 3px;">
+                                                        <a href="/{!vi.Id}/e?retURL={!nsdObj.Id}">Edit</a>&nbsp;|&nbsp;
+                                                        <apex:outputLink value="{!URLFOR($Action.EmailMessage.Delete, vi.id, [retURL=URLFOR($Action.New_Solution_Design__c.View,nsdObj.Id)],true )}" onclick="return window.confirm('Are you sure?');">Del</apex:outputLink>
+                                                    </td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!vi.Deal_Support_Communication_Name__c}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!vi.Subject}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!vi.TextBody}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!vi.FromAddress}"/></td>
+                                                    <td style="max-width:20%;white-space: inherit;"><apex:outputField value="{!vi.ToAddress}"/></td>
+                                                    <td style="max-width:10%;white-space: inherit;"><apex:outputField value="{!vi.MessageDate}"/></td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>            
+                    </table>
+                </apex:pageBlockSection>
+                <br />  
+                <apex:pageBlockSection title="Approval History" columns="1" collapsible="false">
+                    <apex:outputPanel >
+                        <table style="width:100%;">
+                            <tr>
+                                <td>
+                                    <apex:outputPanel id="ApprovalHistory">   
+                                        <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                            <thead>
+                                                <tr style="background-color:#0070d2">
+                                                    <th style="">
+                                                        <b style="color: white;">Action</b>
+                                                    </th>
+                                                    <th style="">
+                                                        <b style="color: white;">Date</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Status</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Submitted By</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Assigned To</b>
+                                                    </th>
+                                                    <th  style="">
+                                                        <b style="color: white;">Comments</b>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody style="width:100%;table-layout: fixed;">
+                                                <apex:repeat value="{!lstApprovalhistory}" var="vi1">
+                                                    <apex:repeat value="{!vi1.StepsAndWorkitems}" var="vi">
+                                                    <tr class="slds-hint-parent" >
+                                                        <td style="max-width:20px;white-space: inherit;padding-bottom: 3px;">
+                                                            <apex:outputText rendered="{!if(vi.StepStatus == 'Pending',true,false)}">
+                                                            <a href="/{!vi.Id}/e?et=REASSIGN&retURL={!nsdObj.Id}" target="_blank">Reassign</a>&nbsp;|&nbsp;
+                                                            <a href="/p/process/ProcessInstanceWorkitemWizardStageManager?id={!vi.Id}" target="_blank">Approve/Reject</a>
+                                                            </apex:outputText>
+                                                        </td>
+                                                        <td style="max-width:20px;white-space: inherit;"><apex:outputField value="{!vi.CreatedDate}"/></td>
+                                                        <td style="max-width:20px;white-space: inherit;"><apex:outputField value="{!vi.StepStatus}"/></td>
+                                                        <td style="max-width:20px;white-space: inherit;"><apex:outputField value="{!vi.OriginalActor.Name}"/></td>
+                                                        <td style="max-width:20px;white-space: inherit;"><apex:outputField value="{!vi.Actor.Name}"/></td>
+                                                        <td style="max-width:20px;white-space: inherit;"><apex:outputField value="{!vi.Comments}"/></td>
+                                                    </tr>
+                                                    </apex:repeat>
+                                                </apex:repeat>
+                                            </tbody>
+                                        </table>
+                                    </apex:outputPanel> 
+                                </td>
+                            </tr>            
+                        </table>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Notes & Attachments" columns="1" collapsible="false">
+                    <a href="/apex/NewSolutionDesignNotesAndAtts?id={!nsdObj.id}" target="_blank">Click here to view Notes &amp; Attachments</a>
+                </apex:pageBlockSection>
+                <div style="text-align:center; margin: 10px 0;">
+                    <apex:commandButton value="Edit" action="{!editRecord}" rendered="{AND(nsdObj.Status__c != 'Submitted for Approval' , nsdObj.Status__c != 'Approved')}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>
+                    <apex:commandButton value="Revise" action="{!reviseRecord}" rendered="{!nsdObj.Status__c == 'Submitted for Approval'}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Submit for Approval" rendered="{!AND(nsdObj.Status__c != 'Submitted for Approval', nsdObj.Status__c != 'Approved')}" action="{!SubmitApproval}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>&nbsp;&nbsp;
+                    <apex:commandButton value="Request a SOW" action="{!sendSoWRequest}" style="font-weight: bolder;" rendered="{!AND(nsdObj.Status__c == 'Approved',designOffering == 'PureEngage Cloud')}"  styleClass="slds-button slds-button--brand slds-button--small" rerender="formId" status="spinnerStatus"/>&nbsp;&nbsp;
+                    <!--<apex:commandButton value="Clone" action="{!redirectToClonePage}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" status="spinnerStatus"/> -->
+                </div>
+            </body>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

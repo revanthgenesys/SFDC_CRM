@@ -1,0 +1,107 @@
+<apex:page docType="html-5.0" showHeader="false" sidebar="false" controller="PartnerPortalGSelectController">
+
+<style>
+    .maintable,.tabheader,.tabrow{
+    border:0px solid black;
+    border-collapse:collapse;
+    }
+    .tabheader{
+    padding:5px;
+    }  
+    .tabrow {
+    padding:5px;
+    }  
+    tr.dataRow {
+      background-color:white;
+    }
+    tr.dataRow:hover {
+      background-color: #e3f3ff;
+    }
+    body .pbBody table.list tr th, body .pbBody table.list tr td {
+    border: 0px solid #ededed;
+    color: #000;
+    }
+    table.list {
+        border: 0px solid #ededed;
+    }
+  </style>
+<!-- BODY START -->
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="pricelist"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+                <div>
+                    <a href="/partner/apex/Home"><apex:image id="theImage" value="{!$Resource.Portal_back_icon}" width="60" height="60"/></a>
+                </div>
+                <apex:form id="dataTable">
+                <!-- Begin demonstration of content  -->
+                <apex:pageBlock rendered="{!hasContent}" mode="maindetail">
+                <div class="filteredContentDisplay">
+                <table class="list " border="0" cellpadding="1px" cellspacing="1px" style="border:0px">        
+                <thead class="rich-table-thead">
+                    <tr class="headerRow" style="height:30px;">
+                        <th  class="headerRow" style="width:40%; ">        
+                            <apex:commandLink title="Click to Sort by this column" value="Title {!IF(sortExp=='Title', IF(sortDir=='ASC','▲','▼'),'')}" action="{!sortByField}" reRender="dataTable" style="text-decoration:underline;">
+                                  <apex:param value="Title" name="srtColumn" />
+                                  <apex:param value="{!IF(sortExp=='Title',   IF(sortDir=='ASC','DESC','ASC'),'DESC')}" name="srtDir"/> 
+                            </apex:commandLink> 
+                        </th>
+                        <!--  <th  class="headerRow" style="width:10%;">Size</th> -->
+                        <th  class="headerRow" style="width:10%;">
+                            <apex:commandLink title="Click to Sort by this column" value="Author {!IF(sortExp=='Author', IF(sortDir=='ASC','▲','▼'),'')}" action="{!sortByField}" reRender="dataTable" style="text-decoration:underline;">
+                                  <apex:param value="Author" name="srtColumn" />
+                                  <apex:param value="{!IF(sortExp=='Author',   IF(sortDir=='ASC','DESC','ASC'),'DESC')}" name="srtDir"/> 
+                            </apex:commandLink> 
+                        </th>
+                        <th  class="headerRow" style="width:13%;">
+                             <apex:commandLink title="Click to Sort by this column" value="Last Modified {!IF(sortExp=='Last Modified', IF(sortDir=='ASC','▲','▼'),'')}" action="{!sortByField}" reRender="dataTable" style="text-decoration:underline;">
+                                  <apex:param value="Last Modified" name="srtColumn" />
+                                  <apex:param value="{!IF(sortExp=='Last Modified',   IF(sortDir=='ASC','DESC','ASC'),'DESC')}" name="srtDir"/> 
+                            </apex:commandLink> 
+                        </th>
+                        <th  class="headerRow" style="width:30%;">
+                            Description 
+                        </th>
+                    </tr>
+                    </thead>
+                    <tr style="height:10px;"></tr>
+                    <apex:repeat var="toplevel" value="{!contentResults}" rendered="{!contentResults != null}">
+                    <tbody>
+                    <tr class="headerRow" height="30px">
+                    <td colspan="5" class="innerheading" style="padding: 5px 5px 5px 5px;">
+                    <h2><apex:outputText value="{!toplevel}"/></h2>        
+                    </td>
+                    </tr>
+                    
+                    <apex:repeat var="doc" value="{!contentResults[toplevel]}">
+                            <tr>  
+                            <td>
+                            <apex:outputLink value="/partner/sfc/servlet.shepherd/version/download/{!doc.versionId}"> 
+                            <apex:outputText value="{!doc.title}" /> 
+                            </apex:outputLink> 
+                            </td>
+                            <td><apex:outputText value="{!doc.Author}" /></td>
+                            <td><apex:outputText value="{!doc.LastModified}" /></td>
+                            <td><apex:outputText value="{!doc.Description}" /></td>
+                    </tr>
+                    </apex:repeat>
+                    </tbody>
+                    </apex:repeat>
+                    </table>
+                </div>
+               </apex:pageBlock>
+               <apex:pageMessage severity="Info" strength="2" summary="You do not have any contents to display at this time." rendered="{!hasContent == false}" ></apex:pageMessage>
+            <br/><br/>
+                </apex:form>
+        </apex:define>
+    </apex:composition>
+            <!--  BODY END  -->
+
+</apex:page>

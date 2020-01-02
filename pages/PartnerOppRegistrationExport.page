@@ -1,0 +1,46 @@
+<apex:page controller="DealRegistrationGraphController" showheader="false" sidebar="false" contentType="application/vnd.ms-excel#PartnerRegExport.xls" cache="true"> 
+ 
+     <apex:pageBlock rendered="{!$CurrentPage.parameters.type = 'oppreg'}">
+        <apex:pageBlockSection title="Opportunity Registrations {!$CurrentPage.parameters.yr}" collapsible="false">
+                <apex:pageBlockTable value="{!opptyReg}"  var="eachCert"  >            
+                    <apex:column headerValue="Opportunity Registrations"><apex:outputText value="{!eachCert.Name}"></apex:outputText></apex:column>
+                    <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.CreatedDate}"/></apex:outputText></apex:column>
+                    <apex:column headerValue="Approval Status"><apex:outputText value="{!eachCert.Status__c}"></apex:outputText></apex:column>
+                    <apex:column headerValue="Exipiration Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.End_Date__c}"/></apex:outputText></apex:column>
+               </apex:pageBlockTable>
+            </apex:pageBlockSection>
+    </apex:pageBlock>
+  
+     <apex:pageBlock rendered="{!$CurrentPage.parameters.type = 'ppln'}">
+        <apex:pageBlockSection title="Pipeline/Forecast {!$CurrentPage.parameters.yr}" collapsible="false">
+               <apex:pageBlockTable value="{!Pipeline}"  var="ppl" >
+                   <apex:column headerValue="Pipeline/Forecast"><apex:outputText value="{!ppl.name}"></apex:outputText></apex:column>
+                   <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!ppl.createdate}"/></apex:outputText></apex:column>
+                   <apex:column headerValue="End User"><apex:outputText value="{!ppl.account}"></apex:outputText></apex:column>                          
+                   <apex:column headerValue="Stage"><apex:outputText value="{!ppl.stage}"></apex:outputText></apex:column>
+                   <apex:column headerValue="Forecast Status"><apex:outputText value="{!ppl.forecastStatus}"></apex:outputText></apex:column>
+                   <apex:column headerValue="Win/Loss"><apex:outputText value="{!ppl.winloss}"></apex:outputText></apex:column>
+                   <apex:column headerValue="Amount">
+                         <apex:outputText value="{!ppl.currn} {0,number,###,###,##0.00}" rendered="{!NOT(ISNULL(ppl.amount))}">
+                              <apex:param value="{!ppl.amount}"/> 
+                         </apex:outputText>   
+                    </apex:column>                 
+                   <apex:column headerValue="Exipiration Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!ppl.expdate}"/></apex:outputText></apex:column>
+                </apex:pageBlockTable>
+         </apex:pageBlockSection>
+    </apex:pageBlock>
+    
+     <apex:pageBlock rendered="{!$CurrentPage.parameters.type = 'ldreg'}">
+        <apex:pageBlockSection title="Lead Registrations {!$CurrentPage.parameters.yr}" collapsible="false">
+             <apex:pageBlockTable value="{!leadReg}"  var="eachCert"  >                
+                  <apex:column headerValue="Lead Referral Registrations"><apex:outputText value="{!eachCert.Name}"></apex:outputText></apex:column>
+                  <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.CreatedDate}"/></apex:outputText></apex:column>
+                  <apex:column headerValue="Approval Status"><apex:outputText value="{!eachCert.Status__c}"></apex:outputText></apex:column>
+                  <apex:column headerValue="Referral Fee (%)">
+                      <apex:outputText value="{!eachCert.Percentage_Referral_Fee__c}" rendered="{!IF(eachCert.Status__c == 'Approved', true, false)}" />
+                 </apex:column>
+              </apex:pageBlockTable>
+      </apex:pageBlockSection>
+    </apex:pageBlock>
+    
+</apex:page>

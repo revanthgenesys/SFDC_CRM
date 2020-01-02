@@ -1,0 +1,190 @@
+<apex:page standardController="Order_Line_Item__c" extensions="OrderLineItemController" >
+<apex:sectionHeader subtitle="New Order Line Item" title="Order Line Item Edit" /> 
+<apex:stylesheet value="{!$Resource.QuotingToolStyles}"/>
+<script type="text/javascript"> 
+  function openLookup(baseURL, width, modified, searchParam){
+    var originalbaseURL = baseURL;
+    var originalwidth = width;
+    var originalmodified = modified;
+    var originalsearchParam = searchParam;
+  
+    var lookupType = baseURL.substr(baseURL.length-3, 3);
+    if (modified == '1') baseURL = baseURL + searchParam;
+ 
+    var isCustomLookup = false;
+  
+    
+    if(lookupType == "01t"){
+ 
+      var urlArr = baseURL.split("&");
+      var txtId = '';
+      if(urlArr.length > 2) {
+        urlArr = urlArr[1].split('=');
+        txtId = urlArr[1];
+      }
+ 
+      
+      baseURL = "/apex/CustomProduct2Lookup?txt=" + txtId;
+ 
+      
+      baseURL = baseURL + "&frm=" + escapeUTF("{!$Component.orderLineItem}");
+      if (modified == '1') {
+        baseURL = baseURL + "&lksearch=" + searchParam;
+      }
+      
+      if(txtId.indexOf('Product') > -1 ){
+        isCustomLookup = true;
+      }
+    }
+ 
+ 
+    if(isCustomLookup == true){
+      openPopup(baseURL, "lookup", 350, 480, "width="+width+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
+    }
+    else {
+      if (modified == '1') originalbaseURL = originalbaseURL + originalsearchParam;
+      openPopup(originalbaseURL, "lookup", 350, 480, "width="+originalwidth+",height=480,toolbar=no,status=no,directories=no,menubar=no,resizable=yes,scrollable=no", true);
+    } 
+  }
+</script>
+
+    <apex:form id="orderLineItem">
+        <apex:pageBlock title="Order Line Item Edit">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveFn}" status="status" reRender="orderLineItem"/>
+                <apex:commandButton value="Save & New" action="{!saveNewFn}" rendered="{!saveNewFlag}" status="status" reRender="orderLineItem"/>
+                <apex:commandButton value="Cancel" action="{!backFn}" immediate="true" /> 
+            </apex:pageBlockButtons>
+            <!-- This section is NOT Customer Care -->  
+            <apex:pageBlockSection title="Information" rendered="{!NOT(isTechSprt)}">
+                <!--<apex:inputField id="Order" value="{!orderLineItem.Order__c}"/>-->
+                <apex:inputField id="Product" required="true" value="{!orderLineItem.Product__c}" rendered="{!NOT(showFixedProduct)}"/>
+                
+                <apex:selectList id="Product1" value="{!orderLineItem.Product__c}" label="Product" multiselect="false" size="1" rendered="{!showFixedProduct}">
+                <apex:selectOptions value="{!PPUNames}"/> 
+               <!-- <apex:actionSupport event="test">
+                <apex:param name="PPUValue" assignTo="{!orderLineItem.Product__c}" value="{!getproductAPNumber}"/>
+                </apex:actionSupport>  -->              
+                </apex:selectList>
+                
+                
+                
+                <!--<apex:outputField id="Product1" value="{!orderLineItem.Product__c}" rendered="{!showFixedProduct}"/>-->
+                <apex:inputField required="true" value="{!orderLineItem.BigMachines_Quantity__c}"/>
+                <apex:inputField id="Order" value="{!orderLineItem.Memo__c}" style="width: 400px"/>
+                <apex:inputField id="totalOrder" label="Order Amount" value="{!orderLineItem.List_Price__c}" />
+                <apex:inputField value="{!orderLineItem.Maintenance_Start_Date__c}"/>
+                <apex:inputField value="{!orderLineItem.Maintenance_End_Date__c }"/>  
+                <apex:inputField value="{!orderLineItem.Maintenance_No_of_Months__c}"/>
+                  
+            <!--      <apex:inputField required="true" value="{!orderLineItem.Sales_Price__c}"/>
+                <apex:inputField value="{!orderLineItem.Maintenance_Start_Date__c}"/>
+                <apex:inputField value="{!orderLineItem.Maintenance_End_Date__c}"/> -->
+            </apex:pageBlockSection>
+            <apex:pageBlockSection rendered="{!isEntitlementAdj}">
+                    <apex:repeat value="{!$ObjectType.Order_Line_Item__c.FieldSets.NRO_Entitlement_Adj_Fields}" var="f" >                            
+                        <apex:inputField value="{!orderLineItem[f]}" required="{!f.required}" rendered="{!NOT(pg == 'view')}"/>                    
+                    </apex:repeat>
+            </apex:pageBlockSection>
+             <!--- Technical Support (Customer Care) section --->
+            <apex:pageBlockSection title="Software Delivery" columns="1" rendered="{!isTechSprt}">
+                <apex:inputText value="{!orderLineItem.Memo__c}" maxlength="250" size="100"/>
+                
+               <apex:selectList id="selectType" value="{!techSupNroType}" size="1" label="Package Type">
+                    <apex:selectOption itemValue="IP" itemLabel="IP"/>
+                    <apex:selectOption itemValue="CD" itemLabel="CD"/>
+                    <apex:actionSupport rerender="orderLineItem" event="onchange"/>
+               </apex:selectList>
+                
+                <apex:inputField value="{!orderLineItem.Support_Product__c}" rendered="{!techSupNroType == 'IP'}">
+                   <apex:actionSupport event="onchange" rerender="versionList" action="{!getVersions}" status="status"/>
+                 </apex:inputField>
+                 
+                 <apex:inputField value="{!orderLineItem.CD_Name__c}" rendered="{!techSupNroType == 'CD'}">
+                   <apex:actionSupport event="onchange" rerender="versionList" action="{!getVersions}" status="status"/>
+                 </apex:inputField>
+                
+                <apex:inputCheckbox label="Untested/Restricted" value="{!orderLineItem.isVersionUntested__c}" > 
+                    <apex:actionSupport rerender="orderLineItem" event="onchange"/>
+                </apex:inputCheckbox>
+                       
+                <apex:selectList value="{!orderLineItem.Product_Version1__c}" label="Version" id="versionList" size="1" style="width:150px; height:20px;" rendered="{!NOT(orderLineItem.isVersionUntested__c)}">
+                         <apex:selectOptions value="{!versions}" />     
+                </apex:selectList>
+                <apex:inputField value="{!orderLineItem.Product_Version1__c}" label="Version" rendered="{!orderLineItem.isVersionUntested__c}"/>
+                           
+                <apex:inputField value="{!orderLineItem.Operating_System__c}"/>
+                
+                <apex:inputField value="{!orderLineItem.Language_lk__c}"/>
+            </apex:pageBlockSection>                      
+       <!-- End Technical Support section --->
+            <apex:pageBlockSection title="System Information">
+            <apex:outputField value="{!orderLineItem.Name}"/>
+                <apex:outputField value="{!orderLineItem.APN_Number__c}"/>
+                <apex:outputField value="{!orderLineItem.Material_Number__c}"/>
+            </apex:pageBlockSection>
+
+        </apex:pageBlock>
+        <apex:outputPanel id="ConfirmPanel" >
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!showConfirmPanel}"/>
+            <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!showConfirmPanel}" style="height:300px; width:600px; overflow: auto;">
+                <apex:pageMessages />
+                <apex:pageBlock title="Product requires Acknowledgement">
+                    <apex:pageBlockButtons location="bottom">                       
+                        <apex:commandButton value="Continue" action="{!confBoxProceed}" reRender="ConfirmPanel" status="closingStatus" />
+                        <apex:commandButton value="Cancel" action="{!confBoxCancel}" reRender="ConfirmPanel" status="closingStatus"/>                        
+                        <apex:actionStatus id="closingStatus">
+                            <apex:facet name="start">
+                                <apex:image value="/img/loading.gif"/>
+                            </apex:facet> 
+                        </apex:actionStatus>
+                    </apex:pageBlockButtons>
+                    <apex:pageBlockSection columns="1">
+                        <apex:outputPanel >
+                            <table cellpadding="5" cellspacing="5" style="width:100%;">
+                                <tr>                                
+                                    <th>
+                                        Product
+                                    </th>
+                                    <th>
+                                        Important Note
+                                    </th>
+                                    <th>
+                                        I acknowledge*
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {!productToConfirm.Description}<br/>({!productToConfirm.Name})      
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!productToConfirm.Notification_Message__c}"/>
+                                    </td>
+                                    <td>
+                                        <apex:inputCheckbox value="{!confirmSelected}"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>                    
+                </apex:pageBlock>         
+                <apex:outputText value="*Acknowledging this message means that you own the responsibility to take action as indicated in lieu of PM approvals." />       
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <div style="height:15px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                <apex:outputPanel >
+                    <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                    <apex:outputPanel styleClass="custPopup" layout="block">
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>
+    </apex:form>
+          <apex:relatedList rendered="true" list="Notes"/>
+</apex:page>

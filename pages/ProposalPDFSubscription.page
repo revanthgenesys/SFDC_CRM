@@ -1,0 +1,997 @@
+<apex:page sidebar="false" controller="ProposalPDFSubscriptionController" showHeader="false" standardStylesheets="false" renderAs="PDF"
+    readOnly="true"  language="{!quote.Proposal_Language__c}" > <!-- renderAs="PDF" -->
+    <apex:stylesheet value="{!URLFOR($Resource.ProposalCss1)}" />     
+    <table style="width:100%;font-family:Calibri;font-size:13px">
+        <tr>
+            <td width="32%">
+                <img src="{!$Resource.GenesysLogo}" width="200px;"/><br/>
+                <apex:outputField value="{!quote.Selling_Entity__c}"/>
+            </td>
+            <td width="15%">&nbsp;</td>
+            <td width="53%" style="text-align:left;">
+                <table cellspacing="3" cellpadding="3" style="font-size:10pt;">
+                    <tr>
+                        <th style="width:120px;">Services Order Form:</th>
+                        <td style="width:300px;">
+                            <apex:outputField value="{!quote.Name}"/>    
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Legal Entity:</th>
+                        <td>
+                            {!quote.BigMachines__Opportunity__r.Country_Selling_Entity__c}
+                        </td>                        
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr><td>&nbsp;</td></tr>
+        <tr>            
+            <td colspan="3">
+                <table style="width:100%;font-family:Calibri;font-size:13px">
+                    <tr>
+                        <td style="width:50%">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">Bill To</td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Sold_To_Name__r.Name}"/><br/>
+                                        <apex:outputPanel layout="none">                                
+                                            {!quote.Sold_To_Name__r.Name}    <br/>
+                                            {!quote.Sold_To_Name__r.Street1__c}&nbsp;{!quote.Sold_To_Name__r.Street2__c}&nbsp;{!quote.Sold_To_Name__r.Street3__c}  <br/>
+                                            {!quote.Sold_To_Name__r.City__c} <br/>
+                                            {!quote.Sold_To_Name__r.StateProvince__c}  {!quote.Sold_To_Name__r.ZipCode__c} <br/>
+                                            {!quote.Sold_To_Name__r.Country__r.Name}
+                                        </apex:outputPanel>
+                                    </td>
+                                </tr>
+                            </table>   
+                        </td>
+                        <td style="width:50%">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13pxtext-align:center;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr style="background-color:#aeb0b2;">
+                                    <th>
+                                        Offering Type    
+                                    </th>
+                                    <th>
+                                        Platform Type    
+                                    </th>
+                                    <th>
+                                        PureSuccess Offer    
+                                    </th>                                    
+                                </tr> 
+                                <tr>
+                                    <td>
+                                        {!IF(isSmallMediumCenter, 'PureConnect SMCC', quote.Offering_Type__c)}
+                                    </td>
+                                    <td>
+                                        {!quote.Quote_Business_Type__c}
+                                    </td>
+                                    <td>
+                                        {!quote.PureSuccess__c}
+                                    </td>                                    
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:50%">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr style="background-color:#aeb0b2;">
+                                    <th>
+                                        Date Created    
+                                    </th>
+                                    <th>
+                                        Quote Expiration
+                                    </th>                                 
+                                </tr> 
+                                <tr>
+                                    <td>
+                                        <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                            <apex:param value="{!quote.CreatedDate}" />
+                                        </apex:outputText>
+                                    </td>
+                                    <td>
+                                        <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                            <apex:param value="{!quote.Expiration_Date__c}" />
+                                        </apex:outputText>
+                                    </td>                                  
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="width:50%">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr style="background-color:#aeb0b2;">
+                                    <th>
+                                        <apex:outputText value="Subscription Term Start Date" rendered="{!quote.Amendment_For__c == null}" />
+                                        <apex:outputText value="Amendment Date" rendered="{!quote.Amendment_For__c != null}" />
+                                    </th>
+                                    <th style="display:{!IF(showDeplPeriod, 'table-cell','none')}"> 
+                                         Deployment Period 
+                                    </th>
+                                    <th>
+                                        {!IF(quote.Amendment_For__c == null, 'Initial Subscription Term Length', 'Amendment Term Length')}            
+                                    </th>  
+                                    <th>
+                                        Optional Renewal Term Length        
+                                    </th>
+                                </tr> 
+                                <tr>
+                                    <td> 
+                                        {!IF(showDeplPeriod, 'End of Deployment Period','Date of Invoice')} 
+                                    </td>                                     
+                                    <td style="display:{!IF(showDeplPeriod, 'table-cell','none')}"> 
+                                        {!quote.Ramp_Period__c} Days
+                                    </td>
+                                    <td>
+                                        <apex:outputText value="{0, number, 00}">
+                                            <apex:param value="{!quote.No_Of_Months__c}" />
+                                        </apex:outputText>
+                                        &nbsp;
+                                        <apex:outputText value="Months" rendered="{!quote.No_Of_Months__c != null}" />
+                                    </td>
+                                    <td>
+                                        {!quote.Optional_extended_term_length_Months__c}
+                                        &nbsp;
+                                        <apex:outputText value="Months" rendered="{!quote.Optional_extended_term_length_Months__c != null}" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:50%">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr style="background-color:#aeb0b2;">
+                                    <th>
+                                        Account Executive        
+                                    </th>
+                                    <th>
+                                        Customer Contact    
+                                    </th>                                 
+                                </tr> 
+                                <tr>
+                                    <td>
+                                        {!quote.Owner.FirstName} {!quote.Owner.LastName}
+                                    </td>
+                                    <td>
+                                        {!quote.Contact__r.FirstName} {!quote.Contact__r.LastName}
+                                    </td>                                  
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="width:50%">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr style="background-color:#aeb0b2;">
+                                    <th>
+                                        Payment Terms         
+                                    </th>
+                                    <th>
+                                        Billing Period  
+                                    </th>  
+                                    <th>
+                                        Currency        
+                                    </th>
+                                </tr> 
+                                <tr>
+                                    <td> 
+                                        {!quote.Order_Payment_Terms__c}   
+                                    </td>
+                                    <td>
+                                        {!quote.Billing_Period__c}
+                                    </td>
+                                    <td>
+                                        {!quote.currencyISOCode}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:50%">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:left;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr >
+                                    <td style="background-color:#aeb0b2;width:60px;">
+                                        Phone        
+                                    </td>
+                                    <td>
+                                        {!quote.Owner.Phone}    
+                                    </td>                                 
+                                </tr>
+                                <tr >
+                                    <td style="background-color:#aeb0b2;">
+                                        Email        
+                                    </td>
+                                    <td>
+                                        {!quote.Owner.Email}    
+                                    </td>                                 
+                                </tr>
+                            </table>
+                        </td>
+                          <!-- Annual Price Increase -->
+                         <td style="width:50%">
+                           <apex:outputPanel rendered="{!(NOT(oneyear) && NOT(secondYrAmend))}">
+                                <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                    <tr style="background-color:#aeb0b2;">
+                                        <!-- Added Annual_Price_Escalation_Other__c field for -INC0419173 -->
+                                        <th>  
+                                            Annual Price Increase             
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                         {!IF(quote.Annual_Price_Escalation_Other__c == null, quote.Price_Escalation__c, quote.Annual_Price_Escalation_Other__c)}
+                                        </td>
+                                    </tr>
+                            </table>
+                          </apex:outputPanel>
+                        <!-- Bursting -->
+                          <apex:outputPanel rendered="{!ShowBurstFields}">
+                            <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                <tr style="background-color:#aeb0b2;">                                  
+                                    <th >   
+                                        Burst Allowance     
+                                    </th>  
+                                    <th>  
+                                        Burst Premium           
+                                    </th>
+                                </tr>
+                                <tr> 
+                                    <!-- Added Overage_Allowance_Other__c field for -INC0419173 -->
+                                    <td>    
+                                        {!IF(quote.Overage_Allowance_Other__c == null, 'N/A', quote.Overage_Allowance_Other__c)}
+                                    </td>
+                                    <td>  
+                                        <apex:outputText value="N/A" rendered="{!quote.Overage_Price_Premium__c == null}" />
+                                        <apex:outputText value="{0, number, ###}" rendered="{!quote.Overage_Price_Premium__c != null}">
+                                            <apex:param value="{!quote.Overage_Price_Premium__c}"/>
+                                        </apex:outputText>
+                                        <apex:outputText value="%" rendered="{!quote.Overage_Price_Premium__c != null}" /> 
+                                    </td>
+                                </tr>
+                            </table>
+                          </apex:outputPanel>
+                     </td>
+
+                    </tr>
+                    <tr>
+                        <td style="width:50%">
+                            <apex:outputPanel rendered="{!quote.Multi_Year_Quote__c}">
+                                <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:left;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                    <tr>
+                                        <td style="background-color:#aeb0b2;width:260px;">
+                                            Year 1 Partner Discount      
+                                        </td>
+                                        <td>
+                                            {!partnerDiscountY1}%   
+                                        </td>                                 
+                                    </tr>                                   
+                                    <tr style="display:{!IF(oneyear, 'none', 'table-row')}">                                   
+                                        <td style="background-color:#aeb0b2;">
+                                            Year 2 Partner Discount      
+                                        </td>
+                                        <td>
+                                            {!partnerDiscountY2}%
+                                        </td>                                                             
+                                    </tr>                                    
+                                </table>
+                            </apex:outputPanel>
+                        </td>
+                        <td style="width:50%">
+                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:50%">
+                            <apex:outputPanel rendered="{!quote.Order_Type__c == 'Migration'}">
+                                <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:left;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+                                    <tr >
+                                        <td style="background-color:#aeb0b2;width:260px;">
+                                            Migration Credit         
+                                        </td>
+                                        <td>
+                                            <apex:outputField value="{!quote.Migration_Credit__c}"/>
+                                        </td>                                 
+                                    </tr>
+                                </table> 
+                            </apex:outputPanel>
+                        </td>
+                        <td style="width:50%">
+                            
+                        </td>
+                    </tr>
+                </table>
+                <br/><br/><br/>
+                <table style="width:70%;font-family:Calibri;font-size:13px">
+                    <tr>
+                        <td>
+                            <table id="theTable" cellspacing="1" cellpadding="5" border="1" style="font-weight:bold;font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:right;">
+                                <tr>
+                                    <th style="background-color:#aeb0b2;">Total</th>
+                                    <th class="headerRow" >
+                                      Amount 
+                                      <span style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        (Change)
+                                      </span> 
+                                    </th>
+                                    <th class="headerRow" style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">Amount <br/>(Running Total)</th>                                   
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">
+                                        Year 1 Annual Subscription Amount                    
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Annual_Contract_Value_1__c}"/>
+                                    </td>   
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decY1AnnualSubscriptionAmount}" />
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+
+                                 <!-- Seasonal Licensing Y1 -->                             
+                                 <tr style="display:{!IF(list_QuoteBurstTerms.size>0, 'table-row', 'none')}"> 
+                                    <td style="background-color:#aeb0b2;">
+                                        Year 1 Committed Seasonal License Amount                   
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Seasonal_License_Net_Value_Y1__c}"/>
+                                    </td>   
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decY1SeasonalLicenseAmount}" /> 
+                                        </apex:outputText>
+                                    </td>
+                               </tr>
+
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">
+                                         PureSuccess Offer Subscription Amount                       
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.PureSuccess_Offer_Subscription_Amount__c}" rendered="{!NOT(quote.Show_Genesys_Care_Tab__c)}"/>
+                                        <apex:outputText value="N/A" rendered="{!quote.Show_Genesys_Care_Tab__c}"/>
+                                    </td>
+                                    <td  style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}"  rendered="{!NOT(quote.Show_Genesys_Care_Tab__c)}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decPureSuccessOfferSubscriptionAmount}" />
+                                        </apex:outputText>
+                                        <apex:outputText value="N/A" rendered="{!quote.Show_Genesys_Care_Tab__c}"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">
+                                        A La Carte PureSuccess Services Amount                       
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.A_La_Carte_PureSuccess_Services_Amount__c}"/>
+                                    </td>
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decALaCartePureSuccessServiceAmount}" />
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">
+                                        Non-Recurring Fees
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.One_Time_Charges_1__c}"/>
+                                    </td>
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decNonRecurringFee}" />
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">
+                                        3rd party Care
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.BEP_Third_Party_Genesys_Care__c}"/>
+                                    </td>
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decThirdPartyCare}" />
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                                <tr style="display:{!IF(secondYrAmend, 'none', 'table-row')}">   
+                                    <td style="background-color:#aeb0b2;">
+                                        Amount Due at Initial Invoice                        
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Total_Contract_Value_1__c}"/>
+                                    </td>
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decAmountDueAtInitialInvoice}" />
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+ 
+                                <tr style="display:{!IF(oneyear, 'none', 'table-row')}">                                   
+                                    <td style="background-color:#aeb0b2;">
+                                        Year 2 Annual Subscription Amount                
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Annual_Contract_Value_2__c}"/>
+                                    </td>
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decY2AnnualSubscriptionAmount}" />
+                                        </apex:outputText>
+                                    </td>                                
+                                </tr>
+                                
+                                  <!-- Seasonal Licensing Y2 -->
+                                <tr style="display:{!IF(list_QuoteBurstTerms.size>0 && !oneyear, 'table-row', 'none')}"> 
+                                    <td style="background-color:#aeb0b2;">
+                                        Year 2 Committed Seasonal License Amount                   
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Seasonal_License_Net_Value_Y2__c}"/>
+                                    </td>   
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decY2SeasonalLicenseAmount}" /> 
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                             
+                                <tr style="display:{!IF(oneyear, 'none', 'table-row')}">                                   
+                                    <td style="background-color:#aeb0b2;">
+                                        Amount Due at Anniversary                
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Amount_Due_At_Anniversary__c}"/>
+                                    </td>
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decAmountDueAtAnniversary}" />
+                                        </apex:outputText>
+                                    </td>             
+                                </tr> 
+                             
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">
+                                       Credit Amount:      
+                                    </td>
+                                    <td>
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decCredit}" />
+                                        </apex:outputText>
+                                    </td>
+                                </tr>                                                        
+                                <tr>
+                                    <td style="background-color:#aeb0b2;">
+                                        Total Commitment                 
+                                    </td>
+                                    <td>
+                                        <apex:outputField value="{!quote.Cloud_Total__c}"/>
+                                    </td>
+                                    <td style="display:{!IF(quote.Amendment_For__c == null, 'none', 'block')}">
+                                        <apex:outputText value="{!quote.currencyIsoCode} {0,number,###,##0.00}">
+                                            <apex:param value="{!decTotalCommitment}" />
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>                
+            </td>
+        </tr>
+    </table>
+    <div class="page-break"></div>
+    <apex:outputPanel layout="none">  
+    Hardware will be billed when shipped. Taxes and shipping will be calculated upon invoicing             
+        <table width="100%" cellpadding="10" style="font-family:Calibri;font-size:13px">
+            <tr >           
+                <th width="50%">{!quote.Sold_To_Name__r.name} (&quot;Customer&quot;)</th>
+                <th width="50%">
+                    {!sellingEntityName}
+                    <!--
+                    {!CASE(quote.Opp_Sold_To_Country__c,
+                    'United Kingdom','Genesys Telecommunications Laboratories B.V.',
+                    'Ireland','Genesys Telecommunications Laboratories B.V.',
+                    'Genesys Telecommunications Laboratories, Inc. (\"Genesys\")')}
+                    --> 
+                </th>
+            </tr>
+            <tr>
+                <td>___________________________________<br/>Signature</td>
+                <td>___________________________________<br/>Signature</td>
+            </tr>
+            <tr>
+                <td>___________________________________<br/>Print name</td>
+                <td>___________________________________<br/>Print name</td>
+            </tr>
+            <tr>
+                <td>___________________________________<br/>Title</td>
+                <td>___________________________________<br/>Title</td>
+            </tr>
+            <tr>
+                <td>___________________________________<br/>Date</td>
+                <td>___________________________________<br/>Date</td>
+            </tr>
+        </table>
+    </apex:outputPanel>
+    <br/><br/>
+    <apex:outputPanel >
+        <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:12px" cellpadding="5px" cellspacing="5px" align="left" width="100%">
+            <tr>
+                <td style="width:140px;">
+                    <br/><br/><br/>
+                    _______ <br/>
+                    Initials
+                </td>
+                <td>
+                    <b><i>
+                    By signing this Service Order, the Customer (i) commits to pay for all fees billed as contemplated in the Agreement and detailed herein, and (ii) agrees to issue a Purchase Order in an amount sufficient to cover all fees billed under this Services Order.    If the Customer requires a Purchase Order for all amounts billed (including overages) , then it must indicate on the Purchase Order issued to cover minimum fees, that Genesys is authorized to bill overages to the Customer , using that Purchase Order for the duration of the Subscription or Optional Renewal Term. 
+                    </i></b>
+                </td>
+            </tr>
+        </table>
+    </apex:outputPanel>
+    <br/><br/><br/><br/>
+    <apex:outputPanel rendered="{!quote.Treat_SO_as_PO__c}">        
+        <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:12px" cellpadding="5px" cellspacing="5px" align="left" width="100%">
+            <tr>
+                <td style="width:140px;">
+                    <br/><br/><br/>
+                    _______ <br/>
+                    Initials
+                </td>
+                <td>
+                    <b><i>
+                    The Customer does not issue separate purchase orders for the services committed to under this executed Services Order.  As such, by signing this Services Order, the Customer confirms that all necessary approvals have been provided internally to commit the Customer to paying all fees listed herein and that Genesys may utilize this Service Order in lieu of a Purchase Order for invoicing and collections.
+                    </i></b>
+                </td>
+            </tr>
+        </table>
+    </apex:outputPanel>
+    <br/>
+    <div class="page-break"></div>
+    Annual Subscription Licensing
+    <!-- Subscription Quote Products -->
+    <table id="theTable" cellspacing="1" cellpadding="5" border="1" style="font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+        <tr class="header">
+            <th>
+                Product
+            </th>
+            <th>
+                Description
+            </th>
+            <th>
+                Quantity
+            </th>
+ 
+            <th style="display:{!IF(secondYrAmend, 'none', 'table-cell')}">  
+                 Year 1 Net Unit Price
+            </th>   
+
+            <th style="display:{!IF(oneyear, 'none', 'table-cell')}">   
+                 Year 2 Net Unit Price
+            </th>  
+
+            <th style="display:{!IF(secondYrAmend, 'none', 'table-cell')}">
+                 Year 1 Ext. Net Price
+            </th>
+
+            <th style="display:{!IF(oneyear, 'none', 'table-cell')}">
+                 Year 2 Ext. Net Price
+            </th>  
+
+        </tr>        
+        <apex:repeat value="{!quoteProducts}" var="eachProduct">
+            <tr >  
+                <td style="{!eachProduct.rowStyle}">
+                    <apex:outputText value="{!eachProduct.record.BigMachines__Product__r.APN_Number__c}"/>
+                    {!eachProduct.headerName}       
+                </td>
+                <td style="{!eachProduct.rowStyle}">
+                    <apex:outputText value="{!eachProduct.record.Product_Description__c}"/>
+                    {!eachProduct.headerDescription}
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;">
+                    <apex:outputText value="{0, number, ######}">
+                        <apex:param value="{!eachProduct.record.BigMachines__Quantity__c}" />
+                    </apex:outputText>    
+                </td>
+ 
+                <td style="display:{!IF(secondYrAmend, 'none', 'table-cell')}; {!eachProduct.rowStyle}text-align:right;">
+                    <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}">
+                        <apex:param value="{!eachProduct.record.Net_Unit_Price_1__c}" />
+                    </apex:outputText>     
+                </td>
+
+                <td  style="display:{!IF(oneyear, 'none', 'table-cell')}; {!eachProduct.rowStyle}text-align:right;">
+                  <!-- MS added 7/31/19
+                  -->
+                    <apex:outputPanel rendered="{!NOT(CONTAINS(eachProduct.record.Product_Description__c,'One-Time Credit'))}">
+                        <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}">
+                            <apex:param value="{!eachProduct.record.Net_Unit_Price_2__c}" />                    
+                        </apex:outputText> 
+                    </apex:outputPanel>    
+                </td>
+                <td style="display:{!IF(secondYrAmend, 'none', 'table-cell')}; {!eachProduct.rowStyle}text-align:right;" >
+                    <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                        <apex:param value="{!eachProduct.record.Ext_Net_Price_1__c}" />
+                    </apex:outputText>     
+                </td>
+                <td style="display:{!IF(oneyear, 'none', 'table-cell')}; {!eachProduct.rowStyle}text-align:right;">
+                    <apex:outputPanel rendered="{!NOT(CONTAINS(eachProduct.record.Product_Description__c,'One-Time Credit')) }">
+                        <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                            <apex:param value="{!eachProduct.record.Ext_Net_Price_2__c}" />
+                        </apex:outputText>
+                    </apex:outputPanel>      
+                </td>
+            </tr>
+        </apex:repeat>                     
+    </table>
+        <!-- END Annual Subscription Products-->
+    <br/>  
+        <!-- Bursting (Seasonal Licensing) -->
+        <apex:repeat value="{!list_QuoteBurstTerms}" var="quoteBurstTerm" rendered="{!list_QuoteBurstTerms.size>0}">  
+            <div class="page-break"></div>
+            Seasonal Licensing - {!quoteBurstTerm.term.Term_Length_Months__c} Months
+            <table id="the6Table" cellspacing="1" cellpadding="5" border="1" style="font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+                <tr class="header">
+                    <th>
+                        Product
+                    </th>
+                    <th>
+                        Description
+                    </th>
+                    <th>
+                        Quantity
+                    </th>
+        
+                    <th style="display:{!IF(secondYrAmend, 'none', 'table-cell')}">  
+                        Year 1 Net Unit Price
+                    </th>   
+    
+                    <th style="display:{!IF(oneyear, 'none', 'table-cell')}">   
+                        Year 2 Net Unit Price
+                    </th>  
+    
+                    <th style="display:{!IF(secondYrAmend, 'none', 'table-cell')}"> 
+                        Year 1 Ext. Net Price
+                    </th>
+    
+                    <th style="display:{!IF(oneyear, 'none', 'table-cell')}">
+                        Year 2 Ext. Net Price
+                    </th>  
+    
+                </tr>        
+                <apex:repeat value="{!quoteBurstTerm.qtprods}" var="burstProduct">
+                    <tr >  
+                        <td >
+                            <apex:outputText value="{!burstProduct.BigMachines__Product__r.APN_Number__c}"/>
+                        </td>
+                        <td>
+                            <apex:outputText value="{!burstProduct.Product_Description__c}"/>
+                        </td>
+                        <td style="text-align:right;">
+                            <apex:outputText value="{0, number, ######}">
+                                <apex:param value="{!burstProduct.BigMachines__Quantity__c}" />
+                            </apex:outputText>    
+                        </td>
+                        <td style="display:{!IF(secondYrAmend, 'none', 'table-cell')}; text-align:right;">
+                            <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                                <apex:param value="{!burstProduct.Net_Unit_Price_1__c}" />
+                            </apex:outputText>     
+                        </td>
+                        <td  style="display:{!IF(oneyear, 'none', 'table-cell')}; text-align:right;">
+                            <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                                <apex:param value="{!burstProduct.Net_Unit_Price_2__c}" />                    
+                            </apex:outputText> 
+                        </td>
+                        <td style="display:{!IF(secondYrAmend, 'none', 'table-cell')}; text-align:right;" >
+                            <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                                <apex:param value="{!burstProduct.Ext_Net_Price_1__c}" />
+                            </apex:outputText>     
+                        </td>
+                        <td style="display:{!IF(oneyear, 'none', 'table-cell')}; text-align:right;">                       
+                                <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                                    <apex:param value="{!burstProduct.Ext_Net_Price_2__c}" />
+                                </apex:outputText>   
+                        </td>
+                    </tr>
+                </apex:repeat>                     
+            </table>
+        </apex:repeat>
+       <!-- END Bursting -->
+    
+    <br/>
+    <!-- START PureSuccess -->
+    <apex:outputPanel rendered="{!NOT(isSmallMediumCenter)}">
+
+    PureSuccess Offer Subscription<br/><br/>
+    <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center; width:50%;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+        <tr style="background-color:#aeb0b2;">
+            <th>
+                Offer    
+            </th>
+            <th>
+                Price
+            </th>
+            <th>
+                Included Tokens
+            </th>
+        </tr> 
+        <tr>
+            <td>
+                {!quote.PureSuccess__c}
+            </td>
+            <td>
+                {!quote.PureSuccess_Offer_Subscription_Amount__c}
+            </td>
+            <td>
+                {!quote.Token_Value__c}
+            </td>
+            
+        </tr>
+    </table>
+    <br/><br/><br/>
+    A La Carte PureSuccess Services
+    <!-- Subscription Quote Products -->
+    <table id="theTable" cellspacing="1" cellpadding="5" border="1" style="font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+        <tr class="header">
+            <th>
+                Product
+            </th>
+            <th>
+                Quantity
+            </th>
+            <th>
+                Net Unit Price
+            </th>
+            <th style="display:{!IF(quote.Multi_Year_Quote__c, '','none')}">
+                 Partner Price
+            </th>  
+            <th>
+                Total Sale Price
+            </th>
+        </tr>        
+        <apex:repeat value="{!quoteProductsAlaCarte}" var="eachProduct">
+            <tr >    
+                <td style="{!eachProduct.rowStyle}">
+                    <apex:outputText value="{!eachProduct.record.BigMachines__Product__r.Name}"/>
+                    {!eachProduct.headerName}       
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;">
+                    <apex:outputText value="{0, number, ######}">
+                        <apex:param value="{!eachProduct.record.BigMachines__Quantity__c}" />
+                    </apex:outputText>    
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;width:100px;">
+                    <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}">
+                        <apex:param value="{!eachProduct.record.Net_Unit_Price__c}" />
+                    </apex:outputText>     
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;width:100px;display:{!IF(quote.Multi_Year_Quote__c, '','none')}">
+                    <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}">
+                        <apex:param value="{!eachProduct.record.Partner_Price__c}" />
+                    </apex:outputText>     
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;width:100px;">
+                    <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                        <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+                    </apex:outputText>   
+                </td>                
+            </tr>
+        </apex:repeat>                     
+    </table>
+    <br/><br/><br/>
+    <table border="1" style="border: 1px solid black;border-collapse:collapse;font-family:Calibri;font-size:13px;text-align:center; width:30%;" cellpadding="5px" cellspacing="5px" align="left" width="90%">
+        <tr >
+            <td style="background-color:#aeb0b2;">
+                {!IF(quote.Amendment_For__c == null, 'Total PureSuccess Tokens', 'Added PureSuccess Tokens')}                             
+            </td>
+            <td>
+                {!IF(quote.Amendment_For__c == null, quote.Token_Value__c, amendTokens)}  
+            </td>        
+        </tr> 
+    </table>
+    <br/><br/><br/>
+
+    </apex:outputPanel> 
+    <!-- END PureSuccess -->    
+
+    Non-Recurring Fees
+    <!-- Upfront Fees -->
+    <table id="theTable" cellspacing="1" cellpadding="5" border="1" style="font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+        <tr class="header">
+            <th>
+                Product
+            </th>
+            <th>
+                Description
+            </th>
+            <th>
+                Quantity
+            </th>
+            <th>
+                Net Unit Price
+            </th>
+            <th style="display:{!IF(quote.Multi_Year_Quote__c, '','none')}">
+                 Partner Price
+            </th>  
+            <th>
+                Total Sale Price
+            </th>          
+        </tr>        
+        <apex:repeat value="{!quoteProductsUpfrontFees}" var="eachProduct">
+            <tr>    
+                <td style="{!eachProduct.rowStyle}">
+                    <apex:outputText value="{!eachProduct.record.BigMachines__Product__r.Name}"/>
+                    {!eachProduct.headerName}       
+                </td>
+                <td style="{!eachProduct.rowStyle}">
+                    <apex:outputText value="{!eachProduct.record.Product_Description__c}"/>
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;">
+                    <apex:outputText value="{0, number, ######}">
+                        <apex:param value="{!eachProduct.record.BigMachines__Quantity__c}" />
+                    </apex:outputText>    
+                </td>  
+                 <td style="{!eachProduct.rowStyle}text-align:right;width:100px;">
+                    <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}">
+                        <apex:param value="{!eachProduct.record.Net_Unit_Price__c}" />
+                    </apex:outputText>     
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;width:100px;display:{!IF(quote.Multi_Year_Quote__c, '','none')}">
+                    <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}">
+                        <apex:param value="{!eachProduct.record.Partner_Price__c}" />
+                    </apex:outputText>     
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;width:100px;">
+                    <apex:outputText value="{0, number, {!currencySymbol}{!strQuoteGeneralPrecisionOutputFormat}}">
+                        <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+                    </apex:outputText>   
+                </td>    
+            </tr>
+        </apex:repeat>                     
+    </table>
+    <div class="page-break"></div>
+         {!IF(quote.Amendment_For__c == null, 'Subscription Line Items', 'Total Subscription Line Items')}   
+    <!-- Subscription Quote Products -->
+    <table id="theTable" cellspacing="1" cellpadding="5" border="1" style="font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+        <tr class="header">
+            <th>
+                Product
+            </th>
+            <th>
+                Description
+            </th>
+            <th>
+                Quantity
+            </th>
+        </tr>        
+        <apex:repeat value="{!quoteProductsSubscriptionLine}" var="eachProduct">
+            <tr >    
+                <td style="{!eachProduct.rowStyle}">
+                    <apex:outputText value="{!eachProduct.record.BigMachines__Product__r.APN_Number__c}"/>
+                    {!eachProduct.headerName}       
+                </td>
+                <td style="{!eachProduct.rowStyle}">
+                    <apex:outputText value="{!eachProduct.record.Product_Description__c}"/>
+                    {!eachProduct.headerDescription}
+                </td>
+                <td style="{!eachProduct.rowStyle}text-align:right;">
+                    <apex:outputText value="{0, number, ######}">
+                        <apex:param value="{!eachProduct.record.Quantity__c}" />
+                    </apex:outputText>    
+                </td>                
+            </tr>
+        </apex:repeat>                     
+    </table>
+
+      <!-- Seasonal Licensing Products -->
+        <apex:repeat value="{!list_QuoteBurstTerms}" var="quoteBurstTerm" rendered="{!list_QuoteBurstTerms.size>0}">   
+            <div class="page-break"></div>
+            {!IF(quote.Amendment_For__c == null, '', 'Total')} Seasonal Licensing - {!quoteBurstTerm.term.Term_Length_Months__c} Months        
+             <table id="the2Table" cellspacing="1" cellpadding="5" border="1" style="font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+                <tr class="header">
+                    <th>
+                        Product
+                    </th>
+                    <th>
+                        Description
+                    </th>
+                    <th>
+                        Quantity
+                    </th>
+                </tr>        
+                <apex:repeat value="{!quoteBurstTerm.qtprods}" var="burstProduct">
+                    <tr>    
+                        <td>
+                           <apex:outputText value="{!burstProduct.BigMachines__Product__r.APN_Number__c}"/>   
+                        </td>
+                        <td>
+                            <apex:outputText value="{!burstProduct.Product_Description__c}"/>
+                        </td>
+                        <td style="text-align:right;">
+                            <apex:outputText value="{0, number, ######}">
+                                <apex:param value="{!burstProduct.Quantity__c}" />
+                            </apex:outputText>     
+                        </td>                
+                    </tr>
+                </apex:repeat>                     
+            </table>
+        </apex:repeat>
+    <!-- END Seasonal Licensing Products -->    
+
+    <br/><br/><br/>
+
+    <!-- START PureSuccess Offer Entitlements -->
+    <apex:outputPanel rendered="{!NOT(isSmallMediumCenter)}">
+        PureSuccess Offer Entitlements -
+        <apex:outputPanel rendered="{!quote.End_User_ID__c == quote.Sold_To_Name__c}">
+            PureSuccess Offer Entitlements (Additional details found <a target="_blank" href="https://docs.genesys.com/Documentation/PRSCS/Current/Portal/Welcome">here</a>)
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!quote.End_User_ID__c != quote.Sold_To_Name__c}">
+            PureSuccess Offer Entitlements (Additional details found <a target="_blank" href="https://docs.genesys.com/Documentation/PRSCS/Current/Partner/Welcome">here</a>)
+        </apex:outputPanel>
+  
+        <!-- Subscription Quote Products -->
+        <table id="theTable" cellspacing="1" cellpadding="5" border="1" style="font-family:Calibri;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+            <tr class="header">
+                <th>
+                    Product
+                </th>
+                <th>
+                    Quantity
+                </th>
+            </tr>        
+            <apex:repeat value="{!quoteProductsPureSuccessEntitlement}" var="eachProduct">
+                <tr >    
+                    <td style="{!eachProduct.rowStyle}">
+                        <apex:outputText value="{!eachProduct.record.BigMachines__Product__r.Description__c}"/>
+                        {!eachProduct.headerName}       
+                    </td>
+                    <td style="{!eachProduct.rowStyle}text-align:right;">
+                        <apex:outputText value="{0, number, ######}">
+                            <apex:param value="{!eachProduct.record.BigMachines__Quantity__c}" />
+                        </apex:outputText>    
+                    </td>                
+                </tr>
+            </apex:repeat>                     
+        </table>
+    </apex:outputPanel>
+    <!-- END PureSuccess Offer Entitlements -->
+
+
+    <div class="page-break"></div>
+    <apex:outputPanel rendered="{!quote.Special_Offer_Terms__c != ''}"  style="font-family:Calibri;font-size:13px;">
+        <br/><br/><b>
+        <apex:outputText value="{!$Label.ProposalPDF_Special_Offers_Business_Exceptions}" escape="false"/>  </b>
+        <br/><br/>
+        <apex:outputText value="{!quote.Special_Offer_Terms__c}" escape="false" />
+    </apex:outputPanel>
+    <br/><br/>
+    <apex:outputPanel style="font-family:Calibri;font-size:13px;text-align: justify;text-justify: inter-word;" rendered="{!quote.End_User_ID__c == quote.Sold_To_Name__c}">
+        <b>Terms and Conditions:</b>
+        This Services Order, together with the applicable Master Software License and Services Agreement that can be found at <a target="_blank" href="{!quote.MSA_Link__c}">{!quote.MSA_Link__c}</a>, the Direct Subscription Addendum that can be found at <a target="_blank" href="{!quote.Subscription_Addendum_Link__c}">{!quote.Subscription_Addendum_Link__c}</a>,, and all other schedules referenced by URL or otherwise (“Agreement”), are incorporated herein by reference, and contain the terms and conditions under which Genesys provides the above Covered Products to Customer. The Agreement constitutes the entire understanding between Customer and Genesys for the Covered Products, and supersedes all previous agreements and understandings between the parties regarding the subject matter herein. Customer acknowledges that it has read and agrees to the terms and conditions set forth herein and at the URLs as referenced in this Agreement. Customer’s execution on the line above indicates compliance with the customer’s business practices in making a purchase commitment equal to the Total Commitment Amount listed in the Subscription Overview displayed herein. All monthly overages are billable under this executed service order for the duration of the specified Term including any Optional Renewal Terms. Although Customer is invoiced annually in advance, usage is trued-up on a monthly basis.
+    </apex:outputPanel>
+    <apex:outputPanel style="font-family:Calibri;font-size:13px;text-align: justify;text-justify: inter-word;" rendered="{!quote.End_User_ID__c != quote.Sold_To_Name__c}">
+        <b>Terms and Conditions:</b>
+        This Services order is governed by the executed Genesys Master Partner Network Agreement, the Subscription Reseller Addendum{!IF(NOT(isSmallMediumCenter), ',', ' for Small to Mid-Sized Contact Centers,')} and any other referenced documents
+and all other schedules referenced by URL or otherwise (“Agreement”), are incorporated herein by reference, and contain the terms and conditions under which Genesys provides the above
+Covered Products to Customer. The Agreement constitutes the entire understanding between Customer and Genesys for the Covered Products, and supersedes all previous agreements and
+understandings between the parties regarding the subject matter herein. Customer acknowledges that it has read and agrees to the terms and conditions set forth herein and at the URLs as
+referenced in this Agreement. Customer’s execution on the line above indicates compliance with the customer’s business practices in making a purchase commitment equal to the Total
+Commitment Amount listed in the Subscription Overview displayed herein. All monthly overages are billable under this executed service order for the duration of the specified Term including
+any Optional Renewal Terms. Although Customer is invoiced annually in advance, usage is trued-up on a monthly basis.
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!quote.End_User_ID__c != quote.Sold_To_Name__c}" style="font-family:Calibri;font-size:13px;text-align: justify;text-justify: inter-word;">
+        <br/><br/>
+        <apex:outputText value="{!$Label.Indirect_Output_Message}" escape="false" />
+    </apex:outputPanel>
+</apex:page>

@@ -1,0 +1,70 @@
+<apex:page controller="stsController" docType="html-5.0">
+    <style>
+.hidden {
+display: none !important;
+}
+</style>
+    <apex:Form >
+        <apex:PageBlock title="Premier Success Services Customer Survey and Estimation Tool">
+            <apex:PageBlockSection title="1. Select Opportunity" columns="1">
+                <apex:inputField value="{!pssOpp.Opportunity__c}">
+                <apex:actionSupport event="onchange" action="{!getPss}" rerender="thePgBlck,loadBtn"/>
+                </apex:inputField>
+            </apex:PageBlockSection>
+            <apex:pageBlockSection id="thePgBlck" title="2. Create/Load Survey" columns="2">
+            <apex:outputPanel rendered="{!showPss}">              
+                    <apex:commandButton value="Create New Survey" styleClass="hidden"/>        
+                    <apex:commandButton action="{!renderBlankPage}" value="Create New Survey" reRender="surveyBlck,surveyBlck2"/>
+                    <br/>
+                    <br/>
+                    <apex:selectList multiselect="false" value="{!selectedPss}" size="1" rendered="{!showLoadOption}">  
+                        <apex:selectOptions value="{!items}"/>
+                    </apex:selectList>
+                    <br/>
+                    <apex:commandButton action="{!loadOpp}" value="Load Existing Survey" reRender="surveyBlck,surveyBlck2,estimateBlck" rendered="{!showLoadOption}"/>
+            </apex:outputPanel>
+            </apex:pageBlockSection>
+        </apex:PageBlock>
+        <apex:PageBlock id="surveyBlck"  title="Survey Info">
+            <apex:outputPanel rendered="{!showSurvey}">
+            	<apex:PageBlockSection title="Basic Customer Information" columns="1">
+                        <apex:inputField value="{!pssOpp.Name}" label="Survey Name:"/>
+                        <apex:inputField value="{!pssOpp.NumUsers__c}" label="How many users will be added to the instance?"/>
+                    	<apex:outputText value="{!tokenCount}" label="Token Count: "/>
+                </apex:PageBlockSection>
+            </apex:outputPanel>
+        </apex:PageBlock>
+        <apex:PageBlock id="surveyBlck2" title="Survey Questions">
+            <apex:outputPanel rendered="{!showSurvey}" layout="block" style="overflow: auto; height: 500px;">
+                <apex:repeat value="{!categoryTables}" var="categoryTable" id="theRepeat">
+                    <apex:PageBlockSection title="{!categoryTable.name}" columns="1">
+                        <apex:PageBlockTable value="{!categoryTable.tableRows}" var="row" title="{!categoryTable.name}" headerClass="hidden" width="100%">
+                            <apex:column value="{!row.question.question__c}" width="50%"/> 
+                            <apex:column headerValue="Response" width="10%">
+                                <apex:selectList size="1" id="status" value="{!row.quote.Quantity__c}" multiselect="false" rendered="{!IF(row.question.answerType__c=='Yes/No', 'true','false')}">
+                                	<apex:actionSupport event="onchange" action="{!getTokenCount}" rerender="surveyBlck"/>                                                                    
+                                    <apex:selectOption itemLabel="Yes" itemValue="1"/>
+                                    <apex:selectOption itemLabel="No" itemValue="0"/>
+                                </apex:selectList>                                
+                                <apex:inputField type="number" required="false" value="{!row.quote.Quantity__c}" rendered="{!IF(row.question.answerType__c=='Numeric', 'true','false')}">
+									<apex:actionSupport event="onchange" action="{!getTokenCount}" rerender="surveyBlck"/>                                                                
+                                </apex:inputField>
+                            </apex:column>    
+                            <apex:column value="{!row.question.tip__c}" width="40%"/>
+                        </apex:PageBlockTable>
+                    </apex:PageBlockSection>
+                </apex:repeat>
+            </apex:outputPanel>
+            <apex:pageblockButtons rendered="{!showSurvey}">
+                <apex:commandButton value="Show Estimate" action="{!updatePage}" reRender="estimateBlck"/>
+                <apex:commandButton value="Save" action="{!save}"/>
+                <apex:commandButton value="Delete" action="{!deleteOpp}" reRender="surveyBlck,surveyBlck2,estimateBlck,thePgBlck,loadBtn"/>                
+            </apex:pageblockButtons>            
+        </apex:PageBlock>
+        <apex:PageBlock id="estimateBlck" title="Estimate">    
+            <apex:OutputPanel rendered="{!showEstimate}">
+                <apex:outputText value="{!pssOpp.Summary__c}" escape="false"/>
+            </apex:OutputPanel>      
+        </apex:PageBlock>
+    </apex:Form>
+</apex:page>

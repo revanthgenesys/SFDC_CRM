@@ -1,0 +1,922 @@
+﻿<apex:page id="pg" controller="QuoteRevenueForecastController" action="{!init}" tabStyle="Opportunity" sidebar="false">
+    <!-- 
+    <link rel="stylesheet" href="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.treeview.css')}"/>
+    <script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.cookie.js')}" type="text/javascript"></script>
+    <script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.treeview.js')}" type="text/javascript"></script>    
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" />
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js" />
+    <apex:styleSheet value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/smoothness/jquery-ui.css" />
+    <apex:outputPanel id="pnlJS">  
+       <script type="text/javascript"> 
+            $.noConflict();             
+               $(function() {
+                   $("#tree").treeview({
+                       collapsed: false,
+                       animated: "medium",
+                       control:"#sidetreecontrol",
+                       persist: "location"
+                   });
+               })
+       </script> 
+    
+    </apex:outputPanel>
+     -->  
+    <!--    
+    <apex:sectionHeader title="Cloud Forecast" subTitle="{!opp.Name} - (Quote : {!quoteNumber})" />
+     -->
+     <head>
+    <apex:stylesheet value="/sCSS/21.0/sprites/1297816277000/Theme3/default/gc/versioning.css" />   
+    <apex:stylesheet value="/sCSS/21.0/sprites/1297816277000/Theme3/default/gc/extended.css" />﻿
+    
+    <style>
+        .columnHeaderClass{
+        text-align:right;
+        }
+    
+       /* popup_box DIV-Styles  Start*/
+        #popup_box {
+            display:none; /* Hide the DIV */
+            position:fixed;  
+            _position:absolute; /* hack for internet explorer 6 */  
+            height:700px;
+            width:600px;  
+            background:#FFFFFF;  
+            left: 300px;
+            top: 50px;
+            z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+            margin-left: 15px;  
+           
+            /* additional features, can be omitted */
+            border:2px solid #1797C0;      
+            padding:15px;  
+            font-size:15px;  
+            -moz-box-shadow: 0 0 5px #ff0000;
+            -webkit-box-shadow: 0 0 5px #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+           
+        }
+        
+        #container {
+            background: #d2d2d2; /*Sample*/
+            width:100%;
+            height:100%;
+        }
+        
+        a{ 
+        cursor: pointer; 
+        text-decoration:none; 
+        }
+        
+        /* This is for the positioning of the Close Link */
+        #popupBoxClose {
+            font-size:20px;  
+            line-height:15px;  
+            right:5px;  
+            top:5px;  
+            position:absolute;  
+            color:#6fa5e2;  
+            font-weight:500;      
+        }
+        /* popup_box DIV-Styles  Close*/
+    </style> 
+    <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+    <script type="text/javascript">
+     var j$ = jQuery.noConflict();
+     
+      j$(document).ready( function() {
+ 
+        var isEr = '{!IsErr}';
+        if(isEr == 'true')
+         loadPopupBox();
+         
+        // When site loaded, load the Popupbox First
+        //loadPopupBox();
+   
+        j$(".clsBoxClose").click( function() {           
+            unloadPopupBox();
+        });
+       
+        j$('#container').click( function() {
+            //unloadPopupBox();
+        });
+      });
+        function unloadPopupBox() {    // TO Unload the Popupbox
+            
+            //alert('test');
+            //alert($j(".cke_wysiwyg_frame").contents().find('.cke_editable cke_editable_themed cke_contents_ltr cke_show_borders').html());
+            
+            j$('#popup_box').fadeOut("slow");
+            j$("#container").css({ // this is just for style       
+                "opacity": "1" 
+            });
+            
+            return false;
+        }   
+       
+        function loadPopupBox() {    // To Load the Popupbox
+        
+           //Call Action function to get Live text data
+           //afLiveText();
+           
+                //j$('.clsLiveText').val('');
+                j$('#popup_box').fadeIn("slow");
+                j$("#container").css({ // this is just for style
+                    "opacity": "0.3" 
+                }); 
+                return false;       
+            }       
+        
+        function OpenPopUp()
+        {
+          loadPopupBox();
+          return false;
+        }
+        
+        //Start
+        //R Systems Team
+        function GoLiveTextDataCount(dVal)
+        {
+          /*var retrn = true;
+          var obj = j$('.clsLiveText').val();
+          if(obj.length < 140)
+          {
+           retrn = false;
+           alert('Go live announcement should have minimum 140 characters.');
+          }*/
+          //alert(dVal);
+          
+          //inHdn.value=dVal;
+          //alert(inHdn.value);
+          //afLiveText(dVal);
+          return true; 
+        }
+        
+       
+        function countChar(val){
+      
+            //alert(val);
+             var len =  j$('.clsLiveText').val().length;
+             //alert(len);
+             if (len < 140) 
+             {
+                      j$('.clsCharCnt').text('Remaining minimum go live text characters:' + (140 - len).toString());
+             }
+             else
+                      j$('.clsCharCnt').text('');
+
+          }
+          
+          function callActionFunction()
+          {
+            afLiveText();
+            var isEr = '{!IsErr}';
+            alert(isEr );
+            
+            if(isEr == 'false')
+              unloadPopupBox();
+            return false;
+          }
+          //End
+      </script>
+     </head> 
+    <apex:form id="frm" > 
+    <!--<apex:actionFunction name="afLiveText" action="{!EventType}" rerender="" status="LiveStatus">
+     <apex:param name="x" value="" assignTo="{!sEventType }"/>
+    </apex:actionFunction>-->
+    
+    
+        <div id="popup_box">   <!-- OUR PopupBox DIV-->
+          <APEX:PAGEMESSAGES />
+         <apex:pageBlock id="pbLive" >
+         
+          <div style="float:left"><!---<a id="popupBoxClose" class="clsBoxClose">Close</a>--></div>
+           <table style="width:100%;margin-top:30px">
+            <tr align="left" style="margin-top:15px"><td><b>Go Live Text</b></td></tr>
+            <tr style="height:30px;"><td style="width:20%"></td></tr>
+            <tr><td></td></tr>
+           
+            <tr><td style="width:100%" align="center"  class="clsTrGoLive">
+            <apex:inputField id="ifGoLiveTxt" onchange="countChar(this)" onkeyup="countChar(this)" value="{!objCBI.Go_Live_Text__c}"  styleClass="clsLiveText" style="width:100%;height:500px;"  />
+            <!--<apex:inputTextarea  id="rta" onchange="countChar(this)" onkeyup="countChar(this)" value="{!objGoLiveOpp.Go_Live_Text__c}" styleClass="clsLiveText" style="width:100%;height:500px;"/>-->
+            </td></tr>
+            <tr><td class="clsCharCnt"></td></tr>
+            <tr style="height:50px;"><td  align="right"><apex:commandButton value="Close" style="font-weight:normal" onclick="return unloadPopupBox();"  id="btnCancel" />
+            
+
+            <apex:commandButton value="Send Go Live Announcement" style="font-weight:normal" action="{!SendEmail}"  id="btnSendEmail" onclick="return GoLiveTextDataCount('SaveWithEmail');">
+              <!--<apex:param name="eventType" value="SaveWithEmail" assignTo="{!sEventType}"/> --> 
+            </apex:commandButton>
+            
+            <!--<apex:commandButton value="Send Go Live Announcement" style="font-weight:normal" action="{!SendEmail}"  id="btnSendEmail" onclick="return callActionFunction();" />-->
+            </td></tr>
+            
+           </table>
+           </apex:pageBlock>
+        </div>
+    
+    
+   <div id="container">           
+        <div style="height:5px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">
+                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                </apex:facet> 
+            </apex:actionStatus>
+        </div>         
+        <apex:tabPanel switchType="client" selectedTab="name2" id="theTabPanel" width="1500px;">
+            <apex:tab label="Delivery Lifecycle" name="tabOne" id="tabOne">
+                <apex:pageBlock id="pgblkTab1">
+                    <apex:pageBlockButtons id="pgblkButton">
+                        <apex:commandButton value="Save" action="{!saveHeader}" status="status" reRender="pgblkTab1" id="btnSave"/>
+                        <apex:commandButton value="Edit" action="{!editHeader}" status="status" reRender="pgblkTab1" id="btnEdit"/>
+                        <apex:commandButton value="Create JIRA Issue" onclick="window.open('http://jira.genesys.com/plugins/servlet/customware/connector/issue/1/Cloud_Billing_Information__c/create.action?id={!cloudBillingForecast.id}'); return false;" />
+                        <apex:commandButton value="Get Related JIRA Issue" onclick="window.open('http://jira.genesys.com/plugins/servlet/customware/connector/issue/1/Cloud_Billing_Information__c/fetch.action?id={!cloudBillingForecast.id}'); return false;" />
+                        <apex:commandButton value="Synchronize JIRA Issue " onclick="window.open('http://jira.genesys.com/plugins/servlet/customware/connector/issue/1/Cloud_Billing_Information__c/synchronize.action?id={!cloudBillingForecast.id}'); return false;" />
+                        <apex:commandButton value="Associate JIRA Issue" onclick="window.open('http://jira.genesys.com/plugins/servlet/customware/connector/issue/1/Cloud_Billing_Information__c/associate.action?id={!cloudBillingForecast.id}'); return false;" />
+                        <!--<apex:commandButton value="Send Go Live Announcement" id="btnLive" onclick="return loadPopupBox();" disabled="{!isDisableGoLive }"/>-->
+                        <apex:commandButton value="Send Go Live Announcement" id="btnLive" onclick="return loadPopupBox();" />
+                        
+                    </apex:pageBlockButtons>
+                    
+                  <apex:pageBlockSection columns="1">
+                      <table cellpadding="10" cellspacing="10" style="border-collapse: collapse;border:solid 1px gray;">
+                       
+                        <tr>
+                        <td style="background-color:#CCC;text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                         Customer Project Health
+                        </td>
+                        <td style="background-color:{!cloudBillingForecast.Project_Health__c};text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                             {!cloudBillingForecast.Project_Health__c}
+                        </td> 
+                       </tr> 
+                      <tr>
+              <td style="background-color:{!cloudBillingForecast.Project_Health__c};text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                    <a href="https://genesys.my.salesforce.com/{!objCBI.id}">Update Go Live Announcement</a></td>
+            </tr>
+                      </table>
+                    </apex:pageBlockSection>                
+                
+                    <apex:pageBlockSection columns="2">
+                            
+                         <apex:outputField value="{!opp.Name}" />
+                         <apex:outputField value="{!opp.Account.Name}" />
+                         <apex:outputField value="{!cloudBillingForecast.Time_to_Revenue__c}" />
+                         <apex:outputField value="{!cloudBillingForecast.Forecasted_Time_to_Revenue__c}" />
+                         <apex:outputField value="{!cloudBillingForecast.Original__c }" />
+                          <apex:outputField value="{!cloudBillingForecast.id }" />
+                            
+                                                                     
+                    </apex:pageBlockSection>
+                                
+                        
+                                            
+                    <apex:pageBlockSection title="Lifecycle Status Summary" columns="1">
+                        <apex:outputLabel value="Please populate all dates to calculate the matrix." rendered="{!NOT(showStatusMatrix)}" />
+                        <apex:outputPanel rendered="{!showStatusMatrix}" >
+                            <table cellpadding="10" cellspacing="10" style="border-collapse: collapse;border:solid 1px gray;">
+                                <tr>
+                                <td style="background-color:#CCC;text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                                    
+                                </td>
+                        
+                                    <apex:repeat value="{!statusMatrix}" var="eachStatus">
+                                        <td style="background-color:#CCC;text-align:center;font-weight:bold;border-collapse: collapse;border:solid 1px gray;">
+                                            {!eachStatus.statusType}
+                                        </td>                                       
+                                    </apex:repeat>
+                                </tr>       
+                                <tr>
+                                    <td style="background-color:#CCC;text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                                     Current Status
+                                    </td>
+                                    <apex:repeat value="{!statusMatrix}" var="eachStatus">
+                                        <td style="background-color:{!eachStatus.color};text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                                            {!eachStatus.status}
+                                        </td>                                       
+                                    </apex:repeat>
+                                </tr>                               
+                                <tr>
+                                    <td style="background-color:#CCC;text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                                     Previous Status
+                                    </td>
+
+                                    <apex:repeat value="{!statusMatrix}" var="eachStatus">
+                                        <td style="background-color:{!eachStatus.previousColor};text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                                            {!eachStatus.previousStatus}
+                                        </td>                                       
+                                    </apex:repeat>
+                                </tr>                               
+                        
+                                   <tr>
+                                    <td style="background-color:#CCC;text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                                    
+                                    </td>
+
+                                    <apex:repeat value="{!statusMatrix}" var="eachStatus">
+                                        <td style="background-color:#FFF;text-align:center;border-collapse: collapse;border:solid 1px gray;font-weight:bold;">
+                                            {!eachStatus.statusText}
+                                        </td>                                       
+                                    </apex:repeat>
+                                </tr>     
+                        
+                            </table>
+                        </apex:outputPanel>
+                        
+                    </apex:pageBlockSection>
+                     
+                     
+                     <apex:pageBlockSection title="Cloud Forecast Account Executive" columns="2" id="pglblkSec2" rendered="{!NOT(edit)}">
+                        <apex:outputField value="{!cloudBillingForecast.Project_Health__c}" />
+                        <apex:outputText value=""/>
+                                            
+                        <apex:outputField value="{!opp.CloseDate}" />
+                        <apex:outputText value="When the deal is fully closed in Salesforce, contract is signed by all authorized parties and service order is received.  This coincides with the booking date."/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Annual Contract Value (ACV)" />
+                            <apex:outputText value="{0, number, ###,##0.00}" >
+                                <apex:param value="{!opp.Annual_Contract_Value__c}" />
+                            </apex:outputText>         
+                        </apex:pageBlockSectionItem>                            
+                        <apex:outputText value="Twelve-month billing value of agreement; includes Subscription Services and Professional Services."/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Override Annual Contract Value" />
+                            <apex:outputField value="{!opp.Override_Annual_Contract_Value__c}"/>         
+                        </apex:pageBlockSectionItem>
+                        <apex:outputText value="Twelve-month billing value of agreement; includes Subscription Services and Professional Services."/>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Total Contract Value (TCV)" />
+                            <apex:outputText value="{0, number, ###,##0.00}" >
+                                <apex:param value="{!opp.Total_Annual_Contract_Value__c}" />
+                            </apex:outputText>         
+                        </apex:pageBlockSectionItem>
+                        
+                        <apex:outputText value="Represents the minimum contractual value for the full length of the contract."/>
+                    
+                        <apex:outputField value="{!cloudBillingForecast.Actual_Go_Live_Date__c}" />
+                        <apex:outputText value="The actual date that Genesys can recognize the first dollars of revenue by delivering the offer or a subset of the offer."/>
+                        
+                        <apex:outputField value="{!cloudBillingForecast.Go_Live_Planned_Date__c}" />
+                        <apex:outputText value="Planned Go Live."/>
+                                        
+                        <apex:outputField value="{!cloudBillingForecast.Forecasted_Go_Live_Date_At_SOW_Signatu__c}" />
+                        <apex:outputText value=" At time SOW is signed, this represents the expected date that Genesys can recognize the first dollars of revenue by delivering the offer or a subset of the offer."/>
+               
+                    
+                        <apex:outputField value="{!cloudBillingForecast.SOW_Execution_Date__c}" />
+                        <apex:outputText value="Date Statement of Work is signed by all authorized parties."/>
+                    
+                         </apex:pageBlockSection>    
+                    
+                    <apex:pageBlockSection title="Cloud Forecast Professional Services" columns="2" id="pglblkSecPSE" rendered="{!NOT(edit)}">      
+                        
+                        <apex:outputField value="{!cloudBillingForecast.Forecasted_Go_Live_Date_Projected__c}" />
+                        <apex:outputText value="The projected date as of this point in time that Genesys can recognize the first dollars of revenue by delivering the offer or a subset of the offer."/>
+                        
+                        <apex:outputField value="{!cloudBillingForecast.Professional_Services_PM__c}" />
+                        <apex:outputText value="The name of the lead responsible for managing the project that will fulfill the SOW.  For EEC projects, this will be the Professional Service project manager.  For BEC RDP Bundle projects, this will be the CXM (Customer eXperience Manager)."/>
+                  
+                        <apex:outputField value="{!cloudBillingForecast.PM_Assigned__c}" />
+                        <apex:outputText value="PM Assignment Date"/>
+                    
+                  
+                        
+                        <apex:outputField value="{!cloudBillingForecast.Discovery_Phase_Complete__c}" />
+                        <apex:outputText value="The actual date that the customer's discovery documents are finalized and approved by the project team."/>
+                  
+                                  
+                        <apex:outputField value="{!cloudBillingForecast.Design_Phase_Completed__c}" />
+                        <apex:outputText value="The actual date that the customer's design documents are finalized and approved by the project team."/>
+      
+                        
+                        <apex:outputField value="{!cloudBillingForecast.Technical_Requirements_Completion_Date__c}" />
+                        <apex:outputText value="The actual date that the customer's technical requirements are finalized and approved by the project team."/>
+                        
+                        <apex:outputField value="{!cloudBillingForecast.SOW_Fully_Delivered_Date_Actual__c}" />
+                        <apex:outputText value="The actual date that Genesys can recognize the maximum monthly dollar value of revenue by fully delivering the requirements as defined by the SOW."/>
+                        
+                        <apex:outputField value="{!cloudBillingForecast.SOW_Fully_Delivered_Date_Forecasted__c}" />
+                        <apex:outputText value="The expected date that Genesys can recognize the maximum monthly dollar value of revenue by fully delivering the requirements as defined by the SOW."/>
+                      </apex:pageBlockSection>                
+                    
+                    
+                    
+                    <apex:pageBlockSection title="Cloud Forecast Account Executive" columns="2" id="pglblkSec" rendered="{!edit}">
+                    
+                        <apex:inputField value="{!cloudBillingForecast.Project_Health__c}" />
+                        <apex:outputText value=""/>
+                        
+                        <apex:outputField value="{!opp.CloseDate}" />
+                        <apex:outputText value="When the deal is fully closed in Salesforce, contract is signed by all authorized parties and service order is received.  This coincides with the booking date."/>
+                    
+                        <apex:outputText value="{!opp.Annual_Contract_Value__c}" />
+                        <apex:outputText value="Twelve-month billing value of agreement; includes Subscription Services and Professional Services."/>
+                        
+                        <apex:inputField value="{!opp.Override_Annual_Contract_Value__c}" />
+                        <apex:outputText value="Twelve-month billing value of agreement; includes Subscription Services and Professional Services."/>
+                        
+                        <apex:outputText value="{!opp.Total_Annual_Contract_Value__c}" />
+                        <apex:outputText value="Represents the minimum contractual value for the full length of the contract."/>
+                    
+                        <apex:inputField required="false" value="{!cloudBillingForecast.Actual_Go_Live_Date__c}" />
+                        <apex:outputText value="The actual date that Genesys can recognize the first dollars of revenue by delivering the offer or a subset of the offer."/>
+                        
+                         <apex:inputField required="false" value="{!cloudBillingForecast.Go_Live_Planned_Date__c}" />
+                        <apex:outputText value="Planned Go Live."/>
+                                            
+                        
+                        <apex:inputField required="false" value="{!cloudBillingForecast.Forecasted_Go_Live_Date_At_SOW_Signatu__c}" />
+                        <apex:outputText value="At time SOW is signed, this represents the expected date that Genesys can recognize the first dollars of revenue by delivering the offer or a subset of the offer."/>
+        
+                    
+                        <apex:inputField required="false" value="{!cloudBillingForecast.SOW_Execution_Date__c}" />
+                        <apex:outputText value="Date Statement of Work is signed by all authorized parties."/>
+                    
+                            </apex:pageBlockSection>    
+                        
+                    <apex:pageBlockSection title="Cloud Forecast Professional Services" columns="2" id="pglblkSecPS" rendered="{!edit}">    
+                        <apex:inputField required="false" value="{!cloudBillingForecast.Forecasted_Go_Live_Date_Projected__c}" />
+                        <apex:outputText value="The projected date as of this point in time that Genesys can recognize the first dollars of revenue by delivering the offer or a subset of the offer."/>
+                        
+                        <apex:inputField required="false" value="{!cloudBillingForecast.Professional_Services_PM__c}" />
+                        <apex:outputText value="The name of the lead responsible for managing the project that will fulfill the SOW.  For EEC projects, this will be the Professional Service project manager.  For BEC RDP Bundle projects, this will be the CXM (Customer eXperience Manager)."/>
+                        
+                        <apex:inputField required="false" value="{!cloudBillingForecast.PM_Assigned__c}" />
+                        <apex:outputText value="PM Assignment Date"/>
+                        
+                        
+                        
+                        <apex:inputField required="false" value="{!cloudBillingForecast.Discovery_Phase_Complete__c}" />
+                        <apex:outputText value="The actual date that the customer's discovery documents are finalized and approved by the project team."/>
+                
+                                   
+                        <apex:inputField required="false" value="{!cloudBillingForecast.Design_Phase_Completed__c}" />
+                        <apex:outputText value="The actual date that the customer's design documents are finalized and approved by the project team."/>
+     
+                
+                        
+                        <apex:inputField required="false" value="{!cloudBillingForecast.Technical_Requirements_Completion_Date__c}" />
+                        <apex:outputText value="The actual date that the customer's technical requirements are finalized and approved by the project team."/>
+                        
+                        <apex:inputField required="false" value="{!cloudBillingForecast.SOW_Fully_Delivered_Date_Actual__c}" />
+                        <apex:outputText value="The actual date that Genesys can recognize the maximum monthly dollar value of revenue by fully delivering the requirements as defined by the SOW."/>
+                        
+                        <apex:inputField required="false" value="{!cloudBillingForecast.SOW_Fully_Delivered_Date_Forecasted__c}" />
+                        <apex:outputText value="The expected date that Genesys can recognize the maximum monthly dollar value of revenue by fully delivering the requirements as defined by the SOW."/>
+                    </apex:pageBlockSection>
+                
+        
+        
+                                    <apex:pageBlockSection title="Lifecycle Status Summary history" columns="1" id="pgblkPhaseLinesHistoryMainHistory">
+                                        <apex:outputLabel value="No record(s) to show." rendered="{!NOT(showGrid)}" />
+                                        <apex:pageBlockTable value="{!informationHistory}" var="eachItem" rendered="{!showGrid}" id="pgblktbl">
+                                         
+                                         <apex:column headerValue="Field" style="text-align:right;" headerClass="columnHeaderClass">                   
+                                                <apex:outputText value="{!eachItem.Field__c}" rendered="true" >
+                                                    <apex:param value="{!eachItem.Field__c}" />
+                                                </apex:outputText>
+                                            </apex:column>      
+                                          <apex:column headerValue="Old Date" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                                                    <apex:param value="{!eachItem.New_Date__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                          
+                                          <apex:column headerValue="New Date" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                                    <apex:param value="{!eachItem.Old_Date__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                              
+                                      <apex:column headerValue="Last Modified" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{!eachItem.LastModifiedBy.name}">
+                                                    
+                                                </apex:outputText>
+                                            </apex:column>          
+                                     <apex:column headerValue="Last Modified Date" style="text-align:right;" headerClass="columnHeaderClass">
+                                                 <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                            <apex:param value="{!eachItem.LastModifiedDate}" />
+                                        
+                                                </apex:outputText>
+                                            </apex:column>    
+                                     
+                                        </apex:pageBlockTable>
+                                </apex:pageBlockSection>  
+        
+                
+                
+                
+                </apex:pageBlock> 
+            </apex:tab>
+            <apex:tab label="Delivery Phases" name="tabTwo" id="tabTwo"> 
+                 <apex:actionFunction action="{!loadPhaseLines}" name="loadPhaseAF" reRender="pgblkPhase, pnlPhaseLines, pnlJS" status="status" immediate="true">
+                    <apex:param name="selectedPhase" assignTo="{!selectedPhase}" value="" />
+                    <apex:param name="selectedPhaseName" assignTo="{!selectedPhaseName}" value="" />
+                </apex:actionFunction>
+                <apex:actionFunction action="{!loadRevenueDetails}" name="showRevenueDetailsAF" reRender="pgblkPhase, pnlPhaseLines, pnlJS" status="status"  immediate="true">
+                    <apex:param name="selectedPhase" assignTo="{!selectedPhase}" value="" />            
+                </apex:actionFunction>
+                <apex:actionFunction action="{!cloneProductLine}" name="cloneProductLineAF" reRender="pgblk" status="status" immediate="true" >
+                    <apex:param name="productLineId" assignTo="{!productLineId}" value="" /> 
+                </apex:actionFunction>              
+                <apex:actionFunction action="{!deleteProductLine}" name="deleteProductLineAF" reRender="pgblk" status="status" immediate="true" >
+                    <apex:param name="productLineId" assignTo="{!productLineId}" value="" /> 
+                </apex:actionFunction>
+                <apex:actionFunction action="{!showPopup}" name="showPopupAF" reRender="pnlPhaseLines" status="status"  immediate="true"/>             
+                <table style="width:100%;" border="0">
+                    <tr>
+                        <td title="width:25%" valign="top">
+                            <apex:pageBlock title="Phases" id="pgblkPhase">
+                                <apex:pageBlockSection id="pgblkSectionPhases" columns="1" >
+                                    <apex:pageBlockSectionItem id="pgblksecPhases">
+                                        <apex:outputPanel id="pnlPhases">
+                                            <div class="treeheader" style="height:0px;">&nbsp;</div>
+                                            <div id="sidetreecontrol" width="300px">
+                                                <a href="#" onclick="loadPhaseAF('', 'All Phases'); return false;">All Phases</a> 
+                                                &nbsp;&nbsp;|&nbsp;&nbsp;
+                                                <apex:outputLink value="/apex/QuoteRevenueSummaryDetails?oppId={!oppId}&year=2015" target="_blank" >
+                                                    View Revenue Details
+                                                </apex:outputLink>
+                                                <!-- 
+                                                <apex:outputLink value="#" onclick="showRevenueDetailsAF(''); return false;" >
+                                                    View Revenue Details
+                                                </apex:outputLink>
+                                                 -->                       
+                                            </div>                  
+                                            <table cellpadding="0" cellspacing="0">                                         
+                                                <apex:repeat value="{!phases}" var="eachPhase">
+                                                    <tr>
+                                                        <td>
+                                                        <span class="formattextcon" style="vertical-align:text-top;">
+                                                            <apex:outputLink rendered="{!NOT(eachPhase.isAddPhase)}" value="#" style="{!eachPhase.style}" onclick="loadPhaseAF('{!eachPhase.phase.id}', '{!eachPhase.phase.Phase_Classification__c}'); return false;">
+                                                                <apex:outputText value="{!eachPhase.phase.Phase_Classification__c}" rendered="{!eachPhase.phase.Phase_Name__c == null}" />
+                                                                <apex:outputText value="{!eachPhase.phase.Phase_Name__c}" rendered="{!eachPhase.phase.Phase_Name__c != null}" />
+                                                                
+                                                                - (
+                                                                <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                                                   <apex:param value="{!eachPhase.phase.End_Date__c}" />
+                                                                </apex:outputText>
+                                                                )&nbsp;                                                     
+                                                            </apex:outputLink>
+                                                            &nbsp;                                                            
+                                                            <apex:outputLink rendered="{!eachPhase.isAddPhase}" value="#" style="{!eachPhase.style}" onclick="showPopupAF(); return false;" >
+                                                                Add New Phase
+                                                            </apex:outputLink>
+                                                        </span>
+                                                        </td> 
+                                                    </tr>
+                                                </apex:repeat>
+                                            </table>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:pageBlock> 
+                        </td>
+                        <td width="75%">
+                            <div style='font-size:14px;color:red;font-weight:bold'>Opportunity:  {!opp.Name}</div>
+                            <apex:outputPanel id="pnlPhaseLines">
+                                <apex:pageBlock title="Phase Revenue Details" rendered="{!showRevenueDetails}">
+                                    <apex:pageBlockSection columns="1" id="pgblkPhaseLines">
+                                        <apex:outputLabel value="No record(s) to show." rendered="{!NOT(showRevenueDetails)}" />
+                                        <apex:pageBlockTable value="{!revenueDetails}" var="eachItem" rendered="{!showRevenueDetails}" id="pgblktbl">
+                                           
+                                            <apex:column headerValue="Phase" style="{!eachItem.rowStyle}" >
+                                                <apex:outputText rendered="{!eachItem.isTotalRow}">
+                                                 Total                                      
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText >
+                                                 {!eachItem.phase.Phase_Classification__c}                                      
+                                                </apex:outputText>
+                                                                                        
+                                            </apex:column>       
+                                                                               
+                                           
+                                            <apex:column headerValue="{!monthNames[0]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_1_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>       
+                                            
+                                            <apex:column headerValue="{!monthNames[1]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_2}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_2_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>                                                                                 
+
+                                            <apex:column headerValue="{!monthNames[2]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_3}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_3_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>                                                                                 
+                                            <apex:column headerValue="{!monthNames[3]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_4}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_4_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>                                          
+                                            <apex:column headerValue="{!monthNames[4]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_5}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_5_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+
+                                            <apex:column headerValue="{!monthNames[5]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_6}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_6_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+
+                                            <apex:column headerValue="{!monthNames[6]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_7}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_7_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+                                                                                        
+                                            <apex:column headerValue="{!monthNames[7]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_8}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_8_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+
+                                            <apex:column headerValue="{!monthNames[8]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_9}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_9_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+
+                                            <apex:column headerValue="{!monthNames[9]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_10}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_10_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+                                                                                                                                    
+                                            <apex:column headerValue="{!monthNames[10]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_11}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_11_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+                                            <apex:column headerValue="{!monthNames[11]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_12}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_12_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+                                            <apex:column headerValue="{!monthNames[12]}" style="{!eachItem.rowStyle}"  headerClass="columnHeaderClass">
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_13}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_13_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+                                            
+                                        </apex:pageBlockTable>
+                                    </apex:pageBlockSection>                        
+                                </apex:pageBlock>
+                                <apex:pageBlock title="Add New Phase" rendered="{!showPopup}">
+                                    <apex:pageBlockButtons location="bottom">
+                                        <apex:commandButton value="Create Phase" action="{!createPhase}" reRender="pnlPhaseLines, pgblkPhase, pnlJS, pgblk" status="status"  rendered="{!NOT(isEditPhase)}"/>
+                                        <apex:commandButton value="Update" action="{!updatePhase}" reRender="pnlPhaseLines, pgblkPhase, pnlJS" status="status" rendered="{!isEditPhase}"/>                              
+                                        <apex:commandButton value="Close" action="{!hidePopup}" reRender="pnlPhaseLines" immediate="false" status="status"/>
+                                    </apex:pageBlockButtons>
+                                    <apex:pageBlockSection columns="2">
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Phase Classification" />
+                                            <apex:inputField value="{!newPhase.Phase_Classification__c}" required="true"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Phase Name" />
+                                            <apex:inputField value="{!newPhase.Phase_Name__c}" />
+                                        </apex:pageBlockSectionItem>   
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Comments" />
+                                            <apex:inputField value="{!newPhase.Comments__c}" />
+                                        </apex:pageBlockSectionItem>                                                                                                       
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Phase Date" />
+                                            <apex:inputField value="{!newPhase.End_Date__c}"/>
+                                        </apex:pageBlockSectionItem>                            
+                                     </apex:pageBlockSection>
+                                </apex:pageBlock>                       
+                                <apex:pageBlock title="{!pageBlockTitle}" rendered="{!NOT(showPopup)}" id="pgblk">
+                                    <apex:pageBlockButtons >                                
+                                        <apex:commandButton value="Save" action="{!saveUpdate}"  status="status" reRender="pgblkPhase, pnlJS, pgblk" rendered="{!showGrid}"/>    
+                                        <apex:commandButton value="Delete Phase" action="{!deletePhase}" reRender="pnlPhaseLines, pgblkPhase, pnlJS" status="status" rendered="{!selectedPhase != null}"/>
+                                        <apex:commandButton value="Edit Phase" action="{!editPhase}" reRender="pnlPhaseLines" status="status"  rendered="{!selectedPhase != null}"/>
+                                        <apex:commandButton value="Back to Opportunity" onclick="location.href='/{!oppId}'; return false;" />
+                                        <apex:commandButton value="Add New Product" action="{!addProductLine}" reRender="pnlPhaseLines" status="status"/>
+                                    </apex:pageBlockButtons>
+                                    <apex:pageBlockSection columns="1" id="pgblkPhaseLines">
+                                        <apex:pageBlockTable value="{!lineItems}" var="eachItem" rendered="{!showGrid}" id="pgblktbl">
+                                            <apex:column headerValue="Action" style="{!eachItem.rowStyle}" id="col1">   
+                                                <apex:outputPanel rendered="{!NOT(eachItem.isHeaderLine)}">                                     
+                                                    <apex:image url="{!$Resource.PlusSign}"  width="15px;" height="15px" style="cursor:pointer;" rendered="{!eachItem.phaseLineItem.id != null}" onclick="cloneProductLineAF('{!eachItem.phaseLineItem.id}'); return false;"/>
+                                                    &nbsp;
+                                                    <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}" style="cursor:pointer;" rendered="{!eachItem.phaseLineItem.id != null}" onclick="deleteProductLineAF('{!eachItem.phaseLineItem.id}'); return false;"/>
+                                                </apex:outputPanel>
+                                            </apex:column>
+                                            <apex:column headerValue="Line Item" style="{!eachItem.rowStyle}">                                              
+                                                <apex:outputLink value="/{!eachItem.quoteProduct.id}" target="_blank" rendered="{!OR(eachItem.isHeaderLine, eachItem.isFromQuote)}">
+                                                    {!eachItem.lineName}
+                                                </apex:outputLink>                                                
+                                                <apex:inputField value="{!eachItem.phaseLineItem.Product__c}" rendered="{!AND(NOT(eachItem.isHeaderLine), !eachItem.isFromQuote)}" style="width:80%;"/>
+                                            </apex:column>       
+                                            <apex:column headerValue="Phase" style="{!eachItem.rowStyle}">
+                                                <apex:selectList value="{!eachItem.phaseId}" multiselect="false" rendered="{!NOT(eachItem.isHeaderLine)}" size="1" >
+                                                    <apex:selectOptions value="{!phasesOptions}"/>
+                                                </apex:selectList>  
+                                            </apex:column>
+                                            <apex:column style="{!eachItem.rowStyle}" headerValue="Line Details">
+                                                <apex:outputLink rendered="{!NOT(eachItem.isHeaderLine)}" value="#" title="{!eachItem.linePhases}">
+                                                    {!eachItem.phaseTotal}
+                                                </apex:outputLink>
+                                            </apex:column>               
+                                            <apex:column headerValue="Agents/Ports/Minutes" style="text-align:right;{!eachItem.rowStyle};" headerClass="columnHeaderClass" width="70px">                   
+                                                <apex:inputText value="{!eachItem.quantity}" rendered="{!NOT(eachItem.isHeaderLine)}" style="text-align:right;width:70px;"/>                                         
+                                            </apex:column>      
+                                            <apex:column headerValue="Agents/Ports/Minutes ({!selectedPhaseName})" style="text-align:right;{!eachItem.rowStyle};" headerClass="columnHeaderClass" rendered="{!selectedPhase != null}" width="70px">                    
+                                                <apex:inputText value="{!eachItem.phaseQuantity}" rendered="{!NOT(eachItem.isHeaderLine)}" style="text-align:right;width:70px;"/>
+                                            </apex:column>                     
+                                             <apex:column headerValue="Net Unit Price" style="text-align:right;{!eachItem.rowStyle};" headerClass="columnHeaderClass" width="70px">
+                                                <apex:inputText value="{!eachItem.price}" rendered="{!NOT(eachItem.isHeaderLine)}" style="text-align:right;width:70px;"/>
+                                            </apex:column>                
+                                            <apex:column headerValue="Revenue" style="text-align:right;{!eachItem.rowStyle};" headerClass="columnHeaderClass" width="80px">
+                                                <!-- 
+                                                <apex:inputText value="{!eachItem.revenue}" rendered="{!NOT(eachItem.isHeaderLine)}" style="text-align:right;width:80px;"/>
+                                                 --> 
+                                                <apex:outputText value="{0, number, ###,##0.00}" >
+                                                    <apex:param value="{!eachItem.revenue}" />
+                                                </apex:outputText>            
+                                            </apex:column>            
+                                        </apex:pageBlockTable>
+                                    </apex:pageBlockSection>  
+                                
+                                 <apex:pageBlockSection columns="1" id="pgblkPhaseLinesHistory">
+                                        <apex:outputLabel value="No record(s) to show." rendered="{!NOT(showGrid)}" />
+                                        <apex:pageBlockTable value="{!phaseHistory}" var="eachItem" rendered="{!showGrid}" id="pgblktbl">
+                                         
+                                         <apex:column headerValue="Phase" style="text-align:right;" headerClass="columnHeaderClass">                   
+                                                <apex:outputText value="{!eachItem.Phase_Classification__c}" rendered="true" >
+                                                    <apex:param value="{!eachItem.Phase_Classification__c}" />
+                                                </apex:outputText>
+                                            </apex:column>      
+                                          <apex:column headerValue="Old Phase Date" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0,date,MM/dd/yyyy} " >
+                                                    <apex:param value="{!eachItem.Old_End_Date__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                          
+                                          <apex:column headerValue="New Phase Date" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                                    <apex:param value="{!eachItem.New_End_Date__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                            <apex:column headerValue="Old Phase Revenue" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0, number, ###,##0.00}">
+                                                    <apex:param value="{!eachItem.Old_Phase_Revenue__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                            <apex:column headerValue="New Phase Revenue" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0, number, ###,##0.00}">
+                                                    <apex:param value="{!eachItem.New_Phase_Revenue__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                            <apex:column headerValue="Date Change" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0, number, ###,##0.00}">
+                                                    <apex:param value="{!eachItem.Phase_Date_Change__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                            <apex:column headerValue="Revenue Change" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{0, number, ###,##0.00}">
+                                                    <apex:param value="{!eachItem.Revenue_Change__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                             <apex:column headerValue="Date Status" style="text-align:right;background-color:{!eachItem.Phase_Date_Change_Status__c}" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{!eachItem.Phase_Date_Change_Status__c}">
+                                                    <apex:param value="{!eachItem.Phase_Date_Change_Status__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+                                            <apex:column headerValue="Revenue Status" style="text-align:right;background-color:{!eachItem.Revenue_Change_Status__c}" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{!eachItem.Revenue_Change_Status__c}">
+                                                    <apex:param value="{!eachItem.Revenue_Change_Status__c}" />
+                                                </apex:outputText>
+                                            </apex:column>          
+        
+                                      <apex:column headerValue="Last Modified" style="text-align:right;" headerClass="columnHeaderClass">
+                                                <apex:outputText value="{!eachItem.LastModifiedBy.name}">
+                                                    
+                                                </apex:outputText>
+                                            </apex:column>          
+                                     <apex:column headerValue="Last Modified Date" style="text-align:right;" headerClass="columnHeaderClass">
+                                                 <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                            <apex:param value="{!eachItem.LastModifiedDate}" />
+                                        
+                                                </apex:outputText>
+                                            </apex:column>    
+                                     
+                                        </apex:pageBlockTable>
+                                </apex:pageBlockSection>  
+                                
+                                
+                                
+                                </apex:pageBlock>
+                            </apex:outputPanel> 
+                        </td>
+                    </tr>
+                </table>    
+            </apex:tab>
+        </apex:tabPanel>
+        <script>
+            window.onload = function() {
+                document.getElemenById('pg:frm:pgblkTab1:pgblkButton:btnSave').focus();
+            }
+        </script> 
+       </div>  
+    </apex:form>
+</apex:page>

@@ -1,0 +1,118 @@
+<apex:page controller="CasesListViewPortal" sidebar="false" action="{!populateMyCases}">
+
+    <div class="my-cases bodyDiv brdPalette brandPrimaryBrd  zen-bodyOverlapsTabs">
+        <table class="outerNoSidebar" id="bodyTable" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="noSidebarCell"> 
+                    
+                    <div class="breadcrumbs-row row">
+                        <div class="breadcrumbs-col col-xs-9 margin-top-1r">
+                            <div class="row">
+                                <div class="col-xs-7 margin-bottom-1r" style="padding-left: 0;">
+                                    <h5 class="bold greytext">
+                                        My Support | <span class="orangetext">My Cases</span> 
+                                    </h5>
+                                    <h4 class="thin margin-top-2r">
+                                        My Non-Closed Cases
+                                    </h4>
+                                </div>
+                                <div class="col-xs-5" style="padding-right: 0;">                                                        
+                        
+                             <div id="dual-search" class="dual-search">
+
+                                        <ul id="search-nav" class="search-nav nav nav-tabs" role="tablist">
+                                            <li class="case active" role="presentation" data-type="case"><a href="#caseSearchPanel" aria-controls="caseSearchPanel" role="tab" data-toggle="tab">Case Search</a></li>
+                                            <li class="knowledge" role="presentation" data-type="knowledge"><a href="#knowledgeSearchPanel" aria-controls="knowledgeSearchPanel" role="tab" data-toggle="tab">Knowledge Search</a></li>                            
+                                        </ul>
+                                     
+                                     
+                                        <div id="search-content" class="search-content tab-content tab-container">
+                                            <div id="caseSearchPanel" class="tab-pane active" role="tabpanel">
+                                              <apex:form id="csrch"> 
+                                               <div class="searchform">                                                                             
+                                                    <apex:inputText value="{!searchTxt}" styleClass="search" html-placeholder="Search by Case# or keywords" id="cssearch"/>                                                          
+                                                    <apex:commandButton action="/customercare/CasePortalSearchResults?inp={!searchTxt}" styleClass="searchsubmit" value="" />                                                                                                                                                                                                                                                                                                                          
+                                                </div>
+                                             </apex:form>
+                                            </div>
+                                            
+                                            <div id="knowledgeSearchPanel" class="tab-pane" role="tabpanel">
+                                              <apex:form id="artsrch">
+                                                <div class="searchform">
+                                                     <apex:inputText value="{!searchTxt}" styleClass="search" html-placeholder="Search the Knowledge Base" id="artsearch" /> 
+                                                     <apex:commandButton action="/customercare/GenesysSearchExternal#&firstQueryCause=searchboxSubmit&q={!searchTxt}" styleClass="searchsubmit" value="" /> 
+                                                </div>
+                                              </apex:form>
+                                            </div>
+                                        </div>                             
+                                    </div>                             
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-3 margin-top-1r margin-bottom-2r">
+                        </div>
+                    </div>
+                    <div class="cases-row row">
+                        
+                        <div class="cases-col col-md-9">
+                        
+                           <!-- casesPanel to go here -->
+                           <apex:form id="cs">
+                             <apex:pageBlock id="blk">    
+                                         
+                                 <apex:pageBlockTable value="{!MyCases}" var="case" style="font-size: .9em;" id="tbl" rows="{!IF(myCasesCount - showMoreIncr>0, showMoreIncr, myCasesCount)}">             
+                                      <apex:column style="text-decoration:underline" headerValue="Case Number">  
+                                       
+                                         <apex:outputLink value="/customercare/CaseDetailAdminPortal?id={!MyCases[case].Id}" target="_blank" rendered="{!MyCases[case].RecordType.DeveloperName=='Genesys_Admin_Case'}" >{!MyCases[case].CaseNumber}</apex:outputLink> 
+                                         
+                                         <apex:outputLink value="/customercare/CaseDetail?id={!MyCases[case].Id}" target="_blank" rendered="{!OR(MyCases[case].RecordType.DeveloperName=='Genesys_Product_Case',MyCases[case].RecordType.DeveloperName=='Genesys_Feature_Request_Case',MyCases[case].RecordType.DeveloperName=='Premises_Service_Request')}" >{!MyCases[case].CaseNumber}</apex:outputLink>        
+                                         
+                                         <apex:outputLink value="/customercare/CaseDetailCloudPortal?id={!MyCases[case].Id}" target="_blank" rendered="{!OR(MyCases[case].RecordType.DeveloperName=='Genesys_Cloud_Incident',MyCases[case].RecordType.DeveloperName=='Genesys_Cloud_Service_Request',MyCases[case].RecordType.DeveloperName=='Genesys_Cloud_Support_Request')}">{!MyCases[case].CaseNumber}</apex:outputLink>                                                     
+                                     
+                                         <apex:outputLink value="/customercare/CaseFRDetailCloudPortal?id={!MyCases[case].Id}" rendered="{!MyCases[case].RecordType.DeveloperName=='Genesys_Cloud_Feature_Request'}" target="_blank" style="text-decoration:underline;">{!MyCases[case].CaseNumber}</apex:outputLink>
+                                         
+                                     </apex:column>
+                                     <apex:column value="{!MyCases[case].Case_Type_Portal__c}" headerValue="Case Type"/>
+                                     <apex:column value="{!MyCases[case].Subject}" headerValue="Subject"/>
+                                     <apex:column value="{!MyCases[case].End_User_Account_For_Search__c}" headerValue="Account"/>
+                                     <apex:column value="{!MyCases[case].Status}" headerValue="Status"/>
+                                     <apex:column value="{!MyCases[case].LastModifiedDate}" headerValue="Updated"/>                
+                                  </apex:pageBlockTable>                                     
+                                                                                            
+                                 <apex:commandLink value="Show More" action="{!showMore}" styleClass="show-more" style="color:#ff4f1f" id="show-more" rendered="{!(showMoreIncr < myCasesCount)}" reRender="cs" />                               
+     
+                          </apex:pageBlock> 
+                       </apex:form>
+                      </div>
+                        <!-- / cases-col -->                      
+                        <div class="sidebar-col col-md-3">
+                            <h4 class="margin-bottom-1r greytext thin">
+                             <span>Create &amp; Manage Cases</span>
+                            </h4>
+                             <c:CustCarePortalMyCasesLinks />
+                        <!---
+                            <ul class="menu">
+                                <li><a href="/customercare/CustCarePEPremCases">PureEngage On-Premise</a></li>
+                                <li><a href="/customercare/CustCarePeCloudCases">PureEngage Cloud</a></li>
+                                <li><a href="/customercare/CustCarePcnctPremCases">PureConnect On-Premise</a></li>
+                                <li><a href="/customercare/CustCarePcnctCloudCases">PureConnect Cloud</a></li>
+                                <li><a href="/customercare/CustCarePCloudCases">PureCloud</a></li>
+                            </ul>
+                        --->
+                            <h4 class="margin-bottom-1r greytext thin">
+                                <span>Admin Cases</span>
+                            </h4>
+                            <ul class="menu">
+                                <li><a href="/customercare/CustCarePortalManageProfile">Manage Profile</a></li>
+                            </ul>
+                        </div>
+                        <!-- / sidebar-col -->
+                        
+                    </div>
+                    
+                </td>
+            </tr>
+        </table>
+     </div>
+
+</apex:page>

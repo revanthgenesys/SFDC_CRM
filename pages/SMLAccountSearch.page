@@ -1,0 +1,172 @@
+<apex:page controller="SMLAccountSearchController" title="Engagement Map Account Search" id="pg" showHeader="false" sidebar="false">
+    <head>
+        <style type="text/css">
+            .custPopup{
+                background-color: white;
+                border-width: 1px;
+                border-style: solid;
+                /*z-index: 9999;*/
+                left: 50%;
+                padding:10px;
+                position: fixed;
+                width: 350px;
+                margin-left: -350px;
+                top:200px;
+            }
+            .popupBackground{
+                background-color:black;
+                opacity: 0.20;
+                filter: alpha(opacity = 10);
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                /*z-index: 9998;*/
+            }
+        </style>
+    </head>
+    <apex:form id="frm">
+        <apex:pageBlock title="Account Search for Advanced Filters" id="pgblk"> 
+            <table cellpadding="5" cellspacing="5">
+                <tr>
+                    <td>
+                        Advanced Filter Name :
+                    </td>
+                    <td>
+                        <apex:outputPanel id="pnlViews">
+                            <apex:selectList id="lstViews" value="{!selectedView}" multiselect="false" size="1" onchange="loadViewAF();" >
+                                <apex:selectOptions value="{!userViews}"/>
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </td>
+                    <td>
+                        <a href="#" onclick="showPopupAF(); return false;"> Create New Advanced Filter </a>
+                    </td>
+                    <td>
+                        <apex:commandLink value="View Accounts for Selected" action="{!loadView}" style="width:25px;"/>
+                    </td>
+                    <td>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <apex:commandLink value="Delete Selected Advanced Filter" action="{!deleteView}" style="width:25px;"/>                           
+                    </td>
+                </tr>            
+                <tr>
+                    <td>
+                        Account Name :
+                    </td>
+                    <td>
+                        <apex:inputText value="{!accountName}" />
+                    </td>
+                    <td>
+                        <apex:commandButton value="Search Accounts" action="{!search}"/> &nbsp;&nbsp;
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                    </td>
+                    <td>
+                        <apex:commandButton value="Save Selected to Adv Filter" onclick="return checkSelected();" action="{!saveSelectedInView}" rendered="{!showRecords}"/> &nbsp;&nbsp;
+                    </td>                   
+                    <td>
+                        <apex:commandButton value="Remove Selected from Adv Filter" onclick="return checkSelected();"  action="{!removeSelectedInView}" rendered="{!showRecords}"/> &nbsp;&nbsp;
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <apex:commandButton value="Show Engagement Map using filter" onclick="showCustomerEngagement();return false;"/>
+                    </td>                                  
+                </tr>
+            </table>                       
+            <apex:pageBlockSection columns="1" id="pgblkSec">
+                <apex:outputLabel value="No records found" rendered="{!NOT(showRecords)}" />
+                <apex:pageblocktable value="{!searchedAccounts}" var="eachAccount" rendered="{!showRecords}" id="pgblktable">
+                    <apex:column headerValue="Select" id="colAccount">
+                        <apex:inputcheckbox value="{!eachAccount.selected}" id="chkSelect"/>
+                    </apex:column>
+                    <apex:column headerValue="Account">
+                        <apex:outputLink value="/{!eachAccount.account.id}" target="_blank"> {!eachAccount.account.Name} </apex:outputLink>
+                    </apex:column>
+                    <apex:column headerValue="Logo">
+                        <apex:outputLink value="/{!eachAccount.account.Parent_Account__c}" target="_blank"> {!eachAccount.account.Parent_Account__r.Name} </apex:outputLink>
+                    </apex:column>
+                    <apex:column headerValue="Region">
+                        {!eachAccount.account.Region__c}
+                    </apex:column>
+                    <apex:column headerValue="Country">
+                        {!eachAccount.account.Country__r.Name}
+                    </apex:column>                    
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+        </apex:pageBlock>        
+            <apex:actionFunction action="{!loadView}" name="loadViewAF" />
+            <apex:actionFunction action="{!showPopup}" name="showPopupAF" rerender="popPanel" status="status" />
+            <apex:actionFunction action="{!hidePopup}" name="hidePopupAF" rerender="popPanel, pnlViews" status="status" />
+            <apex:outputPanel id="popPanel" >
+                <apex:outputPanel rendered="{!showPopup}" id="pnl">             
+                    <apex:outputPanel styleClass="popupBackground" layout="block" />
+                    <apex:outputPanel styleClass="custPopup" layout="block" id="popup">
+                        <apex:outputPanel layout="block" style="text-align:center;" id="popupPanel">
+                            <table cellpadding="5" cellspacing="5">
+                                <tr>
+                                    <td>
+                                        View Name
+                                    </td>
+                                    <td>
+                                        <apex:inputText value="{!newViewName}" />
+                                    </td>
+                                </tr>   
+                                <tr>
+                                    <td>
+                                        
+                                    </td>
+                                    <td>
+                                        <apex:commandButton value="Save" onclick="hidePopupAF();return false;"/>
+                                    </td>
+                                </tr>                                                                
+                            </table>
+                        </apex:outputPanel>
+                    </apex:outputPanel>    
+                </apex:outputPanel>
+             </apex:outputPanel>
+             <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                </apex:facet>                           
+            </apex:actionStatus>
+    </apex:form>
+    <script>
+        function showCustomerEngagement(){
+            if(document.getElementById('pg:frm:pgblk:lstViews').value == ''){
+                alert('Please select a view to show engagement map.');
+                return false
+            }
+            window.opener.location='/apex/SML1?viewId={!selectedView}'; 
+            window.close(); 
+        }
+        function checkSelected(){
+            var selected = false;
+            if(document.getElementById('pg:frm:pgblk:lstViews').value == ''){
+                alert('Please select the view to save/remove account.');
+                return false
+            }
+                
+            for(var i = 0; i < 1000 ; i ++){
+                if(document.getElementById('pg:frm:pgblk:pgblkSec:pgblktable:'+i+':chkSelect') != null 
+                    && document.getElementById('pg:frm:pgblk:pgblkSec:pgblktable:'+i+':chkSelect').checked){
+                    selected = true;    
+                }
+            }
+            if(!selected){
+                alert('Please select atleast one account');
+                return false;
+            }
+            return true;
+        }
+    </script>
+</apex:page>

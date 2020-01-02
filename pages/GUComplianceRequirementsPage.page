@@ -1,0 +1,234 @@
+<apex:page controller="GUComplianceRequirementsController">
+    <style>
+    table.gucrTable {
+		width: 100%;
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+    table.gucrTable th {
+        background-color: #D8D8D8;
+	    height: 20px;
+        align: center;
+        vertical-align: middle;
+        border: 1px solid black;
+        padding: 2px;
+    }
+    table.gucrTable td {
+        border-width: 1px;
+        padding: 2px;
+        vertical-align: middle;
+        border-style: solid;
+        border: 1px solid black;
+        background-color: #ffffff;
+    }        
+	.pbTitle {white-space: nowrap}
+    .fieldwidth50PX { width: 40px; }
+    .fieldwidth500PX { width: 500px; }    
+        
+    /* This is for the full screen DIV */
+    .popupBackground {
+        /* Background color */
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        /* Dimensions */
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 998;
+        position: absolute;
+        /* Mouse */
+        cursor:wait;
+    }
+ 
+    /* This is for the message DIV */
+    .PopupPanel {
+        /* Background color */
+        border: solid 2px blue;
+        background-color: white;
+ 
+        /* Dimensions */
+        left: 50%;
+        width: 200px;
+        margin-left: -100px;
+        top: 50%;
+        height: 50px;
+        margin-top: -25px;
+        z-index: 999;
+        position: fixed;
+        
+        /* Mouse */
+        cursor:pointer;
+    }
+    </style>
+    
+    <apex:sectionHeader subtitle="GU Compliance Requirements" title="Partner"/>
+   	<apex:tabPanel selectedTab="{!selectedTab}" id="theTabPanel">
+		<apex:tab label="GU Compliance Requirements" name="tab1" id="tabOne">
+    		<apex:form >
+                <apex:pageBlock >
+                    <apex:pageBlockSection columns="1" id="partnerTypePanel">
+                        <apex:outputPanel >
+                            Partner Type: &nbsp;&nbsp;
+                            <apex:selectList value="{!selectedPartnerType}" multiselect="false" size="1" disabled="{!editMode}">
+                                <apex:selectOptions value="{!partnerTypes}" />
+                                <apex:actionSupport event="onchange" action="{!retrieveOrInitializeGUCR}" reRender="requirementsPanel" status="actionstatusTag"  />
+                            </apex:selectList>
+                        </apex:outputPanel>  
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+                <apex:outputPanel id="requirementsPanel">
+                    <apex:outputPanel rendered="{!IF(selectedPartnerType != 'Please Select', true, false)}">
+                        <TABLE class="gucrTable" rendered="{!IF(selectedPartnerType != 'Please Select', true, false)}">
+                            <TR>
+                                <TH COLSPAN="{!(cspTiersCS.size * cspSizesCS.size) + 1}" style="text-align:left">{!selectedPartnerType} - Compliance Requirements</TH>
+                            </TR>
+                            <TR>
+                                <TH ROWSPAN="2" style="text-align:center;vertical-align:middle" WIDTH="20%">Tier</TH>
+                                <apex:repeat value="{!cspTiersCS}" var="ptier">
+                                    <TH COLSPAN="{!cspSizesCS.size}" style="text-align:center">{!ptier.name}</TH>
+                                </apex:repeat>
+                            </TR>
+                            <TR>
+                                <apex:repeat value="{!cspTiersCS}" var="ptier">
+                                    <apex:repeat value="{!cspSizesCS}" var="psize">
+                                        <TH style="text-align:center">{!psize.name}</TH>
+                                    </apex:repeat>    
+                                </apex:repeat>
+                            </TR>
+                            
+                            <apex:repeat value="{!cspCertGroupsCS}" var="certgroup">
+                                <TR>
+                                <TD style="vertical-align:middle">{!certgroup.Name}</TD>
+                                <apex:repeat value="{!cspTiersCS}" var="ptier">
+                                    <apex:repeat value="{!cspSizesCS}" var="psize">
+                                        <TD style="text-align:center">
+                                            <apex:inputfield value="{!requirementsMap[selectedPartnerType+ptier.Name+psize.Name+certgroup.Name].Required_Number__c}" label=""  styleClass="fieldwidth50PX"  rendered="{!editMode}" />
+                                            <apex:outputfield value="{!requirementsMap[selectedPartnerType+ptier.Name+psize.Name+certgroup.Name].Required_Number__c}" label=""  styleClass="fieldwidth50PX"  rendered="{!IF(editMode == false, true, false)}"/>
+                                        </TD> 
+                                    </apex:repeat>    
+                                </apex:repeat>
+                                </TR>    
+                            </apex:repeat>
+                        </TABLE>		
+                    </apex:outputPanel>
+                    <BR />
+                    <apex:outputPanel rendered="{!IF(selectedPartnerType != 'Please Select', true, false)}">
+                        <TABLE BORDER="0" WIDTh="100%">
+                            <TR>
+                                <TD style="text-align:center">
+                                    <apex:commandButton value=" Edit " action="{!editGUCR}" rendered="{!IF(editMode == false, true, false)}" reRender="requirementsPanel, partnerTypePanel" status="actionstatusTag" />
+                                    <apex:commandButton value=" Quick Save " action="{!quickSaveGUCR}"  rendered="{!editMode}" reRender="requirementsPanel, partnerTypePanel" status="actionstatusTag" />
+                                    <apex:commandButton value=" Save " action="{!saveGUCR}" rendered="{!editMode}" reRender="requirementsPanel, partnerTypePanel" status="actionstatusTag" />
+                                    <apex:commandButton value=" Cancel " action="{!cancelEditGUCR}" rendered="{!editMode}" reRender="requirementsPanel, partnerTypePanel" status="actionstatusTag" />
+                                </TD>
+                            </TR>
+                        </TABLE>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:form>
+         </apex:tab>            
+    	<apex:tab label="Compliance Settings" name="tab2" id="tabTwo">
+            <apex:form >
+				<apex:pageBlock >
+                    <apex:pageBlockSection columns="1">
+                        <b>Note: Please contact Administrator for any changes required with respect to GU Compliance Requirements Settings.</b>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection columns="2">
+                        <apex:pageBlock title="Partner Types" >
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockTable value="{!cspTypesCS}" var="ptypeCS">
+                                    <apex:column value="{!ptypeCS.DisplayOrder__c}" width="75PX"/>
+                                    <apex:column value="{!ptypeCS.Name}"/>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Partner Tiers">
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockTable value="{!cspTiersCS}" var="ptierCS">
+                                    <apex:column value="{!ptierCS.DisplayOrder__c}" width="75PX"/>
+                                    <apex:column value="{!ptierCS.Name}"/>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Partner Business Size">
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockTable value="{!cspSizesCS}" var="psizeCS" >
+                                    <apex:column value="{!psizeCS.DisplayOrder__c}" width="75PX"/>
+                                    <apex:column value="{!psizeCS.Name}"/>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Partner Certification Groups">
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockTable value="{!cspCertGroupsCS}" var="pcertigroupCS">
+                                    <apex:column value="{!pcertigroupCS.DisplayOrder__c}" width="75PX"/>
+                                    <apex:column value="{!pcertigroupCS.Name}"/>
+                                    <apex:column value="{!pcertigroupCS.Certification_Prefix__c}"/>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>  
+                        <apex:pageBlock title="Partner Offering Types">
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockTable value="{!lst_OfferingTypeCS}" var="objOfferingCS">
+                                    <apex:column value="{!objOfferingCS.DisplayOrder__c}" width="75PX"/>
+                                    <apex:column value="{!objOfferingCS.Name}"/>
+                                    <apex:column value="{!objOfferingCS.Specialization__c}"/>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Specialization Prerequisites">
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockTable value="{!list_Specializations}" var="objSpecialization">
+                                    <apex:column value="{!objSpecialization.Offering_Type__c}" />
+                                    <apex:column headerValue="Name">
+                                        <apex:outputPanel rendered="{! objSpecialization.Name != 'PureEngage - Core' }">
+                                            {! objSpecialization.Name }
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{! objSpecialization.Name == 'PureEngage - Core' }">
+                                            Core
+                                        </apex:outputPanel>
+                                    </apex:column>
+                                    <apex:column headerValue="Prerequisite Specialization">
+                                        <apex:outputPanel rendered="{! objSpecialization.Prerequisite__c != 'PureEngage - Core' }">
+                                            {! objSpecialization.Prerequisite__c }
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{! objSpecialization.Prerequisite__c == 'PureEngage - Core' }">
+                                            Core
+                                        </apex:outputPanel>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Solution Groups">
+                            <apex:pageBlockSection columns="1">
+                                <apex:pageBlockTable value="{!list_SoultionGrp}" var="objSolutionGrp">
+                                    <apex:column value="{!objSolutionGrp.DisplayOrder__c}" width="75PX"/>
+                                    <apex:column value="{!objSolutionGrp.Name}"/>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>                
+            </apex:form>
+        </apex:tab>
+    </apex:tabPanel>
+    <apex:actionStatus id="actionstatusTag" stopText="" >
+        <apex:facet name="start">
+            <div>
+                <div class="popupBackground" />
+                <div class="PopupPanel">
+                    <table border="0" width="100%" height="100%">
+                        <tr>
+                            <td align="center"><b>Please Wait</b></td>
+                        </tr>
+                        <tr>
+                            <td align="center"><img src="{!$Resource.ProgressBarStatus}"/></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </apex:facet>
+	</apex:actionStatus>
+</apex:page>

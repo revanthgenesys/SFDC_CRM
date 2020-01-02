@@ -1,0 +1,731 @@
+<apex:page controller="QuoteRevenueSummaryDetailController" sidebar="false">
+    <apex:form >
+        <div style="height:5px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">
+                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                </apex:facet> 
+            </apex:actionStatus>
+        </div>
+        <apex:actionFunction action="{!loadPhaseLines}" name="loadPhaseLinesAF" reRender="pnlPhaseDetails" status="status" />
+        <apex:pageBlock title="Revenue Summary"> 
+            <apex:pageBlockSection >
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Opportunity" />
+                    <apex:selectList value="{!selectedOpp}" multiselect="false" size="1" onchange="loadPhaseLinesAF(); return false;">
+                        <apex:selectOptions value="{!oppListOptions}"/>
+                    </apex:selectList>                  
+                </apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Year" />
+                    <apex:selectList value="{!currentYear}" multiselect="false" size="1" onchange="loadPhaseLinesAF(); return false;">
+                       <apex:selectOption itemValue="2020" itemLabel="2020"/>
+                       <apex:selectOption itemValue="2019" itemLabel="2019"/>
+                        <apex:selectOption itemValue="2018" itemLabel="2018"/>
+                        <apex:selectOption itemValue="2017" itemLabel="2017"/>
+                        <apex:selectOption itemValue="2016" itemLabel="2016"/>
+                        <apex:selectOption itemValue="2015" itemLabel="2015"/>
+                        <apex:selectOption itemValue="2014" itemLabel="2014"/>
+                        <apex:selectOption itemValue="All" itemLabel="All"/>
+                    </apex:selectList>                  
+                </apex:pageBlockSectionItem>  
+                
+                
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        <apex:outputPanel id="pnlPhaseDetails">
+            <apex:pageBlock title="Phase Revenue Details" rendered="{!showRevenueDetails}">
+                                    <apex:pageBlockSection columns="1" id="pgblkPhaseLines">
+                                        <apex:outputLabel value="No record(s) to show." rendered="{!NOT(showRevenueDetails)}" />
+                                                                               
+                                        <apex:pageBlockTable value="{!revenueDetails}" var="eachItem" rendered="{!showRevenueDetails}" id="pgblktbl">
+                                           
+                                            <apex:column headerValue="Phase" style="{!eachItem.rowStyle}" >
+                                                <apex:outputText rendered="{!eachItem.isTotalRow}">
+                                                 Total                                      
+                                                </apex:outputText>
+
+
+                                                <apex:outputText rendered="{!eachItem.isCMRRRow}">
+                                                 Actual CMRR                                     
+                                                </apex:outputText>
+                                                <apex:outputLink target="_blank" value="/apex/QoteRevenueForecast?oppId={!selectedOpp}">
+                                                    {!eachItem.phase.Phase_Classification__c}
+                                                </apex:outputLink>                           
+                                                 -                    
+                                               <apex:outputText value="{0, date, MMMM d','  yyyy}">
+                                                 <apex:param value="{!eachItem.phase.End_Date__c}" />                                   
+                                                </apex:outputText>                                            
+                                            </apex:column>       
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_1_Revenue__c!=null && eachItem.phase.Month_1_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"   rendered ="{!monthNames.size>=1 && activeMonthNames[0]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[0]} 
+                                                </apex:facet>    
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                <apex:param value="{!eachItem.Total_Month_1}"/>                                        
+                                                </apex:outputText>
+                                              
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_1_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                           
+                                              <apex:outputText value="{0, number, ###,##0.00}"  rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+                                               
+
+
+
+                                                
+                                            </apex:column>       
+                                            
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_2_Revenue__c!=null && eachItem.phase.Month_2_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=2 && activeMonthNames[1]}" footerValue="" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[1]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_2}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_2_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                
+                                                
+                                            </apex:column>                                                                                 
+
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_3_Revenue__c!=null && eachItem.phase.Month_3_Revenue__c > 0,'#CCFFFF','#C0C0C0')}" rendered ="{!monthNames.size>=3 && activeMonthNames[2]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[2]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_3}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_3_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>                                                                                 
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_4_Revenue__c!=null && eachItem.phase.Month_4_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=4 && activeMonthNames[3]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[3]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_4}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_4_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>                                          
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_5_Revenue__c!=null && eachItem.phase.Month_5_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=5 && activeMonthNames[4]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[4]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_5}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_5_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+                                                
+                                            </apex:column>
+
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_6_Revenue__c!=null && eachItem.phase.Month_6_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=6 && activeMonthNames[5]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[5]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_6}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_6_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                              
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                
+                                          
+
+      
+                                            </apex:column>
+
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_7_Revenue__c!=null && eachItem.phase.Month_7_Revenue__c > 0,'#CCFFFF','#C0C0C0')}" rendered ="{!monthNames.size>=7 && activeMonthNames[6]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[6]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_7}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_7_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                              
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+ 
+                                                
+                                            </apex:column>
+                                                                                        
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_8_Revenue__c!=null && eachItem.phase.Month_8_Revenue__c > 0,'#CCFFFF','#C0C0C0')}" rendered ="{!monthNames.size>=8 && activeMonthNames[7]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[7]} 
+                                                </apex:facet>
+                                                
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_8}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_8_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+                                                
+                                            </apex:column>
+
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_9_Revenue__c!=null && eachItem.phase.Month_9_Revenue__c > 0,'#CCFFFF','#C0C0C0')}" rendered ="{!monthNames.size>=9 && activeMonthNames[8]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[8]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_9}"/>                                        
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_9_Revenue__c}"/>                                     
+                                                </apex:outputText>
+                                               
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+
+                                                
+                                            </apex:column>
+
+                        <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_10_Revenue__c!=null && eachItem.phase.Month_10_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=10 && activeMonthNames[9]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[9]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_10}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_10_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                       
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+        
+                                                
+                                            </apex:column>
+                                                                                                                                    
+                        <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_11_Revenue__c!=null && eachItem.phase.Month_11_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=11 && activeMonthNames[10]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[10]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_11}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_11_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                               
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+
+                                                
+                                            </apex:column>
+                                            <apex:column headerValue="{!monthNames[11]}" style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_12_Revenue__c!=null && eachItem.phase.Month_12_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=12 && activeMonthNames[11]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[11]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_12}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_12_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                            
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+   
+                                                
+                                            </apex:column>
+                        <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_13_Revenue__c!=null && eachItem.phase.Month_13_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[12]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[12]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_13}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_13_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                     
+                         <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+          
+                                                
+                                            </apex:column>
+                                       
+                        <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_14_Revenue__c!=null && eachItem.phase.Month_14_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[13]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[13]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_14}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_14_Revenue__c}"/>                                        
+                                                </apex:outputText>
+
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+                                               
+                                                
+                                            </apex:column>
+                                       
+                       <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_15_Revenue__c!=null && eachItem.phase.Month_15_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[14]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[14]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_15}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_15_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                        
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                          
+
+                                    
+                                                
+                                            </apex:column>
+                                       
+                                       
+                               <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_16_Revenue__c!=null && eachItem.phase.Month_16_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[15]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[15]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_16}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_16_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                        
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                          
+
+                                    
+                                                
+                                            </apex:column>
+                           
+                               <apex:column headerValue="{!monthNames[16]}" style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_17_Revenue__c!=null && eachItem.phase.Month_17_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[16]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[16]} 
+                                                </apex:facet>   
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_17}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_17_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                        
+                         <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                                             
+
+                 
+                                                
+                                            </apex:column>
+      
+                               <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_18_Revenue__c!=null && eachItem.phase.Month_18_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[17]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[17]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_18}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_18_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                               
+    `                   <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                                                          
+
+
+     
+                                            </apex:column>
+      
+
+                               <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_19_Revenue__c!=null && eachItem.phase.Month_19_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[18]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[18]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_19}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_19_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                        
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+                                               
+                                                
+                                            </apex:column>
+      
+
+                               <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_20_Revenue__c!=null && eachItem.phase.Month_20_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[19]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[19]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_20}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                <apex:param value="{!eachItem.phase.Month_20_Revenue__c}"/>                                        
+                                               </apex:outputText>
+
+                    <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+                                               
+                                                
+                                            </apex:column>
+      
+
+                               <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_21_Revenue__c!=null && eachItem.phase.Month_21_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[20]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[20]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_21}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_21_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                        
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                     
+
+
+                                         
+                                                
+                                            </apex:column>
+      
+                  
+                               <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_22_Revenue__c!=null && eachItem.phase.Month_22_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[21]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[21]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_22}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_22_Revenue__c}"/>                                        
+                                              </apex:outputText>
+
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                               
+
+                                               
+                                                
+                                            </apex:column>
+                                             
+      
+                               <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_23_Revenue__c!=null && eachItem.phase.Month_23_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[22]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[22]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_23}"/>                                       
+                                                </apex:outputText>
+                                              
+                                              <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                 <apex:param value="{!eachItem.phase.Month_23_Revenue__c}"/>                                        
+                                                </apex:outputText>
+    `                   
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                 <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                                                                         
+
+
+     
+                                                
+                                            </apex:column>
+      
+
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_24_Revenue__c!=null && eachItem.phase.Month_24_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[23]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[23]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_24}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_24_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_25_Revenue__c!=null && eachItem.phase.Month_25_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[24]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[24]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_25}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_25_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_26_Revenue__c!=null && eachItem.phase.Month_26_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[25]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[25]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_26}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_26_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_27_Revenue__c!=null && eachItem.phase.Month_27_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[26]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[26]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_27}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_27_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_28_Revenue__c!=null && eachItem.phase.Month_28_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[27]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[27]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_28}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_28_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_29_Revenue__c!=null && eachItem.phase.Month_29_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[28]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[28]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_29}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_29_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_30_Revenue__c!=null && eachItem.phase.Month_30_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[29]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[29]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_30}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_30_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_31_Revenue__c!=null && eachItem.phase.Month_31_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[30]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[30]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_31}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_31_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_32_Revenue__c!=null && eachItem.phase.Month_32_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[31]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[31]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_32}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_32_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_33_Revenue__c!=null && eachItem.phase.Month_33_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[32]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[32]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_33}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_33_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_34_Revenue__c!=null && eachItem.phase.Month_34_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[33]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[33]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_34}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_34_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_35_Revenue__c!=null && eachItem.phase.Month_35_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[34]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[34]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_35}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_35_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            <apex:column style="background-color:{!IF(Not(eachItem.isTotalRow) && eachItem.phase.Month_36_Revenue__c!=null && eachItem.phase.Month_36_Revenue__c > 0,'#CCFFFF','#C0C0C0')}"  rendered ="{!monthNames.size>=13 && activeMonthNames[35]}" headerClass="columnHeaderClass">
+                                                <apex:facet name="header">
+                                                    {!monthNames[35]} 
+                                                </apex:facet>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotalRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_36}"/>                                       
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!NOT(eachItem.isTotalRow)}">
+                                                    <apex:param value="{!eachItem.phase.Month_36_Revenue__c}"/>                                        
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isCMRRRow}">
+                                                    <apex:param value="{!eachItem.Total_Month_1}"/>                                    
+                                                </apex:outputText>
+                                            </apex:column>
+                                            
+                                            
+                                            <apex:column headerValue="Total" style="background-color:#FFFF66;">
+                                                <apex:outputText value="{0, number, ###,##0.00}" >
+                                                    <apex:param value="{!eachItem.total1To24}"/>                                        
+                                                </apex:outputText>  
+                                            </apex:column>                                      
+                                        </apex:pageBlockTable>
+                                    </apex:pageBlockSection>                        
+                                </apex:pageBlock>
+                </apex:outputPanel> 
+    </apex:form>
+</apex:page>

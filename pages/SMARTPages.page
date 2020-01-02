@@ -1,0 +1,632 @@
+<apex:page standardController="SMART_Feedback__c" extensions="SMARTFeedBackExt">
+
+<script>function setFocusOnLoad() {}</script>
+    <style>
+
+       /* popup_box DIV-Styles  Start*/
+        #popup_box {
+            display:none; /* Hide the DIV */
+            position:fixed;  
+            _position:absolute; /* hack for internet explorer 6 */  
+            height:700px;
+            width:600px;  
+            background:#FFFFFF;  
+            left: 300px;
+            top: 50px;
+            z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+            margin-left: 15px;  
+           
+            /* additional features, can be omitted */
+            border:2px solid #1797C0;      
+            padding:15px;  
+            font-size:15px;  
+            -moz-box-shadow: 0 0 5px #ff0000;
+            -webkit-box-shadow: 0 0 5px #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+           
+        }
+        
+        #container {
+            background: #d2d2d2; /*Sample*/
+            width:100%;
+            height:100%;
+        }
+        
+        a{ 
+        cursor: pointer; 
+        text-decoration:none; 
+        }
+        
+        /* This is for the positioning of the Close Link */
+        #popupBoxClose {
+            font-size:20px;  
+            line-height:15px;  
+            right:5px;  
+            top:5px;  
+            position:absolute;  
+            color:#6fa5e2;  
+            font-weight:500;      
+        }
+        /* popup_box DIV-Styles  Close*/
+    </style> 
+  <script>
+
+    function colorPageBlock(pageblock, color) {
+    if (pageblock != null) pageblock.firstChild.style.cssText = "background-color: " + color + ";";
+    }
+  </script>
+  
+  <script>
+    function checkAll(cb)
+    {
+      var inputElem = document.getElementsByTagName("input");
+      for(var i=0; i<inputElem.length; i++){
+        if(inputElem[i].id.indexOf("checkedone")!=-1)
+            inputElem[i].checked = cb.checked;
+      }
+    }    
+   </script>
+
+  <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+  <script type="text/javascript">
+   var j$ = jQuery.noConflict();
+   
+     
+   j$(document).ready( function() {
+
+     // When site loaded, load the Popupbox First
+     //loadPopupBox();
+
+     j$(".clsBoxClose").click( function() {           
+        unloadPopupBox();
+     });
+   
+     j$('#container').click( function() {
+        //unloadPopupBox();
+     });
+     
+  
+   });
+  
+      
+    function loadPopupBox(fType) 
+    {    
+      j$('[id$=hdnFileType]').val(fType);
+      
+      // To Load the Popupbox
+      j$('#popup_box').fadeIn("slow");
+      j$("#container").css({ // this is just for style
+         "opacity": "0.3" 
+       }); 
+      return false;       
+    } 
+    function unloadPopupBox() 
+    {    
+     // TO Unload the Popupbox
+
+     j$('#popup_box').fadeOut("slow");
+     j$("#container").css({ // this is just for style       
+        "opacity": "1" 
+     });
+     return false;
+    }
+        
+   function GetAttachmentId(obj)       
+    {
+      j$('[id$=hdnFileId]').val(obj);
+      //return false;
+    }
+    
+    function inputLimiter(e,allow) {
+            var AllowableCharacters = '';
+            if (allow == 'Numbers'){AllowableCharacters='1234567890';}
+            var k = document.all?parseInt(e.keyCode): parseInt(e.which);
+            if (k!=13 && k!=8 && k!=0){
+                if ((e.ctrlKey==false) && (e.altKey==false)) {
+                return (AllowableCharacters.indexOf(String.fromCharCode(k))!=-1);
+                } else {
+                return true;
+                }
+            } else {
+                return true;
+            }
+        }
+    function inputLimiterWithDot(e,allow) {
+            var AllowableCharacters = '';
+            if (allow == 'Numbers'){AllowableCharacters='1234567890.';}
+            var k = document.all?parseInt(e.keyCode): parseInt(e.which);
+            if (k!=13 && k!=8 && k!=0){
+                if ((e.ctrlKey==false) && (e.altKey==false)) {
+                return (AllowableCharacters.indexOf(String.fromCharCode(k))!=-1);
+                } else {
+                return true;
+                }
+            } else {
+                return true;
+            }
+        } 
+     function Validations()
+     {
+        var isRetrn = true;
+        
+        if(j$('.clsTechBsnsIssue').val().length < 25)
+        {
+          isRetrn = false;
+          alert('The Technical Business Issues to be solved field requires at least 25 characters.');
+        }
+        if(j$('.clsCriBsIssue').val().length < 25)
+        {
+          isRetrn = false;
+          alert('The Critical Business Issues to be solved field requires at least 25 characters.');
+        }
+        return isRetrn;
+     } 
+     
+   function fillIn(name, id)
+   {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      var ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield}');
+      ele.value=name;
+      ele=winMain.document.getElementById('{!$CurrentPage.parameters.idfield}');
+      ele.value=id;
+      CloseWindow();
+   }
+ 
+   function CloseWindow()
+   {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      winMain.closeLookupPopup();
+   }
+
+            
+  </script>
+  
+  <apex:sectionHeader title="Feedback Loop" subtitle="{!strRecordName}"/>
+  <apex:form >
+       
+     <apex:inputText style="position:absolute;top:-500px;"/>
+     <apex:pageMessages id="msgs"/>
+     <apex:inputHidden value="{!FileDescType}" id="hdnFileType" />
+     <apex:inputHidden value="{!sAttachmentId}" id="hdnFileId" />
+     
+    <apex:actionRegion >  
+        <div id="popup_box" style="height:200px;margin-top:200px;"><!-- OUR PopupBox DIV-->   
+            <apex:pageBlock id="pbLive">
+              <div style="float:left;width:10px;color:black;">
+               <a id="popupBoxClose" class="clsBoxClose">X</a></div>
+                <table style="width:100%;margin-top:30px">
+                  <tr><td>
+                  <apex:outputPanel id="Panel" > 
+                      <div id="upload" class="upload">
+                        <table><tr>
+                          <td><apex:inputFile id="fileToUpload" value="{!fileBody}" filename="{!fileName}" styleClass="input-file"/></td> 
+                          <td><apex:commandButton value="Upload Attachment" action="{!uploadFile}"  immediate="true"/></td>
+                        </tr></table>
+                      </div>   
+                 </apex:outputPanel> 
+                      </td></tr>
+                    </table>
+                </apex:pageBlock>
+           </div>
+    </apex:actionRegion>  
+    <!-- Close PopupBox DIV-->
+    
+    <apex:actionRegion >
+
+             <apex:actionFunction name="vfChangeReqType" action="{!dummyMethod}" reRender="SoutionProd1,SoutionProd2,SoutionProd3,SoutionProd4">
+                  <apex:param name="firstparam" value="" assignTo="{!reqType}"/>
+             </apex:actionFunction>
+       
+             <apex:actionFunction name="vfChangeReqName" action="{!queryRequestorInfo}" reRender="UseCase1,UseCase2,UseCase3,UseCase4">
+               <apex:param name="reqName" value="" assignTo="{!strRequestor}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="SolutionFeedbackType" action="{!solutionFeedbackTypeInfo}" reRender="feedback1">
+                   <apex:param name="solutionFeedbackType" value="" assignTo="{!SolutionFeedbackType}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="Solutionchange" action="{!Sol}" reRender="feedback1">
+                   <apex:param name="solutionchange" value="" assignTo="{!Solutionchange}"/>
+             </apex:actionFunction>
+
+             <apex:actionFunction name="Productchange" action="{!Pro}" reRender="feedback1">
+                   <apex:param name="productchange" value="" assignTo="{!Productchange}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="vfSolutionFeedbackType" action="{!feedbackInfo}" reRender="feedback">
+                   <apex:param name="feedBackName" value="" assignTo="{!strFeedbackRequestor}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="SolutionFeedbackCategory" action="{!FeedbkCategory}" reRender="feedback">
+                   <apex:param name="FeedbackCategory" value="" assignTo="{!strFeedbackCategory}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="UpdateRootCause" action="{!UpdatedRtCause}" reRender="feedback">
+                   <apex:param name="updatedrootComments" value="" assignTo="{!strupdatedrootComments}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="UpdateSuggestion" action="{!UpdateSuggestionforImp}" reRender="feedback">
+                   <apex:param name="updaterootComments" value="" assignTo="{!strupdaterootComments}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="SelectedAccount" action="{!AccountPopulated}" reRender="acc1">
+                   <apex:param name="accValue" value="" assignTo="{!strAccVa}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="SelectedOpportunity" action="{!OpportunityPopulated}" reRender="accinfo, acc1">
+                   <apex:param name="OppValue" value="" assignTo="{!strOppVa}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="UpdateComments" action="{!UpdateCommmentsPopulated}" reRender="comm">
+                   <apex:param name="CommentValue" value="" assignTo="{!strCommVa}"/>
+             </apex:actionFunction>
+             
+             <apex:actionFunction name="AssignedTo" action="{!UpdateAssignedTo}" reRender="rrrr">
+                   <apex:param name="AssignedTo" value="" assignTo="{!strAssignedTo}"/>
+             </apex:actionFunction>
+
+            <apex:actionFunction name="UpdateIdeaTitle" action="{!UpdateIdeaTitle}" reRender="uc">
+                   <apex:param name="IdeaTitle" value="" assignTo="{!strIdeaTitle}"/>
+             </apex:actionFunction>
+
+             <apex:actionFunction name="UpdateIdeaComments" action="{!UpdateIdeaComments}" reRender="cc">
+                   <apex:param name="IdeaComments" value="" assignTo="{!strIdeaComments}"/>
+             </apex:actionFunction>
+
+             <apex:actionFunction name="UpdateAntiBenefits" action="{!UpdateBenefits}" reRender="dd">
+                   <apex:param name="IdeaAntiBenefits" value="" assignTo="{!strIdeaAntiBenefits}"/>
+             </apex:actionFunction>
+              
+             <apex:actionFunction name="UpdateDispositionDate" action="{!UpdateDispositionDate}" reRender="dd">
+                   <apex:param name="DispositionDate" value="" assignTo="{!strDispositionDate}"/>
+             </apex:actionFunction>
+
+             <apex:actionFunction name="UpdateDispositionStatus" action="{!UpdateDispositionStatus}" reRender="ds">
+                   <apex:param name="DispositionStatus" value="" assignTo="{!strDispositionStatus}"/>
+             </apex:actionFunction>
+
+             <apex:actionFunction name="UpdateDispositionComment" action="{!UpdateDispositionComment}" reRender="comm">
+                   <apex:param name="DispositionComment" value="" assignTo="{!strDispositionComment}"/>
+             </apex:actionFunction>
+             
+    </apex:actionRegion>
+       
+       <apex:pageBlock id="mainBlock1" rendered="{!IsNewRecord}">
+
+          <!-- Button -->
+          <apex:pageBlockButtons >
+             <apex:commandButton value="Save" action="{!submit}" rendered="{!objFeedbackloop.Submitted__c}"/>
+             <apex:commandButton value="Submit" action="{!submit}" rendered="{!NOT(objFeedbackloop.Submitted__c)}"/>
+             <apex:commandButton value="Cancel" action="{!CancelPSDSR}" immediate="true"/>
+          </apex:pageBlockButtons>
+          
+           <apex:pageBlockSection rendered="{!isEdit}">
+              <apex:pageBlockSectionItem id="section0" >
+                 <apex:outputlabel value="Assigned To"/>
+                 <apex:inputField value="{!objFeedbackloop.Assigned_To__c}" onchange="AssignedTo(this.value);" id="assigned"/> 
+              </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>
+          
+           <!-- Product or Use Case -->
+          <apex:pageBlockSection >
+              <apex:pageBlockSectionItem id="section1" >
+                 <apex:outputlabel value="Product or Use Case"/>
+                 <apex:inputField value="{!objFeedbackloop.Product_or_Use_Case__c}" onchange="vfChangeReqType(this.value);" required="true" html-disabled="true"/> 
+              </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>
+          
+          
+          <!-- What are you working on -->
+           <apex:outputPanel id="SoutionProd1">
+            
+             <apex:pageBlockSection id="block1" title="What are you working on" columns="1" rendered="{!AND(objFeedbackloop.Product_or_Use_Case__c == 'Product')}"> 
+                 <apex:inputField value="{!objFeedbackloop.Product_Category__c} " onchange="Solutionchange(this.value);" id="xxxpb1" styleClass="requiredInput" required="true"/>
+                  
+                 <apex:inputField value="{!objFeedbackloop.Product_Details__c} " onchange="Productchange(this.value);" id="xxxpb2" styleClass="requiredInput" required="true"/>
+              </apex:pageBlockSection>
+              
+              <apex:pageBlockSection id="block2" title="Feedback Information" columns="1" rendered="{!AND(objFeedbackloop.Product_or_Use_Case__c == 'Product')}">
+                  <apex:pageBlockSectionItem id="section1" >
+                     <apex:outputlabel value="Product Feedback Type"/>
+                     <apex:inputField value="{!objFeedbackloop.Product_Feedback_Type__c}" onchange="SolutionFeedbackType(this.value);" required="true"/>
+                 </apex:pageBlockSectionItem>
+                 <apex:pageBlockSectionItem id="section2" >
+                    <apex:outputlabel value="Product Feedback Category"/> 
+                    <apex:inputField value="{!objFeedbackloop.Product_Feedback_Category__c}" onchange="SolutionFeedbackCategory(this.value);" required="true"/>
+                  </apex:pageBlockSectionItem>
+              </apex:pageBlockSection>
+    
+           </apex:outputPanel>
+           
+           <apex:outputPanel id="feedback1">
+               <apex:pageBlockSection columns="1" rendered="{!AND(objFeedbackloop.Product_Feedback_Type__c=='Lesson Learned (Something we should watch out for in the future)')}">
+                         <apex:pageBlockSectionItem >
+                             <apex:outputLabel value="What do you think was the root cause of the issue?"/>
+                             <apex:inputField value="{!objFeedbackloop.Root_cause_of_Issue__c}" style="width:300px;height:100px" required="true" onkeyup="UpdateRootCause(this.value);"/>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                             <apex:outputLabel value="What is your suggestion for improvement?"/>
+                             <apex:inputField value="{!objFeedbackloop.What_is_your_suggestion_for_improvement__c}" style="width:300px;height:100px" required="true" onkeyup="UpdateSuggestion(this.value);"/>
+                         </apex:pageBlockSectionItem>
+               </apex:pageBlockSection>
+          </apex:outputPanel> 
+    
+           <apex:outputPanel id="SoutionProd2">
+               <apex:pageBlockSection columns="1" id="block3" title="What are you working on"  rendered="{!AND(objFeedbackloop.Product_or_Use_Case__c=='Use Case')}">
+                     <apex:inputField value="{!objFeedbackloop.Use_Case_Feedback_Type__c}"  id="xxxpb3" onchange="vfChangeReqName(this.value);" required="true"/>
+                </apex:pageBlockSection>
+           </apex:outputPanel> 
+        
+          
+         <apex:outputPanel id="UseCase4">
+              <apex:pageBlockSection columns="1" id="block8" title="Product Categories"  
+              rendered="{!AND(objFeedbackloop.Product_or_Use_Case__c == 'Use Case' ,OR(objFeedbackloop.Use_Case_Feedback_Type__c=='Use Case Enhancement' || objFeedbackloop.Use_Case_Feedback_Type__c=='Use Case Gap'))}">
+               
+               <apex:pageBlockSectionItem >
+                    <apex:outputlabel value="Product Categories"/>
+                    <apex:actionRegion >
+                    <apex:selectList size="1" value="{!solstate}" >
+                        <apex:selectOptions value="{!Solution}"/> 
+                        <apex:actionSupport event="onchange" reRender="ref"/>
+                   </apex:selectList>
+                   </apex:actionRegion> 
+               </apex:pageBlockSectionItem>  
+               
+               <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Use Case Id"/>
+                    <apex:actionRegion >
+                     <apex:selectList size="1" value="{!ref}" id="ref" styleClass="font-weight:bold;font-size:14px;color:red;">
+                            <apex:selectOptions value="{!refs}"/>
+                            <apex:actionSupport event="onchange" reRender="name"/>
+                      </apex:selectList>
+                    </apex:actionRegion>
+               </apex:pageblockSectionItem>           
+                
+                <apex:pageblockSectionItem >
+                    <apex:outputLabel value="Use Case Name"/>
+                    <apex:actionRegion >
+                       <apex:selectList size="1" value="{!usecase}" id="name" disabled="True">
+                            <apex:selectOptions value="{!usecases}"/>
+                            <apex:actionSupport event="onchange" />
+                        </apex:selectList> 
+                    </apex:actionRegion>
+               </apex:pageblockSectionItem>
+
+              </apex:pageBlockSection>  
+           </apex:outputPanel>  
+           
+           <apex:outputPanel id="SoutionProd3">
+               <apex:pageBlockSection id="CommentsBlock" title="In your own words (comments)" columns="1" rendered="{!AND(objFeedbackloop.Product_or_Use_Case__c == 'Product')}">
+                   <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Comments"/>
+                            <apex:inputField value="{!objFeedbackloop.User_Comments__c}" style="width:560px;height:200px" required="true" onkeyup="UpdateComments(this.value);"/>
+                   </apex:pageBlockSectionItem>
+              </apex:pageBlockSection>
+           </apex:outputPanel>
+           
+           <apex:outputPanel id="UseCase1">
+             <apex:pageBlockSection id="CommentsBlock3" title="In your own words (comments)" columns="1" rendered="{!AND(objFeedbackloop.Use_Case_Feedback_Type__c == 'New Use Case Idea')}">
+               <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Describe the New Use Case idea - problem it addresses, alternatives, how we solve the problem, how do we develop an unfair advantage, target customers"/>
+                        <apex:inputField value="{!objFeedbackloop.User_Comments__c}" style="width:560px; height: 200px" required="true" onkeyup="UpdateComments(this.value);"/>
+               </apex:pageBlockSectionItem>
+              </apex:pageBlockSection>
+
+              <apex:pageBlockSection title="Idea Information" columns="1"  rendered="{!AND(objFeedbackloop.Use_Case_Feedback_Type__c == 'New Use Case Idea')}">
+              <apex:pageBlockSectionItem id="IdeaTitle" >
+                         <apex:outputlabel value="Idea Title"/>
+                         <apex:inputField value="{!objFeedbackloop.Idea_Title__c }" style="width:560px; height: 15px" onkeyup="UpdateIdeaTitle(this.value);"/>
+                 </apex:pageBlockSectionItem>
+                
+               
+                <apex:pageBlockSectionItem id="SummaryOfUseCase" >
+                         <apex:outputlabel value="Summary of Use Case: what is the Use Case intended to address for the customer"/>
+                         <apex:inputField value="{!objFeedbackloop.Use_Case_Brief_Description__c }"  style="width:560px; height: 300px" onkeyup="UpdateIdeaComments(this.value);" id="uc"/>
+                 </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!NOT(objFeedbackloop.Submitted__c)}">
+                         <apex:outputlabel value="Anticipated Benefits"/>
+                         <apex:inputField value="{!objFeedbackloop.Anticipated_Benefits__c }" onchange="UpdateAntiBenefits(this.value);" />
+                 </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!objFeedbackloop.Submitted__c}">
+                         <apex:outputlabel value="Anticipated Benefits"/>
+                         <apex:actionRegion >
+                           <apex:selectList size="1" value="{!strIdeaAntiBenefits}" id="AnticipatedBenefits">
+                                <apex:selectOptions value="{!AnticipatedValues}"/>
+                                 <apex:actionSupport event="onchange" />
+                            </apex:selectList> 
+                         </apex:actionRegion>
+                 </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>  
+
+             <apex:pageBlockSection title="Disposition Information" columns="1"  rendered="{!(objFeedbackloop.isEmailSent__c==true && IsSubmitterOnEdit == false)}">
+              <apex:pageBlockSectionItem id="DispositionStatus" >
+                         <apex:outputlabel value="Disposition Status"/>
+                         <apex:inputField value="{!objFeedbackloop.Disposition_Status__c }" onchange="UpdateDispositionStatus(this.value);" />
+                 </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="DispositionDate" >
+                         <apex:outputlabel value="Disposition Date"/>
+                         <apex:inputField value="{!objFeedbackloop.Disposition_Date__c }"  onchange="UpdateDispositionDate(this.value);" id="ds" />
+                 </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="DispositionComment" >
+                         <apex:outputlabel value="Disposition Comment"/>
+                         <apex:inputField value="{!objFeedbackloop.Disposition_Comment__c}" style="width:560px; height: 300px"  onkeyup="UpdateDispositionComment(this.value);"  />
+                 </apex:pageBlockSectionItem>
+              </apex:pageBlockSection>  
+            
+              <apex:pageBlockSection title="Disposition Information" columns="1"  rendered="{!(objFeedbackloop.isEmailSent__c==true && IsSubmitterOnEdit == true)}">
+              <apex:pageBlockSectionItem id="DispositionStatus" >
+                         <apex:outputlabel value="Disposition Status"/>
+                         <apex:outputField value="{!objFeedbackloop.Disposition_Status__c }" />
+                 </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="DispositionDate" >
+                         <apex:outputlabel value="Disposition Date"/>
+                         <apex:outputField value="{!objFeedbackloop.Disposition_Date__c }"  />
+                 </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="DispositionComment" >
+                         <apex:outputlabel value="Disposition Comment"/>
+                         <apex:outputField value="{!objFeedbackloop.Disposition_Comment__c}" style="width:560px; height: 100px"  />
+                 </apex:pageBlockSectionItem>
+               
+            </apex:pageBlockSection> 
+
+          </apex:outputPanel>
+
+
+        <apex:outputPanel id="UseCase2">
+             <apex:pageBlockSection id="CommentsBlock4" title="In your own words (comments)" columns="1" rendered="{!AND(objFeedbackloop.Use_Case_Feedback_Type__c == 'Use Case Enhancement')}">
+               <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Describe the Use Case Enhancement - new application for the Use Case, an improvement to the use case, benefit that may be realized,etc:"/>
+                        <apex:inputField value="{!objFeedbackloop.User_Comments__c}" style="width:560px; height: 200px" required="true" onkeyup="UpdateComments(this.value);"/>
+               </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>
+        </apex:outputPanel>
+     
+        <apex:outputPanel id="UseCase3">
+             <apex:pageBlockSection id="CommentsBlock5" title="In your own words (comments)" columns="1" rendered="{!AND(objFeedbackloop.Use_Case_Feedback_Type__c == 'Use Case Gap')}">
+               <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Describe the Use Case Gap - a limitation, lack of capability, or functionality"/>
+                        <apex:inputField value="{!objFeedbackloop.User_Comments__c}" style="width:560px; height: 200px" required="true" onkeyup="UpdateComments(this.value);"/>
+               </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>
+        </apex:outputPanel>
+        
+        
+       <apex:outputPanel >
+        <apex:pageBlockSection id="block22" title="Other Information" columns="1">
+          
+          <apex:pageBlockSectionItem >
+                     <apex:outputlabel value="Sold To Account"/>
+                     <apex:inputField value="{!objFeedbackloop.Sold_To_Account__c}" id="accinfo" onchange="SelectedAccount(this.value);"/>
+             </apex:pageBlockSectionItem>
+                
+              <apex:pageBlockSectionItem id="section22" >
+                    <apex:outputlabel value="Opportunity"/> 
+                    <apex:inputField value="{!objFeedbackloop.Opportunity__c}" styleClass="requiredInput" onchange="SelectedOpportunity(this.value);"/>
+              </apex:pageBlockSectionItem>
+      
+           <!-- 
+             <apex:pageBlockSectionItem id="acc1" >
+                     <apex:outputlabel value="Sold To Account"/>
+                     <apex:inputField value="{!objFeedbackloop.Sold_To_Account__c}" id="acc1" styleClass="requiredInput" onchange="SelectedAccount(this.value);"/>
+             </apex:pageBlockSectionItem>
+                
+              <apex:pageBlockSectionItem id="section22" >
+                    <apex:outputlabel value="Opportunity"/> 
+                    <apex:inputField value="{!objFeedbackloop.Opportunity__c}"  id="opporty" styleClass="requiredInput" onchange="SelectedOpportunity(this.value);" />
+              </apex:pageBlockSectionItem>
+             
+            
+              <apex:pageBlockSectionItem >
+                   <apex:outputPanel id="acc1" rendered="{!objFeedbackloop.Id!=null}">
+                    <apex:outputLink onclick="window.open('/apex/smartCaseDeatilPage?RecordTypeId={!objFeedbackloop.RecordTypeId}&Id={!objFeedbackloop.Id}&accId={!objFeedbackloop.Sold_To_Account__c}&OppId={!objFeedbackloop.Opportunity__c}', 'newwindow', 'width=500, height=500');return false;">Click here to select</apex:outputLink>
+                    </apex:outputPanel>
+              </apex:pageBlockSectionItem>
+              
+              <apex:pageBlockSectionItem >
+                   <apex:outputPanel id="acc1" rendered="!{!objFeedbackloop.Id!=null}">
+                    <apex:outputLink onclick="window.open('/apex/smartCaseDeatilPage?RecordTypeId={!objFeedbackloop.RecordTypeId}&accId={!objFeedbackloop.Sold_To_Account__c}&OppId={!objFeedbackloop.Opportunity__c}, 'newwindow', 'width=500, height=500');return false;">Click here to select</apex:outputLink>
+                    </apex:outputPanel>
+              </apex:pageBlockSectionItem>
+             -->
+             
+             <!--
+             
+             <apex:pageBlockSectionItem id="section26" >
+                    <apex:outputlabel value="Selected Cases"/> 
+                    <apex:outputField value="{!objFeedbackloop.Cases__c}" />
+              </apex:pageBlockSectionItem>
+             
+             -->   
+          </apex:pageBlockSection>
+          </apex:outputPanel>
+       <!--
+       <apex:pageBlock title="Selected Cases">
+        <apex:outputText value="There are no selected cases to display" rendered="{!Relcase.size==0}" />
+        <apex:pageBlockTable value="{!Relcase}" var="c" rowClasses="odd,even" styleClass="tableClass" rendered="{!Relcase.size>0}">
+            <apex:column headerValue="Case Number" >
+                <apex:outputLink value="/{!c.css.Id}" target="_blank"> 
+                    <apex:outputText value="{!c.css.CaseNUmber}">
+                    </apex:outputText> 
+                </apex:outputLink>
+            </apex:column>
+            <apex:column headervalue="Case Subject" value="{!c.css.Subject}" />
+            <apex:column headervalue="Case Type" value="{!c.css.Type}" />
+        </apex:pageBlockTable>
+        </apex:pageBlock>
+       --> 
+     
+     <apex:pageBlockSection Title="List of Available Cases – Items with the checkbox selected will be linked to this Feedback Loop record" columns="1" id="acc1">
+        
+        <apex:pageBlockTable value="{!caselist}" var="c" rowClasses="odd,even" styleClass="tableClass" >
+       
+        <apex:column >
+        <apex:actionRegion >
+            <apex:facet name="header">
+                <apex:inputCheckbox >
+                    <apex:actionSupport event="onclick" action="{!GetSelected}" onsubmit="checkAll(this)" rerender="Selected_PBS"/>
+                </apex:inputCheckbox>
+            </apex:facet>
+            <apex:inputCheckbox value="{!c.selected}" id="checkedone">
+                <apex:actionSupport event="onclick" action="{!GetSelected}" rerender="Selected_PBS"/>
+            </apex:inputCheckbox>
+        </apex:actionRegion>    
+        </apex:column>
+       
+        <apex:column headerValue="Case Number" >
+            <apex:outputLink value="/{!c.css.Id}" target="_blank"> 
+               <apex:outputText value="{!c.css.CaseNUmber}">
+               </apex:outputText> 
+            </apex:outputLink>
+        </apex:column>
+        <apex:column headervalue="Case Subject" value="{!c.css.subject}" />
+        <apex:column headervalue="Case Type" value="{!c.css.Type}" />
+        
+        
+        </apex:pageBlockTable>
+        
+        <apex:outputText value="No cases are available to associate to this Feedback Loop record" rendered="{!AND(case.size==0,objFeedbackloop.Sold_To_Account__c==null)}" />
+    </apex:pageBlockSection>
+    
+          
+       <!-- Attachment Section Start -->
+       <apex:pageBlockSection id="pbsAttachment" title="Attachments" columns="2" >
+            <apex:pageBlockSectionItem >
+              <apex:outputLabel value="Attachment" />
+             <apex:commandButton value="Upload File" onclick="return loadPopupBox('a File');"/>
+            </apex:pageBlockSectionItem>
+            
+          
+             <apex:pageBlock rendered="{!list_Attachment != null}"> 
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                  <apex:repeat value="{!list_Attachment}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         
+         
+       </apex:pageBlockSection>    
+               
+      </apex:pageBlock> 
+      
+   </apex:form>      
+</apex:page>

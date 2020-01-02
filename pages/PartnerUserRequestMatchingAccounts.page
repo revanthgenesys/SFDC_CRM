@@ -1,0 +1,85 @@
+<apex:page standardController="Partner_User_Request__c" extensions="PartnerUserRequestMatchingAccExtension">
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" />
+<apex:form id="theform">
+    <apex:outputPanel id="refresh"></apex:outputPanel>
+    <div style="height:10px">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <apex:image value="/img/loading.gif"/>
+            </apex:facet>
+       </apex:actionStatus>
+   </div>
+    <apex:actionFunction name="populateMatchingContactsAF" action="{!populateMatchingContact}" status="status" reRender="pnlContact">
+        <apex:param name="selectedAccountId" assignTo="{!selectedAccountId}" value=""/>
+    </apex:actionFunction>
+    <apex:actionFunction name="setMatchingContactsAF" action="{!setMatchingContact}" status="status" reRender="refresh">
+        <apex:param name="selectedContactId" assignTo="{!selectedContactId}" value=""/>
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="createNewAccountAF" action="{!createNewAccount}" status="status" reRender="pgblk" />
+    <apex:actionFunction name="createNewContactAF" action="{!createNewContact}" status="status" reRender="pgblk" />
+    <apex:actionFunction name="updatePRMAccess" action="{!updatePartnerAccess}" status="status" reRender="pgblk" />
+    <apex:pageBlock title="Existing User Details">
+    	<apex:pageBlockSection rendered="{!isExistingUserFound}">
+    		<apex:pageBlockSectionItem >
+    			<apex:outputLabel value="Existing User"/>
+    			<apex:outputLink value="/{!existingUser[0].id}"  target="_blank"> {!existingUser[0].Full_Name__c} </apex:outputLink>
+    		</apex:pageBlockSectionItem>
+    		<apex:pageBlockSectionItem >
+    			<apex:outputLabel value="Profile"/>
+    			<apex:outputLabel > {!existingUser[0].Profile.Name} </apex:outputLabel>
+    		</apex:pageBlockSectionItem>
+    		<apex:pageBlockSectionItem >
+    			<apex:outputLabel value="Account"/>    			 
+    			<apex:outputLink value="/{!existingUser[0].Contact.AccountId}" target="_blank"> {!existingUser[0].Contact.Account.Name} </apex:outputLink>    			
+    		</apex:pageBlockSectionItem>
+    		<apex:pageBlockSectionItem >
+    			<apex:outputLabel value="Active"/>
+    			<apex:outputField value="{!existingUser[0].isActive}" />
+    		</apex:pageBlockSectionItem>    		
+    	</apex:pageBlockSection>
+    	<apex:outputLabel value="No existing user found" rendered="{!NOT(isExistingUserFound)}" />
+    </apex:pageBlock>
+    <apex:pageBlock id="pgblk">    	
+        <apex:pageBlockSection >
+        <apex:inputField value="{!partnerUserRequest.Partner_Portal_Access__c}" rendered="{!partnerUserRequest.Status__c != 'Approved'}" required="true" onchange="updatePRMAccess(); return false;">
+         <apex:actionSupport event="onchange" reRender="theform,pgblk,newacntCheck,newcntCheck"/>
+         </apex:inputField>
+        <apex:outputField value="{!partnerUserRequest.Partner_Portal_Access__c}" rendered="{!partnerUserRequest.Status__c == 'Approved' || partnerUserRequest.Status__c == 'Denied'}"/> 
+        </apex:pageBlockSection>
+    
+        <apex:pageBlockSection >
+            <apex:inputCheckBox id="newacntCheck" value="{!partnerUserRequest.Create_New_Account__c}" onchange="createNewAccountAF(); return false;" disabled="{!partnerUserRequest.Partner_Portal_Access__c == 'New User Access'}"/> 
+            <apex:inputCheckBox id="newcntCheck" value="{!partnerUserRequest.Create_New_Contact__c}" onchange="createNewContactAF(); return false;" disabled="{!partnerUserRequest.Partner_Portal_Access__c == 'New User Access'}"/> 
+        </apex:pageBlockSection>
+        <apex:pageBlockSection >            
+            <apex:outputLabel value="{!noAccountMsg}" rendered="{!NOT(renderAccounts)}" />
+            <apex:pageBlockTable value="{!accounts}" var="a" rendered="{!renderAccounts}">
+                <apex:column headerValue="Select">              
+                    <input type="radio" onchange="populateMatchingContactsAF('{!a.acc.id}'); return false;" name="accounts"/>       
+                </apex:column>
+                <apex:column headerValue="Account Name">
+                    <apex:outputLink value="/{!a.acc.id}" target="_blank"> {!a.acc.Name} </apex:outputLink>                 
+                </apex:column>
+                <apex:column headerValue="Country">
+                    <apex:outputText value="{!a.acc.Country__r.Name}" />                
+                </apex:column>              
+            </apex:pageBlockTable>
+            <apex:outputPanel id="pnlContact" >
+                <apex:outputLabel value="{!noContactMsg}" rendered="{!NOT(renderContacts)}" />
+                <apex:pageBlockTable value="{!contacts}" var="c" rendered="{!renderContacts}">
+                    <apex:column headerValue="Select">
+                        <input type="radio" onchange="setMatchingContactsAF('{!c.cont.id}'); return false;" name="contacts"/>
+                    </apex:column>
+                    <apex:column headerValue="Contact Name">
+                        <apex:outputLink value="/{!c.cont.id}" target="_blank"> {!c.cont.Name} </apex:outputLink>                   
+                    </apex:column>
+                    <apex:column headerValue="Account">
+                        <apex:outputText value="{!c.cont.Account.Name}" />              
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:outputPanel>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+</apex:form>
+</apex:page>

@@ -1,0 +1,212 @@
+<apex:component controller="SubscriptionActivityComponentController" id="cmp" allowDML="true" >
+  <!--<apex:attribute name="paramUserType" description="Logged in User Type" type="String" required="true" assignTo="{!userType}"/>-->
+    <style>
+        span.dateInput span.dateFormat{
+            display:none;
+        }
+        .buttong2y {
+           border-top: 1px solid #90ae6a;
+           background: #91af6a;
+           background: -webkit-gradient(linear, left top, left bottom, from(#91af6a), to(#91af6a));
+           background: -webkit-linear-gradient(top, #91af6a, #91af6a);
+           background: -moz-linear-gradient(top, #91af6a, #91af6a);
+           background: -ms-linear-gradient(top, #91af6a, #91af6a);
+           background: -o-linear-gradient(top, #91af6a, #91af6a);
+           padding: 5px 10px;
+           -webkit-border-radius: 8px;
+           -moz-border-radius: 8px;
+           border-radius: 8px;
+           -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
+           -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
+           box-shadow: rgba(0,0,0,1) 0 1px 0;
+           text-shadow: rgba(0,0,0,.4) 0 1px 0;
+           color: #000000;
+           font-size: 14px;
+           font-family: Helvetica, Arial, Sans-Serif;
+           text-decoration: none;
+           vertical-align: middle;
+        }
+        .buttong2y:hover {
+           border-top-color: #fdc45b;
+           background: #fdc45b;
+           color: #cc0000;
+        }
+        .buttong2y:active {
+           border-top-color: #91af6a;
+           background: #91af6a;
+        }
+        
+       .modalStyle {
+          display: block;
+          position: absolute;
+          top: 0%;
+          left: 0%;
+          width: 100%;
+          height: 100%;
+          background-color: gainsboro;
+          z-index: 1001;
+          -moz-opacity: 0.8;
+          opacity: .80;
+          filter: alpha(opacity=80);
+        }
+        .popupStyle {
+            background-color: white;
+            border-style: solid;
+            border-width: 2px;
+            left: 50%;
+            top: 45%;
+            padding: 1px;
+            position: fixed;
+            z-index: 9999;
+            width: 300px;
+            margin-left: -150px;
+        }        
+        .pbTitle {
+            white-space: nowrap
+        }
+        
+        .expiredRequestLog { color: red !important; }
+        .activeRequestLog { color: black !important;}
+        
+    </style>
+    <script>
+        function invokeCancel(){
+            cancel();
+        }
+    </script>
+    <apex:outputPanel id="frm">
+    
+    <apex:actionFunction name="cancel" action="{!cancel}" oncomplete="reload();" status="status" rerender="frm"/>
+    <apex:actionFunction name="reload" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status"/>
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>   
+        <apex:outputPanel id="SelectionAlert">
+            <apex:outputPanel id="AlertOuter" styleClass="modalStyle" rendered="{!displayAlert}">
+            </apex:outputPanel>
+            <apex:outputPanel id="AlertInner" styleClass="popupStyle" layout="block" rendered="{!displayAlert}">
+                <CENTER>
+                    <p style="font-size:15px;">
+                        Are you sure you want to deactivate the selected Subscription File?
+                    </p>
+                    <BR/>
+                    <apex:commandButton value=" Yes " action="{!deactivateLicense}" reRender="licenseRequestsDataPanel,SelectionAlert" status="status"/>
+                    <apex:commandButton value=" No "  action="{!hideAlert}" reRender="licenseRequestsDataPanel,SelectionAlert" status="status"/>
+                    <BR/><BR/>
+                </CENTER>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:outputPanel id="licenseRequestsDataPanel" style="width:50%">
+          <apex:pageBlock > 
+                <apex:outputPanel >
+                    <TABLE WIDTH="100%">
+                        <TR>
+                            <TD>
+                                <b>Account Name:</b>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <apex:inputField value="{!accountSelection.AccountId}" onkeypress="return disableEnterKey(event);" style="width:400px;"/>
+                                <apex:commandButton value=" GO " action="{!goClicked}" reRender="LicenseActivityInnerTab" status="status"/>
+                            </TD>
+                        </TR>
+                    </TABLE>
+                </apex:outputPanel>
+          </apex:pageBlock>
+           <apex:outputPanel id="LicenseActivityInnerTab">  
+            <apex:pageBlock title="Subscription File Activity" rendered="{!showResult}">
+            <TABLE WIDTH="100%">
+                    <TR>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Active:</b><br/>
+                            <apex:selectList value="{!selectedActiveInactive}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!ActiveInactive}"/>
+                                <apex:actionSupport event="onchange" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Product Line:</b><br/>
+                            <apex:selectList value="{!selectedProductLine}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!ProductLines}"/>
+                                <apex:actionSupport event="onchange" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>
+                        <TD WIDTH="15%" ALIGN="RIGHT" VALIGN="BOTTOM">
+                            &nbsp;
+                        </TD> 
+                        <TD ALIGN="RIGHT">&nbsp;</TD>
+                        <TD WIDTH="25px;" ALIGN="RIGHT">
+                            &nbsp;
+                        </TD>
+                    </TR>    
+                 </Table>         
+               <apex:pageBlockTable value="{!licenseRequests}" var="record" id="DataTable"> 
+                    <apex:column headerValue="Generated Date" style="width:150px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                            <apex:param value="{!record.generationDateTime}" /> 
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Expiration Date" style="width:150px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                            <apex:param value="{!record.expirationDateTime}" /> 
+                        </apex:outputText> 
+                    </apex:column>
+                    <apex:column headerValue="Active" style="vertical-align:Top;width:50px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"> 
+                        <apex:outputText rendered="{!record.Active == true}">
+                            <font color="green">Yes</font>
+                        </apex:outputText>
+                        <apex:outputText rendered="{!record.Active == false}">
+                            <font color="red">No</font>
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Generated By" style="vertical-align:Top" value="{!record.requestedBy}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"/>
+                    <apex:column headerValue="Machine" style="vertical-align:Top" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                        <apex:outputPanel rendered="{!record.isMultipleMachines == false}" >
+                            {!record.machineName}
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!record.isMultipleMachines}">
+                            <apex:repeat value="{!record.machineNames}" var="machine">
+                                <b>Machine:</b> {!machine} &nbsp;&nbsp;
+                            </apex:repeat>
+                            <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/MultipleMachines.png')}" height="20"  title="Multiple Machines"/>
+                        </apex:outputPanel>
+                    </apex:column>
+                    <apex:column headerValue="Notes" style="width:400px" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                        <apex:outputText value="{!record.notes}"  /> 
+                    </apex:column>
+                    <apex:column headerValue="Actions" style="vertical-align:Top;width:125px;white-space:nowrap;">  
+                       <a href="{!urlPrefix}/apex/SubscriptionView?id={!record.Id}" target="_blank">
+                            <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/ViewLicense.png')}" height="20" title="View"/>
+                        </a>
+                        &nbsp;
+                        <apex:outputText >
+                            <a href="{!urlPrefix}/apex/SubscriptionDownload?id={!record.Id}">
+                                <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/DownloadLicense.png')}" height="20" title="Download"/>
+                            </a>
+                            &nbsp;    
+                        </apex:outputText>
+                        <apex:outputText >
+                            <apex:commandLink action="{!showAlert}" reRender="SelectionAlert" status="status">
+                                <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/DeactivateLicense.png')}" height="20" title="Deactivate"/>
+                                <apex:param assignTo="{!selectedLicenseRequestId}" name="selectedLicenseRequestId" value="{!record.Id}"/>
+                            </apex:commandLink>
+                        </apex:outputText>
+                    </apex:column>
+                </apex:pageBlockTable>
+                <apex:outputPanel id="NoRecordsPanel">
+                    <apex:pageMessage summary="No records to display." severity="Info" strength="2" rendered="{!totalRecords == 0}" />
+                </apex:outputPanel>                
+             </apex:pageBlock> 
+            </apex:outputPanel> 
+         </apex:outputPanel>
+                   
+    </apex:outputPanel>
+</apex:component>

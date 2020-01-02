@@ -1,0 +1,283 @@
+<apex:page id="OrderSubmission" title="{!objQuote.Name}" standardController="BigMachines__Quote__c" extensions="OrderSubmissionController" sidebar="false" showHeader="false" >
+    <apex:stylesheet value="{!$Resource.QuotingToolStyles}"/> 
+    <apex:form >
+        <apex:actionFunction name="editAddress" action="{!showPopUp}" reRender="pgblkAddress, messages, allocations, msgs"  status="status">
+            <apex:param name="addressId" value="" assignTo="{!selectedAddressId}" />
+        </apex:actionFunction>
+        <apex:actionFunction name="deleteAddress" action="{!deleteAddress}" reRender="pgblkAddress, messages, allocations, msgs"  status="status">
+            <apex:param name="addressId" value="" assignTo="{!selectedAddressId}" />
+        </apex:actionFunction> 
+        <apex:actionFunction name="makeAddressTypeEditable" action="{!makeAddressTypeEditable}" reRender="pgblkAccountAddress, messages, msgs"  status="status" />
+        <apex:actionFunction name="modifyAllocations" action="{!updateAllocations}" rerender="messages,allocations" status="status"/>
+        
+        <apex:outputpanel id="messages"> 
+            <apex:pagemessages />
+        </apex:outputpanel>
+        
+        <apex:outputpanel > 
+            <apex:pageBlock title="Order Addresses" id="pgblkAddress">
+                <apex:pageBlockButtons location="top">
+                    <apex:commandButton value="Create New Address" action="{!showPopUp}" rendered="{!NOT(blnDisplayAddressPopUp)}" reRender="pgblkAddress, messages, msgs" status="status"/> 
+                 </apex:pageBlockButtons>
+                 <div style="{!IF(objQuote.Oppty_Lead_Offer__c == 'PureCloud', 'display:block', 'display:none')}">
+                    <div style="color:blue;font-size:9pt;">                
+                        <b>Choose from the available addresses below or create a new address. Bill to, End User, Sold to , Ship to and Order Acknowledgement  addresses are mandatory to Submit Order. Please note that the Activation Email will be required for new subscriptions.</b><br/><br/>
+                    </div>
+                </div>
+                 <div style="{!IF(objQuote.Oppty_Lead_Offer__c != 'PureCloud' && objQuote.Oppty_Lead_Offer__c != 'PureConnect Cloud', 'display:block', 'display:none')}">
+                    <div style="color:blue;font-size:9pt;">                
+                        <b>Choose from the available addresses below or create a new address . Please note that Bill to, End User, Sold to and Ship to addresses are mandatory to Submit Order.</b><br/><br/>
+                    </div>
+                </div>
+                <!-- Added by navaneetha temp-->
+                 <div style="{!IF(objQuote.Oppty_Lead_Offer__c == 'PureConnect Cloud'&& objQuote.Oppty_Lead_Offer__c == 'PureConnect Premise', 'display:block', 'display:none')}">
+                    <div style="color:blue;font-size:9pt;">                
+                        <b>Choose from the available addresses below or create a new address . Please note that Bill to, End User, Sold to ,Ship to and Order Acknowledgement addresses are mandatory to Submit Order.</b><br/><br/>
+                    </div>
+                </div>
+                <apex:outputLabel value="No records to display" rendered="{!NOT(blnHasOrderAddress)}" />     
+                
+                <apex:outputPanel id="newAddr" rendered="{!blnDisplayAddressPopUp}">                    
+                    <apex:pageBlock title="{!popUpTitle}">                        
+                        <apex:pageBlockButtons location="bottom">
+                            <apex:commandButton value="{!IF(popUpTitle=='New Address', 'Create Address', 'Update Address')}" action="{!createAddress}" reRender="pgblkAddress, pgblkAccountAddress,messages,allocations,msgs" status="status" />                                
+                            <apex:commandButton value="Cancel" action="{!hidePopUp}" reRender="pgblkAddress,messages" immediate="true" />  
+                        </apex:pageBlockButtons>                        
+                        <apex:pageBlockSection columns="2">
+                            <apex:pageBlockSectionItem rendered="{!popUpTitle=='New Address'}">
+                                <apex:outputLabel value="Address Type" />
+                                <apex:actionRegion >
+                                    <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                        <apex:outputPanel styleClass="requiredBlock"/>
+                                        <apex:inputField value="{!objNewAddress.Address_Type__c}">
+                                            <apex:actionSupport event="onchange" rerender="newAddr"/>
+                                        </apex:inputField>
+                                    </apex:outputPanel>
+                                </apex:actionRegion>
+                            </apex:pageBlockSectionItem>
+                            <apex:outputField value="{!objNewAddress.Address_Type__c}" rendered="{!popUpTitle!='New Address'}"/>   
+                            <apex:pageBlockSectionItem />                              
+                            <apex:pageBlockSectionItem rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}">
+                                <apex:outputLabel value="Address"/>
+                                <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                    <apex:outputPanel styleClass="requiredBlock"/>
+                                    <apex:inputField value="{!objNewAddress.Address__c}"/>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>   
+                            <apex:inputField label="Address 2" value="{!objNewAddress.Address2__c}" rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}"/>                            
+                            <apex:pageBlockSectionItem rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}">
+                                <apex:outputLabel value="City"/>
+                                <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                    <apex:outputPanel styleClass="requiredBlock"/>
+                                    <apex:inputField value="{!objNewAddress.City__c}"/>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField value="{!objNewAddress.State__c}" rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}"/>
+                            <apex:pageBlockSectionItem rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}">
+                                <apex:outputLabel value="Country"/>
+                                <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                    <apex:outputPanel styleClass="requiredBlock"/>
+                                    <apex:inputField value="{!objNewAddress.Country__c}"/>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}">
+                                <apex:outputLabel value="Zip Code"/>
+                                <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                    <apex:outputPanel styleClass="requiredBlock"/>
+                                    <apex:inputField value="{!objNewAddress.Zip_Code__c}"/>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>       
+                            <apex:inputField value="{!objNewAddress.Phone__c}" rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}"/>
+                            <apex:inputField value="{!objNewAddress.Fax__c}" rendered="{!objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}"/>
+                            <apex:inputField value="{!objNewAddress.Email__c}" rendered="{!objNewAddress.Address_Type__c!='Ship To' && objNewAddress.Address_Type__c!='Bill To' && objNewAddress.Address_Type__c != 'Activation Email' && objNewAddress.Address_Type__c != 'Order Acknowledgement'}" />
+                            <apex:pageBlockSectionItem rendered="{!objNewAddress.Address_Type__c=='Ship To' || objNewAddress.Address_Type__c=='Bill To' || objNewAddress.Address_Type__c == 'Activation Email' || objNewAddress.Address_Type__c == 'Order Acknowledgement'}">
+                                <apex:outputLabel value="Email"/>
+                                <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                    <apex:outputPanel styleClass="requiredBlock"/>
+                                    <apex:inputField value="{!objNewAddress.Email__c}"/>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>    
+                            <apex:inputField value="{!objNewAddress.Additional_Emails__c}" />                        
+                            <!--<apex:pageBlockSectionItem rendered="{!objNewAddress.Address_Type__c=='Ship To'}"/> -->
+                            <apex:pageBlockSectionItem rendered="{!objNewAddress.Address_Type__c=='Ship To'}">
+                                <apex:outputLabel value="Shipping Method"/>
+                                <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                    <apex:outputPanel styleClass="requiredBlock"/>
+                                    <apex:inputField value="{!objNewAddress.Shipping_Method_Name__c}"/>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>   
+                            <apex:inputField value="{!objNewAddress.Need_By_Date__c}" rendered="{!objNewAddress.Address_Type__c=='Ship To'}"/>    
+                            <apex:inputField value="{!objNewAddress.Shipping_Instructions__c}" style="width: 360px; height: 40px" rendered="{!objNewAddress.Address_Type__c=='Ship To'}"/>                    
+                        </apex:pageBlockSection>                                              
+                    </apex:pageBlock>
+                </apex:outputPanel>
+                
+                <apex:pageBlockTable value="{!map_AllOrderAddresses}" var="ordAddr" rendered="{!blnHasOrderAddress}" Id="addrTbl"> 
+                    <apex:column headerValue="Action" width="7%">
+                        &nbsp; <a href="#" onclick="editAddress('{!map_AllOrderAddresses[ordAddr].Id}'); return false;">Edit</a> &nbsp; | &nbsp;<a href="#" onclick="var result = confirm('Are you sure?');if(result == true){deleteAddress('{!map_AllOrderAddresses[ordAddr].Id}'); return false;}" style="color:red">Del</a> 
+                    </apex:column>
+                    <apex:column headervalue="Invoice Primary" width="5%" rendered="{!objQuote.Oppty_Lead_Offer__c == 'PureCloud'}">
+                        <apex:inputField value="{!map_AllOrderAddresses[ordAddr].Primary_Ship_To__c}" rendered="{!map_AllOrderAddresses[ordAddr].Address_Type__c == 'Ship To' && ISNULL(objQuote.Order__c)}">
+                            <apex:actionSupport event="onchange" action="{!changePrimaryShipTo}" status="status" reRender="addrTbl">
+                                <apex:param name="passAOAId" value="{!ordAddr}" assignTo="{!shipToAddrId}"/>
+                                <apex:param name="passflag" value="{!map_AllOrderAddresses[ordAddr].Primary_Ship_To__c}" assignTo="{!setTrueOrFalse}"/>
+                            </apex:actionSupport>
+                        </apex:inputField>
+                        <apex:outputField value="{!map_AllOrderAddresses[ordAddr].Primary_Ship_To__c}" rendered="{!map_AllOrderAddresses[ordAddr].Address_Type__c == 'Ship To' && NOT(ISNULL(objQuote.Order__c))}"/>
+                    </apex:column>
+                    <apex:column headerValue="Address Type" width="7%">
+                        {!map_AllOrderAddresses[ordAddr].Address_Type__c}
+                    </apex:column>
+                    <apex:column headerValue="Address" width="29%">
+                        {!map_AllOrderAddresses[ordAddr].Address__c + IF(map_AllOrderAddresses[ordAddr].Address2__c != '', ', '+map_AllOrderAddresses[ordAddr].Address2__c, '')}
+                        {!IF(map_AllOrderAddresses[ordAddr].City__c != '', ', '+map_AllOrderAddresses[ordAddr].City__c, '') + IF(map_AllOrderAddresses[ordAddr].State__c!= '', ', '+map_AllOrderAddresses[ordAddr].State__c, '')}
+                        {!IF(map_AllOrderAddresses[ordAddr].Country__c != '', ', '+map_AllOrderAddresses[ordAddr].Country__c , '') + IF(map_AllOrderAddresses[ordAddr].Zip_Code__c != '', ', '+map_AllOrderAddresses[ordAddr].Zip_Code__c, '')}
+                    </apex:column>
+                    <apex:column headerValue="Phone" width="7%">
+                        {!map_AllOrderAddresses[ordAddr].Phone__c}                       
+                    </apex:column>
+                    <apex:column headerValue="Fax" width="7%">
+                        {!map_AllOrderAddresses[ordAddr].Fax__c}                       
+                    </apex:column>
+                    <apex:column headerValue="Email" width="10%">
+                        {!map_AllOrderAddresses[ordAddr].Email__c}                   
+                    </apex:column>
+                    <apex:column headerValue="Additional Emails" width="10%">
+                        {!map_AllOrderAddresses[ordAddr].Additional_Emails__c}                   
+                    </apex:column>
+                    <apex:column headerValue="Shipping Method" width="6%" >
+                        <apex:outputText value="{!map_AllOrderAddresses[ordAddr].Shipping_Method_Name__c}" rendered="{!map_AllOrderAddresses[ordAddr].Address_Type__c=='Ship To'}"/>                        
+                    </apex:column>
+                    <apex:column headerValue="Need By Date" width="8%" >
+                        <apex:outputText value="{0, date, MM/dd/yyyy}" rendered="{!map_AllOrderAddresses[ordAddr].Address_Type__c=='Ship To'}">
+                            <apex:param value="{!map_AllOrderAddresses[ordAddr].Need_By_Date__c}" />
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Instructions" width="14%" >
+                        <apex:outputText value="{!map_AllOrderAddresses[ordAddr].Shipping_Instructions__c}" rendered="{!map_AllOrderAddresses[ordAddr].Address_Type__c=='Ship To'}"/>
+                    </apex:column>                 
+                </apex:pageBlockTable>      
+            </apex:pageblock>    
+            
+            <apex:pageBlock title="Available Addresses" id="pgblkAccountAddress">
+                <apex:pageBlockButtons location="top">  
+                    <apex:commandButton value="Add Selected" action="{!addSelectedAddresses}" reRender="pgblkAddress, pgblkAccountAddress, allocations, messages, msgs" status="status"/>              
+                </apex:pageBlockButtons>
+                <apex:outputLabel value="No records to display" rendered="{!list_AccountAddresses.size == 0}" />
+                <apex:pageBlockTable value="{!list_AccountAddresses}" var="objAddress" rendered="{!list_AccountAddresses.size > 0}" >
+                    <apex:column width="5%">
+                        <apex:inputCheckbox value="{!objAddress.blnSelected}" onclick="makeAddressTypeEditable(); return false;">
+                            <apex:actionsupport event="onclick" rerender="pgblkAccountAddress" status="status"/>
+                        </apex:inputCheckbox>
+                    </apex:column>
+                    <apex:column headerValue="Address Type" width="15%">
+                        <apex:outputLabel value="{!objAddress.objAddress.Address_Type__c}" rendered="{!NOT(objAddress.blnMakeEditable)}"  />
+                        <apex:outputPanel rendered="{!objAddress.blnMakeEditable}">
+                            Add as 
+                            <apex:inputField value="{!objAddress.objAddress.Type__c}">
+                                <apex:actionsupport event="onchange" rerender="pgblkAccountAddress" status="status"/>
+                            </apex:inputField>
+                        </apex:outputPanel>             
+                    </apex:column>
+                    <apex:column headerValue="Account" width="15%">
+                        {!objAddress.objAddress.Account__r.Name}
+                    </apex:column>    
+                    <apex:column headerValue="Address" width="40%">
+                        {!objAddress.objAddress.Address_Line_1__c + IF(objAddress.objAddress.Address_Line_2__c != '', ', '+objAddress.objAddress.Address_Line_2__c, '')}
+                        {!IF(objAddress.objAddress.City__c != '', ', '+objAddress.objAddress.City__c, '') + IF(objAddress.objAddress.State__c !=  '', ', '+objAddress.objAddress.State__c, '')}
+                        {!IF(objAddress.objAddress.Country__c != '', ', '+objAddress.objAddress.Country__c , '') + IF(objAddress.objAddress.Zipcode__c != '', ' - '+objAddress.objAddress.Zipcode__c, '')}
+                    </apex:column>   
+                    <apex:column headerValue="Email" width="15%">
+                        <apex:inputText value="{!objAddress.strEmail}" rendered="{!objAddress.objAddress.Type__c!='Ship To' && objAddress.objAddress.Type__c!='Bill To' && objAddress.objAddress.Type__c!='Activation Email' && objAddress.objAddress.Type__c!='Order Acknowledgement'}"/>
+                        <apex:outputPanel rendered="{!objAddress.objAddress.Type__c=='Ship To' || objAddress.objAddress.Type__c=='Bill To' || objAddress.objAddress.Type__c=='Activation Email' || objAddress.objAddress.Type__c=='Order Acknowledgement'}">
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:inputText value="{!objAddress.strEmail}"/>
+                            </apex:outputPanel>
+                        </apex:outputPanel>  
+                    </apex:column> 
+                    <apex:column headerValue="Additional Emails" width="15%">
+                        <apex:inputTextArea value="{!objAddress.strAdditionalEmails}" style="height:10px"/>
+                    </apex:column> 
+                    <apex:column headerValue="Shipping Method" width="10%" >
+                        <apex:outputPanel layout="block" styleClass="requiredInput" rendered="{!objAddress.objAddress.Type__c=='Ship To'}">
+                            <apex:outputPanel styleClass="requiredBlock"/>
+                            <apex:selectList id="shippingMethods" value="{!objAddress.strShippingMethod}" size="1" >
+                                <apex:selectOptions value="{!shippingMethodNames}"/>
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:column> 
+                </apex:pageBlockTable>   
+            </apex:pageblock>     
+        </apex:outputpanel>
+        
+        <apex:outputpanel rendered="{!list_ShippableProducts.size==null || list_ShippableProducts.size==0}">
+            <div style="background-color:lightgoldenrodyellow; display:block; border:1px solid black; padding: 10px;">
+                There are no shippable parts on this order.
+            </div>
+            <br />
+        </apex:outputpanel>
+        
+        <apex:pageblock title="Shipping Allocations" rendered="{!list_ShippableProducts.size>0}" id="allocations"> 
+            <apex:pageblockbuttons location="top" rendered="false">
+                <apex:commandbutton value="Update Allocation(s)" action="{!updateAllocations}" rerender="messages,allocations,msgs" status="status"/>
+                <apex:actionstatus starttext="Saving..." stoptext="" id="savingStatus" />
+            </apex:pageblockbuttons>   
+            <apex:pageblockTable value="{!list_ShippableProducts}" var="qtProd">
+                <apex:column >
+                    <apex:facet name="header">Part Number</apex:facet>
+                    <apex:outputtext value="{!qtProd.BigMachines__Product__r.APN_Number__c}" />
+                </apex:column>                        
+                <apex:column >
+                    <apex:facet name="header">Name</apex:facet>
+                    <apex:outputtext value="{!qtProd.BigMachines__Product__r.Name}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Qty</apex:facet>
+                    <apex:outputtext value="{!ROUND(IF(qtProd.Quantity_Change__c != null && qtProd.Quantity_Change__c > 0, qtProd.Quantity_Change__c, qtProd.Quantity__c), 0)}" />
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Unallocated</apex:facet>
+                    <apex:inputtext style="width:50px;border-color:{!IF(map_ProdUnallocatedQty[qtProd.Id]>0, 'red', 'none')}" value="{!map_ProdUnallocatedQty[qtProd.Id]}"  />                 
+                </apex:column> 
+                <apex:repeat value="{!set_ShipToAddrIdsWithShipMethod}" var="addrId">                        
+                    <apex:column >
+                        <apex:facet name="header">{!map_ShipToAddresses[addrId].Address__c + ' ' + map_ShipToAddresses[addrId].City__c}
+                        <br/>{!'(' + map_ShipToAddresses[addrId].Shipping_Method_Name__c + ')'}
+                        </apex:facet>
+                        <apex:inputText style="border-color: {!IF(!blnAllocationSave && allocationErrorProdId == qtProd.Id, 'red', 'none')}" onchange="modifyAllocations()" value="{!map_OrdLnItmAllocations[map_ShipToAddresses[addrId].Id+';'+qtProd.Id+';'+map_ShipToAddresses[addrId].Shipping_Method_Name__c].Quantity__c}"/>
+                    </apex:column>
+                </apex:repeat>-->
+            </apex:pageblockTable>
+            <br/><br/>
+            <apex:pageBlockSection id="nonShipSection" title="Non-shippable parts" columns="1" collapsible="true" >
+                <script> twistSection(document.getElementById('{!$Component.allocations.nonShipSection}').getElementsByTagName('img')[0]) </script>
+                <apex:pageblockTable value="{!list_NonShippableProducts}" var="item">
+                    <apex:column value="{!item.BigMachines__Product__r.APN_Number__c}"/>
+                    <apex:column value="{!item.Name}"/>
+                    <apex:column value="{!item.Quantity__c}"/>
+                </apex:pageblockTable> 
+            </apex:pageBlockSection>
+        </apex:pageBlock>  
+    
+        <div style="height:20px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                <apex:outputPanel id="popPanel1">
+                    <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                    <apex:outputPanel styleClass="custPopup" layout="block">
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>
+    </apex:form>
+    <script>
+        function cancelCreateAddress() {
+            return false;
+        }
+    </script>
+</apex:page>

@@ -1,0 +1,137 @@
+<apex:page standardController="Support_Access__c"
+    extensions="CreateSuperAccessExtensions" title="Support Access Edit"
+    tabStyle="Support_Access__c">
+    <script type="text/javascript"
+        src="https://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script>
+    <script type="text/javascript">
+        var field1ClassName = 'End_User_Name__c';
+        var field2ClassName = 'Sold_To_Name__c';
+    </script>
+    <apex:pageMessages escape="false" id="pbmessages"/>
+    <apex:form id="form">
+        <apex:includeScript value="{!$Resource.LookupPopUp}" />
+        <apex:pageBlock title="Support Access Edit" id="seEdit">
+            <apex:pageBlockSection title="Information" collapsible="false">
+                <apex:outputField value="{!supportAccess.Contact__c}"
+                    rendered="{!NOT(AND((contactId == null), (supportAccess.Id ==null)))}" />
+                <apex:inputField value="{!supportAccess.Contact__c}"
+                    rendered="{!AND((contactId == null), (supportAccess.Id ==null))}"
+                    onchange="next();" />
+            <apex:outputField label="Maintenance Terminated"
+                    value="{!supportAccess.Maintenance_Terminated_Flag__c}" />
+                <apex:pageBlockSectionItem id="endUserAcc">
+                    <apex:outputLabel value="End User Account" />
+                    <apex:outputPanel >
+                        <apex:inputHidden value="{!endUserAccId}" id="endUserId" />
+                        <apex:outputpanel layout="block" styleClass="requiredInput">
+                            <apex:outputpanel layout="block" styleClass="requiredBlock" />
+                            <apex:actionRegion >
+                                <apex:inputText value="{!endUserAccName}" id="endUserName" disabled="{!AND((contactId == null), (supportAccess.Id ==null)) || (isSrvContractPg == true)}">
+                                    <apex:actionSupport event="onchange" action="{!next}"
+                                        rerender="endUserAcc, query"  />
+                                </apex:inputText>
+                            </apex:actionRegion>
+                            <a href="#"
+                                onclick="if('{!isContactIdNull}' == 'true') {alert ('Please select the Contact');} else {openLookupPopup('{!$Component.endUserName}', '{!$Component.endUserId}', '{!fields}', 'End_User_Name__r', constructQuery( '{!$Component.query}'),'810'); return false;}">
+                                <script type="text/javascript">
+                                    field1NameId = '{!$Component.endUserName}';
+                                    field1IdId = '{!$Component.endUserId}';
+                                </script>
+                                <img onmouseover="this.className='lookupIconOn';"
+                                alt="Account Name Lookup (New Window)"
+                                onmouseout="this.className='lookupIcon';" class="lookupIcon"
+                                src="/s.gif" />
+                            </a>
+                        </apex:outputpanel>
+
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                                <apex:inputField label="Support Blocked"
+                    value="{!supportAccess.Support_Blocked__c}" />
+                <apex:pageBlockSectionItem id="soldToAcc">
+                    <apex:outputLabel value="Sold To Account" />
+                    <apex:outputPanel >
+                        <apex:inputHidden value="{!soldToAccId}" id="soldToAccId" />
+                        <apex:outputpanel layout="block" styleClass="requiredInput">
+                            <apex:outputpanel layout="block" styleClass="requiredBlock" />
+                            <apex:actionRegion >
+                                <apex:inputText value="{!soldToAccName}" id="soldToAccName" disabled="{!AND((contactId == null), (supportAccess.Id ==null) ) || (isSrvContractPg == true)}">
+                                    <apex:actionSupport event="onchange" action="{!next}" rerender="soldToAcc,query" />
+                                </apex:inputText>
+                            </apex:actionRegion>
+                            <a href="#"
+                                onclick="if('{!isContactIdNull}' == 'true') {alert ('Please select the Contact');} else {openLookupPopup('{!$Component.soldToAccName}', '{!$Component.soldToAccId}', '{!fields}', 'Sold_To_Name__r', constructQuery( '{!$Component.query}'),'810'); return false;}">
+                                <script type="text/javascript">
+                                    field2NameId = '{!$Component.soldToAccName}';
+                                    field2IdId = '{!$Component.soldToAccId}';
+                                </script>
+                                <img onmouseover="this.className='lookupIconOn';"
+                                alt="Account Name Lookup (New Window)"
+                                onmouseout="this.className='lookupIcon';" class="lookupIcon"
+                                src="/s.gif" />
+                            </a>
+                        </apex:outputpanel>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+
+                <apex:inputField label="Expiration Date"
+                    value="{!supportAccess.Expiration_Date__c}" />
+            
+             <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Access Level" />
+                    <apex:outputpanel layout="block" styleClass="requiredInput">
+                        <apex:outputpanel layout="block" styleClass="requiredBlock" />
+                        <apex:inputField label="Access Level"
+                            value="{!supportAccess.SR_Access_Level__c}" />
+                    </apex:outputpanel>
+                </apex:pageBlockSectionItem>
+             
+             <apex:inputField label="Status Comment"
+                    value="{!supportAccess.Status_Comment__c}" />
+                    
+             <apex:inputField label="Access Status"
+                    value="{!supportAccess.Status__c}" />
+                    
+            <apex:inputField label="Case Number"
+                    value="{!supportAccess.Case_Number__c}" />        
+                    
+            </apex:pageBlockSection>
+           
+            
+            <apex:inputHidden value="{!query}" id="query" />
+            <script type="text/javascript">
+                queryFieldId = '{!$Component.query}';
+            </script>
+            <apex:inputCheckbox id="chk" value="{!showInactive}"
+                onclick="showInactive()" />
+            <apex:outputLabel value="Show Inactive"
+                style="color: black;font-size: .9em;font-weight: bold;" />
+            <apex:pageBlockTable value="{!scs}" rendered="{!hasServiceContracts}"
+                var="w" id="scTable">
+                <apex:column >
+                    <apex:inputcheckbox value="{!w.isSelected}" />
+                </apex:column>
+                <apex:column headerValue="Service Contract Name">
+                    <apex:outputLink value="/{!w.obj['Id']}" target="_self">{!w.obj['Name']}</apex:outputLink>
+                </apex:column>
+                <apex:column value="{!w.obj['End_User_Name__c']}" />
+                <apex:column value="{!w.obj['Sold_To_Name__c']}" />
+                <apex:column value="{!w.obj['StartDate']}" />
+                <apex:column value="{!w.obj['EndDate']}" />
+                <apex:column value="{!w.obj['Agreement_Status__c']}" />
+                 <apex:column value="{!w.obj['Service_Contract_Type__c']}" />
+            </apex:pageBlockTable>
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="Save" />
+                <apex:commandButton action="{!cancel}" value="Cancel" />
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+        <apex:actionFunction action="{!getServiceContracts}"
+            name="showInactive" rerender="seEdit" />
+        <apex:actionFunction action="{!next}"
+            name="next" rerender="seEdit"/>
+        <apex:actionFunction name="test" id="cancel" reRender="seEdit, pbmessages"
+            action="{!getServiceContracts}" oncomplete="rerenderPBTable();" />
+        <apex:actionFunction name="rerenderPBTable" reRender="scTable" />
+    </apex:form>
+</apex:page>

@@ -1,0 +1,81 @@
+<apex:page sidebar="true" showHeader="true" controller="PortalViewFRViewController">
+     <apex:variable var="isCommunity" value="{!$Site.CurrentSiteUrl != null}" />
+    <apex:outputPanel id="casesPanel">
+        <apex:form >
+            <apex:actionFunction rerender="casesPanel" name="lazyLoad"
+                action="{!lazyLoad}" />
+            <apex:actionStatus startText=" Processing the stuff "
+                stopText=" Done " id="counterStatus">
+                <apex:facet name="start">Processing...
+                            <img src="/apexpages/devmode/img/saveStatus.gif" />
+                </apex:facet>
+                <apex:facet name="stop">
+                    <apex:selectList value="{!myCases}" multiselect="false" size="1">
+                        <apex:actionSupport event="onchange" action="{!gtMyCases}"
+                            rerender="mycases" status="counterStatus" oncomplete="" />
+                        <apex:selectOptions value="{!items}" />
+                    </apex:selectList>
+                </apex:facet>
+            </apex:actionStatus>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:outputLabel value="End User">
+                <apex:actionStatus startText=" Processing the stuff "
+                    stopText=" Done " id="counterStatus2">
+                    <apex:facet name="start">Processing...
+                            <img src="/apexpages/devmode/img/saveStatus.gif" />
+                    </apex:facet>
+                    <apex:facet name="stop">
+                        <apex:selectList value="{!endUsrId}" multiselect="false" size="1">
+                            <apex:actionSupport event="onchange" action="{!gtMyCases}"
+                                rerender="mycases" status="counterStatus2" oncomplete="" />
+                            <apex:selectOptions value="{!EUsrList}" />
+                        </apex:selectList>
+                    </apex:facet>
+                </apex:actionStatus>
+            </apex:outputLabel>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+   
+            <apex:outputPanel rendered="{!NOT(isReadOnlyProfile)}" >
+                <input class="btn" type="button"
+                    onclick="window.open('{!IF(isCommunity,'/customercare','/apex')}/UpdateCaseProductNew?RecordType={!frCaseRecordTypeId}','_parent');"
+                    value="Create New" name="createCaseButton"/>
+            </apex:outputPanel>
+            <apex:pageBlock id="mycases">
+                <apex:outputPanel rendered="{!!activated}">
+                    <apex:image value="/img/loading.gif" />
+                    Loading... 
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!activated}">
+                    <div class="scroll"><c:DynamicOffsetPaginator pController="{!controller}" panel="casesPanel" id="pginatorComp" />              
+                <!--      
+                    <apex:outputLink title="Export To Excel" value="/customercare/PortalCasesExport?euid={!endUsrId}&cstp={!myCases}" target="_blank" > 
+                         <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px" style="float: right;"/>    
+                    </apex:outputLink>    
+                -->    
+                    <apex:pageBlockTable value="{!cases}" var="case">                                      
+                        <apex:repeat value="{!$ObjectType.Case.FieldSets.Portal_FR_Fields_View}"
+                            var="f">
+                            <apex:column style="font-size: .9em;">
+                                <apex:facet name="header">
+                                    <c:SortOffsetHeader sController="{!controller}"
+                                        header="{!f.Label}" column="{!f.FieldPath}" panel="casesPanel" rendered="{!IF((f.FieldPath=='CaseNumber'),true,true)}"/>                                                                            
+                                </apex:facet>
+                                <apex:outputLink value="/apex/CaseDetail?id={!case.Id}" style="text-decoration:underline;"
+                                    rendered="{!IF((f.FieldPath=='CaseNumber'),true,false)}"
+                                    target="_blank"> {!case[f]}</apex:outputLink>
+                                <apex:outputField value="{!case[f]}"
+                                    rendered="{!IF((f.FieldPath=='CaseNumber'),false,true)}" />
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable></div>
+                </apex:outputPanel>
+            </apex:pageBlock>
+            <apex:actionFunction name="gtMyCases" action="{!gtMyCases}"
+                rerender="mycases" />
+            <apex:actionFunction name="rldPginator" rerender="pginatorComp" />
+        </apex:form>
+    </apex:outputPanel>
+    <script>
+        setTimeout(lazyLoad, 1000);
+    </script>
+</apex:page>

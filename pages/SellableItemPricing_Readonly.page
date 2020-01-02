@@ -1,0 +1,99 @@
+<apex:page id="pg" standardcontroller="Sellable_Item_Product__c" extensions="SellableItemPricingController_readonly" showHeader="false"  tabStyle="Sellable_Item_Product__c">
+    <head>
+        <style>
+            .pricingTable {
+                border-collapse: collapse;
+            }
+            
+            .tdBorder {
+                border: 1px solid #AAD4FF;
+            	height: 13px;
+            }
+        </style>
+    </head>
+    <apex:form id="frm">
+        <apex:pageMessages id="msg"/>
+       
+     
+        
+       
+        <apex:pageBlock id="pgblk">
+           
+            <apex:pageBlockSection columns="1" >
+                <apex:pageBLockSectionItem >
+                    <apex:outputLabel value="Price Book Type" />
+                    <apex:outputField value="{!sellableItem.Price_Book_Type__c}" />
+                </apex:pageBLockSectionItem>
+                <apex:pageBLockSectionItem >
+                    <apex:outputLabel value="Pricing Approval Required" />
+                    <apex:outputField value="{!sellableItem.Pricing_Approval_Required__c}"  />
+                </apex:pageBLockSectionItem>
+                <apex:pageBLockSectionItem >
+                    <apex:outputLabel value="Pricing Approved" />
+                    <apex:outputField value="{!sellableItem.Pricing_Approved__c }" />
+                </apex:pageBLockSectionItem>
+            </apex:pageBlockSection>
+            <table style="width:90%;border:solid 1px gray;" cellpadding="5" cellspacing="0" class="pricingTable">
+                <tr style="background-color:#85C2FF;color:#FFFFFF;font-weight:bold;">
+                    <th rowspan="2" class="tdBorder">
+                        Region/Currency
+                    </th>
+                    <th rowspan="2" class="tdBorder">
+                        Currency Conversion Rate            
+                    </th>                                    
+                   
+                    <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'New Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                        <th colspan="5" style="text-align:center;" class="tdBorder">
+                            New Price Book
+                        </th>              
+                    </apex:outputPanel> 
+                </tr>
+                <tr style="background-color:#85C2FF;color:#FFFFFF;">
+                    <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'New Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                        <th class="tdBorder">
+                            Pricebook
+                        </th>
+                      <!--  <th class="tdBorder">
+                            Price &nbsp; <apex:outputText id="txtNewPrice" style="width:70px;" />
+                        </th>-->
+                        <th class="tdBorder">
+                            Region Multiplier
+                        </th>
+                        <th class="tdBorder">
+                            List Price
+                        </th>            
+                    </apex:outputPanel>
+                </tr>
+                <apex:repeat value="{!pricingList}" var="eachRecord" id="rptPricing">
+                    <tr>
+                        <td class="tdBorder">
+                            {!eachRecord.newPricing.Name}
+                        </td>
+                        <td class="tdBorder" style="text-align:right;width:150px;">
+                            <apex:outputLabel id="lblConversionRate">
+                                {!eachRecord.newPricing.Conversion_Rate__c}                                
+                            </apex:outputLabel>
+                        </td>
+                        <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'New Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                            <td class="tdBorder" style="">
+                                {!eachRecord.newPricing.Price_Book__c}
+                            </td>
+                            <!--<td class="tdBorder" style="text-align:right;">
+                                <apex:outputText value="{!eachRecord.newPrice}" style="width:100px;"  id="txtNewPrice" />
+                            </td>-->
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:outputLabel id="lblMultiplier">
+                                    {!eachRecord.newPricing.Multiplier__c}
+                                </apex:outputLabel>
+                            </td>
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:outputText value="{!eachRecord.newCurrentPrice}"/>
+                            </td>                      
+                        </apex:outputPanel>
+                    </tr>                   
+                </apex:repeat>
+            </table>    
+        </apex:pageBlock>
+    </apex:form>
+  
+</apex:page>

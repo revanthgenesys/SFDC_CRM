@@ -1,0 +1,298 @@
+<!--
+    Harish, 03/11/207 - 
+        1. Added sub categories(Renewal, FYM) under Billing schedule, Deferred revenue and Recognized revenue.
+        2. Removed In milliions categorization from all types revenues and renamed actuals with total.
+    Harish, 03/16/207 - Added sub categories(Expected, Upside) under Incremental Revenue and First Year Maintenance.
+-->
+<apex:page controller="GenesysCareForecastingController" sidebar="false" readOnly="true" id="pg">
+    <script>
+        function forecastingExport(selectedRegion, selectedYear, selectedQuarter){
+            var regionSL = document.getElementById("pg:frm:regionSL").options[document.getElementById("pg:frm:regionSL").selectedIndex].value;
+            var yearSL = document.getElementById("pg:frm:yearSL").options[document.getElementById("pg:frm:yearSL").selectedIndex].value;
+            var quarterSL = document.getElementById("pg:frm:quarterSL").options[document.getElementById("pg:frm:quarterSL").selectedIndex].value;
+                
+            if(selectedYear == 'All'){
+                alert('You can only export data Quaterly, Please apply filters and then export.');               
+            } else {
+                var months = '';
+                var regions = 'APAC, EMEA, Latin America, North America';
+                if(regionSL != 'All'){
+                    regions = regionSL; 
+                }
+                if(selectedQuarter == 'All'){
+                    months = '1,2,3,4,5,6,7,8,9,10,11,12'; 
+                } else if(selectedQuarter == '1'){
+                    months = '1,2,3'; 
+                } else if(selectedQuarter == '2'){
+                    months = '4,5,6'; 
+                } else if(selectedQuarter == '3'){
+                    months = '7,8,9'; 
+                } else if(selectedQuarter == '4'){
+                    months = '10,11,12'; 
+                } 
+                window.open("/00O0B000003SNp4?pv0="+selectedYear+"&pv1="+months+"&pv2="+regions); 
+            }
+                /*
+                else if (confirm('This action will take a while to complete, Do you want to Export?')) {
+                    window.open("/apex/GenesysCareForecastingExport?region="+selectedRegion+"&year="+selectedYear+"&quarter="+selectedQuarter); 
+                } */         
+        }
+    </script>
+    <style>
+        #hor-minimalist-b
+        {
+            font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+            font-size: 12px;
+            background: #fff;
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        #hor-minimalist-b th
+        {
+            font-size: 12px;
+            font-weight: normal;
+            color: #039;
+            padding: 4px 4px;
+            border-top: 2px solid #6678b1;
+            border-bottom: 2px solid #6678b1;
+        }
+        #hor-minimalist-b td
+        {
+            border-bottom: 1px solid #ccc;
+            color: black;
+            padding: 2px 4px;
+        }
+    </style>
+    <apex:form id="frm">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div style="position: fixed; left: 0; top: 0; bottom: 0; right: 0; z-index: 1001; margin: 30% 50%">
+                    <img src="/img/loading.gif" />
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <apex:outputPanel id="chartsContainer">
+            <TABLE WIDTH="100%">
+                <TR>
+                    <TD WIDTH="400">
+                        <apex:sectionHeader title="Genesys Care" subtitle="Revenue Forecasting" />
+                    </TD>
+                    <TD ALIGN="LEFT">
+                        <TABLE WITDH="100%">
+                            <TR>
+                                <TD WIDTH="3%">&nbsp;</TD>
+                                <TD><b>Region</b></TD>
+                                <TD>
+                                    <apex:selectList value="{!selectedRegion}" multiselect="false" size="1" id="regionSL">
+                                        <apex:selectOptions value="{!regions}"/>
+                                        <apex:actionSupport event="onchange" action="{!refereshChartRevenueData}" reRender="chartsContainer" status="status"/>
+                                    </apex:selectList>
+                                </TD>
+                                <TD WIDTH="2%">&nbsp;</TD>
+                                <TD><b>Year</b></TD>
+                                <TD>
+                                    <apex:selectList value="{!selectedYear}" multiselect="false" size="1" id="yearSL">
+                                        <apex:selectOptions value="{!years}"/>
+                                        <apex:actionSupport event="onchange" action="{!refereshChartRevenueData}" reRender="chartsContainer" status="status"/>
+                                    </apex:selectList>
+                                </TD>
+                                <TD WIDTH="2%">&nbsp;</TD>
+                                <TD><b>Quarter</b></TD>
+                                <TD>
+                                    <apex:selectList value="{!selectedQuarter}" multiselect="false" size="1"  id="quarterSL">
+                                        <apex:selectOptions value="{!quarters}"/>
+                                        <apex:actionSupport event="onchange" action="{!refereshChartRevenueData}" reRender="chartsContainer" status="status"/>
+                                    </apex:selectList>
+                                </TD>
+                                <TD WIDTH="2%">&nbsp;</TD>
+                                <TD><b>Currency</b></TD>
+                                <TD>
+                                    <apex:selectRadio value="{!selectedCurrency}">
+                                        <apex:selectOptions value="{!currencies}"/>
+                                        <apex:actionSupport event="onchange" action="{!refereshChartRevenueData}" reRender="chartsContainer" status="status"/>
+                                    </apex:selectRadio>
+                                </TD>
+                                <TD WIDTH="2%">&nbsp;</TD>
+                                <TD>
+                                    <apex:commandButton value="Export" onclick="forecastingExport('{!selectedRegion}', '{!selectedYear}', '{!selectedQuarter}'); return false;" />                                        
+                                </TD>
+                            </TR>
+                        </TABLE>            
+                    </TD>
+                </TR>
+            </TABLE>   
+            <TABLE WIDTH="100%" BORDER="0" id="hor-minimalist-b">
+                <TR>
+                    <TD VALIGN="TOP" ALIGN="CENTER">
+                        <TABLE WIDTH="1100">
+                            <TR>
+                                <TH ROWSPAN="3">Period</TH>
+                                <TH COLSPAN="12" style="text-align:center">Revenue Type</TH>
+                            </TR>
+                            <TR>
+                                <TH COLSPAN="3" style="text-align:center">Incremental Revenue ({!selectedCurrency})</TH>
+                                <TH COLSPAN="3" style="text-align:center">First Year Maintenance ({!selectedCurrency})</TH>
+                                <TH COLSPAN="3" style="text-align:center">Billing Schedule ({!selectedCurrency})</TH>
+                                <TH COLSPAN="3" style="text-align:center">Deferred Revenue ({!selectedCurrency})</TH>
+                                <TH COLSPAN="3" style="text-align:center">Recognized Revenue ({!selectedCurrency})</TH>
+                                <TH COLSPAN="1" style="text-align:center">Total ({!selectedCurrency})</TH>
+                            </TR>
+                            <TR>
+                                <TH style="text-align:center">Expected</TH>
+                                <TH style="text-align:center">Upside</TH>
+                                <TH style="text-align:center">Total</TH>
+                                
+                                <TH style="text-align:center">Expected</TH>
+                                <TH style="text-align:center">Upside</TH>
+                                <TH style="text-align:center">Total</TH>
+                                
+                                <TH style="text-align:center">FYM</TH>
+                                <TH style="text-align:center">Renewal</TH>
+                                <TH style="text-align:center">Total</TH>
+                                
+                                <TH style="text-align:center">FYM</TH>
+                                <TH style="text-align:center">Renewal</TH>
+                                <TH style="text-align:center">Total</TH>
+                                
+                                <TH style="text-align:center">FYM</TH>
+                                <TH style="text-align:center">Renewal</TH>
+                                <TH style="text-align:center">Total</TH>
+                                
+                                <TH style="text-align:center">Total</TH>
+                            </TR>
+                            <apex:repeat var="r" value="{!revenueDataWithTotals}">
+                                <TR style='font-weight:{!IF(contains(r.name, "Total"), "bold", "normal")}'>
+                                    <TD style="white-space:nowrap">{!r.name}</TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.incrementalRevenue_e}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.incrementalRevenue_u}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.incrementalRevenue}" />
+                                        </apex:outputText>
+                                    </TD>
+
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.firstYearMaintenance_e}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.firstYearMaintenance_u}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.firstYearMaintenance}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    
+                                    <!--<TD ALIGN="RIGHT">{!r.billingScheduleInMillions}</TD>-->
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.billingSchedule_fym}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.billingSchedule_renew}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.billingSchedule}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    
+                                    <!--<TD ALIGN="RIGHT">{!r.deferredRevenueInMillions}</TD>-->
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.deferredRevenue_fym}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.deferredRevenue_renew}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.deferredRevenue}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    
+                                    <!--<TD ALIGN="RIGHT">{!r.recognizedRevenueInMillions}</TD>-->
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.recognizedRevenue_fym}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.recognizedRevenue_renew}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.recognizedRevenue}" />
+                                        </apex:outputText>
+                                    </TD>
+                                    
+                                    <!--<TD ALIGN="RIGHT">{!r.totalRevenueInMillions}</TD>-->
+                                    <TD style="text-align:center">
+                                        <apex:outputText value="{0, number, ###,##0}">
+                                            <apex:param value="{!r.totalRevenue}" />
+                                        </apex:outputText>
+                                    </TD>
+                                </TR>
+                            </apex:repeat>
+                            
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD  ALIGN="CENTER">
+                        <apex:chart height="550" width="1100" data="{!revenueData}">
+                            <apex:legend position="top"/>
+                            <apex:axis type="Numeric" position="left" fields="incrementalRevenueInMillions,firstYearMaintenanceInMillions,billingScheduleInMillions,deferredRevenueInMillions,recognizedRevenueInMillions" title="Revenue (Millions)" grid="true"/>
+                            <apex:axis type="Category" position="bottom" fields="name" title="Month of the Year" >
+                                <apex:chartLabel rotate="270"/>
+                            </apex:axis>    
+                            <apex:lineSeries axis="left" fill="false" xField="name" yField="incrementalRevenueInMillions" title="Incremental Revenue" markerType="circle" markerSize="4" markerFill="#F5EE0C"/>
+                            <apex:lineSeries axis="left" fill="false" xField="name" yField="firstYearMaintenanceInMillions" title="First Year Maintenance" markerType="circle" markerSize="4" markerFill="#F5EAEF"/>
+                            <apex:lineSeries axis="left" fill="false" xField="name" yField="billingScheduleInMillions" title="Billing Schedule"  markerType="cross" markerSize="4" markerFill="#FF0000"/>
+                            <apex:lineSeries axis="left" fill="false" xField="name" yField="deferredRevenueInMillions" title="Deferred Revenue" markerType="circle" markerSize="4" markerFill="#8E35EF"/>
+                            <apex:lineSeries axis="left" fill="false" xField="name" yField="recognizedRevenueInMillions" title="Recognized Revenue" markerType="circle" markerSize="4" markerFill="#8E35EF"/>
+                        </apex:chart>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD  ALIGN="CENTER">
+                        <apex:chart data="{!revenueData}" height="550" width="1100">
+                            <apex:legend position="top"/>
+                            <apex:axis type="Numeric" position="left" title="Total Revenue (millions)" grid="true" fields="incrementalRevenueInMillions,firstYearMaintenanceInMillions,billingScheduleInMillions,deferredRevenueInMillions,recognizedRevenueInMillions" minimum="0" dashSize="2">
+                                <apex:chartLabel />
+                            </apex:axis>
+                            <apex:axis type="Category" position="bottom" fields="name" title="Month of the Year">
+                                <apex:chartLabel rotate="270"/>
+                            </apex:axis>
+                            <apex:barSeries orientation="vertical" axis="left" xField="name" yField="incrementalRevenueInMillions,firstYearMaintenanceInMillions,billingScheduleInMillions,deferredRevenueInMillions,recognizedRevenueInMillions" title="Incremental Revenue, First Year Maintenance, Billing Schedule, Deferred Revenue, Recognized Revenue" stacked="true"/>
+                        </apex:chart>                      
+                    </TD>
+                </TR>
+            </TABLE>
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

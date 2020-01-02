@@ -1,0 +1,85 @@
+<apex:page standardController="Sellable_Item_Product__c" extensions="SellableItemHeaderExtension">
+    
+    <apex:form >
+       
+        <apex:pageBlock id="pgblk">   
+
+            <apex:pageBlockButtons location="top">  
+            
+                <apex:commandButton value="Edit" rendered="{!IF(isProductManagement,OR(showDraftComplete,showValidateAndFreeze),true)}"   onclick="window.top.location='/{!sellableItemId}/e?retURL=/{!sellableItemId}'; return false;" />
+                <apex:commandButton value="Delete" action="{!deleteRecord}" oncomplete="window.top.location = '/a9X/o';" rendered="{!showDeleteButton}"/>
+                <!--
+                <apex:commandButton value="Clone" action="{!cloneRecord}" oncomplete="window.top.location = '/{!clonedSellableItemId}/e?retURL=/{!clonedSellableItemId}&Name=';"/>
+                 -->
+                <apex:commandButton value="Clone" onclick="window.top.location='/apex/dh_superclone__superclone?rid={!Sellable_Item_Product__c.Id}&cfg=Sellable_Item_Product_Clone';" />
+                 
+                <apex:commandButton value="Manage Pricing" onclick="window.top.location='/apex/SellableItemPricing?id={!sellableItemId}';" rendered="{!isPricingManagement}" />
+                <apex:commandButton value="Draft Complete" action="{!draftComplete}" rendered="{!AND(showDraftComplete, isProductManagement)}" onComplete="refreshPage(); return false;"/>
+                <apex:commandButton value="Validate And Freeze" action="{!validateAndFreeze}"  rendered="{!AND(isProductManagement, showValidateAndFreeze)}" reRender="pnlJS" onComplete="showErrorIfAny(); return false;"/>
+                <apex:commandButton value="Pricing Complete" action="{!pricingComplete}" rendered="{!AND(showPricingComplete, isPricingManagement)}" onComplete="refreshPage(); return false;"/>
+                
+                <!--Commented by JJ-->
+                <!--<apex:commandButton value="Validate & Approve" action="{!validateAndApprove}"  rendered="{!AND(showValidateAndApprove, isProjectManagement)}" onComplete="refreshPage(); return false;" />-->
+               
+                <apex:commandButton value="Review & Approve" action="{!FinanceReview}" rendered="{!AND(showSubmitToSAP, isSoftwareDelivery)}" onComplete="refreshPage(); return false;"/>
+                 <!--<apex:commandButton value="Review & Approve" action="{!FinanceReview}" rendered="{!AND(showSubmitToSAP, isSoftwareDelivery)}" onComplete="refreshPage(); return false;"/>-->
+                 <apex:commandButton value="Submit for Tax Review" rendered="{!AND(showFinanceReview,isFinance)}" action="{!Tax}" onComplete="refreshPage(); return false;"/>
+                  <apex:commandButton value="Submit To ERP" action="{!submitToSAP}" rendered="{!AND(showTax, isTax)}" onComplete="refreshPage(); return false;"/>
+                
+                <!-- 
+                <apex:commandButton value="SAP Profile Complete" action="{!SAPProfileComplete}" rendered="{!showSAPProfileComplete}" onComplete="refreshPage(); return false;"/>
+                 -->
+                 
+                <apex:commandButton value="Activate & Release" action="{!activateAndRelease}" rendered="{!AND(showActivateAndRelease, isSoftwareDelivery)}" onComplete="refreshPage(); return false;"/>
+                <!--<apex:commandButton value="Submit To ERP" action="{!submitToSAP}" rendered="{!AND(showFinanceReview, isFinance)}" onComplete="refreshPage(); return false;"/> -->
+                <apex:commandButton value="Update Sellable Item" action="{!updateSellableItem}" rendered="{!showUpdateSellableItem}" onComplete="refreshPage(); return false;"/>
+                <apex:commandButton value="EOL" action="{!EOL}" rendered="{!showEOL}" onComplete="refreshPage(); return false;"/>
+                <apex:commandButton value="ERP Hold" action="{!ERPHold}" rendered="{!showERPHold}" onComplete="refreshPage(); return false;"/>
+                
+                <apex:commandButton value="Decline" action="{!decline}" rendered="{!showDecline}" onComplete="refreshPage(); return false;"/>
+                
+               
+                
+                <a href="https://genesys.my.salesforce.com/sfc/#version?selectedVersionId=068U0000001gV9n" target="_blank">
+                    Field Glossary
+                </a>
+                &nbsp;|&nbsp;
+                <a href="https://genesys.my.salesforce.com/sfc/#version?selectedDocumentId=069U0000001ew9Y" target="_blank">
+                    EOL Document
+                </a>
+                
+            </apex:pageBlockButtons>
+            <!-- {!showActivateAndRelease}  -->        
+        </apex:pageBlock>
+    </apex:form>
+    <apex:outputPanel id="pnlJS">
+        <script>
+            function showErrorIfAny(){
+                if('{!errorStatus}' != 'OK'){
+                    var str = '{!errorStatus}';
+                    //var re = new RegExp(find, 'g');
+                    //var res = str.replace(".", ". \n");
+                     var res = str.replace(".", ". \n");
+                    alert(res);
+                }
+                else{
+                    refreshPage();
+                }
+            }
+        </script>
+    </apex:outputPanel>
+    <script>
+        function refreshPage(){     
+            window.top.location = '/{!sellableItemId}';
+        }
+        function goToHome(){     
+            window.top.location = '/a9C/o';
+        }
+        function deleteRecord(){
+            var result = confirm('Are you sure?');
+            if(result){
+                deleteAF();
+            }
+        }
+    </script>    
+</apex:page>

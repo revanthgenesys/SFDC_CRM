@@ -1,0 +1,159 @@
+<apex:component controller="LMSUpgradeComponentController" id="cmp" allowDML="true">
+    <apex:attribute name="paramAccountId" description="End User Account Id" type="String" required="true" assignTo="{!endUserAccountId}"/>
+    <apex:attribute name="paramSoldToAccountIds" description="List of Sold To Account Ids" type="String[]" required="true"  assignTo="{!soldToAccountIds}"/>
+    <apex:attribute name="paramUserType" description="Logged in User Type" type="String" required="true" assignTo="{!userType}"/>
+    <style>
+    	.modalStyle {
+          display: block;
+          position: absolute;
+          top: 0%;
+          left: 0%;
+          width: 100%;
+          height: 100%;
+          background-color: gainsboro;
+          z-index: 1001;
+          -moz-opacity: 0.8;
+          opacity: .80;
+          filter: alpha(opacity=80);
+        }
+        .popupStyle {
+            background-color: white;
+            border-style: solid;
+            border-width: 2px;
+            left: 50%;
+            top: 45%;
+            padding: 1px;
+            position: fixed;
+            z-index: 9999;
+            width: 300px;
+            margin-left: -150px;
+        }        
+        .pbTitle {
+            white-space: nowrap
+        }
+    </style>
+    <apex:form id="frm">
+    	<apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+         </apex:actionStatus> 
+         
+         <apex:outputPanel id="UpgradeAlert">
+            <apex:outputPanel id="UpgradeAlertOuter" styleClass="modalStyle" rendered="{!displayAlert}">
+            </apex:outputPanel>
+            <apex:outputPanel id="UpgradeAlertInner" styleClass="popupStyle" layout="block" rendered="{!displayAlert}">
+                <CENTER>
+                    <p style="font-size:15px;">
+                        Do you really want to perform this upgrade?
+                    </p>
+                    <BR/>
+                    <apex:commandButton value=" Yes " action="{!performUpgrade}" reRender="AvaiableForUpgradePanel,UpgradeAlert" status="status"/>
+                    <apex:commandButton value=" No "  action="{!hideAlert}" reRender="AvaiableForUpgradePanel,UpgradeAlert" status="status"/>
+                    <BR/><BR/>
+                </CENTER>
+            </apex:outputPanel>
+        </apex:outputPanel>
+         <apex:pageBlock title="Upgrade Software">
+		        <apex:tabPanel switchType="client"  id="UpgradeInnerTabs">
+					<apex:tab label="Parts without Upgrade Options">
+					 	<!--  apex:actionSupport event="ontabenter"  action="{!initialize}" reRender="AvaiableForUpgradePanel" status="status" / -->
+		                <apex:outputPanel id="NotAvaiableForUpgradePanel">
+			                <apex:pageBlockTable value="{!notAvailableForUpgrades}" var="record">
+			                  <apex:column headerValue="Part Number" value="{!record.partNumber}" />
+			                  <apex:column headerValue="Product Category" value="{!record.productCategory}" style="vertical-align:Top"/>                    
+			                  <apex:column headerValue="Description" value="{!record.description}" style="vertical-align:Top"/>                    
+			                  <apex:column headerValue="Quantity" value="{!record.quantity}" style="vertical-align:Top" /> 
+			                </apex:pageBlockTable>
+			                <apex:outputPanel id="NoRecordsPanel2">
+			                    <apex:pageMessage summary="No records to display." severity="Info" strength="2" rendered="{!notAvailableForUpgrades.size == 0}" />
+			                </apex:outputPanel>
+						</apex:outputPanel>
+	                </apex:tab>
+	                <apex:tab label="Parts with Upgrade Options">
+	                    <!-- apex:actionSupport event="ontabenter"  action="{!initialize}" reRender="AvaiableForUpgradePanel" status="status" / -->   
+						<apex:outputPanel id="AvaiableForUpgradePanel">
+			            	<apex:pageMessages />
+			                <TABLE WIDTH="100%">
+			                    <TR>
+			                        <TD WIDTH="35%" style="white-space: nowrap">
+			                            <b>Upgrade Option:&nbsp;&nbsp;</b>
+			                            <apex:selectList value="{!selectedUpgradeOption}" multiselect="false" size="1">
+			                                <apex:selectOptions value="{!upgradeOptions}"/>
+			                                <apex:actionSupport event="onchange" action="{!initialize}" reRender="AvaiableForUpgradePanel" status="status" />
+			                            </apex:selectList>
+			                        </TD>
+			                        <TD WIDTH="30" ALIGN="CENTER">
+			                            <apex:commandButton value="Upgrade Selected" action="{!showAlert}" rendered="{!upgradeOptions != NULL && (upgradeOptions.size > 1 || selectedUpgradeOption != '-- ALL --')}" reRender="UpgradeAlert" status="status"/>	
+			                        </TD>
+			                        <TD ALIGN="RIGHT" WIDTH="34%">
+			                            <apex:outputPanel id="DataTableCount">
+			                                Number of Total Results # <b>{!totalRecords}</b>
+			                            </apex:outputPanel>
+			                        </TD>
+			                        <TD WIDTH="1%" ALIGN="RIGHT">
+			                            &nbsp;
+			                        </TD>
+			                    </TR>
+			                </TABLE>
+			                <apex:outputPanel rendered="{!(selectedUpgradeOption != '-- ALL --')}">
+			                    <TABLE WIDTH="100%">
+			                        <apex:repeat value="{!mirrorOptions}" var="mOption">
+			                         <TR>
+			                             <TD style="background-color:yellow;font-size:15px;">
+			                                 <b>
+			                                     Mirror {!mOption.mirrorOption}
+			                                     &nbsp; 
+			                                     <apex:inputCheckbox value="{!mOption.selected}"/>
+			                                     &nbsp;
+			                                     By selecting this checkbox, annual support renewal will be charged on the most recent software version of products.
+			                                </b> 
+			                             </TD>
+			                         </TR> 
+			                        </apex:repeat>
+			                    </TABLE>
+			                </apex:outputPanel>
+			                <br />
+			                <apex:pageBlockTable value="{!availableForUpgrades}" var="record" id="AvaiableForUpgradePBTable">
+			                     <apex:column headerValue="Part Number" value="{!record.partNumber}" />
+			                     <apex:column headerValue="Product Category" value="{!record.productCategory}" style="vertical-align:Top"/>                    
+			                     <apex:column headerValue="Description" value="{!record.description}" style="vertical-align:Top"/>
+			                     <apex:column headerValue="Upgrade Options" style="vertical-align:Top">
+			                      	 <!--
+			                      	 <apex:inputCheckbox value="{!record.selected}"> 
+				                        <apex:actionSupport event="onchange" action="{!dummyAction}" reRender="AvaiableForUpgradePBTable"/>
+				                    </apex:inputCheckbox> {!record.upgradeOption}
+			                      	 -->
+			                      	 
+			                         <apex:inputCheckbox id="upgradePartSelectionCheckbox" value="{!record.selected}"/> {!record.upgradeOption}
+			                     </apex:column>
+			                     <apex:column headerValue="Mirroring Available" style="vertical-align:Top">
+			                        <apex:outputText rendered="{!record.mirroringAvailable == true}">
+			                            <font color="green">Yes</font>
+			                        </apex:outputText>
+                                    <apex:outputText rendered="{!record.mirroringAvailable == false}">
+			                            <font color="red">No</font>
+			                        </apex:outputText> 
+			                     </apex:column>
+			                     <apex:column headerValue="Upgrade Quanity" style="vertical-align:Top">
+			                         <!--apex:inputText value="{!record.selectedQuantity}" style="width:75px" /--> 
+			                         {!record.selectedQuantity} of {!record.quantity}
+			                     </apex:column>
+			                 </apex:pageBlockTable>
+			                 <apex:outputPanel id="NoRecordsPanel1">
+			                     <apex:pageMessage summary="No records to display." severity="Info" strength="2" rendered="{!availableForUpgrades.size == 0}" />
+			                 </apex:outputPanel>
+			            </apex:outputPanel>
+		            </apex:tab>
+	            </apex:tabPanel>    
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

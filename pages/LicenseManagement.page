@@ -1,0 +1,235 @@
+<apex:page controller="LicenseManagementController" sidebar="false" showHeader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" docType="html-5.0">
+    <c:loadingDialog />
+    <style>
+        .activeTab {background-color: #236FBD; color:white; background-image:none; white-space:nowrap;}
+        .inactiveTab {background-color: lightgrey; color:black; background-image:none; white-space:nowrap;}
+    </style>
+
+    <script type="text/javascript">
+        function licensingRelatedQuestion(){
+            var url = 'http://genesys.force.com/activationfile/ActivationFileRequest?src=LMS&fnm={!$User.FirstName}&lst={!$User.LastName}&em={!$User.Email}&empl={!$User.CompanyName}&reqtp=Qst';
+            window.open(url);
+        }
+        function licensingRelatedAFR(){
+            var url = 'http://genesys.force.com/activationfile/ActivationFileRequest?src=LMS&fnm={!$User.FirstName}&lst={!$User.LastName}&em={!$User.Email}&empl={!$User.CompanyName}&reqtp=AFR';
+            window.open(url);
+        }
+         function TemplicensingRelatedAFR(){
+            var url = 'http://genesys.force.com/activationfile/ActivationFileRequest?src=LMS&fnm={!$User.FirstName}&lst={!$User.LastName}&em={!$User.Email}&empl={!$User.CompanyName}&reqtp=TEMP';
+            window.open(url);
+        }
+        function disableEnterKey(e){
+            var key;     
+            if(window.event)
+                key = window.event.keyCode; //IE
+            else
+                key = e.which; //firefox     
+            return (key != 13);
+        }
+        
+        window.onload = function () {
+            if('{!userSeenMessage}' == 'false') {
+            setLoadingMessageDialogContent('Non Perpetual File(s) are no longer self serve.<br\> Please submit an Activation File Request by using the Non Perpetual Activation File Request button. See top right of page. <br/><br/> The Licensing team will generate these files for you with the appropriate end dates.<br/><br/>Submit an AFR for any questions regarding this change, <br/>Or click on the Help icon for additional details that are noted on the Account Summary Tab and the Activation File Activity of the tool guide  <br/><br/>Thank you!');
+            setLoadingMessageTitle('Alert');
+            showMessage();
+            updateUserMessageSetting();
+            }
+         }    
+    </script>
+    
+    
+   <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="actfm" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="body">
+    
+    <apex:outputPanel id="unauthorizedUserPanel" rendered="{!authorizedUser == false}">
+        <br /><br /><br />
+        <p align="center" style="font-size:20px;color:red;">
+            You are not authorized to access this application, Please contact Genesys Support.
+        </p>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="authorizedUserPanel" rendered="{!authorizedUser == true}">
+        <apex:form >
+            <apex:actionFunction action="{!updateUser}" name="updateUserMessageSetting" rerender="none"/>
+            <apex:actionStatus id="status">
+                <apex:facet name="start">
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                        &nbsp;
+                    </div>
+                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                        <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                            <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                            <span class="waitingDescription">Please Wait...</span>
+                        </div>
+                    </div>
+                </apex:facet>
+            </apex:actionStatus>
+            <TABLE WIDTH="100%">
+                <TR>
+                    <TD WIDTH="50%">
+                        <apex:sectionHeader title="Manage" subtitle="Activation Files"/>
+                    </TD>
+                    <TD WIDTH="50%" ALIGN="RIGHT" VALIGN="BOTTOM">
+                        <apex:commandButton value="Non Perpetual Activation File Request" onclick="javascript:TemplicensingRelatedAFR(); return false;" />
+                        <apex:commandButton value="Activation File Related Question" onclick="javascript:licensingRelatedQuestion(); return false;" />
+                        <apex:commandButton value="Third-Party Activation File Request" onclick="javascript:licensingRelatedAFR(); return false;" />
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a href="{!$Resource.AFMToolHelpGuide}" target="_blank"><apex:image url="{!$Resource.LMSHelpIcon}" width="50" height="50"/></a>
+                        &nbsp;&nbsp;
+                    </TD>
+                </TR>    
+            </TABLE>
+            
+            <apex:actionFunction name="changeValue" reRender="none">
+                <apex:param name="selectedTab" value="{!selectedTab}" assignTo="{!selectedTab}" />
+            </apex:actionFunction>
+            <apex:pageBlock >
+                <apex:outputPanel rendered="{!userType == 'Internal'}">
+                    <TABLE WIDTH="100%">
+                        <TR>
+                            <TD>
+                                <b>Account Name:</b>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <apex:inputField value="{!accountSelection.AccountId}" onkeypress="return disableEnterKey(event);" style="width:400px;"/>
+                                <apex:commandButton value=" GO " action="{!goClicked}" reRender="lmsTabsPanel,supportOptionPanelInternal" status="status"/>
+                            </TD>
+                            <TD ALIGN="RIGHT">
+                                <apex:outputPanel id="supportOptionPanelInternal">
+                                    <apex:outputPanel rendered="{!accountSelection.AccountId != NULL}">
+                                        <b>Support Option:&nbsp;&nbsp;</b>{!supportOption}
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </TD>
+                        </TR>
+                    </TABLE>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!userType != 'Internal'}">
+                    <TABLE WIDTH="100%">
+                        <TR>
+                            <TD>
+                                <b>Account Name:</b>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <apex:selectList value="{!selectedEndUserAccountId}" multiselect="false" size="1"> 
+                                    <apex:selectOptions value="{!EndUserAccounts}"/>
+                                </apex:selectList>
+                                &nbsp;&nbsp;
+                                <apex:commandButton value=" GO " action="{!goClicked}" reRender="lmsTabsPanel,supportOptionPanelPartner" status="status"/>
+                            </TD>
+                            <TD ALIGN="RIGHT">
+                                <apex:outputPanel id="supportOptionPanelPartner">
+                                    <apex:outputPanel rendered="{!accountSelection.AccountId != NULL}">
+                                        <b>Support Option:&nbsp;&nbsp;</b>{!supportOption}
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </TD>
+                        </TR>
+                    </TABLE>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:form>     
+        <apex:outputPanel id="lmsTabsPanel">
+            <apex:outputPanel id="lmsMessagePanel" rendered="{!accountSelection.AccountId == NULL}">
+                <br />
+                <p align="center" style="font-size:20px" >
+                    Please select an Account to proceed.
+                </p>
+                <br /><br />
+            </apex:outputPanel>
+
+             <apex:tabPanel switchType="client"  tabClass="activeTab" inactiveTabClass="inactiveTab"  value="{!selectedTab}" selectedTab="{!selectedTab}" id="lmsTabs" rendered="{!accountSelection.AccountId != NULL}">
+                <apex:tab label="Account Summary" id="SummaryTab" >
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="SummaryInnerTab,LMSSummaryComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="SummaryTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="SummaryInnerTab">
+                        <c:LMSSummaryComponent paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" paramUserType="{!userType}"  rendered="{!selectedTab == 'SummaryTab'}" id="LMSSummaryComponent" />  
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="Software Details" id="SnapshotTab" rerender="SnapshotTab">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="SnapshotInnerTab,LMSSnapshotComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="SnapshotTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="SnapshotInnerTab">
+                        <c:LMSSnapshotComponent paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" paramUserType="{!userType}" rendered="{!selectedTab == 'SnapshotTab'}" id="LMSSnapshotComponent"/>       
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="Activation File Activity" id="LicenseActivityTab" rerender="LicenseActivityInnerTab">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="LicenseActivityInnerTab,LMSLicenseActivityComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="LicenseActivityTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="LicenseActivityInnerTab">
+                       <c:LMSLicenseActivityComponent paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" paramUserType="{!userType}" rendered="{!selectedTab == 'LicenseActivityTab'}" id="LMSLicenseActivityComponent" /> 
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="Upgrade Software" id="UpgradeTab">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="UpgradeInnerTab,LMSUpgradeComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="UpgradeTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="UpgradeInnerTab">
+                        <c:LMSUpgradeComponent paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" paramUserType="{!userType}" rendered="{!selectedTab == 'UpgradeTab'}" id="LMSUpgradeComponent"/>   
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="New Activation File" id="NewLicenseTab" rerender="NewLicenseInnerTab">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="NewLicenseInnerTab,LMSNewLicenseComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="NewLicenseTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="NewLicenseInnerTab">
+                        <c:LMSNewLicenseComponent hybrid="Regular" paramUserType="{!userType}"  paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" rendered="{!selectedTab == 'NewLicenseTab'}" id="LMSNewLicenseComponent"/>       
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="Temp Activation File" id="TempLicenseTab" rendered="{!userType == 'Internal'}">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="TempLicenseInnerTab,LMSTempLicenseComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="TempLicenseTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                  
+                    <apex:outputPanel id="TempLicenseInnerTab">
+                        <c:LMSTempLicenseComponent hybrid="Temporary" paramUserType="{!userType}"  paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" rendered="{!selectedTab == 'TempLicenseTab'}" id="LMSTempLicenseComponent"/>       
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="Hybrid Activation File" id="HybridLicenseTab" rendered="{!userType == 'Internal'}">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="HybridLicenseInnerTab,LMSHybridLicenseComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="HybridLicenseTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="HybridLicenseInnerTab">
+                        <c:LMSHybridLicenseComponent hybrid="Hybrid" paramUserType="{!userType}"  paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" rendered="{!selectedTab == 'HybridLicenseTab'}" id="LMSHybridLicenseComponent"/>       
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="Genesys Internal File" id="DummyLicenseTab" rendered="{!userType == 'Internal'}">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="DummyLicenseInnerTab,LMSDummyLicenseComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="DummyLicenseTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="DummyLicenseInnerTab">
+                        <c:DummyLicenseComponent hybrid="Dummy" paramUserType="{!userType}"  paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" rendered="{!selectedTab == 'DummyLicenseTab'}" id="LMSDummyLicenseComponent"/>       
+                    </apex:outputPanel>
+                </apex:tab>
+                
+                <apex:tab label="Install Sites" id="InstallSitesTab">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="InstallSitesInnerTab,LMSInstallSitesComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="InstallSitesTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="InstallSitesInnerTab">
+                        <c:LMSInstallSitesComponent paramAccountId="{!accountSelection.AccountId}" paramSoldToAccountIds="{!soldToAccountIds}" paramUserType="{!userType}" rendered="{!selectedTab == 'InstallSitesTab'}" id="LMSInstallSitesComponent"/>       
+                    </apex:outputPanel>
+                </apex:tab>
+            </apex:tabPanel>        
+        </apex:outputPanel>        
+    </apex:outputPanel>
+   </apex:define>
+ </apex:composition>
+</apex:page>

@@ -1,0 +1,378 @@
+<apex:component controller="LMSLicenseActivityComponentController" id="cmp" allowDML="true" >
+    <apex:attribute name="paramAccountId" description="End User Account Id" type="String" required="true" assignTo="{!endUserAccountId}"/>
+    <apex:attribute name="paramSoldToAccountIds" description="List of Sold To Account Ids" type="String[]" required="true"  assignTo="{!soldToAccountIds}"/>
+    <apex:attribute name="paramUserType" description="Logged in User Type" type="String" required="true" assignTo="{!userType}"/>
+
+    <style>
+        span.dateInput span.dateFormat{
+            display:none;
+        }
+        .buttong2y {
+           border-top: 1px solid #90ae6a;
+           background: #91af6a;
+           background: -webkit-gradient(linear, left top, left bottom, from(#91af6a), to(#91af6a));
+           background: -webkit-linear-gradient(top, #91af6a, #91af6a);
+           background: -moz-linear-gradient(top, #91af6a, #91af6a);
+           background: -ms-linear-gradient(top, #91af6a, #91af6a);
+           background: -o-linear-gradient(top, #91af6a, #91af6a);
+           padding: 5px 10px;
+           -webkit-border-radius: 8px;
+           -moz-border-radius: 8px;
+           border-radius: 8px;
+           -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
+           -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
+           box-shadow: rgba(0,0,0,1) 0 1px 0;
+           text-shadow: rgba(0,0,0,.4) 0 1px 0;
+           color: #000000;
+           font-size: 14px;
+           font-family: Helvetica, Arial, Sans-Serif;
+           text-decoration: none;
+           vertical-align: middle;
+        }
+        .buttong2y:hover {
+           border-top-color: #fdc45b;
+           background: #fdc45b;
+           color: #cc0000;
+        }
+        .buttong2y:active {
+           border-top-color: #91af6a;
+           background: #91af6a;
+        }
+        
+       .modalStyle {
+          display: block;
+          position: absolute;
+          top: 0%;
+          left: 0%;
+          width: 100%;
+          height: 100%;
+          background-color: gainsboro;
+          z-index: 1001;
+          -moz-opacity: 0.8;
+          opacity: .80;
+          filter: alpha(opacity=80);
+        }
+        .popupStyle {
+            background-color: white;
+            border-style: solid;
+            border-width: 2px;
+            left: 50%;
+            top: 45%;
+            padding: 1px;
+            position: fixed;
+            z-index: 9999;
+            width: 300px;
+            margin-left: -150px;
+        }        
+        .pbTitle {
+            white-space: nowrap
+        }
+        
+        .expiredRequestLog { color: red !important; }
+        .activeRequestLog { color: black !important;}
+        
+    </style>
+    <script>
+        function invokeCancel(){
+            cancel();
+        }
+    </script>
+    <apex:form id="frm">
+    
+    <apex:actionFunction name="cancel" action="{!cancel}" oncomplete="reload();" status="status" rerender="frm"/>
+    <apex:actionFunction name="reload" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status"/>
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>   
+        <apex:outputPanel id="SelectionAlert">
+            <apex:outputPanel id="AlertOuter" styleClass="modalStyle" rendered="{!displayAlert}">
+            </apex:outputPanel>
+            <apex:outputPanel id="AlertInner" styleClass="popupStyle" layout="block" rendered="{!displayAlert}">
+                <CENTER>
+                    <p style="font-size:15px;">
+                        Are you sure you want to deactivate the selected Activation File?
+                    </p>
+                    <BR/>
+                    <apex:commandButton value=" Yes " action="{!deactivateLicense}" reRender="licenseRequestsDataPanel,SelectionAlert" status="status"/>
+                    <apex:commandButton value=" No "  action="{!hideAlert}" reRender="licenseRequestsDataPanel,SelectionAlert" status="status"/>
+                    <BR/><BR/>
+                </CENTER>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:outputPanel id="licenseRequestsDataPanel" style="width:50%" rendered="{!!showUpdatePanel}">
+                
+            <apex:pageBlock title="Activation File Activity">
+                <TABLE WIDTH="100%">
+                    <TR>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Install Site:</b><br/>
+                            <apex:selectList value="{!selectedInstallSite}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!installSites}"/>
+                                <apex:actionSupport event="onchange" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Generation Date (&gt;=)</b><br/>
+                            <apex:inputField value="{!startDateObject.Change_Date__c}" />
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Generation Date (&lt;=)</b><br/>
+                            <apex:inputField value="{!endDateObject.Change_Date__c}" />
+                        </TD>
+                        <TD WIDTH="15%" ALIGN="RIGHT" VALIGN="BOTTOM">
+                            &nbsp;
+                        </TD> 
+                        <TD ALIGN="RIGHT">&nbsp;</TD>
+                        <TD WIDTH="25px;" ALIGN="RIGHT">
+                            &nbsp;
+                        </TD>
+                    </TR>
+                    <TR>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Active:</b><br/>
+                            <apex:selectList value="{!selectedActiveInactive}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!ActiveInactive}"/>
+                                <apex:actionSupport event="onchange" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Product Line:</b><br/>
+                            <apex:selectList value="{!selectedProductLine}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!ProductLines}"/>
+                                <apex:actionSupport event="onchange" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>License Type:</b><br/>
+                            <apex:selectList value="{!selectedLicenseType}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!LicenseTypes}"/>
+                                <apex:actionSupport event="onchange" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>
+                         <TD WIDTH="15%" ALIGN="RIGHT" VALIGN="BOTTOM">
+                            &nbsp;
+                        </TD> 
+                        <TD ALIGN="RIGHT">&nbsp;</TD>
+                        <TD WIDTH="25px;" ALIGN="RIGHT">
+                            &nbsp;
+                        </TD>
+                    </TR>
+                    <TR>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Generated By:</b><br/>
+                            <apex:inputText value="{!searchTextGeneratedBy}" />
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Machine Name</b><br/>
+                            <apex:inputText value="{!searchTextMachineName}" />
+                        </TD>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            &nbsp;
+                        </TD>
+                        <TD WIDTH="15%" ALIGN="RIGHT" VALIGN="BOTTOM">
+                            <apex:commandButton value="Apply Filters" action="{!initLicenseRequests}" reRender="licenseRequestsDataPanel" status="status"/>
+                            <apex:commandButton value="Clear Filters" action="{!clearFilters}" reRender="licenseRequestsDataPanel" status="status" />
+                        </TD>
+                        <TD ALIGN="RIGHT">
+                            <apex:outputPanel id="DataTableCount">
+                                Number of Total Results # <b>{!totalRecords}</b>
+                            </apex:outputPanel>
+                        </TD>
+                        <TD WIDTH="25px;" ALIGN="RIGHT">
+                            &nbsp;
+                        </TD>
+                    </TR>
+                </TABLE>
+                
+                <apex:outputPanel rendered="{!records500Plus}">
+                    <p ALIGN="CENTER">
+                        <span style="color:red;font-size:150%;">
+                            More than 100 Activation File Requests exists, Please use filters to narrow down your list.
+                        </span>
+                    </p>
+                    <hr />
+                </apex:outputPanel>
+
+
+              <table width="100%" class="list" border="0" cellpadding="0" cellspacing="0">
+                        <tr class="headerRow">    
+                                
+                            <th width="120px" class="headerRow" style="vertical-align:top;" scope="col">Generated Date</th>
+                            <th width="120px" class="headerRow" scope="col" style="vertical-align:top;">Expiration Date</th>
+                            <th width="50px" class="headerRow" scope="col" style="vertical-align:top;">Active</th>
+                            <th class="headerRow" scope="col" style="vertical-align:top;">Install Site</th>
+                            <th class="headerRow" scope="col" style="vertical-align:top;">Generated By</th>
+                            <th class="headerRow" scope="col" style="vertical-align:top;">Machine</th>
+                            <th class="headerRow" scope="col" style="vertical-align:top;">Product</th>
+                            <th class="headerRow" scope="col" style="vertical-align:top;">Type</th>
+                            <th class="headerRow" scope="col" style="{!IF(showtemp, 'vertical-align:top', 'display:none')}">Temp License Type</th>
+                            
+                            <th class="headerRow" scope="col" style="vertical-align:top;">Sold To</th>
+                            <th width="120px" class="headerRow" scope="col" style="{!IF(userType == 'Internal', 'vertical-align:top', 'display:none')}" >Notes</th>
+                            <th width="125px" class="headerRow" scope="col" style="vertical-align:top;">Actions</th>
+                        </tr>
+                        <apex:repeat value="{!licenseRequests}" var="record" id="DataTable">
+                            <tr class="dataRow" style="vertical-align:top;">     
+                                <td class="dataCell" style="width:120px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                                        <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                                        <apex:param value="{!record.generationDateTime}" /> 
+                                    </apex:outputText>
+                                </td>
+                                <td class="dataCell" style="width:120px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                                        <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                                        <apex:param value="{!record.expirationDateTime}" /> 
+                                    </apex:outputText> </td>
+                                <td class="dataCell" style="vertical-align:Top;width:50px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                                        <apex:outputText rendered="{!record.Active == true}">
+                                                <font color="green">Yes</font>
+                                            </apex:outputText>
+                                            <apex:outputText rendered="{!record.Active == false}">
+                                                <font color="red">No</font>
+                                            </apex:outputText></td>
+                                <td class="dataCell" style="vertical-align:Top" value="{!record.installSiteName}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                                       {!record.installSiteName}
+                                
+                                </td>
+                                <td class="dataCell" style="vertical-align:Top"  styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                                        {!record.requestedBy}</td>
+                                <td class="dataCell" style="vertical-align:Top"  styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                                        <apex:outputPanel rendered="{!record.isMultipleMachines == false}" >
+                                                {!record.machineName}
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!record.isMultipleMachines}">
+                                                <apex:repeat value="{!record.machineNames}" var="machine">
+                                                    <b>Machine:</b> {!machine} &nbsp;&nbsp;
+                                                </apex:repeat>
+                                                <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/MultipleMachines.png')}" height="20"  title="Multiple Machines"/>
+                                            </apex:outputPanel>
+                                        </td>
+
+
+
+                                       
+                                <td class="dataCell" style="vertical-align:top;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">{!record.productType}</td>
+                                <td class="dataCell" style="vertical-align:top;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">{!record.licenseType}</td>
+                                <td class="dataCell" style="{!IF(showtemp, 'vertical-align:top', 'display:none')}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">{!record.tempfiletype}</td>
+                                <td class="dataCell" style="vertical-align:top;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">{!record.soldToName}</td>
+                                <td class="dataCell" style="{!IF(userType == 'Internal', 'vertical-align:Top;width:120px;', 'display:none')}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">{!record.Notes}</td>
+                                <td class="dataCell" style="vertical-align:Top;width:125px;white-space:nowrap;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                                <a href="{!urlPrefix}/apex/LMSLicenseView?id={!record.Id}" target="_blank">
+                                    <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/ViewLicense.png')}" height="20" title="View"/>
+                                </a>
+                                &nbsp;
+                                <apex:outputText rendered="{!record.Active == true && record.certified == true}">
+                                    <a href="{!urlPrefix}/apex/LMSLicenseDownload?id={!record.Id}">
+                                        <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/DownloadLicense.png')}" height="20" title="Download"/>
+                                    </a>
+                                    &nbsp;    
+                                </apex:outputText>
+                                <apex:outputText rendered="{!record.Active == true && record.canUpdate == true && record.sipProduct = false && record.certified == true}">
+                                    <apex:commandLink action="{!updateLicense}" reRender="updatePanel" status="status" rerender="frm">
+                                        <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/UpdateLicense.png')}" height="20" title="Update" />
+                                        <apex:param assignTo="{!selectedLicenseRequestId}" name="selectedLicenseRequestId" value="{!record.Id}"/>
+                                        <apex:param assignTo="{!selectedProductLine}" name="selectedProductLine" value="{!record.productType}"/>
+                                        <apex:param assignTo="{!selectedRecordType}" name="selectedRecordType" value="{!record.type}"/>                                
+                                    </apex:commandLink>
+                                    &nbsp;
+                                </apex:outputText>
+                                <apex:outputText rendered="{!record.Active == true && record.canDeactivate == true && record.certified == true}">
+                                    <apex:commandLink action="{!showAlert}" reRender="SelectionAlert" status="status">
+                                        <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/DeactivateLicense.png')}" height="20" title="Deactivate"/>
+                                        <apex:param assignTo="{!selectedLicenseRequestId}" name="selectedLicenseRequestId" value="{!record.Id}"/>
+                                    </apex:commandLink>
+                                </apex:outputText></td>
+                            </tr>
+                        </apex:repeat>
+                    </table>
+                   
+              <!-- <apex:pageBlockTable value="{!licenseRequests}" var="record" id="DataTable"> 
+                    <apex:column headerValue="Generated Date" =="width:120px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                            <apex:param value="{!record.generationDateTime}" /> 
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Expiration Date" style="width:120px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy}"> 
+                            <apex:param value="{!record.expirationDateTime}" /> 
+                        </apex:outputText> 
+                    </apex:column>
+                    <apex:column headerValue="Active" style="vertical-align:Top;width:50px;" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"> 
+                        <apex:outputText rendered="{!record.Active == true}">
+                            <font color="green">Yes</font>
+                        </apex:outputText>
+                        <apex:outputText rendered="{!record.Active == false}">
+                            <font color="red">No</font>
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Install Site" style="vertical-align:Top" value="{!record.installSiteName}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"/>
+                    <apex:column headerValue="Generated By" style="vertical-align:Top" value="{!record.requestedBy}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"/>
+                    <apex:column headerValue="Machine" style="vertical-align:Top" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}">
+                        <apex:outputPanel rendered="{!record.isMultipleMachines == false}" >
+                            {!record.machineName}
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!record.isMultipleMachines}">
+                            <apex:repeat value="{!record.machineNames}" var="machine">
+                                <b>Machine:</b> {!machine} &nbsp;&nbsp;
+                            </apex:repeat>
+                            <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/MultipleMachines.png')}" height="20"  title="Multiple Machines"/>
+                        </apex:outputPanel>
+                    </apex:column>
+                    <apex:column headerValue="Product" style="vertical-align:Top" value="{!record.productType}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"/>  
+                    <apex:column headerValue="Type" style="vertical-align:Top" value="{!record.licenseType}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"/>  
+                    <apex:column headerValue="Temp License Type" style="vertical-align:Top" value="{!record.tempfiletype}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"/>  
+                    <apex:column headerValue="Sold To" style="vertical-align:Top" value="{!record.soldToName}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}"/>  
+                    <apex:column headerValue="Notes" style="vertical-align:Top;width:120px;" value="{!record.Notes}" styleClass="{!IF((record.Active == true && record.expired == true),'expiredRequestLog','activeRequestLog')}" rendered="{!userType = 'Internal'}"/> 
+                    <apex:column headerValue="Actions" style="vertical-align:Top;width:125px;white-space:nowrap;">  
+                        <a href="{!urlPrefix}/apex/LMSLicenseView?id={!record.Id}" target="_blank">
+                            <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/ViewLicense.png')}" height="20" title="View"/>
+                        </a>
+                        &nbsp;
+                        <apex:outputText rendered="{!record.Active == true && record.certified == true}">
+                            <a href="{!urlPrefix}/apex/LMSLicenseDownload?id={!record.Id}">
+                                <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/DownloadLicense.png')}" height="20" title="Download"/>
+                            </a>
+                            &nbsp;    
+                        </apex:outputText>
+                        <apex:outputText rendered="{!record.Active == true && record.canUpdate == true && record.sipProduct = false && record.certified == true}">
+                            <apex:commandLink action="{!updateLicense}" reRender="updatePanel" status="status" rerender="frm">
+                                <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/UpdateLicense.png')}" height="20" title="Update" />
+                                <apex:param assignTo="{!selectedLicenseRequestId}" name="selectedLicenseRequestId" value="{!record.Id}"/>
+                                <apex:param assignTo="{!selectedProductLine}" name="selectedProductLine" value="{!record.productType}"/>
+                                <apex:param assignTo="{!selectedRecordType}" name="selectedRecordType" value="{!record.type}"/>                                
+                            </apex:commandLink>
+                            &nbsp;
+                        </apex:outputText>
+                        <apex:outputText rendered="{!record.Active == true && record.canDeactivate == true && record.certified == true}">
+                            <apex:commandLink action="{!showAlert}" reRender="SelectionAlert" status="status">
+                                <apex:image url="{!URLFOR($Resource.LMSIcons, 'images/DeactivateLicense.png')}" height="20" title="Deactivate"/>
+                                <apex:param assignTo="{!selectedLicenseRequestId}" name="selectedLicenseRequestId" value="{!record.Id}"/>
+                            </apex:commandLink>
+                        </apex:outputText>
+                    </apex:column>
+                </apex:pageBlockTable>-->
+                <apex:outputPanel id="NoRecordsPanel">
+                    <apex:pageMessage summary="No records to display." severity="Info" strength="2" rendered="{!totalRecords == 0}" />
+                </apex:outputPanel>                
+             </apex:pageBlock> 
+         </apex:outputPanel>
+         
+         <apex:outputPanel id="updatePanel">
+             <apex:outputPanel rendered="{!showUpdatePanel}">
+                    <apex:commandButton id="cancel" value="Cancel" onclick="invokeCancel();return false;" styleClass="buttong2y" style="visibility:hidden;" reRender="frm,licenseRequestsDataPanel"  status="status"/>
+                    <c:LMSUpdateLicenseComponent installSiteId="{!selectedInstallSite}" requestLog="{!selectedLicenseRequestId}" paramAccountId="{!paramAccountId}" paramSoldToAccountIds="{!soldToAccountIds}" paramUserType="{!userType}" type="{!selectedRecordType}" rendered="{!showUpdatePanel}" id="updateComponent" />      
+            
+             </apex:outputPanel>
+         </apex:outputPanel>
+          
+    </apex:form>
+</apex:component>

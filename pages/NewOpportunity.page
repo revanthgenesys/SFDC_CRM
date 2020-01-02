@@ -1,0 +1,60 @@
+<apex:page standardController="Opportunity" extensions="NewOpportunityExtension" showheader="false" sidebar="false" >
+    <apex:outputPanel id="pnlJS">
+        <script type="text/javascript">
+            
+            if('{!TEXT($User.UserType)}' == 'Standard'){                
+                location.href='/setup/ui/recordtypeselect.jsp?ent=Opportunity&?retURL={!$CurrentPage.Parameters.retURL}&RecordType={!$CurrentPage.Parameters.RecordType}&nooverride=1&save_new_url=%2F006%2Fe%3FretURL%3D%252F006%252Fo';
+            }
+            /*  
+            function goToNewOpportunity(){
+                //location.href='/partner/006/e?retURL={!$CurrentPage.Parameters.retURL}&ent=Opportunity&00Nn000000177vC={!objOpp.Opportunity_Type__c}&RecordType={!objOpp.RecordTypeId}&nooverride=1';
+                location.href='/partner/{!objOpp.id}';    
+            }
+            */ 
+        </script>
+    </apex:outputPanel>
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="optyTab"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+            <apex:form >
+                <apex:pageBlock title="New Opportunity" rendered="{!blnIsPartner}">
+                    <apex:pageBlockButtons >
+                        <apex:commandButton value="Next" action="{!next1}" rendered="{!NOT(showEndUserAccount)}"/> 
+                        <apex:commandButton value="Next" action="{!next2}" rendered="{!showEndUserAccount}"/> 
+                        <apex:commandButton value="Cancel" onclick="location.href='/partner/apex/OpenOppurtunityTab'; return false;"/> 
+                    </apex:pageBlockButtons>            
+                    <apex:pageBlockSection id="pgblkSecMain1" rendered="{!NOT(showEndUserAccount)}">
+                        <apex:inputField value="{!objOpp.Name}" required="true"/>
+                        <apex:outputField value="{!objOpp.StageName}" />
+                        <apex:inputField value="{!objOpp.CloseDate}" required="true"/>
+                        <!--
+                        <apex:inputField value="{!objOpp.Opportunity_Type__c}" required="true"/>
+                        -->
+                        <apex:selectList id="lstType" value="{!objOpp.Type}" size="1" required="true">
+                            <apex:selectOption itemValue="New logo" itemLabel="New logo"/>
+                            <apex:selectOption itemValue="Existing Business - Expansion" itemLabel="Existing Business - Expansion"/>
+                            <apex:selectOption itemValue="Existing Business - Cross Sell" itemLabel="Existing Business - Cross Sell"/>
+                            <apex:selectOption itemValue="Existing Business - New Line of Business" itemLabel="Existing Business - New Line of Business"/>
+                        </apex:selectList>
+                        <apex:inputField value="{!objOpp.Lead_Offer__c}" required="true"/>
+                    </apex:pageBlockSection>
+                    <apex:pageMessage summary="Please select end user account." severity="warning" strength="3" rendered="{!showEndUserAccount}" /> 
+                    <apex:pageMessages />
+                    <apex:pageBlockSection id="pgblkSecMain2" rendered="{!showEndUserAccount}">             
+                        <apex:selectList value="{!objOpp.AccountId}" multiselect="false" size="1" rendered="{!showEndUserAccount}">
+                            <apex:selectOptions value="{!list_OfEndUsers}"/>
+                        </apex:selectList>    
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+</apex:page>

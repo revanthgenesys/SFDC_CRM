@@ -1,0 +1,149 @@
+<apex:page title="Quote : {!BigMachines__Quote__c.Name}" standardController="BigMachines__Quote__c" extensions="ProposalOptionsExt1" sidebar="false" id="pg">
+    <apex:sectionHeader title="Proposal Options" subtitle="{!BigMachines__Quote__c.Name}"/>
+    <c:QuoteTabPanel1 QuoteId="{!BigMachines__Quote__c.id}" typeOfQuote="Cloud" selectedTab="Proposal Options" showHeader="false"/>
+    <apex:form id="form">
+        <apex:outputText value="{!BigMachines__Quote__c.Cover_Letter_Text__c}" rendered="false"/>
+        <apex:outputText value="{!BigMachines__Quote__c.Sold_To_Name__r.Name}" rendered="false"/>
+        <apex:outputPanel rendered="{!NOT(BigMachines__Quote__c.BigMachines__Status__c == 'Quote Approved' ||
+                                    BigMachines__Quote__c.BigMachines__Status__c == 'Order Submitted' || 
+                                    BigMachines__Quote__c.BigMachines__Status__c == 'Order Accepted')}">
+            <hr/>
+            <apex:pageMessage severity="info" strength="2">
+                You can access Quote output once your Opportunity is reviewed and approved.
+            </apex:pageMessage>
+        </apex:outputPanel>
+        <apex:outputPanel id="messages"> 
+            <apex:pageMessages /> 
+        </apex:outputPanel>
+        <apex:pageBlock rendered="{!(BigMachines__Quote__c.BigMachines__Status__c == 'Quote Approved' || BigMachines__Quote__c.BigMachines__Status__c == 'Order Submitted' ||  BigMachines__Quote__c.BigMachines__Status__c == 'Order Accepted') && list_QuoteAddresses.size > 0 }" id="pgblk">
+            <apex:pageBlockButtons id="buttons">
+                <apex:commandButton value="View Quote" status="status" action="{!viewContract}" reRender="pnlRefresh,messages" oncomplete="validateContact(); return false;"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Display Options" collapsible="false" columns="2" id="displaySectionLicense">
+                <apex:pageBlockSectionItem id="pgblkOutputOutputFormat">
+                    <apex:outputLabel value="Output Format"/>
+                    <apex:outputPanel layout="block" styleClass="requiredInput" id="pnlOutputFormat">
+                        <apex:outputPanel styleClass="requiredBlock"/>
+                        <apex:selectList value="{!BigMachines__Quote__c.Group_Product_By__c}" size="1" id="lstDisplayOption">
+                            <apex:selectOption itemValue="Standard View" itemLabel="Standard View"/>
+                            <apex:selectOption itemValue="Proposal Group View" itemLabel="Proposal Group View" itemDisabled="{!BigMachines__Quote__c.Offering_Type__c=='PureCloud'}"/>                         
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>                    
+                <apex:selectList id="lstLangauge" value="{!objQuote.Proposal_Language__c}" size="1">
+                    <!--<apex:selectOptions value="{!languages}"/>-->
+                    <apex:selectOption itemValue="en_US" itemLabel="English"/>
+                </apex:selectList>
+                <apex:inputField label="{!IF(BigMachines__Quote__c.Offering_Type__c=='PureCloud', 'Hide TCV', 'Hide Totals')}" value="{!BigMachines__Quote__c.Hide_Totals__c}"/>
+                <apex:inputField value="{!BigMachines__Quote__c.Hide_Discount__c}"/>     
+                <apex:inputField value="{!BigMachines__Quote__c.Hide_List_Price__c}" rendered="{!(BigMachines__Quote__c.Offering_Type__c=='PureCloud' || BigMachines__Quote__c.Offering_Type__c=='PureConnect Cloud' ||  BigMachines__Quote__c.Offering_Type__c=='PureEngage Cloud')}"/>  
+                <apex:pageBlockSectionItem rendered="{!BigMachines__Quote__c.Offering_Type__c!='PureCloud'}"/>
+                <apex:inputField value="{!BigMachines__Quote__c.Show_One_Time_Fees_Only__c}" rendered="{!(BigMachines__Quote__c.Offering_Type__c=='PureCloud' || BigMachines__Quote__c.Offering_Type__c=='PureConnect Cloud' ||  BigMachines__Quote__c.Offering_Type__c=='PureEngage Cloud') && BigMachines__Quote__c.Order_Type__c == $Label.Amend_Subscription}"/> 
+                <apex:inputHidden rendered="{!(BigMachines__Quote__c.Offering_Type__c=='PureCloud' || BigMachines__Quote__c.Offering_Type__c=='PureConnect Cloud'||  BigMachines__Quote__c.Offering_Type__c=='PureEngage Cloud') && BigMachines__Quote__c.Order_Type__c == $Label.Amend_Subscription}"/>
+                <apex:inputField value="{!BigMachines__Quote__c.Show_Updated_Quantity_Only__c}" rendered="{!(BigMachines__Quote__c.Offering_Type__c=='PureCloud' || BigMachines__Quote__c.Offering_Type__c=='PureConnect Cloud'||  BigMachines__Quote__c.Offering_Type__c=='PureEngage Cloud') && BigMachines__Quote__c.Order_Type__c == $Label.Amend_Subscription}"/> 
+                <apex:inputHidden rendered="{!(BigMachines__Quote__c.Offering_Type__c=='PureCloud' || BigMachines__Quote__c.Offering_Type__c=='PureConnect Cloud'||  BigMachines__Quote__c.Offering_Type__c=='PureEngage Cloud') && BigMachines__Quote__c.Order_Type__c == $Label.Amend_Subscription}"/>
+                <apex:inputField value="{!BigMachines__Quote__c.Purchase_Order_is_Required__c}" rendered="{!(BigMachines__Quote__c.Offering_Type__c=='PureCloud' || BigMachines__Quote__c.Offering_Type__c=='PureConnect Cloud' ||  BigMachines__Quote__c.Offering_Type__c=='PureEngage Cloud')}"/> 
+                <apex:inputField value="{!BigMachines__Quote__c.Tax_Exemption_Applicable__c}" rendered="{!(BigMachines__Quote__c.Offering_Type__c=='PureCloud' || BigMachines__Quote__c.Offering_Type__c=='PureConnect Cloud' ||  BigMachines__Quote__c.Offering_Type__c=='PureEngage Cloud')}"/> 
+                <apex:pageBlockSectionItem rendered="{!BigMachines__Quote__c.Offering_Type__c=='PureCloud' && BigMachines__Quote__c.Order_Type__c != $Label.Amend_Subscription}"/>
+                <apex:inputField value="{!BigMachines__Quote__c.Proposal_Date__c}"/> 
+                <apex:pageBlockSectionItem id="pgsecItemEndUserAccount1">
+                    <apex:outputLabel value="Contact"/>
+                    <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput">
+                        <apex:outputPanel layout="block" styleClass="requiredBlock"/>
+                        <apex:inputHidden value="{!BigMachines__Quote__c.Contact__c}" id="hdnContactId"/>                        
+                        <apex:inputText id="txtContact" value="{!BigMachines__Quote__c.Contact__r.Name}" maxlength="100">              
+                        </apex:inputText>                            
+                        <a href="javascript:void(0);"> 
+                            <img id="theImage" src="/s.gif" height="10" width="10"  
+                                 onclick="openCustomLookup('Contact','pg:form:pgblk:displaySectionLicense:pgsecItemEndUserAccount1:txtContact','pg:form:pgblk:displaySectionLicense:pgsecItemEndUserAccount1:hdnContactId');return false;" title="Contact" 
+                                 class="lookupIcon" onmouseout="this.className='lookupIcon';" alt="Contact Lookup" onmouseover="this.className='lookupIconOn';" /> 
+                        </a>                            
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>                                                     
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Address" collapsible="false" columns="1" >     
+                <apex:outputField value="{!list_QuoteAddresses[0].Address__c}"/>                                                                    
+                <apex:outputField value="{!list_QuoteAddresses[0].City__c}"/>                                                                    
+                <apex:outputField value="{!list_QuoteAddresses[0].State__c}"/>                                                                    
+                <apex:outputField value="{!list_QuoteAddresses[0].Country__c}"/> 
+                <apex:outputField value="{!list_QuoteAddresses[0].Zip_Code__c}"/>  
+            </apex:pageBlockSection>
+            <!--    <apex:pageBlockSection title="Address" collapsible="false" columns="1" >   
+<apex:inputField value="{!BigMachines__Quote__c.Sold_To_Address__c}"/>                                                                    
+<apex:inputField value="{!BigMachines__Quote__c.Sold_To_City__c}"/>                                                                    
+<apex:inputField value="{!BigMachines__Quote__c.Sold_To_State__c}"/>                                                                    
+<apex:inputField value="{!BigMachines__Quote__c.Sold_To_Country__c}"/> 
+<apex:inputField value="{!BigMachines__Quote__c.Sold_To_Zip_Code__c}"/> 
+</apex:pageBlockSection>-->
+            
+            <apex:outputPanel id="pnlRefresh"> </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+    <style type="text/css">
+        .custPopup{
+        background-color: white;
+        border-width: 2px;
+        border-style: solid;
+        z-index: 9999;
+        left: 50%;
+        padding:10px;
+        position: absolute;
+        /* These are the 3 css properties you will need to change so the popup 
+        displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can add 
+        the height property for a fixed size pop up if you want.*/
+        width: 500px;
+        margin-left: -250px;
+        top:100px;
+        }
+        .popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+        }
+    </style>
+    <div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">    
+                <apex:outputPanel id="popPanel">
+                    <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                    <apex:outputPanel styleClass="custPopup" layout="block">
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:facet>                           
+        </apex:actionStatus>
+    </div>
+    
+    <script>
+    
+    function openCustomLookup(type, nameField, idField)
+    {
+        var searchString = document.getElementById(nameField).value;                
+        searchString = searchString == null ? '' : searchString;
+        if(type == 'Contact')
+        {              
+            var url = '/apex/CustomLookup?namefield=' + nameField + '&idfield=' + idField + '&searchText='+searchString;
+            url = url + '&obj=Contact';
+            url = url + '&endUserId={!BigMachines__Quote__c.End_User_ID__c}';
+            url = url + '&soldToId={!BigMachines__Quote__c.Sold_To_Name__c}&contactsOnly=true';                                
+            window.open(url,'lookupWindow','width=550,height=550,top=50,toolbar=no,personalbar=no,location=no,directories=no,statusbar=no,menubar=no,status=no,re sizable=yes,left=60,screenX=60,top=100,screenY=100,resizable=yes,scrollbars=yes');
+        }
+    }
+    
+    function setContactAF(){
+    }
+    //window.onload = function() {
+    //    document.getElementById('pg:form:pgblk:displaySectionLicense:pgblkOutputOutputFormat:lstDisplayOption').focus();
+    //}    
+    </script>
+    
+</apex:page>

@@ -1,0 +1,1024 @@
+<apex:page controller="ProposalCloudPCController" applyBodyTag="false" standardStylesheets="false" language="{!objQuote.Proposal_Language__c}" readOnly="true"  renderaS="PDF">
+    <apex:stylesheet value="{!URLFOR($Resource.ServiceOrderCSS)}"/>    
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.internal == '1'}">
+        <img src="{!$Resource.Watermark}" height="110%" width="110%" style="position: fixed;background-repeat:repeat;left: 1cm; top:2cm; z-index:0"/>
+    </apex:outputPanel>
+    <apex:variable var="endUserTag" value="{!IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, 'Participant', 'Customer')}"/>
+    <table style="width:100%;">
+        <tr>
+            <td width="33%">
+                <img src="{!$Resource.GenesysLogo}" width="200px;"/><br/>
+                <apex:outputField value="{!objQuote.Selling_Entity__c}"/>
+            </td>
+        
+            <td width="67%" style="text-align:right;font-size:10pt;">
+                {!IF(objQuote.Order_Type__c == $Label.Amend_Subscription, 'Amendment','')} Services Order&nbsp;&nbsp;<apex:outputField value="{!objQuote.Name}"/>
+            </td>
+        </tr>
+        <tr/><tr/>
+        <tr>
+            <td width="33%">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;" align="left" width="90%">
+                    <tr>
+                        <td class="tableHeader">Bill To</td>
+                        <td>
+                            <apex:outputText value="{!IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, objQuote.Sold_To_Name__r.Name, objQuote.End_User_ID__r.Name)}"/><br/>
+                            <apex:outputPanel layout="none" rendered="{!list_QuoteAddresses.size>0}">                                
+                                <apex:outputField value="{!list_QuoteAddresses[0].Address__c}"/><br/>
+                                <apex:outputField value="{!list_QuoteAddresses[0].City__c}"/>&nbsp;
+                                <apex:outputField value="{!list_QuoteAddresses[0].State__c}"/>&nbsp;
+                                <apex:outputField value="{!list_QuoteAddresses[0].Zip_Code__c}"/><br/>
+                                <apex:outputField value="{!list_QuoteAddresses[0].Country__c}"/> 
+                            </apex:outputPanel>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="tableHeader">End User</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.End_User_ID__r.Name}"/> 
+                        </td> 
+                    </tr>
+                </table>
+            </td>
+            <td width="33%">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;" align="left" width="90%">
+                    <tr> 
+                        <td class="tableHeader">Ship To</td>
+                        <td>
+                            <apex:outputText value="{!IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, objQuote.Sold_To_Name__r.Name, objQuote.End_User_ID__r.Name)}"/><br/>
+                            <apex:outputPanel layout="none" rendered="{!list_QuoteShipToAddresses.size>0}">                                
+                                <apex:outputField value="{!list_QuoteShipToAddresses[0].Address__c}"/><br/>
+                                <apex:outputField value="{!list_QuoteShipToAddresses[0].City__c}"/>&nbsp;
+                                <apex:outputField value="{!list_QuoteShipToAddresses[0].State__c}"/>&nbsp;
+                                <apex:outputField value="{!list_QuoteShipToAddresses[0].Zip_Code__c}"/><br/>
+                                <apex:outputField value="{!list_QuoteShipToAddresses[0].Country__c}"/> 
+                            </apex:outputPanel>
+                        </td>
+                    </tr>
+                </table>  
+            </td>
+            <td width="33%">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="right" width="90%">
+                    <tr>
+                        <td class="tableHeader">Quote Expiration</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Expiration_Date__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tableHeader">Date Created</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Proposal_Date__c}" rendered="{!objQuote.Proposal_Date__c != null}"/>
+                            <apex:outputField value="{!objQuote.Quote_Created_Date_Formula__c}" rendered="{!objQuote.Proposal_Date__c == null}"/>
+                        </td>
+                    </tr>
+                    <tr style="{!IF(objQuote.Order_Type__c==$Label.Renew_Subscription, '', 'display:none')}">
+                        <td class="tableHeader">Start Date</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Subscription_Start_Date__c}" rendered="{!objQuote.Subscription_Start_Date__c >= TODAY()}"/>
+                            <apex:outputText value="{!MONTH(TODAY())}/{!DAY(TODAY())}/{!YEAR(TODAY())}" rendered="{!objQuote.Subscription_Start_Date__c < TODAY()}"/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr/><tr/>
+        <tr>
+            <td>
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="left" width="90%">
+                    <!--<tr style="{!IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, '', 'display:none')}">
+<td class="tableHeader">End User</td>
+<td>
+<apex:outputField value="{!objQuote.End_User_ID__r.Name}"/>
+</td>
+
+</tr>-->
+                    <tr>
+                        <td class="tableHeader">Account Executive</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Owner.Name}"/>
+                        </td>
+                        
+                    </tr>
+                    <tr>
+                        <td class="tableHeader">Customer Contact</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Contact__r.Name}"/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="left" width="90%">
+                    <tr>
+                        <td class="tableHeader">Phone</td>
+                        <td>
+                            <apex:outputText value="{!IF(objQuote.Contact__r.Phone != '', objQuote.Contact__r.Phone, objQuote.Contact__r.ContactPhone__c)}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tableHeader">E-mail</td>
+                        <td>
+                            <apex:outputText value="{!objQuote.Contact__r.Email}"/>
+                        </td>
+                    </tr>
+                </table>
+            </td>            
+        </tr>
+        <tr/>
+        <td colspan="4">
+            <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="center" width="100%">
+                <tr>
+                    <td class="tableHeader" width="33%">{!IF(objQuote.Order_Type__c==$Label.Renew_Subscription, 'Extended', 'Initial')} Subscription Term</td>
+                    <td class="tableHeader" width="33%">Renewal Subscription Term</td>
+                    <!--class="tableHeader" style="{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription, '', 'display:none')}">Remaining Term</td>-->
+                    <td width="33%" class="tableHeader" style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Amend_Subscription, '', 'display:none')}">Remaining Term(Months)</td>
+                </tr>
+                <tr>
+                    <td width="33%">
+                        {!IF(objQuote.Initial_Subscription_Term__c == 'Other',TEXT(objQuote.No_Of_Months__c) & ' Months', IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c == 'Free Trial', 'N/A', objQuote.Initial_Subscription_Term__c))}
+                    </td>
+                    <td width="33%">
+                        {!IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c== 'Free Trial', 'N/A', objQuote.Renewal_Subscription_Term__c)}
+                    </td>
+                    <!-- style="{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription, '', 'display:none')}">
+<apex:outputText value="{!intRemainingTerm}"/>
+</td>-->
+                    <td style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Amend_Subscription, '', 'display:none')}" width="33%">
+                        <!--x:outputText value="{!IF(objQuote.Ramp_Period__c !='1 Year',VALUE(objQuote.Ramp_Period__c)/30,'12')}"/>--><apex:outputText value="{!intRemainingTerm}"/>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <tr/>
+        <tr>
+            <td colspan="3">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="center" width="100%">
+                    <tr>
+                        <td class="tableHeader" width="33%">Payment Terms</td>
+                        <td class="tableHeader" width="33%">Billing Period</td>
+                        <td class="tableHeader" width="33%">Currency</td>
+                    </tr>
+                    <tr>
+                        <td width="33%"><apex:outputField value="{!objQuote.Order_Payment_Terms__c}"/></td>
+                        <td width="33%"><apex:outputField value="{!objQuote.Billing_Period__c}"/></td>
+                        <td width="33%"><apex:outputField value="{!objQuote.CurrencyISOCode}"/></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>   
+            <td colspan = "4">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+                    <tr width="100" >
+                        <td class="tableHeader" style="white-space: nowrap;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ramp Period(Months)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td rowspan="2">
+                            <apex:outputText value="{!$Label.Ramp_Period_Verbiage}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;">
+                            <apex:outputText value="{!intRampPeriodInMonths}"/>
+                        </td>
+                    </tr>     
+                </table>     
+            </td>      
+        </tr>
+    </table>
+    <br/><br/><br/>
+    
+    <apex:repeat value="{!list_OrderedHeadings}" var="sortOrder">        
+        <apex:variable value="{!map_HeadingsWithSortOrder[sortOrder]}" var="objProductGroupMain"/>
+        <apex:outputPanel layout="none" rendered="{!objProductGroupMain=='One-Time Fees' || (objProductGroupMain != 'One-Time Fees' && NOT(objQuote.Show_One_Time_Fees_Only__c)) && IF(CONTAINS(strProductGroupKey,objProductGroupMain),true,false)}">
+            <apex:outputPanel >
+                <apex:outputText value="{!objProductGroupMain}" styleClass="subHeader"/>
+                <br/><br/>
+            </apex:outputPanel>
+        </apex:outputPanel>        
+        <apex:repeat value="{!map_ProdGrpToQtProds[objProductGroupMain]}" var="objProductGroup" rendered="{!((objProductGroupMain=='One-Time Fees' || (objProductGroupMain != 'One-Time Fees' && NOT(objQuote.Show_One_Time_Fees_Only__c))) && IF(CONTAINS(strProductGroupKey,objProductGroupMain),true,false))}">
+            <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+                <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                    <td colspan="{!4+IF(objQuote.Order_Type__c == $Label.Amend_Subscription && objProductGroupMain != 'One-Time Fees',1,0)+IF(objQuote.Hide_List_Price__c,0,1)+IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c,1,0)+IF(objQuote.Hide_Discount__c,0,1) + IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c != 'Free Trial',1,0)}">{!objProductGroup}</td>
+                </tr>
+                <tr style="font-weight:bold;text-align:center;">                    
+                    <th width="10%">Product</th>                    
+                    <th width="30%" style="{!IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c == 'Free Trial', 'display:none', '')}">Description</th>
+                    <th width="5%" style="{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription && objProductGroupMain != 'One-Time Fees', '', 'display:none')}">Original<br/>Quantity</th>
+                    <th width="5%">{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription && objProductGroupMain != 'One-Time Fees', 'Updated Quantity', 'Quantity')}</th>
+                    <th width="10%" style="{!IF(objQuote.Hide_List_Price__c, 'display:none', '')}">List Price</th>
+                    <th width="10%" style="{!IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, '', 'display:none')}">Partner Price</th>
+                    <th width="9%" style="{!IF(objQuote.Hide_Discount__c, 'display:none', '')}">Discount (%)</th>                    
+                    <th width="10%">Net Unit Price</th>   
+                    <!--<th width="10%" style="{!IF(objProductGroupMain=='One-Time Fees', 'display:none', '')}">Extended<br/>Net Unit Price</th>                   
+<th style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objProductGroupMain=='Overage Subscription Pricing', 'display:none', '')}">Original<br/>Extended Price</th>--> 
+                    <th width="12%">{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription, 'Updated Ext Price', 'Ext Price')} {!IF(objProductGroupMain=='One-Time Fees', '', IF(objProductGroupMain=='Overage Subscription Pricing' || objProductGroupMain=='Estimated PureCloud Virtual Edge' || objProductGroupMain=='PureCloud Voice' || objProductGroupMain=='Resource Services', '(Monthly)', IF(objProductGroupMain=='Recurring Services', '('+strRecServBillingPeriod+')', '('+objQuote.Billing_Period__c+')')))}</th>
+                </tr>
+                
+                <apex:repeat value="{!map_ProdGrpToQtProds[objProductGroupMain][objProductGroup]}" var="objQP">
+                    <apex:variable value="{!objQP.BigMachines__Product__c};{!objQP.Is_Overage__c}" var="uniqueKey"/>
+                    <apex:variable value="{!map_ExistingOriginalSubscrProds[uniqueKey].Product_Quantity__c}" var="orgQty" rendered="{!objQuote.Order_Type__c == $Label.Amend_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription}"/>
+                    <apex:variable value="{!map_ExistingOriginalSubscrProds[uniqueKey].Ext_Net_Price__c}" var="orgExtPrice" rendered="{!objQuote.Order_Type__c == $Label.Amend_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription}"/>
+                    <tr style="text-align:center;">
+                        <td style="text-align:left;"><apex:outputText value="{!objQP.Name + ' (' + objQP.APN_Number__c + ')'}"/></td>                        
+                        <td style="{!IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c == 'Free Trial','display:none','text-align:left;')}"><apex:outputText value="{!objQP.BigMachines__Product__r.Support_Information__c}"/></td> 
+                        <td style="{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription && objProductGroupMain != 'One-Time Fees', '', 'display:none')}">
+                            <apex:outputText value="{!IF(orgQty != null, orgQty, 0)}"/>
+                        </td>  
+                        <td><apex:outputText value="{!IF((objQuote.Order_Type__c == $Label.Amend_Subscription) && objProductGroupMain=='One-Time Fees', objQP.Quantity_Change__c,  objQP.Product_Quantity__c)}"/></td>                         
+                        <td style="{!IF(objQuote.Hide_List_Price__c, 'display:none', '')}">
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.00}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null || objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                <apex:param value="{!objQP.List_Price__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.0000}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                <apex:param value="{!objQP.List_Price__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.000000}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                <apex:param value="{!objQP.List_Price__c}"/>
+                            </apex:outputText>
+                        </td>
+                        <td style="{!IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, '', 'display:none')}">
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.00}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null || objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                <apex:param value="{!objQP.Partner_Price__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.0000}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                <apex:param value="{!objQP.Partner_Price__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.000000}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                <apex:param value="{!objQP.Partner_Price__c}"/>
+                            </apex:outputText>
+                        </td>      
+                        <td style="{!IF(objQuote.Hide_Discount__c, 'display:none', '')}">
+                            <apex:outputField value="{!objQP.Total_Discount__c}"/>
+                        </td>                 
+                        <td>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.00}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null || objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                <apex:param value="{!objQP.Net_Unit_Price__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.0000}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                <apex:param value="{!objQP.Net_Unit_Price__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number,###,###,##0.000000}" rendered="{!objQP.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                <apex:param value="{!objQP.Net_Unit_Price__c}"/>
+                            </apex:outputText>
+                        </td>
+                        <!--<apex:outputPanel layout="none" rendered="{!objProductGroupMain!='One-Time Fees'}">
+<td>{!strCurrencySymbol}
+<apex:outputText value="{0, number, ###,##0.00}">
+<apex:param value="{!objQP.Ext_Net_Price__c}"/>
+</apex:outputText>
+</td>
+</apex:outputPanel> 
+<td style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objProductGroupMain=='Overage Subscription Pricing', 'display:none', '')}">{!strCurrencySymbol}
+<apex:outputText value="{0, number, ###,##0.00}">
+<apex:param value="{!IF(orgExtPrice != null, IF(objProductGroupMain=='One-Time Fees', orgExtPrice, orgExtPrice * intRemainingTerm), 0)}"/>
+</apex:outputText>
+</td>-->
+                        <td>
+                            <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}" rendered="{!objProductGroupMain!='Resource Services' && objProductGroupMain!='PureCloud Voice' && ((objProductGroupMain!='Subscription Fees' && objQuote.Billing_Category__c=='M2M') || objQuote.Billing_Category__c!='M2M')}">
+                                <apex:param value="{!IF((objQuote.Order_Type__c == $Label.Amend_Subscription) && objProductGroupMain=='One-Time Fees', objQP.Quantity_Change__c * objQP.Net_Unit_Price__c, 
+                                                   IF((objProductGroupMain=='One-Time Fees' || objProductGroupMain=='Overage Subscription Pricing' || objProductGroupMain=='Estimated PureCloud Virtual Edge' || (objProductGroupMain=='Recurring Services' && strRecServBillingPeriod=='Monthly')), objQP.Ext_Net_Price__c, 
+                                                   IF(objProductGroupMain=='Recurring Services' && strRecServBillingPeriod=='Annually', objQP.Ext_Net_Price__c*12, objQP.Extended_Price_Per_Period__c)))}"/>
+                            </apex:outputText>
+                            <apex:outputText value="Based on Usage" rendered="{!objProductGroupMain=='Resource Services' || objProductGroupMain=='PureCloud Voice'|| (objProductGroupMain=='Subscription Fees' && objQuote.Billing_Category__c=='M2M')}"/>
+                        </td>
+                    </tr>
+                </apex:repeat>                
+            </table>
+            <br/><br/>  
+        </apex:repeat>
+    </apex:repeat>
+    
+    <!--Removed Charges -- Starts -->
+    <apex:outputPanel rendered="{!NOT(objQuote.Show_One_Time_Fees_Only__c) && objQuote.Order_Type__c == $Label.Amend_Subscription && objQuote.Amendment_For__c != null && list_RemovedProducts.size > 0}">        
+        <apex:outputText value="Removed Charges" styleClass="subHeader"/>
+        <br/><br/>
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+            <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                <td colspan="15">Information</td>
+            </tr>
+            <tr style="font-weight:bold;text-align:center;">                
+                <th width="20%">Product</th>  
+                <th width="8%">Quantity</th>              
+                <th>Unit</th>
+                <th style="{!IF(objQuote.Hide_List_Price__c, 'display:none', '')}">List Price</th> 
+                <th style="{!IF(objQuote.Hide_Discount__c, 'display:none', '')}">Discount (%)</th>
+                <th>Net Unit Price</th>
+                <th>Extended Price</th>
+            </tr>            
+            <apex:repeat value="{!list_RemovedProducts}" var="objSP">
+                <tr style="text-align:center;{!IF(NOT(objSP.Hide_Record__c), '', 'display:none')}">                    
+                    <td><apex:outputText value="{!objSP.Product__r.Name}"/></td>
+                    <td><apex:outputText value="{!objSP.Product_Quantity__c}"/></td>
+                    <td><apex:outputText value="{!objSP.Product__r.Unit_of_Measure__c}"/></td>                    
+                    <td style="{!IF(objQuote.Hide_List_Price__c, 'display:none', '')}">
+                        <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}">
+                            <apex:param value="{!objSP.List_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td style="{!IF(objQuote.Hide_Discount__c, 'display:none', '')}">
+                        <apex:outputField value="{!objSP.Total_Discount__c}"/></td>
+                    <td>
+                        <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}">
+                            <apex:param value="{!objSP.Net_Unit_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td>
+                        <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}">
+                            <apex:param value="{!objSP.Ext_Net_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                </tr>
+            </apex:repeat>            
+        </table>
+        <br/><br/>           
+    </apex:outputPanel>
+    <!--Removed Charges -- Ends -->
+    
+    <!--Original Charges -- Starts -->
+    <apex:outputPanel rendered="{!NOT(objQuote.Show_One_Time_Fees_Only__c) && objQuote.Order_Type__c == $Label.Amend_Subscription && objQuote.Amendment_For__c != null && !objQuote.Show_Updated_Quantity_Only__c}">        
+        <apex:outputText value="Original Charges" styleClass="subHeader"/>
+        <br/><br/>
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+            <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                <td colspan="15">Information</td>
+            </tr>
+            <tr style="font-weight:bold;text-align:center;">                
+                <th width="20%">Product</th>  
+                <th width="8%">Quantity</th>              
+                <th>Unit</th>
+                <th style="{!IF(objQuote.Hide_List_Price__c, 'display:none', '')}">List Price</th> 
+                <th style="{!IF(objQuote.Hide_Discount__c, 'display:none', '')}">Discount (%)</th>
+                <th>Net Unit Price</th>
+                <th>Extended Price</th> 
+            </tr>            
+            <apex:repeat value="{!objSubscription.Subscription_Products__r}" var="objSP">
+                <tr style="text-align:center;{!IF(NOT(objSP.Hide_Record__c), '', 'display:none')}">                    
+                    <td><apex:outputText value="{!objSP.Product__r.Name}"/></td>
+                    <td><apex:outputText value="{!objSP.Product_Quantity__c}"/></td>
+                    <td><apex:outputText value="{!objSP.Product__r.Unit_of_Measure__c}"/></td>                    
+                    <td style="{!IF(objQuote.Hide_List_Price__c, 'display:none', '')}">
+                        <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}">
+                            <apex:param value="{!objSP.List_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td style="{!IF(objQuote.Hide_Discount__c, 'display:none', '')}">
+                        <apex:outputField value="{!objSP.Total_Discount__c}"/></td>
+                    <td>
+                        <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}">
+                            <apex:param value="{!objSP.Net_Unit_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td>
+                        <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}">
+                            <apex:param value="{!objSP.Ext_Net_Price__c}"/>
+                        </apex:outputText>
+                    </td>
+                </tr>
+            </apex:repeat>            
+        </table>
+        <br/><br/>           
+    </apex:outputPanel>
+    <!--Original Charges -- Ends -->
+    
+    <!-- Resource Services -- Starts -->
+    <apex:outputPanel rendered="{!objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription || (objQuote.Order_Type__c == $Label.Amend_Subscription && (blnCNCUPart || blnSMSPart))}"> 
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-inside:avoid;" width="100%">
+            <tr style="font-weight:bold;text-align:center;">
+                <td width="20%">Resource Services</td>
+                <td width="80%">Costs</td>   
+            </tr>
+            <tr style="{!IF(NOT(blnCustomIVRPart) && (objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription), '', 'display:none')}">
+                <td width="20%">Basic IVR Usage</td>
+                <td width="80%">
+                    Customers can use up to the “fair use” basic IVR amounts allocated by user without being charged. For allocation amounts, see <a href="http://help.mypurecloud.com/articles/IVR-usage">http://help.mypurecloud.com/articles/IVR-usage</a>/
+                </td>
+            </tr>
+            <!--<tr style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription, '', 'display:none')}">
+<td width="50%">IVR with TTS per Minute Charge</td>
+<td width="50%"><a href="http://help.mypurecloud.com/articles/IVR-usage/">http://help.mypurecloud.com/articles/IVR-usage/</a></td>
+</tr>   
+<tr style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription, '', 'display:none')}">
+<td width="50%">IVR with ASR per Minute Charge</td>
+<td width="50%"><a href="http://help.mypurecloud.com/articles/IVR-usage/">http://help.mypurecloud.com/articles/IVR-usage/</a></td>
+</tr>-->      
+            <tr style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription, '', 'display:none')}">
+                <td width="20%">Data Storage</td>
+                <td width="80%">
+                    Customers can use up to the “fair use” storage amounts allocated by user without being charged. For allocation amounts, see <a href="https://help.mypurecloud.com/articles/data-storage-usage/">http://help.mypurecloud.com/articles/data-storage-usage/</a>
+                </td>
+            </tr>  
+            <tr style="{!IF(objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription, '', 'display:none')}">
+                <td width="20%">API Usage</td>
+                <td width="80%">
+                    Customers can use up to the “fair use” API request count allocated by user without being charged. For allocation amounts,see <a href="http://help.mypurecloud.com/articles/?p=201525/">http://help.mypurecloud.com/articles/?p=201525/</a>
+                </td>
+            </tr>               
+            
+            <tr style="{!IF(blnCNCUPart, '', 'display:none')}">
+                <td width="20%">BYOC Per Minute Charge</td>
+                <td width="80%"><a href="https://help.mypurecloud.com/articles/byoc-cloud-pricing">http://help.mypurecloud.com/articles/byoc-cloud-pricing</a></td>
+            </tr>  
+            <tr style="{!IF(blnSMSPart, '', 'display:none')}">
+                <td width="20%">PureCloud Short Message Service (SMS)</td>
+                <td width="80%">Requires PureCloud 3 Users. <br/> <a href="https://help.mypurecloud.com/?p=150871">https://help.mypurecloud.com/?p=150871</a></td>
+            </tr> 
+            <!-- Changed by Anto -->
+            <!--  <tr style="{!IF(blnAmazonFlexPart, '', 'display:none')}">
+<td width="20%">PureCloud for Amazon Lex - Voice</td>
+<td width="80%">BYO (Bring Your Own) Integration enabling customer to integrate Amazon Lex voicebots into PureCloud for use within a customer’s inbound call flow. Charged at a per invocation within a call flow.  For per invocation costs, see  <br/> <a href="https://help.mypurecloud.com/articles/bring-your-own-technology-services-model">https://help.mypurecloud.com/articles/bring-your-own-technology-services-model</a></td>
+</tr>  
+<tr style="{!IF(blnAmazonFlexPart, '', 'display:none')}"> -->
+            <tr>
+                <td width="20%">Bring Your Own Technology Charges</td>
+                <td width="80%">BYO (Bring Your Own) Technology Integration enabling customer to integrate third party services into PureCloud. Charged per invocation. For per invocation costs, see  <br/> <a href="https://help.mypurecloud.com/articles/bring-your-own-technology-services-model">https://help.mypurecloud.com/articles/bring-your-own-technology-services-model</a></td>
+            </tr> 
+            <!-- Changed by Anto Ends-->
+            <tr style="{!IF(blnWhatsAppPart, '', 'display:none')}">
+                <td width="20%">PureCloud for WhatsApp Messaging</td>
+                <td width="80%">For WhatsApp Messaging pricing see, <a href="https://help.mypurecloud.com/?p=150871">https://help.mypurecloud.com/?p=150871</a><br/><br/> Customers using WhatsApp Business Solution via Genesys agree to be in compliance with the WhatsApp Business Solution Terms (<a href="https://www.whatsapp.com/legal/business-solution-terms/">https://www.whatsapp.com/legal/business-solution-terms</a>) at all times when accessing and using the WhatsApp Business Solution via Genesys. Initial and continued access to the WhatsApp Business API is subject to approval and ongoing review by WhatsApp.</td>
+            </tr> 
+            <!--<apex:repeat value="{!list_ResourceServices}" var="resServ">
+<tr>
+<td width="50%">{!resServ.Name}</td>
+<td width="50%">{!strCurrencySymbol}
+<apex:outputText value="{0, number, ###,##0.00}">
+<apex:param value="{!resServ.Ext_Net_Price__c}"/>
+</apex:outputText>
+</td>
+</tr> 
+</apex:repeat>
+-->
+        </table>
+    </apex:outputPanel>   
+    <br/>              
+    <!-- Resource Services -- Ends -->
+    
+    <!--PureSuccess parts -->
+    
+    <!--
+<div class="page-break"/>
+<apex:outputPanel rendered="{!objQuote.Order_Type__c != $Label.Amend_Subscription}"> 
+<apex:repeat value="{!map_PureSuccesGroupItems}" var="PEProds">
+<apex:outputPanel rendered="{!map_PureSuccessProductGroupsToShow[PEProds]}">
+<apex:outputText value="PureSuccess Offer Entitlements:" styleClass="mainHeader"/><br/><br/>
+<table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+<tr>
+<th>Product</th>
+<th>Description</th>
+<th>Quantity</th>
+</tr>
+<tr><td colspan="3" class="tableHeader" style="font-size:9pt;font-family:'Calibri';"> {!objQuote.PureSuccess__c}</td></tr>
+<apex:repeat value="{!map_PureSuccesGroupItems[PEProds]}" var="objQP">
+<tr style="text-align:center;">
+
+<td><apex:outputText value="{!objQP.Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.Quantity__c}"/></td>
+
+</tr>
+</apex:repeat>
+<tr style="display: {!IF(objQuote.Offering_Type__c == 'PureCloud' && 
+!ISBLANK(list_AlacItems) && list_AlacItems.size > 0, 'table-row', 'none')};"><td colspan="3" class="tableHeader" style="font-size:9pt;font-family:'Calibri';"> A la Carte </td></tr>
+<apex:repeat value="{!list_AlacItems}" var="objQP">
+<tr style="text-align:center;display: {!IF(objQuote.Offering_Type__c == 'PureCloud' && 
+!ISBLANK(list_AlacItems) && list_AlacItems.size > 0, 'table-row', 'none')};">
+
+<td><apex:outputText value="{!objQP.BigMachines__Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.BigMachines__Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.BigMachines__Quantity__c}"/></td>
+
+</tr>
+</apex:repeat>
+
+</table>
+<br/><br/>
+</apex:outputPanel>
+</apex:repeat>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!objQuote.Order_Type__c == $Label.Amend_Subscription}"> 
+<apex:repeat value="{!map_PureSuccesGroupItems}" var="PEProds">
+<apex:outputPanel rendered="{!map_PureSuccessProductGroupsToShowForAmend[PEProds] || (!ISBLANK(list_AlacItemsForAmend) && list_AlacItemsForAmend.size > 0)}">
+<apex:outputText value="PureSuccess Offer Entitlements:" styleClass="mainHeader"/><br/><br/>
+<table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+<tr>
+<th>Product</th>
+<th>Description</th>
+<th>Quantity</th>
+</tr>
+<tr><td colspan="3" class="tableHeader" style="font-size:9pt;font-family:'Calibri';"> {!objQuote.PureSuccess__c}</td></tr>
+<apex:repeat value="{!map_PureSuccesGroupItems[PEProds]}" var="objQP">
+<tr style="text-align:center;">
+
+<td><apex:outputText value="{!objQP.Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.Quantity__c}"/></td>
+
+</tr>
+</apex:repeat>
+<tr style="display: {!IF(objQuote.Offering_Type__c == 'PureCloud' && 
+!ISBLANK(list_AlacItemsForAmend) && list_AlacItemsForAmend.size > 0, 'table-row', 'none')};"><td colspan="3" class="tableHeader" style="font-size:9pt;font-family:'Calibri';"> A la Carte </td></tr>
+<apex:repeat value="{!list_AlacItems}" var="objQP">
+<tr style="text-align:center;display: {!IF(objQuote.Offering_Type__c == 'PureCloud' && 
+!ISBLANK(list_AlacItems) && list_AlacItems.size > 0, 'table-row', 'none')};">
+
+<td><apex:outputText value="{!objQP.BigMachines__Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.BigMachines__Product__r.Description__c}"/></td>
+<td><apex:outputText value="{!objQP.Quantity_Change__c}"/></td>
+
+</tr>
+</apex:repeat>
+
+</table>
+<br/><br/>
+</apex:outputPanel>
+</apex:repeat>
+</apex:outputPanel>
+-->
+    <!--PureSuccess parts Ends -->                        
+    <!-- Special Terms & Notes -- Starts -->    
+    <table cellspacing="1" cellpadding="5" border="1" style="{!IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c !='Free Trial','border: 1px solid black;border-collapse:collapse;page-break-before:always;page-break-after:always;page-break-inside:avoid;','border: 1px solid black;border-collapse:collapse;page-break-before:always;')}" width="100%">
+        <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';text-align:left;">
+            <td colspan="15">SPECIAL TERMS &amp; NOTES</td>
+        </tr>
+        <tr>
+            <td>
+                <apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Offering_Detail__c != 'Free Trial'}">
+                    <apex:outputText rendered="{!objQuote.Order_Type__c == $Label.Amend_Subscription && objQuote.Show_Updated_Quantity_Only__c && objQuote.BigMachines__Opportunity__r.Direct_Indirect_Sale__c == 'Direct'}">
+                        This Service Order describes only the Software Licenses and other products in which the committed quantity will change, and does not include descriptions of the Software Licenses or other products purchased under previous Service Orders. The Updated Total Minimum Subscription Fees line in the final pricing table above represents Customer's total minimum Subscription Fee after execution of this Service Order.
+                    </apex:outputText><br/>
+                    <apex:outputText rendered="{!objQuote.Order_Type__c == $Label.Amend_Subscription && objQuote.Show_Updated_Quantity_Only__c && objQuote.BigMachines__Opportunity__r.Direct_Indirect_Sale__c == 'Indirect'}">
+                        This Service Order describes only the Software Licenses and other products in which the committed quantity will change, and does not include descriptions of the Software Licenses or other products purchased under previous Service Orders. The Updated Total Minimum Subscription Fees line in the final pricing table above represents Participant's total minimum Subscription Fee after execution of this Service Order.
+                    </apex:outputText><br/> 
+                    <apex:outputText rendered="{!objQuote.Order_Type__c == $Label.Renew_Subscription}">
+                        Customer agrees to extend their subscription term by {!LOWER(objQuote.Initial_Subscription_Term__c)}, which will begin on upon the expiration of the current subscription term..<br/><br/>
+                    </apex:outputText>
+                    <apex:outputText value="{!strRichText}" rendered="{!objQuote.Special_Offer_Terms__c != null}"/><br/><br/>
+                    <apex:outputText rendered="{!objQuote.Order_Type__c == $Label.Amend_Subscription && NOT(objQuote.Show_One_Time_Fees_Only__c)}">
+                        *In the case of an Annual Pre-Pay, total One-Time Fees outlined in this Service Order reflect Annual Pre-Pay Subscription Fees pro-rated for the months remaining in the current annual billing period. Annual Pre-Pay Subscription Fees for subsequent years shall be billed annually in advance on the anniversary of the Initial Term.<br/><br/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c}">
+                        This Services Order is governed by the executed Genesys Master Partner Network Agreement, the Cloud Reseller Agreement, and any other referenced documents.<br/><br/>
+                        The Genesys Products provided under this Order to Participant for resale to its End User, must be provided to the End User pursuant to an End User Agreement, a sample of which can be found on the Partner Portal and which may be modified by the Participant pursuant to the Cloud Reseller Agreement.<br/><br/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!NOT(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c) && objQuote.Order_Type__c == $Label.Amend_Subscription}">
+                        This Service Order which amends the original Service Order shall be governed by the PureCloud Terms and Conditions agreed to with the initial Service Order, other than payment terms found therein.<br/><br/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!NOT(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c) && (objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription)}">
+                        This Service Order shall be governed by the PureCloud Terms and Conditions found at <a href="{!objQuote.MSA_Link__c}">{!objQuote.MSA_Link__c}</a>.<br/><br/>
+                    </apex:outputText>
+                    <!--<apex:outputText >
+Any purchase of Services Packages as described at <a href="https://help.mypurecloud.com/articles/premier-success-services/">https://help.mypurecloud.com/articles/premier-success-services/</a>, will be governed by the Premier Success Services Addendum found at <a href="https://help.mypurecloud.com/articles/premier-success-services-addendum/">https://help.mypurecloud.com/articles/premier-success-services-addendum/</a>.<br/><br/>
+</apex:outputText>-->                    
+                    <apex:outputText rendered="{!blnPCVPart && NOT(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c)}">
+                        The PureCloud Voice rate table is described at <a href="https://help.mypurecloud.com/articles/purecloud-voice-pricing/">https://help.mypurecloud.com/articles/purecloud-voice-pricing/</a>. Any use of the PureCloud Voice Services will be governed by the terms found at <a href="http://help.mypurecloud.com/articles/addendum-purecloud-voice-service/">http://help.mypurecloud.com/articles/addendum-purecloud-voice-service/</a>.<br/><br/>
+                    </apex:outputText> 
+                    <apex:outputText rendered="{!blnPCVPart && objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c}">
+                        The PureCloud Voice rate table is described at <a href="https://help.mypurecloud.com/articles/purecloud-voice-pricing/">https://help.mypurecloud.com/articles/purecloud-voice-pricing/</a>. Any use of the PureCloud Voice Services must be governed by the PureCloud Telco End User Agreement Addendum, a sample of which is attached hereto. <br/><br/>
+                    </apex:outputText> 
+                    <apex:outputText rendered="{!blnBYOCPart}">
+                        The BYOC rate table is described at <a href="https://help.mypurecloud.com/?p=151378">https://help.mypurecloud.com/?p=151378</a>. <br/><br/>
+                    </apex:outputText> 
+                    <apex:outputText rendered="{!intServiceTokensCount > 0}">
+                        The Premier Success Services is described in the Premier Success Services Addendum, attached hereto. The Premier Success Services is governed by the terms of the PureCloud Terms and Conditions entered into by the parties, and by the professional service terms found at <a href="https://help.mypurecloud.com/articles/professional-services-terms-and-conditions">https://help.mypurecloud.com/articles/professional-services-terms-and-conditions</a>.
+                    </apex:outputText>                    
+                    <!-- <apex:outputText rendered="{!NOT(blnCustomIVRPart) && ((objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription) && objQuote.BigMachines__Opportunity__r.Offering_Detail__c !='Free Trial')}">
+Customers can use up to the “fair use” basic IVR amounts allocated by user without being charged. For allocation amounts, see <a href="http://help.mypurecloud.com/articles/IVR-usage">http://help.mypurecloud.com/articles/IVR-usage</a>/<br/><br/>
+</apex:outputText> -->
+                    <apex:outputText rendered="{(!objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription) && objQuote.BigMachines__Opportunity__r.Offering_Detail__c !='Free Trial'}">
+                        Customers can use up to the “fair use” storage amounts allocated by user without being charged. For allocation amounts, see <a href="https://help.mypurecloud.com/articles/data-storage-usage/">http://help.mypurecloud.com/articles/data-storage-usage/</a><br/><br/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!blnCNCUPart}">
+                        Any use of PureCloud Bring Your Own Carrier (“BYOC”) network services will be governed by the terms and invoiced per the rates found at <a href="http://help.mypurecloud.com/articles/byoc-usage/">http://help.mypurecloud.com/articles/byoc-usage/</a>.<br/><br/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!blnSMSPart && objQuote.BigMachines__Opportunity__r.Offering_Detail__c !='Free Trial'}">
+                        Any use of the SMS/Messaging Service within PureCloud 3 will be governed by the terms and invoiced per the rates found at <a href="https://help.mypurecloud.com/?p=150871">https://help.mypurecloud.com/?p=150871</a>.<br/><br/>
+                    </apex:outputText>
+                    <!-- <apex:outputText rendered="{!blnAmazonFlexPart}">
+BYO (Bring Your Own) Integration enabling customer to integrate Amazon Lex voicebots into PureCloud for use within a customer’s inbound call flow. Charged at a per invocation within a call flow.  For per invocation costs, see <a href="https://help.mypurecloud.com/articles/bring-your-own-technology-services-model">https://help.mypurecloud.com/articles/bring-your-own-technology-services-model</a>.<br/><br/>
+</apex:outputText> -->
+                    <apex:outputText rendered="{!objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription}">
+                        The minimum charge, regardless of usage and not including tax, for PureCloud license subscription fees with a monthly payment structure will be the greater of (i) {!strCurrencySymbol}{!objQuote.PureCloud_Monthly_Minimum__c} {!objQuote.CurrencyIsoCode} per month or, (ii) the Minimum Monthly Subscription Fees set forth in the Pricing Table above. The minimum charge for a PureCloud subscription with an annual payment structure, regardless of usage and not including tax, will be the greater of (i) {!strCurrencySymbol}{!objQuote.PureCloud_Monthly_Minimum__c * 12} {!objQuote.CurrencyIsoCode} per year, or (ii) the Annual Subscription Fee set forth in the Pricing Table above. These minimums only apply to the license subscription fee, and do not apply to other fees such as services, virtual Edge devices, hardware, etc.  {!endUserTag} agrees to pay such minimum monthly or annual fees for the Initial Subscription Term and any Renewal Terms.<br/><br/>
+                    </apex:outputText>                                      
+                    <apex:outputText rendered="{!blnAltoCloud}"> <!-- Added for INC0418308 -->
+                        Upon termination of Altocloud services Customer will remove the Altocloud snippet from its webpages. In the event Customer fails to remove the Altocloud snippet from its webpages, Genesys reserves the right to bill Customer at the rates identified in this Service Order.<br/><br/>  
+                    </apex:outputText>                                          
+                    <!--PureSuccess -->
+                    <apex:outputPanel rendered="{!blnDisplayPureSucessMessage}"> 
+                        <apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Direct_Indirect_Sale__c == 'Direct'}">
+                            Additional terms and conditions applicable to Customer’s use of PureSuccess Services are set forth at <a href="https://genbin.genesys.com/media/3838b8fb-puresuccess-supplemental-terms-direct.pdf">https://genbin.genesys.com/media/3838b8fb-puresuccess-supplemental-terms-direct.pdf</a>.<br/><br/>
+                            Additional details for the PureSuccess offers can be found <a href ="https://docs.genesys.com/Documentation/PRSCS/latest/Portal/Welcome">here</a>. Purchased service elements expire 12 months from the service order effective date.<br/><br/>   
+                        </apex:outputPanel>    
+                        <apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Direct_Indirect_Sale__c == 'Indirect'}">
+                            Additional terms and conditions applicable to Participant use of PureSuccess Services are set forth at <a href="https://genbin.genesys.com/media/c1712f2e-puresuccess-cloud-terms-indirect.pdf">https://genbin.genesys.com/media/c1712f2e-puresuccess-cloud-terms-indirect.pdf</a>.<br/><br/>
+                            Additional details for the PureSuccess offers can be found <a href ="https://docs.genesys.com/Documentation/PRSCS/Current/Partner/Welcome">here</a>. Purchased service elements expire 12 months from the service order effective date. <br/><br/>     
+                        </apex:outputPanel>    
+                    </apex:outputPanel> 
+                    <!--PureSuccess ends-->                                                           
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Offering_Detail__c == 'Free Trial'}">
+                    <apex:outputText value="{!strRichText}" escape="false" rendered="{!objQuote.Special_Offer_Terms__c != null}"/><br/>
+                    The term of the Trial period is 30 days, which will commence upon execution of this Service Order.<br/><br/>
+                    Upon expiration of Term, Customer will either 1) place an Order for Genesys Altocloud Services or 2) remove the Altocloud snippet from its webpages. In the event Customer does not place an Order and fails to remove the Altocloud snippet from its webpages, Genesys reserves the right to bill Customer at the below rates.<br/><br/>
+                    Customer shall receive up to a $200.00 credit per month for minutes used during Trial period, if utilizing PureCloud Voice or BYOC (no rollover).<br/><br/>
+                    The PureCloud Voice rate table is described at <a href="http://help.mypurecloud.com/?p=64839">http://help.mypurecloud.com/?p=64839</a>.<br/><br/>
+                    <apex:outputText rendered="{!NOT(blnCustomIVRPart) && objQuote.BigMachines__Opportunity__r.Offering_Detail__c != 'Free Trial'}">
+                        Customers can use up to the “fair use” basic IVR amounts allocated by user without being charged. For allocation amounts, see <a href="http://help.mypurecloud.com/articles/IVR-usage">http://help.mypurecloud.com/articles/IVR-usage</a>/<br/><br/>
+                    </apex:outputText> 
+                    <apex:outputText rendered="{!objQuote.BigMachines__Opportunity__r.Offering_Detail__c != 'Free Trial'}">
+                        Customers can use up to the “fair use” storage amounts allocated by user without being charged. For allocation amounts, see <a href="https://help.mypurecloud.com/articles/data-storage-usage/">http://help.mypurecloud.com/articles/data-storage-usage/</a><br/><br/>
+                    </apex:outputText>    
+                    <apex:outputText rendered="{!blnBYOCPart && objQuote.BigMachines__Opportunity__r.Offering_Detail__c != 'Free Trial'}">
+                        The BYOC rate table is described at <a href="https://help.mypurecloud.com/?p=151378">https://help.mypurecloud.com/?p=151378</a>. <br/><br/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!blnCNCUPart}">
+                        Any use of PureCloud Bring Your Own Carrier (“BYOC”) network services will be governed by the terms and invoiced per the rates found at <a href="http://help.mypurecloud.com/articles/byoc-usage/">http://help.mypurecloud.com/articles/byoc-usage/</a>.<br/><br/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!blnSMSPart && objQuote.BigMachines__Opportunity__r.Offering_Detail__c != 'Free Trial'}">
+                        Any use of the SMS/Messaging Service within PureCloud 3 will be governed by the terms and invoiced per the rates found at <a href="https://help.mypurecloud.com/?p=150871">https://help.mypurecloud.com/?p=150871</a>.<br/><br/>
+                    </apex:outputText>
+                    
+                    This Service Order shall be governed by the PureCloud Terms and Conditions found at <a href="https://help.mypurecloud.com/articles/terms-and-conditions/">https://help.mypurecloud.com/articles/terms-and-conditions/</a>. Any use of the PureCloud Voice Services will be governed by the terms found at <a href="https://help.mypurecloud.com/articles/addendum-purecloud-voice-service/">https://help.mypurecloud.com/articles/addendum-purecloud-voice-service/</a>. Any professional services will be governed by the terms found at <a href="https://help.mypurecloud.com/articles/professional-services-terms-and-conditions/">https://help.mypurecloud.com/articles/professional-services-terms-and-conditions/</a>.<br/><br/>
+                    Genesys may make the above licenses available to Customer on a trial basis (“Trial Subscription”). In addition to Customer’s payment of any applicable fees, Customer agrees to provide feedback as may be reasonably requested by Genesys, including participation in surveys, in consideration for the Trial Subscription. Customer’s Trial Subscription terminates upon the earlier of (i) the parties execution of an Service Order to provide the then-Trial Subscription for a standard Term; or (ii) the end of the trial period set forth in the Service Order (“Trial Period”). Genesys may also terminate a Trial Subscription on ten (10) days written notice.  The Trial Subscription may be extended by up to thirty (30) days upon mutual written (including email) agreement by both parties.  Trial Subscriptions are excluded from support and any Service Level Agreement.<br/><br/>
+                    If Customers usage of PureCloud 1, PureCloud 2, PureCloud 3, or Communicate individually exceeds 25 users at any time during Customer's 30 day trial period, Customer will be charged overage fees at the per license rates described below. For clarity, such overage fee will not apply if Customer's usage of PureCloud 1, PureCloud 2, PureCloud 3, or Communicate in the aggregate exceeds 25 users, provided that usage of any single license type does not exceed 25 users.<br/><br/>
+                    
+                    <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+                        <apex:repeat value="{!list_PilotTrialPOCOverages}" var="ovgChrg">
+                            <tr style="{!IF(ovgChrg.BigMachines__Product__r.APN_Number__c != 'PC-170-NV-PCEDGE-VIR', '', 'display:none')}">
+                                <td width="50%">{!ovgChrg.BigMachines__Product__r.Name}</td>
+                                <td width="50%">{!strCurrencySymbol}
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!ovgChrg.List_Price__c}"/>
+                                    </apex:outputText>
+                                    <apex:outputText value=" per 10,000 web site visits" rendered="{!ovgChrg.BigMachines__Product__r.APN_Number__c =='PC-170-NV-ALTOCLDWEB'}"/>
+                                </td>
+                            </tr> 
+                        </apex:repeat>
+                    </table>
+                </apex:outputPanel>                             
+                <br/>
+            </td>
+        </tr>
+    </table>    
+    <br/><br/><br/>
+    <!-- Special Terms & Notes -- Ends-->
+    
+    <!-- Terms & Conditions -- Starts -->
+    <apex:outputPanel style="page-break-before:always;page-break-inside:avoid;">         
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+            <tr>
+                <td width="100%">
+                    <apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c}">
+                        <b>Terms and Conditions:</b> This Service Order, together with the applicable Master Partner Network Agreement and the Cloud Reseller Agreement and all other documents referenced by url or otherwise, are incorporated herein  by reference, and contain the terms and conditions under which Genesys provides the above products and/or services to {!endUserTag} (“Agreement”). The Agreement constitutes the entire understanding between {!endUserTag} and Genesys for the products and/or services, and supersedes all previous agreements and understandings between the parties regarding the subject matter herein. {!endUserTag} acknowledges that it has read and agrees to the terms and conditions set forth herein and the Agreement.
+                    </apex:outputPanel> 
+                    <apex:outputPanel rendered="{!!objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c}">
+                        <b>Terms and Conditions:</b> This Service Order and all other documents referenced by url or otherwise, are incorporated herein  by reference, and contain the terms and conditions under which Genesys provides the above products and/or services to {!endUserTag} (“Agreement”). The Agreement constitutes the entire understanding between {!endUserTag} and Genesys for the products and/or services, and supersedes all previous agreements and understandings between the parties regarding the subject matter herein. {!endUserTag} acknowledges that it has read and agrees to the terms and conditions set forth herein and the Agreement.
+                    </apex:outputPanel>
+                    <br/><br/>
+                    <b>Unless otherwise specified in this Service Order, (a) the price and quantities above do not include network services required for the use of the above products and/or services and (b) the use of Genesys network services will be billed at the then-current rates at the end of each billing month.</b>
+                </td>
+            </tr>                  
+        </table>
+    </apex:outputPanel> 
+    <br/><br/><br/>
+    <!-- Terms & Conditions -- Ends -->         
+    
+    <!--Contract Totals -- Starts -->
+    <apex:outputPanel style="{!IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c !='Free Trial','page-break-after:always;page-break-inside:avoid;immediate!','immediate!')}">        <div align="right">
+        <apex:outputText value="Contract Totals" style="font-weight:bold;font-size:12pt;text-decoration:underline;text-align:center;"/>
+        </div><br/><br/><br/>
+        <table border="1" width="75%" style="border: 1px solid black;border-collapse:collapse;text-align:right;font-size:11pt;" align="right">
+            <tr style="{!IF(AND(objQuote.Order_Type__c == $Label.Amend_Subscription, NOT(objQuote.Show_One_Time_Fees_Only__c)), '', 'display:none')}">
+                <td>Monthly Changes:</td>
+                <td><b>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!objQuote.CMRR_Change__c}"/>
+                    </apex:outputText></b>
+                </td>
+            </tr>                                                                                                                                    
+            <tr style="{!IF(AND(objQuote.Order_Type__c == $Label.Amend_Subscription,(objQuote.Show_Updated_Quantity_Only__c)), '', 'display:none')}">
+                <td>Net Change to {!IF(objQuote.Billing_Period__c == 'Annually', 'Annual', objQuote.Billing_Period__c)} Subscription Fees:</td>
+                <td><b>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!objQuote.CMRR_Change__c * CASE(objQuote.Billing_Period__c, 'Annually', 12, 'Semi-Annually', 6,'Quarterly',3,'Monthly',1,objQuote.No_Of_Months__c)}"/>
+                    </apex:outputText></b>
+                </td>
+            </tr>            
+            <tr style="{!IF(AND(objQuote.Billing_Category__c != 'M2M', NOT(objQuote.Show_One_Time_Fees_Only__c)), '', 'display:none')}">
+                <td>{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription, 'Updated', '')} {!IF(objQuote.Billing_Period__c == 'Annually', 'Annual', objQuote.Billing_Period__c)} Subscription Fees:</td>
+                <td>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decNonRecBundleTotals + ((decSubscriptionTotals + decRecBundleTotals) * IF(objQuote.Billing_Period__c == 'Annually', 12, 1))}"/>
+                    </apex:outputText>
+                </td>
+            </tr>
+            <tr style="{!IF(AND(decRecCreditTotals > 0, objQuote.Billing_Category__c != 'M2M', NOT(objQuote.Show_One_Time_Fees_Only__c)), '', 'display:none')}">
+                <td>Recurring {!IF(objQuote.Billing_Period__c == 'Annually', 'Annual', objQuote.Billing_Period__c)} Credit Amount:</td>
+                <td>({!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decRecCreditTotals * IF(objQuote.Billing_Period__c == 'Annually', 12, 1)}"/>
+                    </apex:outputText>)
+                </td>
+            </tr>
+            <tr style="{!IF(AND(objQuote.Billing_Category__c != 'M2M', NOT(objQuote.Show_One_Time_Fees_Only__c)), '', 'display:none')}">
+                <td><b>{!IF(objQuote.Order_Type__c == $Label.Amend_Subscription, IF( objquote.Show_Updated_Quantity_Only__c,'Total Minimum','Amend'), 'Total ')} {!IF(objQuote.Billing_Period__c == 'Annually', 'Annual', objQuote.Billing_Period__c)} Subscription Fees:</b></td>
+                <td><b>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decNonRecBundleTotals + ((decSubscriptionTotals + decRecBundleTotals - decRecCreditTotals) * IF(objQuote.Billing_Period__c == 'Annually', 12, 1))}"/>
+                    </apex:outputText></b>
+                </td>
+            </tr>
+            <tr style="{!IF(AND(decRecurringServiceTotals > 0, NOT(objQuote.Show_One_Time_Fees_Only__c)), '', 'display:none')}">
+                <td><b>{!IF(strRecServBillingPeriod == 'Annually', 'Annual', strRecServBillingPeriod)} Recurring Services:</b></td>
+                <td><b>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!IF(strRecServBillingPeriod == 'Annually', decRecurringServiceTotals * 12, decRecurringServiceTotals)}"/>
+                    </apex:outputText></b>
+                </td>
+            </tr>
+            <tr style="{!IF(NOT(objQuote.Show_One_Time_Fees_Only__c), '', 'display:none')}">
+                <td><b>Estimated Subscription/{!IF(objQuote.Billing_Category__c != 'M2M', 'Overage', 'Usage')} Fees:</b></td>
+                <td><b>
+                    <apex:outputText value="{!strCurrencySymbol}{0, number, ###,##0.00}" rendered="{!objQuote.Total_Overage__c != null && objQuote.Total_Overage__c > 0}">
+                        <apex:param value="{!objQuote.Total_Overage__c}"/>
+                    </apex:outputText>
+                    <apex:outputText rendered="{!objQuote.Total_Overage__c == null || objQuote.Total_Overage__c == 0}" value="Based on Usage"/></b>
+                </td>
+            </tr> 
+            <tr style="{!IF(decOneTimeServicesTotals > 0, '', 'display:none')}">
+                <td>Subtotal for One-Time Services:</td>
+                <td>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decOneTimeServicesTotals}"/>
+                    </apex:outputText>
+                </td>
+            </tr>
+            <tr style="{!IF(decOneTimeHardwareTotals > 0, '', 'display:none')}">
+                <td>Subtotal for Hardware:</td>
+                <td>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decOneTimeHardwareTotals}"/>
+                    </apex:outputText>
+                </td>
+            </tr>
+            <tr style="{!IF(decOneTimeEducationTotals > 0, '', 'display:none')}">
+                <td>Subtotal for Education:</td>
+                <td>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decOneTimeEducationTotals}"/>
+                    </apex:outputText>
+                </td>
+            </tr>            
+            <!--PureSuccess -->
+            <tr style="display: {!IF(objQuote.Offering_Type__c == 'PureCloud' && 
+                       !ISBLANK(objQuote.PureSuccess_Offer_Subscription_Amount__c) && objQuote.PureSuccess_Offer_Subscription_Amount__c> 0, 'table-row', 'none')};">
+                <td>PureSuccess Offer Amount:</td>
+                <td><apex:outputField value="{!objQuote.PureSuccess_Offer_Subscription_Amount__c}"/></td>
+            </tr>
+            <tr style="display: {!IF(objQuote.Offering_Type__c == 'PureCloud' && 
+                       !ISBLANK(objQuote.A_La_Carte_PureSuccess_Services_Amount__c) && objQuote.A_La_Carte_PureSuccess_Services_Amount__c > 0, 'table-row', 'none')};">
+                <td>A La Carte PureSuccess Services Amount:</td>
+                <td><apex:outputField value="{!objQuote.A_La_Carte_PureSuccess_Services_Amount__c}"/></td>
+            </tr>
+            <!--PureSuccess ends-->
+            
+            <tr style="{!IF(decOneTimeTotals > 0 || decOneTimeTotals < 0 || ( objQuote.Order_Type__c == $Label.Amend_Subscription && objQuote.Annual_Contract_Value_Change__c > 0 && objQuote.Billing_Category__c=='Annual Pre-Pay'), '', 'display:none')}">
+                <td><b>Total One-Time Fees{!IF(AND(objQuote.Order_Type__c == $Label.Amend_Subscription, NOT(objQuote.Show_One_Time_Fees_Only__c)), ':*', ':')}</b></td>
+                <td><b>{!strCurrencySymbol} 
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!IF(objQuote.Order_Type__c != $Label.Amend_Subscription, decOneTimeTotals, decOneTimeTotals + IF(objQuote.Billing_Category__c=='Annual Pre-Pay', IF(intCurrYrProration==12, objQuote.Annual_Contract_Value__c, (objQuote.CMRR_Change__c + (decRecCreditTotals + (decOneTimeCreditTotals/objQuote.No_Of_Months__c)))*intCurrYrProration), 0))}"/>
+                        <!--<apex:param value="{!IF(objQuote.Order_Type__c != $Label.Amend_Subscription, decOneTimeTotals, decOneTimeTotals + IF(objQuote.Billing_Category__c=='Annual Pre-Pay', (objQuote.Annual_Contract_Value_Change__c/12)*intCurrYrProration, 0))}"/>-->
+                    </apex:outputText></b>
+                </td>
+            </tr>
+            <tr style="{!IF(AND(decOneTimeCreditTotals > 0, objQuote.Billing_Category__c != 'M2M', NOT(objQuote.Show_One_Time_Fees_Only__c)), '', 'display:none')}">
+                <td>One-Time Credit Amount:                                    
+                    <div style="border:none;font-size:7pt;">(One-time credit amounts will be applied as a reduction on initial invoice for committed dues)</div>
+                </td>
+                <td>({!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!decOneTimeCreditTotals}"/>
+                    </apex:outputText>)
+                </td>
+            </tr>
+            <tr style="{!IF(NOT(objQuote.Hide_Totals__c) && (objQuote.Order_Type__c == $Label.New_Subscription || objQuote.Order_Type__c == $Label.Replace_Subscription || objQuote.Order_Type__c == $Label.Renew_Subscription), '', 'display:none')}">
+                <td><b>Total Contract Value:</b></td>
+                <td><b>{!strCurrencySymbol}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!objQuote.Total_Contract_Value__c}"/>
+                    </apex:outputText></b>
+                </td>
+            </tr>
+            <!--PureSuccess -->
+            <tr style="display: {!IF(objQuote.Offering_Type__c == 'PureCloud' && 
+                       !ISBLANK(objQuote.Token_Value__c) && objQuote.Token_Value__c > 0, 'table-row', 'none')};">
+                <td>Total Tokens:</td>
+                <td>
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!IF(objQuote.Order_Type__c != $Label.Amend_Subscription, objQuote.Token_Value__c, objQuote.Total_Tokens_Change__c)}"/>
+                        
+                    </apex:outputText>
+                </td>        
+            </tr>
+            <!--PureSuccess Ends-->
+            
+            <tfoot>
+                <tr><td colspan="2" style="border:none;font-size:9pt;">Hardware will be billed when shipped.  Taxes and shipping will be calculated upon invoicing.</td></tr>
+                <tr style="font-size:9pt;{!IF(AND(objQuote.Order_Type__c == $Label.Amend_Subscription, NOT(objQuote.Show_One_Time_Fees_Only__c)), '', 'display:none')}">
+                    <td colspan="2" style="border:none">* Defined in Special Terms and Notes changes</td>
+                </tr>
+            </tfoot>
+        </table>
+        <br/><br/>           
+    </apex:outputPanel><br/>
+    <br/><br/><br/><br/><br/><br/><br/><br/><br/> 
+    <!--<apex:outputpanel style="align:right;page-break-after: always;immediate!">
+<apex:outputLabel value=""></apex:outputLabel>
+</apex:outputpanel><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>-->
+    <!--Contract Totals -- Ends -->
+    
+    <!-- Signature Block -- Starts -->
+    <apex:outputPanel style="{!IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c !='Free Trial','page-break-before:always;page-break-inside:avoid;','')}"> 
+        <apex:variable value="{!objQuote.BigMachines__Opportunity__r.Sold_To_Country__r.Name}" var="sldToCtry"/>
+        <div style="font-family:{!IF(sldToCtry == 'Japan', 'Arial Unicode MS', '')}">
+            <apex:outputText rendered="{!sldToCtry != 'Germany' && sldToCtry != 'Japan'}">
+                IN WITNESS WHEREOF, Genesys and Customer have executed this Agreement as of the Effective Date.<br/><br/>    
+                AGREED AND ACCEPTED
+            </apex:outputText>
+            <apex:outputText style="font-size:20pt;" rendered="{!sldToCtry == 'Germany'}">
+                Akzeptiert und vereinbart:
+            </apex:outputText>        
+            <apex:outputText style="font-family:Arial Unicode MS;" rendered="{!sldToCtry == 'Japan'}">
+                この証拠として、本契約はインタラクティブおよび御社の間で発効日に締結したものといたします。
+            </apex:outputText>        
+            <br/><br/>
+            <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+                <tr style="font-weight:bold;text-align:center;">
+                    <td width="50%">{!CASE(sldToCtry, 'Germany', 'KUNDE:', 'Japan', '', 'Authorized Signature for')}<br/>
+                        {!IF(objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, objQuote.BigMachines__Opportunity__r.BusinessPartner__r.Name, objQuote.End_User_ID__r.Name)}</td>
+                    <td width="50%">{!objQuote.BigMachines__Opportunity__r.Sold_To_Country__r.PureCloud_Selling_Entity__c}</td>   
+                </tr>
+                <tr>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'Unterzeichnet durch', 'Japan', '署名', 'By')}: 
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerSignRev, $CurrentPage.parameters.customerSign)}</span> 
+                    </td>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'Unterzeichnet durch', 'Japan', '署名', 'By')}:
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerSign, $CurrentPage.parameters.customerSignRev)}</span> 
+                    </td>
+                </tr>
+                <tr>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'In Druckbuchstaben', 'Japan', '活字体', 'Printed')}:
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerNameRev, $CurrentPage.parameters.customerName)}</span> 
+                    </td>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'In Druckbuchstaben', 'Japan', '活字体', 'Printed')}:
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerName, $CurrentPage.parameters.customerNameRev)}</span> 
+                    </td>
+                </tr>   
+                <tr>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'Titel/Funktion', 'Japan', '役職', 'Title')}:
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerTitleRev, $CurrentPage.parameters.customerTitle)}</span> 
+                    </td>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'Titel/Funktion', 'Japan', '役職', 'Title')}:
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerTitle, $CurrentPage.parameters.customerTitleRev)}</span> 
+                    </td>
+                </tr> 
+                <tr style="{!IF(sldToCtry == 'Germany', '', 'display:none')}">
+                    <td width="50%">Telefon:</td>
+                    <td width="50%">Telefon:</td>
+                </tr>   
+                <tr style="{!IF(sldToCtry == 'Germany', '', 'display:none')}">
+                    <td width="50%">E-Mail:</td>
+                    <td width="50%">E-Mail:</td>
+                </tr> 
+                <tr>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'Datum', 'Japan', '日付', 'Date')}:
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerDateRev, $CurrentPage.parameters.customerDate)}</span> 
+                    </td>
+                    <td width="50%">
+                        {!CASE(sldToCtry, 'Germany', 'Datum', 'Japan', '日付', 'Date')}:
+                        <span style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerDate, $CurrentPage.parameters.customerDateRev)}</span> 
+                    </td>
+                </tr>                        
+            </table>
+        </div>
+    </apex:outputPanel> 
+    <br/><br/><br/>
+    <!-- Signature Block -- Ends -->
+    
+    <!-- Approval Block -- Starts -->
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.deliveryOption != 'Download PDF' && $CurrentPage.parameters.deliveryOption != 'Download' && objQuote.BigMachines__Opportunity__r.Offering_Detail__c != 'Free Trial'}">
+        <table cellspacing="1" cellpadding="5" border="1" style="{!IF(objQuote.BigMachines__Opportunity__r.Offering_Detail__c !='Free Trial','border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;','border: 1px solid black;border-collapse:collapse;')}" width="100%">
+            <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                <td colspan="15">Required Approvals</td>
+            </tr>
+            <tr style="font-weight:bold;text-align:center;">
+                <th width="20%">Role</th>
+                <th width="40%">Name</th>            
+                <th width="40%">Initials</th>
+            </tr>
+            <tr>
+                <td height="30px">Legal</td>
+                <td style="color:white">{!$CurrentPage.parameters.legalName}</td>
+                <td style="color:white">{!$CurrentPage.parameters.legalInitial}</td>
+            </tr>
+            <tr>
+                <td height="30px">Finance</td>
+                <td style="color:white">{!$CurrentPage.parameters.financeName}</td>
+                <td style="color:white">{!$CurrentPage.parameters.financeInitial}</td>
+            </tr>            
+        </table>
+    </apex:outputPanel>
+    <br/><br/><br/>
+    <!-- Approval Block -- Ends -->
+    
+    <!-- Purchase Order Waiver -- Starts -->
+    <!--<apex:outputPanel > 
+<table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+<tr style="font-weight:bold;">
+<td colspan="2" width="100%">The Company does not issue purchase orders for these services and will agree to the terms and conditions set forth below.</td>   
+</tr>
+<tr>
+<td width="20%"><b>By:</b></td>
+<td width="80%" style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerSignRev, $CurrentPage.parameters.customerSign)}</td>
+</tr>
+<tr>
+<td width="20%"><b>Printed:</b></td>
+<td width="80%" style="color:white">{!IF(CONTAINS($CurrentPage.parameters.deliveryOption, 'Reverse Order'), $CurrentPage.parameters.customerNameRev, $CurrentPage.parameters.customerName)}</td>
+</tr>       
+</table>
+<br/><br/><br/>
+<table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+<tr>
+<td width="100%">
+<b>{!endUserTag}’s execution of this document indicates compliance with the {!endUserTag}’s business practices in making a purchase commitment equal to the total contract value displayed herein. All minimum charges, plus period overages are billable under this executed Service Order for the duration of the specified Term including any subsequent renewals.</b>
+</td>
+</tr>                  
+</table>
+</apex:outputPanel> -->
+    <!-- Purchase Order Waiver -- Ends -->
+    <!-- Purchase Order Acknowledgement -- Start -->
+    <apex:outputPanel >
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;" width="100%">
+            <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                <td colspan="2">Purchase Order Acknowledgement</td>
+            </tr>
+            <tr style="font-weight:bold;">
+                <td colspan="2" width="100%">Customer agrees by signature below,that either i)Customer will issue a purchase order for the purchase of the products and services described in this service order on execution, ii)this signed Service Order will serve as Customer's purchase order and no seperately issued purchase order will be required for any of the fees owned under this Service Order,including but not limited to,minimum charges,period overages,renewals,hardware and one-time fees.If the purchase order option is selected below,Customer will send the purchase order to Genesys for processing immediately upon execution of this Service Order.</td>   
+            </tr>  
+            <tr style="{!IF(strPORequired == 'Required', '', 'display:none')}">
+                <td width="70%"><b>By initialing in the adjacent box, I agree that the Purchase Order is current and accurate.</b><br/></td>
+                <td width="30%" style="text-align:center;vertical-align:top;height:50px;"><b>Initial</b><br/><br/><br/><br/><span style="color:white;vertical-align:middle;text-align:center;">{!$CurrentPage.parameters.customerInitial}</span></td>
+            </tr> 
+            <tr style="{!IF(strPORequired != 'Required', '', 'display:none')}">
+                <td width="70%"><b>By initialing in the adjacent box, I agree that that a purchase order is not required for any of the fees owned under this Service Order ,including but not limited to,minimum charges,period overages,renewals,hardware and one-time fees</b></td>
+                <td width="30%" style="text-align:center;vertical-align:top;"><b>Initial</b><br/><br/><br/><br/><span style="color:white;vertical-align:middle;text-align:center;">{!$CurrentPage.parameters.customerInitial}</span></td>
+            </tr>     
+        </table>    
+    </apex:outputPanel>
+    <!-- Purchase Order Acknowledgement -- Ends -->
+    <br/><br/><br/>
+    <!-- Tax Acknowledgement -- Start -->
+    <apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Sold_To_Country__r.Name == 'United States' || objQuote.BigMachines__Opportunity__r.Sold_To_Country__r.Name == 'Canada'}">
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+             <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                <td colspan="2">Tax Acknowledgement</td>
+            </tr>
+            <tr style="font-weight:bold;">
+                <td colspan="2" width="100%">Genesys will include all applicable sales, use and telecommunications taxes (Federal and State) on every invoice unless tax exemption certificate is provided.</td>   
+            </tr>  
+            <tr>
+                <td width="70%" ><b>By initialing in the adjacent box,I agree to pay all taxes incurred on invoices.</b><br/></td>
+                <td width="30%" style="text-align:center;vertical-align:top;height:50px;"><b>Initial</b><br/><br/><br/><br/><span style="color:white;vertical-align:middle;text-align:center;">{!$CurrentPage.parameters.customerInitial}</span></td>
+            </tr> 
+            <tr>
+                <td width="70%" ><b>By initialing in the adjacent box, I agree to provide all applicable tax exemption certificates upon execution of this Service Order</b></td>
+                <td width="30%" style="text-align:center;vertical-align:top;height:50px;"><b>Initial</b><br/><br/><br/><br/><span style="color:white;vertical-align:middle;text-align:center;">{!$CurrentPage.parameters.customerInitial}</span></td>
+            </tr>     
+        </table>    
+    </apex:outputPanel>
+    <!-- Tax Acknowledgement -- Ends -->
+    
+    
+    
+    <!-- PC END USER AGREEMENT -- Starts -->
+    <!--<apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c}">
+<table style="page-break-before:always;page-break-inside:avoid;"/>
+<c:PureCloudTermsAndConditions />
+</apex:outputPanel> -->
+    <!-- END USER AGREEMENT -- Ends -->
+    
+    <!-- PureCloud Voice Service Telco Addendum -- Starts -->
+    <!--<apex:outputPanel rendered="{!objQuote.BigMachines__Opportunity__r.Indirect_Partner_PureCloud_Approved__c}">
+<table style="page-break-before:always;page-break-inside:avoid;"/>
+<c:PureCloudVoiceServiceTelcoAddendum />
+</apex:outputPanel> -->
+    <!-- PureCloud Voice Service Telco Addendum -- Ends -->
+</apex:page>

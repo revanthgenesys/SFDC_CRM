@@ -1,0 +1,668 @@
+<apex:page sidebar="false" standardStylesheets="false" docType="html-5.0" controller="DemoRequestSubmissionController">
+    
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        
+        <title>Submit a Demo Request</title>
+        
+        <!-- Bootstrap -->
+        <apex:stylesheet value="{!URLFOR($Resource.bootstrap_3_3_1, 'dist/css/bootstrap.min.css')}" />
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"/>
+        <apex:includeScript value="{!URLFOR($Resource.bootstrap_3_3_1, 'dist/js/bootstrap.min.js')}" /> 
+        <style>
+            .bPageBlock {border-top:none !important;}
+            body .bPageBlock, body .secondaryPalette.bPageBlock, body .individualPalette .secondaryPalette.bPageBlock {background-color:#fff !important;border:none;}
+            .secondaryPalette {background-color:#fff !important;}
+            .bodyDiv {border-top:none !important;}
+            .pbBody a {color:none !important}
+            hr { margin-top: 10px; margin-bottom: 10px; }
+            .verifyPanel h2 { margin-left: 25px;border-bottom: 1px solid #f5f5f5;font-family: 'Droid Sans'; }
+            .headerRow { margin-top:20px;margin-bottom:10px;}
+             #hide{
+   visibility:hidden;
+}
+        </style>
+        <apex:includeScript value="{!URLFOR($Resource.BootstrapDatePicker)}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.BootstrapDatePickerCSS)}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQueryTimePicker)}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.jQueryTimePickerCSS)}"/>
+        <apex:includeScript value="{!URLFOR($Resource.bootstrapMultiselect)}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.bootstrapMultiselectCSS)}"/>
+    </head>
+    <apex:pageMessages />
+    <div class="container">
+        <div class="row">
+            <apex:form rendered="{!showNavigation}" styleClass="col-md-3 col-sm-4 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h2>Navigation</h2><br/><br/>
+                        <apex:commandLink action="{!backToRequestor}" value="Requestor Info"/><br/>
+                        <apex:commandLink rendered="{!showReturnClient}" action="{!backToClient}" value="Client Info"/><br/>
+                        <apex:commandLink rendered="{!showReturnDemo}" action="{!backToItems}" value="Demo Info"/><br/>
+                        <apex:commandLink rendered="{!showReturnSchedule}" action="{!backToSchedule}" value="Schedule"/><br/>
+                        <apex:commandLink rendered="{!showReturnVerify}" action="{!backToVerify}" value="Verification"/>
+                    </div>
+                </div>
+            </apex:form>
+            <apex:form rendered="{!showYourInformation}" styleclass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>Your Information</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label for="reqName">Your Name:</label>
+                            <apex:input styleClass="form-control" value="{!drb.RequesterName}" id="reqName" required="true" html-placeholder="Requester Name" />
+                        </div>
+                        <div class="form-group">
+                            <label for="compName">Your Company:</label>
+                            <apex:input styleClass="form-control" value="{!drb.RequesterCompanyName}" id="compName" required="true" html-placeholder="Requester's Company Name" />
+                        </div>
+                        <div class="form-group">
+                            <label for="emailName">Your Email:</label>
+                            <apex:input type="email" styleClass="form-control" value="{!drb.RequesterEmail}" id="emailName" required="true" html-placeholder="Requester Email" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reqPhone">Your Phone:</label>
+                            <apex:input type="tel" styleClass="form-control" value="{!drb.RequesterPhone}" id="reqPhone" required="true" html-placeholder="Phone Number" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reqPhone">Audience Type:</label>
+                            <apex:selectList size="1" value="{!drb.audienceType}" styleClass="form-control">
+                                <apex:selectOptions value="{!audienceTypeOptions}"></apex:selectOptions>
+                            </apex:selectList>
+                        </div>
+                        <div class="form-group" id="hide" style="{!if(not isPartner, '', 'display: none;')}">
+                            <label for="reqPhone">Demo Type:</label>
+                            <apex:selectList size="1" value="{!drb.queue}" styleClass="form-control">
+                                <apex:selectOptions value="{!queueOptions}"></apex:selectOptions>
+                            </apex:selectList>
+                        </div>
+                        <br/><br/>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitRequestor}" value="Continue to Client Info"/>
+                    </div> 
+                    
+                </div>
+            </apex:form>
+            <apex:form rendered="{!showLinkedOppurtunities}"  styleClass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>Is this request related to an opportunity?</h2>
+                    </div><br/>
+                    <div class="form-group">
+                        <label for="relOpp">Related Opportunity:</label>
+                        <apex:selectList size="1" value="{!selectedLinkedOpp}" id="relOpp" styleClass="form-control" >
+                            <apex:selectOptions value="{!opportunityOptions}"></apex:selectOptions>
+                        </apex:selectList>
+                    </div><br/><br/><br/>
+                    &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitLinkedOpp}" value="Continue to Client Info"/>
+                </div>         
+            </apex:form>
+            <apex:form rendered="{!showClientInformation}" styleClass="col-md-7 col-sm-10 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>Client's Information</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label>Client's Company Name:</label>
+                            <apex:input rendered="{!showCompanyName}" value="{!drb.companyName}" required="true" styleClass="form-control" />
+                            <apex:outputText rendered="{!not showCompanyName}"  value="{!drb.companyName}" styleClass="form-control" ></apex:outputText>
+                        </div>
+                        <div class="form-group">
+                            <label for="reqType">Request Type:</label>
+                            <apex:selectList size="1" value="{!drb.requestType}" id="reqType" styleClass="form-control" >
+                                <apex:selectOptions value="{!requestTypeOptions}"></apex:selectOptions>
+                            </apex:selectList>
+                        </div>
+                        <div class="form-group">
+                            <label for="vert">Client's Vertical:</label>
+                            <apex:selectList size="1" value="{!drb.Vertical}" id="vert" styleClass="form-control">
+                                <apex:selectOptions value="{!verticalOptions}"></apex:selectOptions>
+                            </apex:selectList>
+                        </div>
+                        <div class="form-group">
+                            <label for="reqWeb">Client's Website URL:</label>
+                            <apex:input value="{!drb.Website}" id="reqWeb" styleClass="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reqBus">Client's Business:</label>
+                            <apex:inputTextarea cols="20" rows="5" value="{!drb.Business}" id="reqBus" styleClass="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reqNeed">Client's Needs:</label>
+                            <apex:inputTextarea cols="20" rows="5" value="{!drb.BusinessNeeds}" id="reqNeed" styleClass="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reqButtons">Client's Hot Buttons/Pain Points:</label>
+                            <apex:inputTextarea cols="20" rows="5" value="{!drb.HotButtons}" id="reqButtons" styleClass="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="reqNames">Name and Titles of Attendees:</label>
+                            <apex:inputTextarea cols="20" rows="5" value="{!drb.Attendees}" id="reqNames" styleClass="form-control" />
+                        </div>
+                        <div class="form-group row">
+                            <label for="comp" class="col-xs-12">Competitors:</label>
+                            <div class="col-xs-12">                              
+                                <c:BootstrapMuliselectPicklist leftOptions="{!competitorOptions}"
+                                                               rightOptions="{!selectedCompetitors}"
+                                                               size="14"
+                                                               id="comp" />
+                            </div>
+                        </div>
+                        <br/><br/>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitClient}" value="Continue to Demo Info"/>
+                    </div>     
+                </div>
+            </apex:form>
+            <apex:form rendered="{!showDemoInformation}" styleClass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Demo Items</div>
+                    <div class="panel-body container-fluid">
+                        <apex:outputPanel rendered="{!showSelectPlatform}">
+                            <div class="form-group row">
+                                <label for="plat" class="col-xs-12">Platforms</label>
+                                <div class="col-xs-12">
+                                    <c:BootstrapMuliselectPicklist leftOptions="{!drl.platOptSel}"
+                                                                   rightOptions="{!drl.platSel}"
+                                                                   size="14"
+                                                                   id="plat" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="sol" class="col-xs-12">Solutions</label>
+                                <div class="col-xs-12">
+                                    <c:BootstrapMuliselectPicklist leftOptions="{!drl.solOptSel}"
+                                                                   rightOptions="{!drl.solSel}"
+                                                                   size="14"
+                                                                   id="sol" />
+                                </div>
+                            </div>
+                            <apex:commandButton styleClass="btn btn-default" action="{!submitPlatform}" value="Select Platform" />
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!showItems}">
+                            <div class="row">
+                                &nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!resetPlatform}" value="Change Platforms" />
+                            </div>
+                            <div class="row">
+                                &nbsp;&nbsp;<b>Selected Platforms:</b>&nbsp;<apex:outputText value="{!drl.platformsDisplay}" ></apex:outputText><br/>
+                                &nbsp;&nbsp;<b>Selected Solutions:</b>&nbsp;<apex:outputText value="{!drl.solDisplay}" ></apex:outputText>
+                            </div>
+                            <br/><br/>
+                            <div class="form-group row">
+                                <label for="prdsol" class="col-xs-12">Solution Products</label>
+                                <div class="col-xs-12"> 
+                                    <c:BootstrapMuliselectPicklist leftOptions="{!drl.prdSolOptSel}"
+                                                                   rightOptions="{!drl.prdSolSel}"
+                                                                   size="14"
+                                                                   id="prdsol" />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="int" class="col-xs-12">Integrations</label>
+                                <div class="col-xs-12"> 
+                                    <c:BootstrapMuliselectPicklist leftOptions="{!drl.intOptSel}"
+                                                                   rightOptions="{!drl.intSel}"
+                                                                   size="14"
+                                                                   id="int" />
+                                </div>
+                            </div>
+                            <hr/>
+                            <br/>
+                            <div>
+                                <h4>
+                                    Optional Information
+                                </h4>
+                            </div><br/>
+                            <div class="form-group row">
+                                <label for="prod" class="col-xs-12">All Products</label>
+                                <div class="col-xs-12"> 
+                                    <c:BootstrapMuliselectPicklist leftOptions="{!drl.prodOptSel}"
+                                                                   rightOptions="{!drl.prodSel}"
+                                                                   size="14"
+                                                                   id="prod" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="oProd" class="col-xs-4">Other Products:</label>
+                                <apex:inputTextarea cols="20" rows="3" value="{!drb.otherProducts}" id="oProd" styleClass="form-control" />
+                            </div>
+                            <div class="form-group row">
+                                <label for="gen" class="col-xs-12">General Concepts</label>
+                                <div class="col-xs-12"> 
+                                    <c:BootstrapMuliselectPicklist leftOptions="{!drl.genOptSel}"
+                                                                   rightOptions="{!drl.genSel}"
+                                                                   size="14"
+                                                                   id="gen" />
+                                </div>
+                            </div>
+                            <hr/>
+                            <apex:commandButton styleClass="btn btn-default" value="Continue to Scheduling" action="{!submitItems}"/>
+                        </apex:outputPanel>
+                    </div>
+                </div>
+            </apex:form>
+            <apex:form rendered="{!showSchedule}"  styleClass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>When?</h2>
+                    </div> 
+                    <div class="panel-body container-fluid">
+                        <div class="form-group">
+                            <label for="newdate">Date:</label>
+                            <apex:input value="{!demoDate}" id="newdate" styleClass="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="newtime">Time: (24hr format)</label>
+                            <apex:input value="{!demoTime}" id="newtime" styleClass="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Timezone:</label>
+                            <apex:selectList size="1" value="{!drb.demoTimezone}" id="tz" styleClass="form-control">
+                                <apex:selectOptions value="{!timezoneOptions}"></apex:selectOptions>
+                            </apex:selectList>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-xs-4">Duration:</label>
+                            <div class="col-xs-8">
+                                Hours: <apex:input type="number" html-min="0" html-max="8" value="{!demoDurationHours}" required="true" styleClass="form-control" />
+                                Minutes: <apex:input type="number" html-min="0" html-max="60" value="{!demoDurationMinutes}" required="true" styleClass="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Location:</label>
+                            <apex:selectList size="1" value="{!drb.demoLocation}" styleClass="form-control">
+                                <apex:selectOptions value="{!locationOptions}"></apex:selectOptions>
+                                <apex:actionSupport event="onchange" action="{!getLocationDetails}" />
+                            </apex:selectList>
+                        </div>
+                        <br/><br/>
+                        
+                        <apex:pageBlock rendered="{!showOnsite}">
+                            <div class="form-group">
+                                <label for="onsiteLoc" class="col-xs-4">On-Site Location:</label>
+                                <apex:inputTextarea cols="20" rows="3" value="{!drb.onsiteDemoLocation}" id="onsiteLoc" styleClass="form-control" html-placeholder="Please include the address of the meeting location if possible" />
+                            </div>
+                            <div class="form-group">
+                                <label for="onsiteJust" class="col-xs-4">On-Site Justification:</label>
+                                <apex:inputTextarea cols="20" rows="3" value="{!drb.onsiteJustify}" id="onsiteJust" styleClass="form-control" html-placeholder="Please include any details that can help justify the travel expenditure for Technical Sales.  This includes number of seats and potential revenue for the company.  The more information you provide, the faster your on-site request can be approved." />
+                            </div>
+                        </apex:pageBlock>
+                        <apex:pageBlock rendered="{!showHQ}">
+                            <div class="form-group">
+                                <label for="onsiteRoom" class="col-xs-4">Campus Meeting Room:</label>
+                                <apex:inputTextarea cols="20" rows="3" value="{!drb.onsiteMeetingRoom}" id="onsiteRoom" styleClass="form-control" />
+                            </div>
+                        </apex:pageBlock>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton style="{!if(not isPartner, '', 'display: none;')}" styleClass="btn btn-default" action="{!checkAvail}" value="Next"/>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton style="{!if(isTSMember || isPartner, '','display: none;')}" styleClass="btn btn-default" action="{!submitWhen}" value="Continue to Verify"/>
+                    </div>
+                </div>
+                <apex:includeScript value="{!URLFOR($Resource.BootstrapDatePicker)}"/>
+                <apex:includeScript value="{!URLFOR($Resource.jQueryTimePicker)}"/>
+                <script>
+                $ts = jQuery.noConflict();
+                $ts(document).ready(function() {
+                    $ts('[id$=newdate]').datepicker({
+                        autoclose:true, 
+                        format: "yyyy-mm-dd"
+                        <apex:outputText rendered="{!not isTSMember}">
+                        ,startDate: new Date()
+                        </apex:outputText>
+                    });
+                    $ts('[id$=newtime]').timepicker({ 
+                        'scrollDefault': 'now',
+                        'step': 15,
+                        'timeFormat': 'H:i'
+                    });
+                });
+                </script>    
+            </apex:form>
+            <apex:form rendered="{!showVerifySchedule}" styleClass="col-md-8 col-sm-10 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>When?</h2>
+                    </div> 
+                    <div class="panel-body container-fluid">
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Date &amp; Time:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!demoDate}" />&nbsp;&nbsp;<apex:outputText value="{!demoTime}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Timezone:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.demoTimezone}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Duration:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.demoDuration}" />&nbsp;hours
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Location:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.demoLocation}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>                  
+                <apex:pageBlock rendered="{!showAvailability}">
+                    <!--<c:DemoRequestAvailability tscCount="{!tscCount}" tscProgress="{!tscProgress}"></c:DemoRequestAvailability>
+                    <div class="panel panel-default" style="{!if(showAltTimes, '','display: none;')}">
+                        <div class="panel-heading">
+                            <h2>Suggested Alternative Times</h2>
+                        </div>
+                        <div class="panel-body">
+                            <apex:repeat value="{!altTimes}" var="datetime">
+                                <apex:outputText value="{!datetime}"></apex:outputText><br/>
+                            </apex:repeat>
+                        </div>
+                    </div> -->
+                    &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitWhen}" onclick="return checkLow()" disabled="{!if(tscCount == 0, true, false)}" value="Continue to verify"/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!resetSchedule}" value="Reset Schedule Time"/>
+                    <script>
+                    $ts = jQuery.noConflict();
+                    $ts(document).ready(function() {
+                        checkLow = function() {
+                            var count = $ts('#tscCount').text();
+                            if(count == 0) {
+                                var ans = confirm('Are you positive you wish to submit with 0 currently available? ');
+                                return ans;
+                            }
+                            return true;
+                        }
+                    });
+                    </script>
+                </apex:pageBlock>
+            </apex:form>
+            <apex:form rendered="{!showVerifyInformation}" styleClass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h1>Look correct?</h1>
+                    </div>
+                    <div class="panel-body container-fluid verifyPanel">
+                        <div class="row headerRow">
+                            <h2>Requester Information</h2>
+                        </div>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Name:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.RequesterName}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Requester Company:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.RequesterCompanyName}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Email:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.RequesterEmail}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Phone:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.RequesterPhone}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Demo Type:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.queue}" />
+                            </div>
+                        </div>
+                        <div class="row headerRow">
+                            <h2>Client Information</h2>
+                        </div>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Audience Type:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.audienceType}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Request Type:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.requestType}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Client's Vertical:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.Vertical}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Website URL:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.Website}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Client's Business:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.Business}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Client's Needs:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.BusinessNeeds}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Client's Hot Buttons/Pain Points:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.HotButtons}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Name and Titles of Attendees:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.Attendees}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Competitors:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!selectedCompetitorsDisplay}" />
+                            </div>
+                        </div>
+                        <div class="row headerRow">
+                            <h2>Demo Items</h2>
+                        </div>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Selected Platforms:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drl.platformsDisplay}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Selected Solutions:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drl.solDisplay}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                General Concepts:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drl.genconDisplay}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Products/Applications:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drl.prodDisplay}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Other Applications:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.otherProducts}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Integrations:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drl.intDisplay}" />
+                            </div>
+                        </div>
+                        <div class="row headerRow">
+                            <h2>Schedule</h2>
+                        </div>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Date &amp; Time:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!demoDateTimeDisplay}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Timezone:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.demoTimezone}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Duration:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.demoDuration}" />
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <b class="col-xs-4">
+                                Location:
+                            </b>
+                            <div class="col-xs-8">
+                                <apex:outputText value="{!drb.demoLocation}" />
+                            </div>
+                        </div>
+                        <div class="row" style="{!if(isTSMember, '','display: none;')}">
+                            <hr/>
+                            <b class="col-xs-4">
+                                Suppress Notifications:
+                            </b>&nbsp;
+                            <apex:inputCheckbox value="{!drb.suppressNotifications}"/>
+                        </div>
+                        <br/><br/>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" value="Submit Request" action="{!submitVerify}"/>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" value="Submit Request And Accept" action="{!submitVerifyAccept}" rendered="{!showSubmitAndAccept}"/>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" value="Submit Request And Decline" action="{!submitVerifyDecline}" rendered="{!showSubmitAndDecline}"/>
+                        &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" value="Submit Request And Complete" action="{!submitVerifyComplete}" rendered="{!showSubmitAndComplete}"/>
+                    </div></div>
+            </apex:form>
+        </div>
+    </div>
+    <apex:pageBlock rendered="{!showFinished}">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-7 col-sm-8 col-xs-12">
+                    Your request has been submitted. You should receive an email with relevant information shortly. <br/>
+                    Help us make this demo a success. 
+                </div>
+            </div>
+        </div>
+    </apex:pageBlock>
+    <apex:pageBlock rendered="{!showDecline}">
+        <apex:form styleClass="container" id="altInfo">
+            <c:DemoRequestDeclineInfo demo="{!req}"
+                                      rescheduleDate="{!declineDate}"
+                                      rescheduleTime="{!declineTime}"
+                                      origDate="{!demoDate}"
+                                      origTime="{!demoTime}"
+                                      selectedPerson="{!userName}"
+                                      comments="{!declineComments}"
+                                      declineReason="{!declineReason}"
+                                      declineReasons="{!declineReasons}">
+            </c:DemoRequestDeclineInfo>
+            <div class="row">
+                &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitDecline}" value="Submit"></apex:commandButton>
+            </div>
+        </apex:form>
+    </apex:pageBlock>
+</apex:page>

@@ -1,0 +1,89 @@
+<apex:page controller="LicAuditController2" cache="false">
+    <apex:actionStatus id="startimage">
+        <apex:facet name="start">
+            <apex:image value="{!$Resource.sfloader}"/> 
+        </apex:facet>           
+    </apex:actionStatus> 
+<apex:form >
+<apex:pageblock rendered="{!ISBLANK($CurrentPage.parameters.accid)}">
+    <apex:pageblockSection >
+        <apex:inputField value="{!cnt.Accountid}" style="width:200px;"/>
+    </apex:pageblockSection>    
+    <apex:pageblockButtons location="bottom"> 
+    <apex:commandButton action="{!search}" value="Search"/>
+    </apex:pageblockButtons>
+</apex:pageblock>
+<apex:pageBlock title="{!acc.name}">
+<apex:outputPanel rendered="{!AND(!ISNULL(lstPrd),lstPrd.size>0)}" id="thepanel">
+    <apex:commandButton value="Export to Excel" action="{!createExcel}"/>
+   <apex:pageblockTable value="{!lstPrd}" var="prd">
+        <apex:column headerValue="Migrated?(TBD)">
+            <a href="#" >
+                <apex:outputText value="c" rendered="{!OR(CONTAINS(prd,'IVR'),CONTAINS(prd,'voice'))}">
+                </apex:outputText>
+            </a>
+        </apex:column> 
+        <apex:column >
+            <apex:facet name="header">
+                <apex:commandlink value="Product" action="{!sort}" rerender="thepanel" status="startimage"  style="text-decoration:underline;">
+                    <apex:param assignTo="{!sortField}" name="sort" value="product"/>
+                 <apex:image url="/s.gif" styleClass="sortAsc" rendered="{!IF(AND(sortOrder='asc',sortField='product'),true,false)}"/>
+                <apex:image url="/s.gif" styleClass="sortDesc" rendered="{!IF(AND(sortOrder='dsc',sortField='product'),true,false)}"/>                        
+                </apex:commandLink>
+            </apex:facet>        
+             <apex:outputText value="{!prd}" />
+         </apex:column>
+        <apex:column >
+            <apex:facet name="header">
+                <apex:commandlink value="Maintained Quantity" action="{!sort}" rerender="thepanel" status="startimage"  style="text-decoration:underline;">
+                        <apex:param assignTo="{!sortField}" name="sort" value="maintainedquantity"/>
+                 <apex:image url="/s.gif" styleClass="sortAsc" rendered="{!IF(AND(sortOrder='asc',sortField='maintainedquantity'),true,false)}"/>
+                <apex:image url="/s.gif" styleClass="sortDesc" rendered="{!IF(AND(sortOrder='dsc',sortField='maintainedquantity'),true,false)}"/>                        
+                </apex:commandLink>
+            </apex:facet>
+            <a href="/00OU0000001cEB8?pv0={!LEFT(accid,15)}&pv1={!LEFT(accid,15)}&pv2={!prd}&pv3={!mapqty[prd].LineItemIds}" target="_blank">
+                <apex:outputText value="{0,number}">
+                   <apex:param value="{!mapqty[prd].maintainedquantity}"/> 
+                </apex:outputText>
+            </a>
+        </apex:column>
+        <apex:column >
+            <apex:facet name="header">
+                <apex:commandlink value="Purchased Quantity (Active)" action="{!sort}" rerender="thepanel" status="startimage"  style="text-decoration:underline;">
+                        <apex:param assignTo="{!sortField}" name="sort" value="actpurchasedquantity"/>
+                         <apex:image url="/s.gif" styleClass="sortAsc" rendered="{!IF(AND(sortOrder='asc',sortField='purchasedquantity'),true,false)}"/>
+                        <apex:image url="/s.gif" styleClass="sortDesc" rendered="{!IF(AND(sortOrder='dsc',sortField='purchasedquantity'),true,false)}"/>                        
+                    </apex:commandLink>
+            </apex:facet>        
+            <!--<a href="/apex/licauditprd?report=purchased&prd={!prd}&accountid={!accid}" target="_blank">-->
+            <a href="/00OZ0000000ZfVh?pv0={!mapqty[prd].actorderLineIds}&pv1={!prd}" target="_blank">
+                <apex:outputText value="{0,number}">
+                   <apex:param value="{!mapqty[prd].actpurchasedquantity}"/> 
+                </apex:outputText>
+            </a>
+        </apex:column>         
+        <apex:column >
+            <apex:facet name="header">
+                <apex:commandlink value="Purchased Quantity" action="{!sort}" rerender="thepanel" status="startimage"  style="text-decoration:underline;">
+                        <apex:param assignTo="{!sortField}" name="sort" value="purchasedquantity"/>
+                         <apex:image url="/s.gif" styleClass="sortAsc" rendered="{!IF(AND(sortOrder='asc',sortField='purchasedquantity'),true,false)}"/>
+                        <apex:image url="/s.gif" styleClass="sortDesc" rendered="{!IF(AND(sortOrder='dsc',sortField='purchasedquantity'),true,false)}"/>                        
+                    </apex:commandLink>
+            </apex:facet>        
+            <!--<a href="/apex/licauditprd?report=purchased&prd={!prd}&accountid={!accid}" target="_blank">-->
+            <a href="/00OZ0000000ZfVh?pv0={!mapqty[prd].orderLineIds}&pv1={!prd}" target="_blank">
+                <apex:outputText value="{0,number}">
+                   <apex:param value="{!mapqty[prd].purchasedquantity}"/> 
+                </apex:outputText>
+            </a>
+        </apex:column>           
+        <apex:column headervalue="Pre 2002">
+            <a href="/00OZ0000000ZgNo?pv0={!LEFT(accid,15)}&pv1={!prd}" target="_blank">     
+                <apex:outputText value="{0,number}"> <apex:param value="{!mapqty[prd].preQty}"/></apex:outputText>
+            </a>
+        </apex:column>
+    </apex:pageblockTable>
+</apex:outputPanel>
+</apex:pageBlock>
+</apex:form>
+</apex:page>

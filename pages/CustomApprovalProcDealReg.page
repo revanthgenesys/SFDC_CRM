@@ -1,0 +1,109 @@
+<apex:page extensions="CustomApprovalProcDealRegController" standardController="partner_portal_prospect__c" showHeader="false" showChat="false" sidebar="true">
+   <style>
+      .hoverTable tr.overAllStatusRow{font-weight:700;background-color:#ddb929}.whiteHead,td.whiteHead{color:#fff!important;padding-left:10px}.hoverTable tr.dataRow:hover{background-color:#e3f3ff}.hoverTable #overAllStatusRow:hover{background-color:#ddb929}.Approved{background-color:#a1f78d}.Rejected{background-color:#fb8a8c}.Removed{background-color: #c0bebc}.Pending{background-color:#ffd74b}.approval_btn{-webkit-border-radius:4;-moz-border-radius:4;border-radius:4px;font-family:Arial;color:#fff!important;font-size:10.8px;background:#ddb929;padding:5px 10px;margin-left:5px;text-decoration:none}.approval_btn:hover{background:#ebca44;background-image:-webkit-linear-gradient(top,#ebca44,#d1ad1b);background-image:-moz-linear-gradient(top,#ebca44,#d1ad1b);background-image:-ms-linear-gradient(top,#ebca44,#d1ad1b);background-image:-o-linear-gradient(top,#ebca44,#d1ad1b);background-image:linear-gradient(to bottom,#ebca44,#d1ad1b);text-decoration:none}.hoverTable tr#headerRow,.hoverTable tr#headerRow:hover{background:#f2f3f3;border-color:#e0e3e5}.hoverTable tr#headerRow td{padding:11px 0}
+   </style>
+   
+    <!--<apex:includeScript value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/js/jquery-1.10.2.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/js/jquery-ui-1.10.4.min.js')}"/>-->
+   <apex:form >
+   <script type="text/javascript">
+        function recallApprovalFn(URL){
+            //alert(URL);
+            window.open(URL,"_parent");
+        }
+        
+        function submitForAppr(submit){
+            if(confirm('Once you submit this record for approval, you might not be able to edit it or recall it from the approval process depending on your settings. Continue?')==true){
+                window.open(submit,"_parent");
+            }
+        }
+        
+        function approveReject(stepName,TargetRecId){
+            //alert(stepName);
+            //alert(TargetRecId);
+            window.open("/apex/DealRegApproveReject?recid="+TargetRecId+"&step="+stepName,"_parent");
+        }
+        
+   </Script>
+   <apex:pageMessages id="msgs" />
+       <apex:pageBlock rendered="{!NOT(isApprHistoryAvailable)}">
+       No records to display
+           <apex:pageblockButtons location="top">
+                <apex:CommandButton rendered="{!aSW.isSubmitForApproval}" title="Submit For Deal Approval" value="Submit for Approval" onClick="submitForAppr('{!URLFOR($Action.partner_portal_prospect__c.Submit,$CurrentPage.Parameters.ID)}'); return false;"/>
+                <apex:CommandButton rendered="{! !aSW.isSubmitForApproval}" title="Recall Deal Approval Request" value="Recall Approval Request"/>   
+           </apex:pageblockButtons>
+       </apex:pageBlock>
+       <apex:pageBlock rendered="{!isApprHistoryAvailable}">
+
+        <!--<div align = "center">
+            <apex:CommandButton rendered="{!aSW.isSubmitForApproval}" title="Submit For Deal Approval" value="Submit for Approval"/>
+            <apex:CommandButton rendered="{! !aSW.isSubmitForApproval}" title="Recall Deal Approval Request" value="Recall Approval Request" />
+        </div>-->
+       
+       <div class="pbBody">
+           <table class="list hoverTable" border="0" cellpadding="0" cellspacing="0">
+               <tbody>
+                   <tr class="dataRow" id="headerRow">
+                   <td class="dataCell"></td>
+                   <td class="dataCell"></td>                  
+                   <td class="dataCell" colspan="3">
+                        <!--<div align = "center">
+                           <apex:CommandButton rendered="{!aSW.isSubmitForApproval}" title="Submit For Deal Approval" value="Submit for Approval"/>
+                           <apex:CommandButton rendered="{! !aSW.isSubmitForApproval}" title="Recall Deal Approval Request" value="Recall Approval Request" />
+                        </div>-->
+                   </td>
+
+                   <td class="dataCell"></td>
+                   <td class="dataCell"></td>                                                        
+                   </tr>
+                   <tr class="headerRow">
+                       <th width="200">Action</th>
+                       <th>Date</th>
+                       <th>Status</th>
+                       <th>Assigned To</th>
+                       <th>Actual Approver</th>
+                       <th>Comments</th>
+                       <th>Overall Status</th>
+                   </tr>                   
+                   <apex:repeat value="{!aSW.approvals}" var="s">
+                       <tr class="overAllStatusRow dataRow" id="overAllStatusRow">
+                           <td colspan="6" class="dataCell whiteHead">
+                               {!IF(AND(s['listOfSteps'][0].stepstatus != 'Started', s['listOfSteps'][0].ProcessNode.Name != NULL),IF( s['listOfSteps'][0].stepstatus !='Removed','Step : '+s['listOfSteps'][0].ProcessNode.Name + IF(s['listOfSteps'][0].stepstatus=='Pending',' (Pending for first approval) ',''),'Approval Request Recalled'), 'Approval Request Submitted')}
+                           </td>
+                           <td class="dataCell {!s['listOfSteps'][0].stepstatus}">
+                                {!IF(AND(s['listOfSteps'][0].stepstatus != 'Started',s['listOfSteps'][0].stepstatus != 'NoResponse'),IF( s['listOfSteps'][0].stepstatus !='Removed',s['listOfSteps'][0].stepstatus,'Recalled'), '')}
+                           </td>
+                       </tr>
+                           <apex:repeat var="step" value="{!s.listOfSteps}">
+                               <tr class="dataRow">
+                                   <td class="dataCell">
+                                       <apex:outputPanel rendered="{!step.stepstatus == 'Pending'}">
+                                               <a href="{!s.workItemReassignLink}" target="_parent" style="color:#015ba7">Reassign</a> | 
+                                               <!--<a href="{!ORG_LNK}/apex/DealRegApproveReject?recid={!step.TargetObjectId}&step={!step.ProcessNode.DeveloperName}" target="_parent" style="color:#015ba7">Approve / Reject</a>-->
+                                               <apex:commandLink value="Approve / Reject" style="color:#015ba7" onclick="approveReject('{!step.ProcessNode.DeveloperName}','{!step.TargetObjectId}'); return false;"/>
+                                               <!--<apex:outputLink value="/apex/DealRegApproveReject?recid={!step.TargetObjectId}&step={!step.ProcessNode.DeveloperName}" id="theLink" style="color:#015ba7">Approve / Reject</apex:outputLink>-->
+                                       </apex:outputPanel>
+                                   </td>
+                                   <td class="dataCell">
+                                       <apex:outputText value="{0,date,MM/dd/yyyy HH:mm:ss}">
+                                           <apex:param value="{!step.CreatedDate}"/>
+                                       </apex:outputText> 
+                                   </td>
+                                   <td class="dataCell">{!IF(step.Stepstatus!='NoResponse',IF(step.Stepstatus == 'Started','Submitted',IF(step.Stepstatus == 'Removed','Recalled',step.Stepstatus)),'')}</td>
+                                   <td class="dataCell"><a href="/{!step.OriginalActorID}" target='_parent'>{!step.OriginalActor.Name}</a></td>
+                                   <td class="dataCell"><a href="/{!step.ActorId}" target='_parent'>{!step.Actor.Name}</a></td>
+                                   <td class="dataCell">{!step.comments}</td>
+                                   <td></td>
+                               </tr>
+                           </apex:repeat>
+                </apex:repeat>
+               </tbody>
+           </table>
+       </div>
+       <apex:pageblockButtons location="top">
+            <apex:CommandButton rendered="{!aSW.isSubmitForApproval}" title="Submit For Deal Approval" value="Submit for Approval" onClick="submitForAppr('{!URLFOR($Action.partner_portal_prospect__c.Submit,$CurrentPage.Parameters.ID)}'); return false;"/>
+            <apex:CommandButton rendered="{! !aSW.isSubmitForApproval}" title="Recall Deal Approval Request" value="Recall Approval Request" onClick="recallApprovalFn('{!recallURL}'); return false;"/>   
+       </apex:pageblockButtons>
+       </apex:pageBlock>
+   </apex:form>
+</apex:page>

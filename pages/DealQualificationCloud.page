@@ -1,0 +1,854 @@
+<apex:page id="pg" standardController="Deal_Qualification__c" extensions="DealQualificationCloudController" title="{!objOppty.Name}" tabStyle="Opportunity" action="{!reviseOnLoad}">
+    
+    
+    <apex:form id="form">  
+        <apex:sectionHeader title="Deal Qualification" subtitle="{!objOppty.Name}"/>  
+        <div style="height:15px;"> 
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    <apex:image value="/img/loading.gif"/>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>                      
+        <apex:actionFunction name="reviseAF" action="{!revise}" />
+
+        <apex:pageMessages id="pgmsgs"/>
+        <apex:commandButton value="Back To Opportunity" onclick="location.href='/{!objOppty.id}'; return false;" rendered="{!blnHideDQ}"/>
+        <apex:outputPanel rendered="{!NOT(blnHideDQ)}">
+                
+        <div style="width:100%; text-align:right;">
+            <a style="color:red;font-size:160%;"  href="#" target="_blank">
+                <b>Help FAQs</b>
+            </a>
+        </div>        
+        <apex:pageBlock title="{!IF(strOfferingTypeToDisplay == 'PureCloud',strOfferingTypeToDisplay,strOfferingTypeToDisplay & ' ' & 'Cloud') & ' : ' & objDQ.Name}" id="pgblk">
+            <!--Mukunth added below section for INC0416843 - DQ Special Offers Sub-aprpovers-->
+            <apex:actionStatus id="status1">                   
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv waitingSearchDivOpacity" style="width: 100%; height: 100%; display: block;opacity: 0.60;"/>
+                    <div id="loading_image" class="waitingSearchDiv" style="width: 100%; height: 100%; display: block;">
+                        <div class="waitingHolder" style="top: 20%; width: 20px;background:#fff;">
+                            <img class="waitingImage" src="/img/loading.gif" style="background:#fff;"/>
+                            <span class="waitingDescription">Refreshing...</span>
+                        </div>
+                    </div>
+                </apex:facet>
+                <apex:facet name="stop"/>
+            </apex:actionStatus>
+            <!--Mukunth code end - DQ Special Offers-->
+            <apex:pageBlockbuttons location="top">
+                <apex:commandButton value="Save Draft" action="{!save}" rendered="{!((blnIsDealFactoryUser || blnIsFinanceUser) && objDQ.Status__c != 'Approved') || (NOT(blnIsDealFactoryUser) && NOT(blnIsReadOnly))}"  status="status" reRender="pgmsgs,theTabPanel" oncomplete="onSaveComplete(); return false;"/>
+                <apex:commandButton value="Revise" onclick="doRevise(); return false;" rendered="{!blnIsReadOnly}" status="status"/>
+                <apex:commandButton value="Back To Opportunity" onclick="location.href='/{!objOppty.id}'; return false;"/>
+                <apex:commandButton value="Submit for Approval" action="{!submitForApproval}" rendered="{!NOT(blnIsReadOnly)}"/>
+                <!--Mukunth added below button for INC0416843 - DQ Special Offers Sub-aprpovers-->
+                <apex:commandButton value="Save" action="{!saveFinanceApproval}" status="status1" rendered="{!isRevSubApprover || isOMBSubApprover || isCCSubApprover || isLegalSubApprover}"  reRender="specOfferApprSec"/>
+                <!--Mukunth  - DQ Code End-->
+            </apex:pageBlockbuttons>
+            
+            <apex:tabPanel switchType="client" selectedTab="dqTab" id="theTabPanel">
+                <apex:tab label="Deal Qualification" name="dqTab" id="dqTab">
+                    
+                    <apex:pageBlockSection >
+                        <apex:outputField value="{!objDQ.Status__c}" label="Approval Status"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Opportunity Details">
+                        <apex:outputField value="{!objOppty.Name}" label="Opportunity Name"/>
+                        <apex:outputField value="{!objDQ.Platform_Type__c}"/>
+                        <apex:outputField value="{!objOppty.AccountId}" label="End User"/>
+                        <!--Anju Nov 17-->
+                        <apex:outputField value="{!objOppty.BusinessPartner__c}"/>
+                        <apex:outputField value="{!objOppty.Owner.Name}" label="Owner"/>
+                        <apex:outputField value="{!objOppty.Country_Region__c}"/>
+                        
+                        <!-- Added by Anju Aug 28, 2017 starts -->
+                        <apex:outputField value="{!objOppty.Owner.Segment__c}" label="Sales Segment" rendered="{!objDQ.Offering_Type__c == 'PureCloud'}"/>
+                        <apex:outputField value="{!objOppty.Direct_Indirect_Sale__c}" rendered="{!objDQ.Offering_Type__c == 'PureCloud' || objDQ.Offering_Type__c == 'PureConnect Cloud'}"/>
+                        <!--Anju Nov 17-->
+                        <apex:inputHidden />
+                        <apex:outputField value="{!objOppty.Sold_To_Country__c}" rendered="{!objDQ.Offering_Type__c == 'PureCloud' || objDQ.Offering_Type__c == 'PureConnect Cloud'}"/>
+                        
+                        
+                        <apex:outputField value="{!objOppty.Primary_Solution__c}"/>
+                        <apex:outputField value="{!objOppty.Country_Sub_Region__c}"/>
+                        <apex:outputField value="{!objOppty.StageName}"/>
+                        <apex:outputField value="{!objOppty.Type}"/>
+                        <!--<apex:outputField value="{!objDQ.Offering_Type__c}"/>-->
+                        <apex:outputText value="{!strOfferingTypeToDisplay}" label="Offering Type"/>
+                        <apex:outputField value="{!objDQ.Quote__c}"/>
+                        
+                        <apex:outputText value="{0, number, 00.00}" label="{!$ObjectType.Opportunity.fields.ACV_Subscription_Only__c.Label}">
+                          <apex:param value="{!objOppty.ACV_Subscription_Only__c}" />
+                        </apex:outputText>
+                        <apex:inputHidden />
+                        <!--Anju Nov 17-->
+                        <apex:outputText value="{0, number, 00.00}" label="{!$ObjectType.Opportunity.fields.Total_Annual_Contract_Value__c.Label}">
+                          <apex:param value="{!objOppty.Total_Annual_Contract_Value__c}" />
+                        </apex:outputText>
+                        
+                        <apex:outputField value="{!objDQ.PureCloud_Trial__c}" rendered="{!objDq.Offering_Type__c == 'PureCloud'}"/>
+                        <apex:inputHidden rendered="{!objDq.Offering_Type__c == 'PureCloud'}"/>
+                        
+                        <apex:outputField value="{!objDQ.Initial_Subscription_Term_Months__c}" label="Initial Subscription Term (Months)" rendered="{!objDq.Offering_Type__c != 'Business Edition' && objDq.Offering_Type__c != 'PureCloud' && objDq.Offering_Type__c != 'PureConnect Cloud'}" />
+                        
+                        <apex:outputField value="{!objQuote.Initial_Subscription_Term__c}" label="Initial Subscription Term" rendered="{!objDq.Offering_Type__c == 'Business Edition'}" />                        
+                        
+                        <!--<apex:inputHidden rendered="{!objDq.Offering_Type__c == 'PureConnect Cloud'}"/>-->
+                        
+                        <apex:inputField required="true" id="initialterms" value="{!objDQ.Initial_Subscription_Term_Months_PC__c}" rendered="{!NOT(blnIsReadOnly) && (objDq.Offering_Type__c == 'PureCloud')}"/>
+                        
+                        <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$ObjectType.Deal_Qualification__c.fields.Initial_Subscription_Term_Months_PC__c.Label}"/>
+                        <apex:selectList value="{!objDQ.Initial_Subscription_Term_Months_PC__c}" size="1" label="{!$ObjectType.Deal_Qualification__c.fields.Initial_Subscription_Term_Months_PC__c.Label}" rendered="{!NOT(blnIsReadOnly) && (objDq.Offering_Type__c == 'PureConnect Cloud')}" required="true">
+                            <apex:SelectOption itemLabel="12"  itemValue="12"/>
+                            <apex:SelectOption itemLabel="24"  itemValue="24"/>  
+                            <apex:SelectOption itemLabel="36"  itemValue="36"/> 
+                            <apex:SelectOption itemLabel="48"  itemValue="48"/> 
+                            <apex:SelectOption itemLabel="60"  itemValue="60"/> 
+                            <apex:SelectOption itemLabel="72"  itemValue="72"/> 
+                            <apex:SelectOption itemLabel="84"  itemValue="84"/>
+                            <apex:SelectOption itemLabel="96"  itemValue="96"/>
+                            <apex:SelectOption itemLabel="108"  itemValue="108"/>
+                            <apex:SelectOption itemLabel="120"  itemValue="120"/>                        
+                        </apex:selectList>
+                        </apex:pageBlockSectionItem>
+                        
+                        
+                        <apex:inputField value="{!objDQ.If_Other_Term_Months_Requested__c}" rendered="{!NOT(blnIsReadOnly) && (objDq.Offering_Type__c == 'PureCloud')}"/>
+                        <apex:outputField value="{!objDQ.Initial_Subscription_Term_Months_PC__c}" rendered="{!blnIsReadOnly &&(objDq.Offering_Type__c == 'PureCloud' || objDq.Offering_Type__c == 'PureConnect Cloud')}"/>
+                        <apex:outputField value="{!objDQ.If_Other_Term_Months_Requested__c}" rendered="{!blnIsReadOnly && (objDq.Offering_Type__c == 'PureCloud' || objDq.Offering_Type__c == 'PureConnect Cloud')}"/>
+                        
+                        
+                        <apex:inputField required="true" value="{!objDQ.Ramp_Period_Days__c}" rendered="{!NOT(blnIsReadOnly) && (objDq.Offering_Type__c == 'PureCloud' || objDq.Offering_Type__c == 'PureConnect Cloud')}"/>
+                        <apex:inputField value="{!objDQ.If_Other_Ramp_Period_Requested_Days__c}" rendered="{!NOT(blnIsReadOnly) && (objDq.Offering_Type__c == 'PureCloud' || objDq.Offering_Type__c == 'PureConnect Cloud')}"/>
+                        <apex:outputField value="{!objDQ.Ramp_Period_Days__c}" rendered="{!blnIsReadOnly && (objDq.Offering_Type__c == 'PureCloud' || objDq.Offering_Type__c == 'PureConnect Cloud')}"/>
+                        <apex:outputField value="{!objDQ.If_Other_Ramp_Period_Requested_Days__c}" rendered="{!blnIsReadOnly && (objDq.Offering_Type__c == 'PureCloud' || objDq.Offering_Type__c == 'PureConnect Cloud')}"/>
+                        
+                        
+                       
+                        
+                        
+                        <apex:inputField value="{!objDQ.Billing_Period__c}" rendered="{!(objDq.Offering_Type__c == 'PureConnect Cloud') && NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.Billing_Period__c}" rendered="{!(objDq.Offering_Type__c == 'PureConnect Cloud') && (blnIsReadOnly)}"/>
+                       
+                        <!--Anju Nov 17-->
+                        <apex:inputField value="{!objDQ.Total_Genesys_Agent_Seats__c}" label="Total Existing Genesys Agent Seats" required="true" rendered="{!NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.Total_Genesys_Agent_Seats__c}" label="Total Existing Genesys Agent Seats" rendered="{!blnIsReadOnly}"/>
+                        
+                        <apex:inputField value="{!objDQ.Total_Agent_Seats__c}" required="true" rendered="{!NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.Total_Agent_Seats__c}" rendered="{!blnIsReadOnly}"/>
+                        
+                        <apex:inputField value="{!objDQ.Number_of_Seats__c}" label="Number of Agent Seats in this opportunity" required="true" rendered="{!NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.Number_of_Seats__c}" label="Number of Agent Seats in this opportunity"  rendered="{!blnIsReadOnly}"/>
+                        <apex:outputField value="{!objDQ.Quote__r.Reason_for_New_when_Sub_s_Already_Exist__c }" label="Reason for New when Sub(s) Already Exist"  rendered="{!blnIsReadOnly}"/>
+
+                        <apex:inputField value="{!objDQ.Committed_Minutes__c}" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType == 'Business Edition')}"/>
+                        <apex:outputField value="{!objDQ.Committed_Minutes__c}" rendered="{!AND(blnIsReadOnly, strOfferingType == 'Business Edition')}"/>
+                        
+                        <apex:inputField value="{!objDQ.Estimated_Usage_Minutes__c}" label="Estimate Usage Mintues (Monthly)" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType == 'Business Edition')}"/>
+                        <apex:outputField value="{!objDQ.Estimated_Usage_Minutes__c}" label="Estimate Usage Mintues (Monthly)" rendered="{!AND(blnIsReadOnly, strOfferingType == 'Business Edition')}"/>
+                        
+                        <!--<apex:inputField value="{!objDQ.Estimated_Usage_Minutes_Numbers__c}" label="Estimate Usage Mintues (Monthly)" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType != 'Business Edition')}"/>
+                        <apex:outputField value="{!objDQ.Estimated_Usage_Minutes_Numbers__c}" label="Estimate Usage Mintues (Monthly)" rendered="{!AND(blnIsReadOnly, strOfferingType != 'Business Edition')}"/>-->
+                        <script type="text/javascript">
+                        (function(){
+                            var e = document.querySelectorAll('[id$="pg:form:pgblk:j_id40:initialterms"]')[0];
+                            var oType = '{!objDq.Offering_Type__c}';
+                            if (e[0].value == '1' && oType == 'PureConnect Cloud') {e.remove(0);}
+                        })();
+                        </script>                        
+                    </apex:pageBlockSection>
+                              
+                    <apex:pageBlockSection title="Pricing (Not including Telco)" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType == 'PureConnect Cloud')}">
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Net_Deal_Value__c.InlineHelpText}">
+                            <apex:outputLabel value="Net Deal Size (ACV)"/>
+                            <apex:outputField value="{!objDQ.Net_Deal_Value__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:selectList value="{!objDQ.Pricing_Model__c}" size="1" label="Pricing Model">
+                            <apex:SelectOption itemLabel="Named"  itemValue="Named"/>
+                            <apex:SelectOption itemLabel="Concurrent"  itemValue="Concurrent"/>                          
+                        </apex:selectList>
+                        <apex:outputField value="{!objDQ.Base_Agent_Discount__c}"/>
+                        <apex:outputField value="{!objDQ.Expiration_Date__c}" label="DQ Expiration Date"/>
+                        <apex:outputField value="{!objDQ.Hardware_Discount__c}" label="Telco, MPLS, Hardware, 3rd Party, and Miscellaneous Costs Discount"/>
+                        <apex:outputField value="{!objDQ.Editable_List_Price_Approval_Required__c}" rendered="{!objDQ.Offering_Type__c != 'PureCloud'}"/>                        
+                        <apex:outputField value="{!objDQ.Business_Users_Add_On__c}"/>
+                        <apex:outputField value="{!objDQ.Special_Offer_Terms__c}"/>
+                        <!--<apex:inputField value="{!objDQ.Business_Users_Provisioning_Discount__c}"/> --> 
+                        <apex:outputField value="{!objDQ.Data_Center_Provisioning_Discount__c}"/>     
+                        
+                        <apex:outputField value="{!objDQ.Overage_Discount__c}"/> 
+                        <apex:outputField value="{!objDQ.Third_Party_Discount__c}"/> 
+                        <apex:outputField value="{!objDQ.TCV_Reduction__c}"/>
+                        <apex:outputField value="{!objDQ.Deal_Score__c}"/>                                         
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Justification_for_Discount__c.InlineHelpText}">  
+                            <apex:outputLabel value="Justification for Discount"/>
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                <apex:inputField value="{!objDQ.Justification_for_Discount__c}" style="width:250px;"/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>                        
+                        
+                    </apex:pageBlockSection> 
+                    <!--Anju June 2018 Suggested discount -->
+                    <apex:pageBlockSection title="Suggested Discount" id="pnlSecApprovedDiscount" rendered="{!strOfferingType == 'PureConnect Cloud'}">                
+                        
+                    <apex:pageBlockSectionItem helpText="A suggested discount determined by the product line item with Highest Seat Count">
+                        <apex:outputLabel value="Seat Size Discount" />                        
+                        <apex:outputText value="{!objDQ.Seat_Discount_Range__c}" />
+                    </apex:pageBlockSectionItem>    
+                                         
+                    </apex:pageBlocksection>                      
+                    <apex:pageBlockSection title="Pricing (Not including Telco)" rendered="{!AND(strOfferingType != 'PureConnect Cloud', strOfferingType != 'PureCloud')}">
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Net_Deal_Value__c.InlineHelpText}" rendered="{!NOT(blnIsReadOnly)}">
+                            <apex:outputLabel value="Net Deal Size (ACV)"/>
+                            <apex:outputField value="{!objDQ.Net_Deal_Value__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:selectList value="{!objDQ.Pricing_Model__c}" size="1" label="Pricing Model" rendered="{!NOT(blnIsReadOnly)}">
+                            <!--Mukunth added for PEC -->
+                            <apex:SelectOption itemLabel="Enabled"  itemValue="Enabled"/>
+                            <!--Mukunth code End -->
+                            <apex:SelectOption itemLabel="Named"  itemValue="Named"/>
+                            <apex:SelectOption itemLabel="Concurrent"  itemValue="Concurrent"/>                          
+                        </apex:selectList>
+                        
+                                               
+                        <apex:outputField value="{!objDQ.Discount_On_Quote__c}" label="{!IF(strOfferingType == 'Business Edition', 'What is the average Discount ?', 'Discount on Quote')}" rendered="{!NOT(blnIsReadOnly)}"/>
+                        
+                        
+                        <apex:outputField value="{!objDQ.Expiration_Date__c}" label="DQ Expiration Date"/>
+                        <apex:outputField value="{!objDQ.Editable_List_Price_Approval_Required__c}" />
+                        <apex:outputField value="{!objDQ.Special_Offer_Terms__c}"/>
+                        <apex:outputField value="{!objDQ.Deal_Score__c}"/>
+                         
+                        
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Justification_for_Discount__c.InlineHelpText}" rendered="{!NOT(blnIsReadOnly)}">  
+                            <apex:outputLabel value="Justification for Discount"/>
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                <apex:inputField value="{!objDQ.Justification_for_Discount__c}" style="width:250px;"/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection> 
+                    <apex:pageBlockSection title="Pricing (Not including Telco)" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType == 'PureCloud')}">
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Net_Deal_Value__c.InlineHelpText}" rendered="{!NOT(blnIsReadOnly)}">
+                            <apex:outputLabel value="Net Deal Size (ACV)"/>
+                            <apex:outputField value="{!objDQ.Net_Deal_Value__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:selectList value="{!objDQ.Pricing_Model__c}" size="1" label="Pricing Model" rendered="{!NOT(blnIsReadOnly)}">
+                            <apex:SelectOption itemLabel="Named"  itemValue="Named"/>
+                            <apex:SelectOption itemLabel="Concurrent"  itemValue="Concurrent"/>                          
+                        </apex:selectList>
+                        
+                        <apex:outputField value="{!objDQ.PureCloud_Monthly_Minimum__c}" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType == 'PureCloud')}"/>
+                        <apex:outputField value="{!objDQ.If_Other_PureCloud_Monthly_Minimum_Req__c}" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType == 'PureCloud')}"/>
+                        
+                        
+                        <apex:outputField value="{!objDQ.Discount_On_Quote__c}" label="{!IF(strOfferingType == 'Business Edition', 'What is the average Discount ?', 'Discount on Quote')}" rendered="{!NOT(blnIsReadOnly)}"/>
+                        
+                        <apex:outputField value="{!objDQ.PS_Discount_on_Quote__c}" rendered="{!NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.Hardware_Discount__c}" rendered="{!NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.Software_Discount__c}" rendered="{!NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.Overage_Discount__c}" rendered="{!NOT(blnIsReadOnly)}"/>
+                        <apex:outputField value="{!objDQ.TCV_Reduction__c}" rendered="{!NOT(blnIsReadOnly)}"/>
+                        
+                        <apex:outputField value="{!objDQ.Special_Offer_Terms__c}"/> 
+                        <apex:outputField value="{!objDQ.Editable_List_Price_Approval_Required__c}"/>
+                        
+                        <apex:outputField value="{!objDQ.Incentive_Rebate__c}"/>
+                        <!-- Anju Dec 17 -->
+                        <apex:outputField value="{!objDQ.PureCloud_Credit_Applied__c}" rendered="{!AND(NOT(blnIsReadOnly), strOfferingType == 'PureCloud')}"/>
+                        <apex:outputField value="{!objDQ.Deal_Score__c}"/>
+                        
+                        
+                        <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Justification_for_Discount__c.InlineHelpText}" rendered="{!NOT(blnIsReadOnly)}">  
+                            <apex:outputLabel value="Justification for Discount"/>
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                <apex:inputField value="{!objDQ.Justification_for_Discount__c}" style="width:250px;"/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>                      
+                    <apex:pageBlockSection title="Pricing (Not including Telco)" rendered="{!AND(blnIsReadOnly, strOfferingType == 'PureConnect Cloud')}">
+                        <apex:outputField value="{!objDQ.Net_Deal_Value__c}" label="Net Deal Size (ACV)"/>
+                        <apex:outputField value="{!objDQ.Pricing_Model__c}"/>
+                        <apex:outputField value="{!objDQ.Base_Agent_Discount__c}"/>
+                        <apex:outputField value="{!objDQ.Expiration_Date__c}" label="DQ Expiration Date"/>
+                        <apex:outputField value="{!objDQ.Hardware_Discount__c}" label="Telco, MPLS, Hardware, 3rd Party, and Miscellaneous Costs Discount"/>
+                        <apex:outputField value="{!objDQ.Editable_List_Price_Approval_Required__c}"/>
+                        <apex:outputField value="{!objDQ.Business_Users_Add_On__c}"/>
+                        <apex:outputField value="{!objDQ.Special_Offer_Terms__c}"/>
+                        <!--<apex:outputField value="{!objDQ.Business_Users_Provisioning_Discount__c}"/>   -->      
+                        <apex:outputField value="{!objDQ.Data_Center_Provisioning_Discount__c}"/>  
+                        <apex:outputField value="{!objDQ.Overage_Discount__c}"/> 
+                        <apex:outputField value="{!objDQ.TCV_Reduction__c}"/>
+                        <apex:outputField value="{!objDQ.Deal_Score__c}"/> 
+                        <apex:outputField value="{!objDQ.Third_Party_Discount__c}"/>                 
+                        <apex:outputField value="{!objDQ.Justification_for_Discount__c}"/> 
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Pricing (Not including Telco)" rendered="{!AND(blnIsReadOnly, strOfferingType == 'PureCloud')}">
+                        <apex:outputField value="{!objDQ.Net_Deal_Value__c}" label="Net Deal Size (ACV)"/>
+                        <apex:outputField value="{!objDQ.Pricing_Model__c}"/>
+
+                        <apex:outputField value="{!objDQ.PureCloud_Monthly_Minimum__c}" rendered="{!AND((blnIsReadOnly), strOfferingType == 'PureCloud')}"/>
+                        <apex:outputField value="{!objDQ.If_Other_PureCloud_Monthly_Minimum_Req__c}" rendered="{!AND((blnIsReadOnly), strOfferingType == 'PureCloud')}"/>
+                       
+
+                        <apex:outputField value="{!objDQ.Discount_On_Quote__c}" label="{!IF(strOfferingType == 'Business Edition', 'What is the average Discount ?', 'Overall Discount on Quote')}"/>
+                        
+                        <apex:outputField value="{!objDQ.PS_Discount_on_Quote__c}"/>
+                        <apex:outputField value="{!objDQ.Hardware_Discount__c}"/>
+                        <apex:outputField value="{!objDQ.Software_Discount__c}"/>
+                        <apex:outputField value="{!objDQ.Overage_Discount__c}"/>
+                        <apex:outputField value="{!objDQ.TCV_Reduction__c}"/>
+                        
+                        <apex:outputField value="{!objDQ.Incentive_Rebate__c}"/>
+
+                        <apex:outputField value="{!objDQ.Expiration_Date__c}" label="DQ Expiration Date"/>
+                        <apex:outputField value="{!objDQ.Editable_List_Price_Approval_Required__c}"/>
+                        <apex:outputField value="{!objDQ.Special_Offer_Terms__c}"/> 
+                        <apex:outputField value="{!objDQ.Special_Offers_Business_Exceptions__c}"/> 
+                        <apex:outputField value="{!objDQ.Deal_Score__c}"/>                      
+                        <apex:outputField value="{!objDQ.Justification_for_Discount__c}"/> 
+                        <apex:outputField value="{!objDQ.PureCloud_Credit_Applied__c}" rendered="{!AND((blnIsReadOnly), strOfferingType == 'PureCloud')}"/>                       
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Pricing (Not including Telco)" rendered="{!AND(blnIsReadOnly, strOfferingType != 'PureConnect Cloud',strOfferingType != 'PureCloud')}">
+                        <apex:outputField value="{!objDQ.Net_Deal_Value__c}" label="Net Deal Size (ACV)"/>
+                        <apex:outputField value="{!objDQ.Pricing_Model__c}"/>
+                        <apex:outputField value="{!objDQ.Discount_On_Quote__c}" label="{!IF(strOfferingType == 'Business Edition', 'What is the average Discount ?', 'Overall Discount on Quote')}"/>
+                        
+                        <apex:outputField value="{!objDQ.Expiration_Date__c}" label="DQ Expiration Date"/>
+                        <apex:outputField value="{!objDQ.Editable_List_Price_Approval_Required__c}"/>
+                        <apex:outputField value="{!objDQ.Special_Offer_Terms__c}"/> 
+                        <apex:outputField value="{!objDQ.Deal_Score__c}"/>                      
+                        <apex:outputField value="{!objDQ.Justification_for_Discount__c}"/>                        
+                    </apex:pageBlockSection>
+                    <apex:actionRegion immediate="true">
+                        <apex:pageBlockSection title="Telco" id="pgblkSecTelco" columns="1">
+                            <apex:inputField value="{!objDQ.Is_Telco_Included__c}" label="{!if(objDQ.Offering_Type__c == 'PureCloud','Is PureCloud Voice Included?','Is Telco Included?')}" required="true" rendered="{!NOT(blnIsReadOnly) && strOfferingType != 'PureConnect Cloud'}">
+                                <apex:actionSupport event="onchange" action="{!telcoIncludedToggleHandler}" reRender="pgblkSecTelco,pgmsgs" status="status"/>
+                            </apex:inputField>
+                            <apex:inputField value="{!objDQ.Is_Telco_Included__c}" label="Is Telco Included" required="true" rendered="{!NOT(blnIsReadOnly) && strOfferingType == 'PureConnect Cloud'}"/>
+                            
+                            <apex:outputField value="{!objDQ.Is_Telco_Included__c}" label="{!if(objDQ.Offering_Type__c == 'PureCloud','Is PureCloud Voice Included?','Is Telco Included?')}" rendered="{!blnIsReadOnly}"/>
+                            
+                            <apex:actionRegion immediate="true">
+                                <apex:pageBlockSection id="ratesQuestion" columns="3" rendered="{!AND(objDQ.Is_Telco_Included__c == 'Yes', NOT(blnIsReadOnly), strOfferingType != 'PureConnect Cloud')}">
+                                    <apex:inputField value="{!objDQ.Is_Telco_Quoted_At_Standard_Rates__c}" required="true" label="Is Telco being quoted at the Standard Telco Rates ?">
+                                        <apex:actionSupport event="onchange" reRender="pgblkSecTelco,pgmsgs" status="status"/>
+                                    </apex:inputField>                            
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Explanation_for_Telco_Pricing__c.InlineHelpText}" rendered="{!objDQ.Is_Telco_Quoted_At_Standard_Rates__c == 'No'}">  
+                                        <apex:outputLabel value="Explanation for Telco pricing"/>
+                                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                            <apex:inputField value="{!objDQ.Explanation_for_Telco_Pricing__c}" style="width:250px;"/>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:outputLink style="color:red;font-size:110%;" value="https://genesys.gosavo.com/Document/Document.aspx?id=37679964&view=&srlid=46979010&srisprm=False&sritidx=0&srpgidx=0&srpgsz=25" target="_blank">Pricing Guide</apex:outputLink>
+                                </apex:pageBlockSection>
+                            </apex:actionRegion>
+                            
+                            <apex:pageBlockSection columns="3" rendered="{!AND(objDQ.Is_Telco_Included__c == 'Yes', blnIsReadOnly, strOfferingType != 'PureConnect Cloud')}">
+                                <apex:outputField value="{!objDQ.Is_Telco_Quoted_At_Standard_Rates__c}"/>
+                                <apex:outputField value="{!objDQ.Explanation_for_Telco_Pricing__c}" label="Explanation for Telco pricing" rendered="{!objDQ.Is_Telco_Quoted_At_Standard_Rates__c == 'No'}"/>                            
+                                <apex:outputLink style="color:red;font-size:110%;" value="https://genesys.gosavo.com/Document/Document.aspx?id=37679964&view=&srlid=46979010&srisprm=False&sritidx=0&srpgidx=0&srpgsz=25" target="_blank">Pricing Guide</apex:outputLink>
+                            </apex:pageBlockSection>
+                            
+                            <!-- MPLS Info -->
+                            <apex:actionRegion immediate="true">
+                                <apex:pageBlockSection columns="1" rendered="{!NOT(blnIsReadOnly) && objDQ.Offering_Type__c != 'PureCloud'}">
+                                    <apex:inputField value="{!objDQ.Is_MPLS_included__c}" required="true">
+                                        <apex:actionSupport event="onchange" reRender="MPLSInfo,pgmsgs" status="status"/>
+                                    </apex:inputField>
+                                </apex:pageBlockSection>
+                            </apex:actionRegion>
+                            
+                            <apex:outputPanel id="MPLSInfo">
+                                <apex:pageBlockSection columns="2" rendered="{!AND(objDQ.Offering_Type__c != 'PureCloud', objDQ.Is_MPLS_included__c == 'Yes', NOT(blnIsReadOnly))}">
+                                    <apex:inputField value="{!objDQ.Has_MPLS_been_approved__c}" required="true"/>
+                                    <apex:inputField value="{!objDQ.Has_MPLS_questionnaire_been_submitted__c}" required="true"/>
+                                    <apex:inputField value="{!objDQ.Is_Inbound_Voice_included__c}" required="true"/>
+                                    <apex:inputField value="{!objDQ.Data_Center_Region__c}" required="true"/>
+                                </apex:pageBlockSection>
+                            </apex:outputPanel>
+                            
+                            <apex:outputField value="{!objDQ.Is_MPLS_included__c}" rendered="{!AND(objDQ.Offering_Type__c != 'PureCloud', objDQ.Is_Telco_Included__c == 'Yes', blnIsReadOnly)}" />
+                            <apex:pageBlockSection columns="2" rendered="{!AND(objDQ.Offering_Type__c != 'PureCloud', objDQ.Is_MPLS_included__c == 'Yes', blnIsReadOnly)}">
+                                <apex:outputField value="{!objDQ.Has_MPLS_been_approved__c}"/>
+                                <apex:outputField value="{!objDQ.Has_MPLS_questionnaire_been_submitted__c}"/>
+                                <apex:outputField value="{!objDQ.Is_Inbound_Voice_included__c}"/>
+                                <apex:outputField value="{!objDQ.Data_Center_Region__c}"/>
+                            </apex:pageBlockSection>
+                        </apex:pageBlockSection>
+                    </apex:actionRegion>
+                    <apex:actionRegion immediate="true">
+                        <apex:pageBlockSection title="Overages" id="pgblkSecOverage" columns="2" rendered="{!strOfferingType == 'PureConnect Cloud'}">
+                            <apex:inputField value="{!objDQ.Any_Overage_over_20_for_any_month__c}" rendered="{!NOT(blnIsReadOnly)}" >
+                                <apex:actionSupport event="onchange" action="{!overageToggleHandler}" reRender="pgblkSecOverage,pgmsgs" status="status" />
+                            </apex:inputField>                                
+                            <apex:outputField value="{!objDQ.Any_Overage_over_20_for_any_month__c}" rendered="{!blnIsReadOnly}"/>                            
+                            <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(NOT(blnIsReadOnly), objDQ.Any_Overage_over_20_for_any_month__c)}">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                <apex:inputField value="{!objDQ.Explanation_for_Overage__c}" style="width:250px;"/>
+                            </apex:outputPanel>                            
+                            <apex:outputField value="{!objDQ.Explanation_for_Overage__c}" rendered="{!AND(blnIsReadOnly, objDQ.Any_Overage_over_20_for_any_month__c)}"/>                                                                                
+                        </apex:pageBlockSection>            
+                    </apex:actionRegion>
+                    <!--<apex:pageBlockSection title="Genesys Care" columns="1">-->
+                        <!-- Using pageBlockSectionItem to field hide help text -->
+                        <!--<apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Genesys Care"/>
+                            <apex:outputField value="{!objDQ.Genesys_Care__c}"/>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>-->
+                    <apex:pageBlockSection title="Subscription Terms" id="pgblkSecBurst" columns="2" rendered="{!strOfferingType == 'PureConnect Cloud'}">
+                                <apex:outputField value="{!objDQ.Overage_Allowance__c}"/>
+                                <apex:pageBlockSectionItem rendered="{!blnIsDealFactoryUser}">
+                                    <apex:outputLabel value="Burst Allowance (Other) %"  />
+                                    <apex:inputField value="{!objDQ.Overage_Allowance_Other__c}" />
+                                </apex:pageBlockSectionItem>
+                                <apex:outputText value="{!objDQ.Overage_Allowance_Other__c}" rendered="{!NOT(blnIsDealFactoryUser)}"/>  
+                                <apex:outputField value="{!objDQ.Price_Escalation__c}"/>
+                                <apex:inputField label="Annual Price Increase Other (%)" value="{!objDQ.Annual_Price_Escalation_Other__c}"  rendered="{!blnIsDealFactoryUser}"/>                                
+                                <apex:outputText value="{!objDQ.Annual_Price_Escalation_Other__c}" rendered="{!NOT(blnIsDealFactoryUser)}"/>                             
+                    </apex:pageBlockSection> 
+                    <apex:pageBlockSection title="Professional Services Opportunity Details" columns="2"  id="pgblkSecPS" rendered="{AND(!objChildPSOppty != null, strOfferingType = 'Business Edition')}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Opportunity"/>
+                            <apex:outputLink value="/{!objChildPSOppty.Id}" target="_blank">{!objChildPSOppty.Name}</apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                        <apex:outputField value="{!objChildPSOppty.OwnerId}"/>
+                        <apex:outputText value="{!objChildPSOppty.CurrencyISOCode} {0, number, ###,##0.00}" label="Professional Services Amount">
+                           <apex:param value="{!objChildPSOppty.PS_Amount_On_Premise__c}" />
+                        </apex:outputText>
+                        <apex:outputField value="{!objChildPSOppty.ProjectType__c}"/>
+                        <apex:outputField value="{!objChildPSOppty.Sold_Margin_PPW__c}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Professional Services Opportunity Details" columns="1" rendered="{AND(!objChildPSOppty == null, strOfferingType == 'Business Edition')}">
+                        <apex:outputLabel value="No Child Professional Services Opportunity"/>
+                    </apex:pageBlockSection>
+                    
+                    
+                        <apex:pageBlockSection title="Business Exceptions"  columns="2" rendered="{!NOT(blnIsReadOnly) && objDQ.Offering_Type__c == 'PureConnect Cloud'}">
+                               
+                               <!--<apex:inputField value="{!objDQ.Monthly_Recurring_Revenue_less_than_14K__c}" >
+                               
+                               
+                               </apex:inputField>
+                               
+                               
+                               <apex:inputField value="{!objDQ.Estimated_Monthly_Recurring_Revenue__c}" id="monthlyRecurringRevenue" required="{!if(objDQ.Monthly_Recurring_Revenue_less_than_14K__c == 'Yes',true,false)}"/>-->
+                               <apex:outputField value="{!objDQ.Less_than_100_Agents__c}"/>
+                               <apex:outputField value="{!objDQ.Estimated_Number_of_Agents__c}"/>
+                               <apex:outputField value="{!objDQ.More_than_5_000_Business_Users__c}"/>
+                               <apex:outputField value="{!objDQ.Estimated_Number_of_Business_Users__c}"/>
+                               <!--<apex:outputField value="{!objDQ.Business_User_to_Agent_Ratio_Exception__c}"/>-->
+                               
+                        </apex:pageBlockSection>
+                    
+                    
+                    
+                    <apex:pageBlockSection title="Business Exceptions" columns="2" rendered="{!blnIsReadOnly && objDQ.Offering_Type__c == 'PureConnect Cloud'}">
+                               <!--<apex:outputField value="{!objDQ.Monthly_Recurring_Revenue_less_than_14K__c}"/>-->
+                               <apex:outputField value="{!objDQ.Estimated_Monthly_Recurring_Revenue__c}"/>
+                               <apex:inputhidden />
+                               <apex:outputField value="{!objDQ.Less_than_100_Agents__c}"/>
+                               <apex:outputField value="{!objDQ.Estimated_Number_of_Agents__c}"/>
+                               <apex:outputField value="{!objDQ.More_than_5_000_Business_Users__c}"/>
+                               <apex:outputField value="{!objDQ.Estimated_Number_of_Business_Users__c}"/>
+                               <!--<apex:outputField value="{!objDQ.Business_User_to_Agent_Ratio_Exception__c}"/>-->
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Finance" columns="1" rendered="{!objDQ.Offering_Type__c == 'PureCloud'}">
+                               <apex:outputField value="{!objDQ.Payment_Terms__c}" rendered="{!NOT(blnIsReadOnly)}"/>
+                               <apex:outputField value="{!objDQ.Payment_Terms__c}" rendered="{!blnIsReadOnly}"/>
+                               
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Finance" columns="1" rendered="{!objDQ.Offering_Type__c == 'PureConnect Cloud'}">
+                               <apex:outputField value="{!objDQ.Payment_Terms__c}" rendered="{!NOT(blnIsReadOnly)}"/>
+                               <apex:outputField value="{!objDQ.Payment_Terms__c}" rendered="{!blnIsReadOnly}"/>
+                               
+                    </apex:pageBlockSection>
+                    
+                    <apex:actionRegion immediate="true">
+                     <!--   <apex:pageblockSection id="pgblkSecProdMgmt" title="Product Management" columns="1">
+                            <apex:inputField value="{!objDQ.X3rd_Party_Products__c}" label="Are you selling 3rd party products ?" rendered="{!NOT(blnIsReadOnly)}"/>
+                            <apex:outputField value="{!objDQ.X3rd_Party_Products__c}" label="Are you selling 3rd party products ?" rendered="{!blnIsReadOnly}"/>
+                            
+                            <apex:inputField value="{!objDQ.Are_you_selling_Non_GA_Future_Roadmap__c}" label="Are you selling products or features that are not yet available ?" rendered="{!NOT(blnIsReadOnly)}">
+                                <apex:actionSupport event="onchange" reRender="pgblkSecProdMgmt" status="status"/>
+                            </apex:inputField>    
+                            <apex:outputField value="{!objDQ.Are_you_selling_Non_GA_Future_Roadmap__c}" label="Are you selling products or features that are not yet available ?" rendered="{!blnIsReadOnly}"/>
+                            
+                            <apex:pageBlockSection columns="2" rendered="{!AND(objDQ.Are_you_selling_Non_GA_Future_Roadmap__c == 'Yes', NOT(blnIsReadOnly))}">
+                                <apex:inputField value="{!objDQ.Product_or_Solution_Name__c}" style="width:250px;" label="Product or Solution Name"/>
+                                <apex:inputField value="{!objDQ.Describe_your_roadmap_related_request__c}" style="width:250px;" label="Describe your roadmap related request"/>
+                                <apex:inputField value="{!objDQ.Justification_and_time_constraints__c}" style="width:250px;" label="Justification and time constraints"/>
+                                <apex:inputField value="{!objDQ.Product_Managers_already_approached__c}" style="width:250px;" label="Names of Product Managers you have approached already"/>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2" rendered="{!AND(objDQ.Are_you_selling_Non_GA_Future_Roadmap__c == 'Yes', blnIsReadOnly)}">
+                                <apex:outputField value="{!objDQ.Product_or_Solution_Name__c}" style="width:250px;" label="Product or Solution Name"/>
+                                <apex:outputField value="{!objDQ.Describe_your_roadmap_related_request__c}" style="width:250px;" label="Describe your roadmap related request"/>
+                                <apex:outputField value="{!objDQ.Justification_and_time_constraints__c}" style="width:250px;" label="Justification and time constraints"/>
+                                <apex:outputField value="{!objDQ.Product_Managers_already_approached__c}" style="width:250px;" label="Names of Product Managers you have approached already"/>
+                            </apex:pageBlockSection>                        
+                        </apex:pageblockSection> -->
+                    </apex:actionRegion>
+                    
+                    <apex:pageblockSection title="Business Benefits" columns="2" rendered="{!NOT(blnIsReadOnly)}">
+                        <apex:inputField value="{!objDQ.Product_Values__c}" required="true" style="width:100%;" label="Bid Summary (What value do our products bring to customer business?)"/>
+                        <apex:inputField value="{!objDQ.Potential_Growth__c}" required="true" style="width:100%;" label="Future Benefits (What are potential growth(s) add-n project(s) with this customer?)"/>     
+                        <apex:inputField value="{!objDQ.Partner__c}" style="width:100%;" required="{!objDQ.Opportunity__r.BusinessPartner__c != null}" label="Partner Information (What is partner’s contractual discount? What is partner justification for extra discount (new logo, partner investment, partner exclusivity, etc)? Did you negotiate margin (percentage of end user price the partner keeps) with the partner?)"/>
+                        <apex:inputField value="{!objDQ.Competition__c}" required="true" style="width:100%;" label="Competitor Information (Who are the competitors? Who is the incumbent? What does the customer prefer and why? How are we positioning our solution against the competitive offerings?)"/>
+                        <!--
+                        <apex:inputField value="{!objDQ.Competitor__c}"/>
+                        -->
+                    </apex:pageblockSection>
+                    
+                    <apex:pageblockSection title="Business Benefits" columns="2" rendered="{!blnIsReadOnly}">
+                        <apex:outputField value="{!objDQ.Product_Values__c}" label="Bid Summary (What value do our products bring to customer business?)"/>
+                        <apex:outputField value="{!objDQ.Potential_Growth__c}" label="Future Benefits (What are potential growth(s) add-n project(s) with this customer?)"/>
+                        <apex:outputField value="{!objDQ.Partner__c}" label="Partner Information (What is partner’s contractual discount? What is partner justification for extra discount (new logo, partner investment, partner exclusivity, etc)? Did you negotiate margin (percentage of end user price the partner keeps) with the partner?)"/>
+                        <apex:outputField value="{!objDQ.Competition__c}" style="width:100%;" label="Competitor Information (Who are the competitors? Who is the incumbent? What does the customer prefer and why? How are we positioning our solution against the competitive offerings?)"/>
+                        <!--
+                        <apex:outputField value="{!objDQ.Competitor__c}"/>
+                        -->
+                    </apex:pageblockSection>
+                    
+                    <!--Mukunth added below section for INC0416843 - DQ Special Offers Sub-aprpovers-->
+                    <apex:outputPanel id="specOfferApprSec" rendered="{!isSpecApprOfferPending}">
+                        <apex:pageblockSection title="Revenue Approval for Special Offers" columns="2" id="revApproval">
+                            
+                                <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                    <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                        rendered="{!objDQ.Req_Revenue_Approval__c && NOT(isSubApprover) && (objDQ.Revenue_approval__c=='Approved' || objDQ.Revenue_approval__c=='Rejected')}">
+                                        <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="revenue" />
+                                    </apex:commandButton>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem />
+                                
+                                <!--Revenue section Start-->
+                                <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(objDQ.Req_Revenue_Approval__c) && NOT(isSubApprover)}">
+                                <apex:outputLabel value="Request approval from Revenue" />
+                                <apex:inputField value="{!objDQ.Req_Revenue_Approval__c}">
+                                    <apex:actionSupport event="onchange" rerender="revApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                        
+                                    </apex:actionSupport>
+                                </apex:inputField>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || objDQ.Req_Revenue_Approval__c || isSubApprover}">
+                                    <apex:outputLabel value="Request approval from Revenue" />
+                                    <apex:outputField value="{!objDQ.Req_Revenue_Approval__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSection rendered="{!objDQ.Req_Revenue_Approval__c && isRevSubApprover && NOT(showDQSpecApprReadOnly) && (objDQ.Revenue_approval__c==NULL || objDQ.Revenue_approval__c=='Pending')}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:inputField value="{!objDQ.Revenue_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments"/>
+                                    <apex:inputField value="{!objDQ.Revenue_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>    
+    
+                                <apex:pageBlockSection rendered="{!(objDQ.Req_Revenue_Approval__c && NOT(isRevSubApprover)) || showDQSpecApprReadOnly || objDQ.Revenue_approval__c=='Approved' || objDQ.Revenue_approval__c=='Rejected'}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!objDQ.Revenue_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:outputField value="{!objDq.Revenue_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                        </apex:pageBlockSection>
+                                <!--Revenue section End-->
+                                
+                                <!--Order Mgmt/Billing section Start-->
+                        <apex:pageblockSection title="Order Managment/Billing Approval for Special Offers" columns="2" id="ordMgmtApproval">
+                            
+                                <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                    <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                        rendered="{!objDQ.Req_Order_Mgmt_Billing_approval__c && NOT(isSubApprover) && (objDQ.Order_Mgmt_Billing_approval__c=='Approved' || objDQ.Order_Mgmt_Billing_approval__c=='Rejected')}">
+                                        <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="orderMgmt" />
+                                    </apex:commandButton>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem />
+                                
+                                <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(objDQ.Req_Order_Mgmt_Billing_approval__c) && NOT(isSubApprover)}">
+                                <apex:outputLabel value="Request approval from Order Management/Billing" />
+                                <apex:inputField value="{!objDQ.Req_Order_Mgmt_Billing_approval__c}">
+                                    <apex:actionSupport event="onchange" rerender="ordMgmtApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                        
+                                    </apex:actionSupport>
+                                </apex:inputField>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || objDQ.Req_Order_Mgmt_Billing_approval__c || isSubApprover}">
+                                    <apex:outputLabel value="Request approval from Order Management/Billing" />
+                                    <apex:outputField value="{!objDQ.Req_Order_Mgmt_Billing_approval__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSection rendered="{!objDQ.Req_Order_Mgmt_Billing_approval__c && isOMBSubApprover && NOT(showDQSpecApprReadOnly) && (objDQ.Order_Mgmt_Billing_approval__c==NULL || objDQ.Order_Mgmt_Billing_approval__c=='Pending')}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:inputField value="{!objDQ.Order_Mgmt_Billing_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:inputField value="{!objDQ.Order_Management_Billing_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                                <apex:pageBlockSection rendered="{!(objDQ.Req_Order_Mgmt_Billing_approval__c && NOT(isOMBSubApprover)) || showDQSpecApprReadOnly || objDQ.Order_Mgmt_Billing_approval__c=='Approved' || objDQ.Order_Mgmt_Billing_approval__c=='Rejected'}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!objDQ.Order_Mgmt_Billing_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments"/>
+                                    <apex:outputField value="{!objDQ.Order_Management_Billing_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                        </apex:pageBlockSection>
+                                <!--Order Mgmt/Billing section End-->
+                                
+                                <!--Credit and Collection - start -->
+                        <apex:pageblockSection title="Credit and Collection Approval for Special Offers" columns="2" Id="creditApproval">
+                            
+                                <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                    <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                        rendered="{!objDQ.Req_Credit_Collections_approval__c && NOT(isSubApprover) && (objDQ.Credit_and_Collections_approval__c=='Approved' || objDQ.Credit_and_Collections_approval__c=='Rejected')}">
+                                        <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="creditCol" />
+                                    </apex:commandButton>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem />
+                                <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(objDQ.Req_Credit_Collections_approval__c) && NOT(isSubApprover)}">
+                                <apex:outputLabel value="Request approval from Credit & Collections" />
+                                <apex:inputField value="{!objDQ.Req_Credit_Collections_approval__c}">
+                                    <apex:actionSupport event="onchange" rerender="creditApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                        
+                                    </apex:actionSupport>
+                                </apex:inputField>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || objDQ.Req_Credit_Collections_approval__c || isSubApprover}">
+                                    <apex:outputLabel value="Request approval from Credit & Collections" />
+                                    <apex:outputField value="{!objDQ.Req_Credit_Collections_approval__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSection rendered="{!objDQ.Req_Credit_Collections_approval__c && isCCSubApprover && NOT(showDQSpecApprReadOnly) && (objDQ.Credit_and_Collections_approval__c==NULL || objDQ.Credit_and_Collections_approval__c=='Pending')}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:inputField value="{!objDQ.Credit_and_Collections_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:inputField value="{!objDQ.Credit_Collections_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>    
+                                    
+                                <apex:pageBlockSection rendered="{!(objDQ.Req_Credit_Collections_approval__c && NOT(isCCSubApprover)) || showDQSpecApprReadOnly || objDQ.Credit_and_Collections_approval__c=='Approved' || objDQ.Credit_and_Collections_approval__c=='Rejected'}">  
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!objDQ.Credit_and_Collections_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:outputField value="{!objDQ.Credit_Collections_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                        </apex:pageBlockSection>
+                                <!--Credit and Collection - end -->
+                                
+                                <!-- Legal Section - start-->
+                        <apex:pageblockSection title="Legal Approval for Special Offers" columns="2" id="legalApproval">
+                            
+                                <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                    <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                        rendered="{!objDQ.Req_Legal_approval__c && NOT(isSubApprover) && (objDQ.Legal_approval__c=='Approved' || objDQ.Legal_approval__c=='Rejected')}">
+                                        <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="legal" />
+                                    </apex:commandButton>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem />
+                                <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(objDQ.Req_Legal_approval__c) && NOT(isSubApprover)}">
+                                <apex:outputLabel value="Request approval from Legal" />
+                                <apex:inputField value="{!objDQ.Req_Legal_approval__c}">
+                                    <apex:actionSupport event="onchange" rerender="legalApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                        
+                                    </apex:actionSupport>
+                                </apex:inputField>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || objDQ.Req_Legal_approval__c || isSubApprover}">
+                                    <apex:outputLabel value="Request approval from Legal" />
+                                    <apex:outputField value="{!objDQ.Req_Legal_approval__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSection rendered="{!objDQ.Req_Legal_approval__c && isLegalSubApprover && NOT(showDQSpecApprReadOnly) && (objDQ.Legal_approval__c==NULL || objDQ.Legal_approval__c=='Pending')}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status"/>
+                                    <apex:inputField value="{!objDQ.Legal_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:inputField value="{!objDQ.Legal_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                                <apex:pageBlockSection rendered="{!(objDQ.Req_Legal_approval__c && NOT(isLegalSubApprover)) || showDQSpecApprReadOnly || objDQ.Legal_approval__c=='Approved' || objDQ.Legal_approval__c=='Rejected'}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!objDQ.Legal_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:outputField value="{!objDQ.Legal_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                        </apex:pageblockSection>
+                                <!-- Legal Section - end-->
+                                
+                    </apex:outputPanel>
+                    
+                    <!--Mukunth code end - DQ Special Offers-->
+                    
+                    <apex:pageBlockSection title="Deal Desk Recommendation" rendered="{!AND(blnIsDealFactoryUser, objDQ.Status__c != 'Approved')}"> 
+                        <apex:inputField value="{!objDQ.Historical_Discount_on_the_Account__c}"/>
+                        <apex:inputField value="{!objDQ.PureEngage_Cloud_Regional_Avg_Discount__c}"/>
+                        <apex:inputField value="{!objDQ.Margin__c}"/>
+                        <apex:inputField value="{!objDQ.Current_and_Historical_Genesys_Care_Rate__c}" label="Deal Desk Recommendation"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Deal Desk Recommendation" rendered="{!AND(blnIsDealFactoryUser,objDQ.Status__c == 'Approved')}"> 
+                        <apex:outputField value="{!objDQ.Historical_Discount_on_the_Account__c}"/>
+                        <apex:outputField value="{!objDQ.PureEngage_Cloud_Regional_Avg_Discount__c}"/>
+                        <apex:outputField value="{!objDQ.Margin__c}"/>
+                        <apex:outputField value="{!objDQ.Current_and_Historical_Genesys_Care_Rate__c}" label="Deal Desk Recommendation"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageblockSection title="POR" columns="1" rendered="{!strOfferingType == 'Business Edition'}" >
+                        <apex:outputLabel value="No PORs for this Opportunity" rendered="{!objOppty.Deal_Support__r.size == 0}"/>
+                        <apex:repeat value="{!objOppty.Deal_Support__r}" var="objDS" rows="1">
+                             <!--<apex:pageblockSection title="SC Information" collapsible="false" columns="1">
+                                <apex:outputField value="{!objDS.Request_Type__c}"/>
+                                <apex:outputField value="{!objDS.CreatedDate}" label="Request Date"/>
+                                <apex:outputField value="{!objDS.POR_Type__c}"/>
+                                <apex:outputField value="{!objDS.SC_Engagement_Form__c}"/>
+                                <apex:outputField value="{!objDS.Key_Team_Members__c}"/>
+                            </apex:pageblockSection>
+                            <apex:pageblockSection title="CTO Information" collapsible="false" columns="1">
+                                <apex:outputField value="{!objDS.POR_Lead__c}"/>
+                                <apex:outputField value="{!objDS.POR_Schedule_Date__c}"/>
+                                <apex:outputField value="{!objDS.POR_Disposition__c}"/>
+                                <apex:outputField value="{!objDS.Date_Time_Completed__c}" label="Disposition Date"/>
+                            </apex:pageblockSection>-->
+                            <apex:pageblockSection title="POR Summary" collapsible="false" columns="2">
+                                <apex:outputField value="{!objDS.POR_Type__c}"/>
+                                <apex:outputField value="{!objDS.POR_Schedule_Date__c}"/>
+                                <apex:outputField value="{!objDS.POR_Disposition__c}"/>
+                                <apex:pageblocksectionItem >
+                                    <apex:outputLabel for="DSName">Name</apex:outputLabel>
+                                    <apex:outputLink id="DSName" value="/apex/PORDSR?id={!objDS.id}&retURL=/apex/DealQualificationCloud%3FoppId={!oppId}%26ot={!strOfferingType}%26pt={!strPlatformType}" target="_blank" title="Edit">
+                                         {!objDS.name}
+                                    </apex:outputLink>
+                                </apex:pageblocksectionItem>
+                                
+                                <apex:outputField value="{!objDS.CTO_Comments__c}"/>
+                                
+                            </apex:pageblockSection>
+                        </apex:repeat>
+                    </apex:pageblockSection>                         
+                </apex:tab>
+                <apex:tab label="Approvers" name="upfrontApprovalTab" id="upfrontApprovalTab"> 
+                    <apex:outputPanel layout="block" id="pnlUpfrontApprovals">
+                        <iframe src="/apex/DealQualificationUpfrontApprovals?id={!objDQ.id}" scrolling="auto" height="300px" width="100%" id="ifUpfront"></iframe>
+                    </apex:outputPanel>                            
+                </apex:tab>   
+            </apex:tabPanel>                                           
+        </apex:pageBlock>
+          
+        <c:DealQualificationHistory idDQ="{!dqId}" retURL="/apex/DealQualificationCloud%3FoppId={!oppId}%26id={!objDQ.id}"/>       
+        <c:GenericHistoryComponent object="{!objDQ}" recordsLimit="30"/> 
+            
+        <apex:pageBlock title="Quotes" >
+            <apex:pageBlockTable value="{!objOppty.BigMachines__BigMachines_Quotes__r}" var="eachQuote" >
+                <apex:column headerValue="Action">
+                    <apex:outputLink value="/{!eachQuote.id}/e" target="_blank" title="Edit">
+                        <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/pencil-small-icon.png')}"/>   
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Quote">
+                    <apex:outputLink value="/{!eachQuote.id}" target="_blank">{!eachQuote.Name}</apex:outputLink>
+                </apex:column>             
+                <apex:column headerValue="Status">
+                    <apex:outputField value="{!eachQuote.BigMachines__Status__c}"/>
+                </apex:column>
+                <apex:column headerValue="Annual Contract Value (ACV)">
+                    <apex:outputText value="{0, number, 00.00}">
+                          <apex:param value="{!eachQuote.Annual_Contract_Value__c}" />
+                    </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Is Primary?">
+                    <apex:outputField value="{!eachQuote.BigMachines__Is_Primary__c}"/>
+                </apex:column>
+                <apex:column headerValue="CreatedDate">
+                    <apex:outputField value="{!eachQuote.CreatedDate}" />
+                </apex:column>
+            </apex:pageBlockTable>
+            <!--<apex:pageBlockTable value="{!objOppty.zqu__Quotes__r}" var="eachQuote" rendered="{!objDQ.Offering_Type__c == 'PureCloud'}">
+                <apex:column headerValue="Action">
+                    <apex:outputLink value="/{!eachQuote.id}/e?retURL=/apex/DealQualificationCloud%3FoppId={!oppId}%26ot={!strOfferingType}%26pt={!strPlatformType}" target="_blank" title="Edit">
+                        <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/pencil-small-icon.png')}"/>   
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Quote">
+                    <apex:outputLink value="/{!eachQuote.id}" target="_blank">{!eachQuote.Name}</apex:outputLink>
+                </apex:column>             
+                <apex:column headerValue="Status">
+                    <apex:outputField value="{!eachQuote.zqu__ApprovalStatus__c}"/>
+                </apex:column>
+                <apex:column headerValue="Total">
+                    <apex:outputField value="{!eachQuote.zqu__Previewed_Total__c}" />
+                </apex:column>
+                <apex:column headerValue="Is Primary">
+                    <apex:outputField value="{!eachQuote.zqu__Primary__c}"/>
+                </apex:column>
+                <apex:column headerValue="CreatedDate">
+                    <apex:outputField value="{!eachQuote.CreatedDate}" />
+                </apex:column>
+            </apex:pageBlockTable>-->
+            
+        </apex:pageBlock>  
+        
+        </apex:outputPanel>
+    </apex:form>
+    
+    <apex:relatedList list="activityhistories"/>
+    <apex:relatedList list="CombinedAttachments" />
+    
+    <script>
+        function doRevise(){
+            if(confirm('Are you sure you want to revise ? Press OK to revise or Cancel.')){
+                reviseAF();
+            }
+        }
+        function onSaveComplete(){          
+            var iframe = document.getElementById('ifUpfront');
+            iframe.src = iframe.src;
+        }
+        
+       
+    </script>    
+</apex:page>

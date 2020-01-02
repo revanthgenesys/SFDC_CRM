@@ -1,0 +1,53 @@
+<apex:page controller="TaskDetailController" title="Task">
+    <apex:form >
+        <apex:pageBlock title="Task">
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="Update" action="{!updateTask}" rendered="{!NOT(isReadOnly)}"/>
+                <apex:commandButton value="Reply" onclick="location.href='/_ui/core/email/author/EmailAuthor?email_id={!em.id}&p26=customercare@genesys.com:Genesys Customer Care&p24={!em.FromAddress}'; return false;" rendered="{!NOT(isReadOnly)}" />
+                <apex:commandButton value="Cancel" onclick="location.href='/{!currentTask.WhatId}'; return false;" rendered="{!NOT(isReadOnly)}"/>
+                <apex:commandButton value="Back" onclick="if('{!currentTask.WhatId}' != '')location.href='/{!currentTask.WhatId}'; else history.go(-1); return false;" rendered="{!NOT(isReadOnly)}"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1">
+                <apex:pageBlockSectionItem rendered="{!NOT(isReadOnly)}">
+                    <apex:outputLabel value="Case" />
+                    <apex:inputField value="{!currentTask.whatId}" />
+                </apex:pageBlockSectionItem>                
+                <apex:pageBlockSectionItem rendered="{!NOT(isReadOnly)}">
+                    <apex:outputLabel value="Public" />
+                    <apex:inputField value="{!currentTask.IsVisibleInSelfService}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Date" />
+                    <apex:outputText value="{0,date,MM'/'dd'/'yyyy HH:mm:ss}">
+                        <apex:param value="{!currentTask.CreatedDate}" /> 
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Sender" />
+                    <apex:inputField value="{!em.FromAddress}" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Subject" />
+                    <apex:outputText escape="false" value="{!em.Subject}" />
+                </apex:pageBlockSectionItem>  
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Description" />
+                    <apex:outputText escape="false" value="{!body}" />
+                </apex:pageBlockSectionItem>                
+            </apex:pageBlockSection>            
+        </apex:pageBlock>
+        <apex:pageBlock title="Attachments">
+            <apex:pageBlockSection columns="1">
+                <apex:pageBlockTable value="{!atts}" var="a">
+                    <apex:column headerValue="Action" width="100px">
+                        <a href="/{!a.id}"> View </a>
+                    </apex:column>                      
+                    <apex:column headerValue="File">
+                        <a href="/{!a.id}"> {!a.Name} </a>
+                    </apex:column>                      
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

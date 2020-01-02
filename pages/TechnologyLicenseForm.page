@@ -1,0 +1,57 @@
+<apex:page standardController="Technology_License_Form__c" extensions="TechnologyLicenseFormController" title="AppFoundry License Report" showheader="false" sidebar="false" id="themtcf">
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="appfoundry"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+            <apex:form >
+                <apex:pageMessage rendered="{!(hasAppFoundryApproved == false && appFoundryApplicationNotRequired == false)}" summary="There is no approved AppFoundry Application so you cannot view License report." strength="3" severity="info"></apex:pageMessage>
+                <apex:pageBlock title="AppFoundry License Report" rendered="{!(hasAppFoundryApproved || appFoundryApplicationNotRequired)}">
+                    <apex:pageBlockButtons location="top">
+                        <apex:commandLink value="New AppFoundry License Report" action="/partner/NewTechnologyLicenseForm" styleClass="btn" immediate="true"
+                        style="text-decoration:none"></apex:commandLink>
+                    </apex:pageBlockButtons> 
+                    <br/>
+                    <apex:outputPanel rendered="{!technologyLicenseFormList.size == 0}">
+                        No AppFoundry License Reports Submitted.
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!technologyLicenseFormList.size > 0}">
+                        <apex:outputLink title="Export To Excel" value="/apex/LicenseReportExportPage" target="_blank" >
+                                <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px" style="margin-left: 26cm;"/>    
+                         </apex:outputLink>
+                        <apex:pageBlockSection title="Submitted AppFoundry License Report" collapsible="false" />
+                            <apex:pageBlockTable value="{!TechnologyLicenseForm}" var="t" columns="7">
+                                <apex:column headerValue="Action">
+                                    <apex:commandLink value="View" action="/partner/NewTechnologyLicenseForm?id={!t.Id}" immediate="true"/>
+                                </apex:column>
+                                <apex:column value="{!t.Product_Sold__c}"  />
+                                <apex:column value="{!t.Number_of_Licenses_sold__c}" />
+                                <apex:column value="{!t.Sales_price_per_license__c}" />
+                                <apex:column value="{!t.Total_sale__c}" />
+                                <apex:column value="{!t.Customer_Name__c}" />
+                                <apex:column headerValue="Submited Date">
+                                    <apex:outputField value="{!t.CreatedDate}"/>
+                                </apex:column>
+                            </apex:pageBlockTable>
+                            <div align="center">
+                                <apex:panelGrid columns="5"> 
+                                    <apex:commandLink action="{!first}" rendered="{!hasPrevious}" >First</apex:commandLink> 
+                                    <apex:commandLink action="{!previous}" rendered="{!hasPrevious}" >Previous</apex:commandLink> 
+                                    <apex:commandLink action="{!next}" rendered="{!hasNext}" >Next</apex:commandLink> 
+                                    <apex:commandLink action="{!last}" rendered="{!hasNext}" >Last</apex:commandLink> 
+                                    <apex:outputText rendered="{!IF(hasNext == true || hasPrevious == true, true, false)}">Page - {!pageNumber} of {!TotalPages}</apex:outputText>
+                                </apex:panelGrid>   
+                            </div>
+                        </apex:outputPanel>
+                </apex:pageBlock>
+            </apex:form>  
+        </apex:define>
+    </apex:composition>
+</apex:page>

@@ -1,0 +1,884 @@
+<apex:page standardController="BigMachines__Quote__c" extensions="ProposalPdfInlineDataExt" sidebar="false" 
+    showHeader="false" standardStylesheets="false" 
+     readOnly="true" renderAs="pdf" title="Quote : {!objQuote.Name}">
+    
+    <apex:stylesheet value="{!URLFOR($Resource.ProposalCss)}"/>
+    
+    <apex:outputPanel rendered="{!strInternal == '1'}">
+        <b>Quote Number :&nbsp;</b><apex:outputText value="{!objQuote.Name}"/><br/>
+        <b>Quote Created Date :&nbsp;</b><apex:outputField value="{!objQuote.Quote_Created_Date__c}"/><br/>
+        <b>Sold To :&nbsp;</b><apex:outputText value="{!objQuote.Sold_To_Name__r.Name}"/><br/>
+        <b>End User :&nbsp;</b><apex:outputText value="{!objQuote.End_User_ID__r.Name}"/><br/>
+        <b>Current Rate :&nbsp;</b><apex:outputField value="{!objQuote.Current_Maint_Rate__c}"/><br/><br/>
+    </apex:outputPanel>    
+    
+    <apex:outputPanel rendered="{!objQuote.Quote_Periods__r.size > 0 && (NOT(objQuote.Hide_Periods__c) || strInternal == '1')}">
+        Periods:<br/><br/>
+        <table cellspacing="1" cellpadding="1" border="1" style="border-color:black;text-align:center">
+            <tr style="font-size:80%;background-color:#DDDCDC">
+                <th width="50px">Period</th>
+                <th width="150px">Start Date</th>
+                <th width="150px">End Date</th>
+                <apex:outputPanel rendered="{!objQuote.Show_Rates__c && objQuote.Increase_type__c = 'Genesys Care Rate'}" layout="none">
+                    <th width="150px">Care Rate</th>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objQuote.Show_Rates__c && objQuote.Increase_type__c != 'Genesys Care Rate'}" layout="none">
+                    <th width="150px">Increase %</th>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objQuote.Show_KPIs__c}" layout="none">
+                    <th width="150px">KPI1</th>
+                    <th width="150px">KPI2</th>
+                </apex:outputPanel>
+            </tr>
+            <apex:variable var="rowNum" value="{!1}"/>
+            <apex:repeat value="{!objQuote.Quote_Periods__r}" var="objQuotePeriod">
+                <tr style="font-size:90%;">
+                    <td>
+                        <apex:outputText >Period {!rowNum}</apex:outputText>
+                    </td>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objQuotePeriod.Start_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objQuotePeriod.End_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <apex:outputPanel rendered="{!objQuote.Show_Rates__c && objQuote.Increase_type__c = 'Genesys Care Rate'}" layout="none">
+                        <td><apex:outputField value="{!objQuotePeriod.Default_Period_Care_Rate__c}"/></td>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_Rates__c && objQuote.Increase_type__c != 'Genesys Care Rate'}" layout="none">
+                        <td><apex:outputField value="{!objQuotePeriod.Default_Increase__c}"/></td>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_KPIs__c}" layout="none">
+                        <td><apex:outputField value="{!objQuotePeriod.KPI1__c}"/></td>
+                        <td><apex:outputField value="{!objQuotePeriod.KPI2__c}"/></td>
+                    </apex:outputPanel>
+                </tr>
+                <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+            </apex:repeat>
+        </table>
+        <br/><br/>
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!list_FlexCare.size > 0}">
+        Flex Care:<br/><br/>
+        <table cellspacing="1" cellpadding="1" border="1" style="border-color:black;text-align:center">
+            <tr style="font-size:80%;background-color:#DDDCDC">
+                <th width="250px">Product Name</th>
+                <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                    <th width="120px">Product Code</th>
+                </apex:outputPanel>
+                <th width="150px">Start Date</th>
+                <th width="150px">End Date</th>
+                <th width="150px">Revised Net</th>
+                <th width="150px">Amount</th>
+            </tr>
+            <apex:repeat value="{!list_FlexCare}" var="objFlexCareProduct">
+                <tr style="font-size:90%;">
+                    <td style="text-align:left">
+                        <apex:outputText >{!objFlexCareProduct.Product_Description__c}</apex:outputText>
+                    </td>
+                    <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                        <td>{!objFlexCareProduct.BigMachines__Product__r.Name}</td>
+                    </apex:outputPanel>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objFlexCareProduct.Maintenance_Start_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objFlexCareProduct.Maintenance_End_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <!--<td style="text-align:right">-->
+                    <td>
+                        <c:myOutputText myValue="{!objFlexCareProduct.Revised_Net_License_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                    </td>
+                    <td>
+                        <c:myOutputText myValue="{!objFlexCareProduct.Sales_Price_Display__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </table>
+        <br/><br/>
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!list_Fees.size > 0}">
+        Fees:<br/><br/>
+        <table cellspacing="1" cellpadding="1" border="1" style="border-color:black;text-align:center">
+            <tr style="font-size:80%;background-color:#DDDCDC">
+                <th width="250px">Product Name</th>
+                <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                    <th width="120px">Product Code</th>
+                </apex:outputPanel>
+                <th width="150px">Start Date</th>
+                <th width="150px">End Date</th>
+                <th width="150px">Amount</th>
+            </tr>
+            <apex:repeat value="{!list_Fees}" var="objFeesProduct">
+                <tr style="font-size:90%;">
+                    <td style="text-align:left">
+                        <apex:outputText >{!objFeesProduct.Product_Description__c}</apex:outputText>
+                    </td>
+                    <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                        <td>{!objFeesProduct.BigMachines__Product__r.Name}</td>
+                    </apex:outputPanel>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objFeesProduct.Maintenance_Start_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objFeesProduct.Maintenance_End_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td style="text-align:right">
+                        <c:myOutputText myValue="{!objFeesProduct.Sales_Price_Display__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </table>
+        <br/><br/>
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!list_GridProducts.size > 0 && objQuote.Group_Product_By__c != 'Invoice Number'}">
+        <table width="100%" cellspacing="1" cellpadding="1" border="1" style="border-right:1px solid transparent !important;border-bottom:1px solid transparent !important;border-width:1px;border-collapse:collapse;border-color:black !important;border-collapse:collapse;border-color:black;text-align:center">
+            <tr style="font-size:80%;background-color:#DDDCDC">
+                <th>Product Name</th>
+               
+               <apex:outputPanel rendered="{!objQuote.Show_Pricing_Model__c}" layout="none">
+                    <th>Unit Of Measure</th>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                    <th>Product Code</th>
+                </apex:outputPanel>
+                
+                
+             <apex:Outputpanel rendered="{!Downsize}" layout="none">
+                <th>Original Quantity</th>
+                <th>Current Quantity</th>
+                    </apex:Outputpanel> 
+                <apex:Outputpanel rendered="{!!Downsize}" layout="none">
+                <th>Quantity</th>
+                </apex:Outputpanel>
+                <apex:outputPanel rendered="{!NOT(objQuote.Hide_Revised_Net__c)|| strInternal == '1'}" layout="none">
+                <th>{!IF((PureConnectDirect),"Revised List Price","Revised Net")}</th>
+               
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objQuote.Show_EOS__c && NOT(objQuote.Show_EOS_Fees__c)}" layout="none">
+                   <th>Extended EOS</th>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objQuote.Show_EOS_Fees__c}" layout="none">
+                   <th>Extended EOS Fees</th>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objQuote.Show_Reinstatment__c}" layout="none">
+                    <th>Reinstatement</th>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objQuote.Show_Shelving_Fees__c}" layout="none">
+                    <th>Shelving Fees</th>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!objQuote.Group_Product_By__c != 'Part Number'}" layout="none">
+                    <th>Maintenance<br/>Start Date</th>
+                </apex:outputPanel>
+                <th>Maintenance<br/>End Date</th>
+                <apex:outputPanel rendered="{!NOT(objQuote.Hide_Maintenance_Due__c) || strInternal == '1'}" layout="none">
+                    <th>Maintenance Due</th>
+                </apex:outputPanel>
+               <apex:outputPanel rendered="{!objQuote.Show_Comments__c}" layout="none">
+                    <th>Comments</th>
+                </apex:outputPanel>
+            
+            
+            
+            </tr>
+            <apex:repeat value="{!list_GridProducts}" var="objQP">
+                <tr style="font-size:90%;">
+                    <td style="text-align:left">
+                        <apex:outputText >{!objQP.Product_Description__c}</apex:outputText>
+                    </td>
+                    
+                     <apex:outputPanel rendered="{!objQuote.Show_Pricing_Model__c}" layout="none">
+                        <td>{!objQP.Product_Type__c}</td>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                        <td>
+                            <!-- {!objQP.BigMachines__Product__r.Name} -->
+                            <apex:outputText value="{!objQP.BigMachines__Product__r.APN_Number__c}" rendered="{!(NOT(ISBLANK(objQP.BigMachines__Product__r.OfferingType__c)) && contains(objQP.BigMachines__Product__r.OfferingType__c, 'PureConnect'))}"/>
+                            <apex:outputText value="{!objQP.BigMachines__Product__r.Name}" rendered="{!(ISBLANK(objQP.BigMachines__Product__r.OfferingType__c) || (NOT contains(objQP.BigMachines__Product__r.OfferingType__c, 'PureConnect')))}"/>
+
+                        </td>
+                    </apex:outputPanel>
+                   <apex:Outputpanel rendered="{!Downsize}" layout="none">
+                    <td>
+                    <apex:outputField value="{!objQP.Original_Qty__c}"/>
+                    </td>
+                    </apex:Outputpanel>
+                    <td>
+                            <apex:outputField value="{!objQP.Current_Qty__c}"/>
+                           
+                    </td>
+                    <apex:outputPanel rendered="{!NOT(objQuote.Hide_Revised_Net__c) || strInternal == '1'}" layout="none">
+                        <td>
+                        <c:myOutputText myValue="{!objQP.Revised_Net_License_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                        </td>
+                    </apex:outputPanel>
+                     <apex:outputPanel rendered="{!objQuote.Show_EOS__c && NOT(objQuote.Show_EOS_Fees__c)}" layout="none">
+                        <td><apex:outputField value="{!objQP.Extended_End_of_Support__c}"/></td>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_EOS_Fees__c}" layout="none">
+                        <td style="{!IF(intNumOfPeriods > 1 && NOT(objQuote.Hide_Periods__c),'text-align:left','')}">
+                            <apex:outputPanel rendered="{!NOT(objQuote.Hide_Periods__c) && 
+                                    OR(objQP.Period1_EOS_Fee__c != 0,objQP.Period2_EOS_Fee__c != 0,objQP.Period3_EOS_Fee__c != 0,
+                                    objQP.Period4_EOS_Fee__c != 0,objQP.Period5_EOS_Fee__c != 0)}" layout="none">
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 0}" layout="none">
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                        Period 1 = &nbsp;
+                                    </apex:outputPanel>
+                                    <c:myOutputText myValue="{!objQP.Period1_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                    <br/>Period 2 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period2_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 2}" layout="none">
+                                    <br/>Period 3 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period3_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 3}" layout="none">
+                                    <br/>Period 4 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period4_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 4}" layout="none">
+                                    <br/>Period 5 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period5_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <c:myOutputText myValue="{!objQP.Adjustment__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" rendered="{!objQuote.Hide_Periods__c && objQP.Adjustment__c != 0}"/>
+                        </td>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_Reinstatment__c}" layout="none">
+                        <td><apex:outputField value="{!objQP.Reinstatement__c}"/></td>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_Shelving_Fees__c}" layout="none">
+                        <td style="{!IF(intNumOfPeriods > 1 && NOT(objQuote.Hide_Periods__c),'text-align:left','')}">
+                            <apex:outputPanel rendered="{!NOT(objQuote.Hide_Periods__c) && 
+                                    OR(objQP.Period1_Shelving_Fee__c != 0,objQP.Period2_Shelving_Fee__c != 0,objQP.Period3_Shelving_Fee__c != 0,
+                                    objQP.Period4_Shelving_Fee__c != 0,objQP.Period5_Shelving_Fee__c != 0)}" layout="none">
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 0}" layout="none">
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                        Period 1 = &nbsp;
+                                    </apex:outputPanel>
+                                    <c:myOutputText myValue="{!objQP.Period1_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                    <br/>Period 2 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period2_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 2}" layout="none">
+                                    <br/>Period 3 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period3_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 3}" layout="none">
+                                    <br/>Period 4 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period4_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 4}" layout="none">
+                                    <br/>Period 5 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period5_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <c:myOutputText myValue="{!objQP.Decreased_Quote_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" rendered="{!objQuote.Hide_Periods__c && objQP.Decreased_Quote_Value__c != 0}"/>
+                        </td>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Group_Product_By__c != 'Part Number'}" layout="none">
+                        <td>
+                            <apex:outputText value="{0,date,MMM dd, yyyy}">
+                                 <apex:param value="{!objQP.Maintenance_Start_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                    </apex:outputPanel>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objQP.Maintenance_End_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <apex:outputPanel rendered="{!NOT(objQuote.Hide_Maintenance_Due__c) || strInternal == '1'}" layout="none">
+                        <td style="{!IF(intNumOfPeriods > 1 && NOT(objQuote.Hide_Periods__c),'text-align:left','')}">
+                            <apex:outputPanel rendered="{!NOT(objQuote.Hide_Periods__c)}" layout="none">
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 0}" layout="none">
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                        Period 1 = &nbsp;
+                                    </apex:outputPanel>
+                                    <c:myOutputText myValue="{!objQP.Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                    <br/>Period 2 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Year2_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 2}" layout="none">
+                                    <br/>Period 3 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Year3_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 3}" layout="none">
+                                    <br/>Period 4 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Year4_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 4}" layout="none">
+                                    <br/>Period 5 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Year5_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <c:myOutputText myValue="{!objQP.Total_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" rendered="{!objQuote.Hide_Periods__c}"/>
+                        </td>
+                    </apex:outputPanel>
+                   
+                   <apex:outputPanel rendered="{!objQuote.Show_Comments__c}" layout="none">
+                   <td> <apex:outputText value="{!objQP.Comment__c}"></apex:outputText></td>
+                   
+                   </apex:outputPanel>
+                </tr>
+            </apex:repeat>
+        </table>
+        <br/><br/>
+    </apex:outputPanel>
+    {!Downsize}
+    <apex:outputPanel rendered="{!list_InvoiceGroups.size > 0 && objQuote.Group_Product_By__c = 'Invoice Number'}">
+        <apex:repeat value="{!list_InvoiceGroups}" var="objInvoiceGroup">
+            <b>Reference Invoice:</b> {!objInvoiceGroup.objInvoiceGroupQP.Lic_Invoice__c}&nbsp;&nbsp;&nbsp;&nbsp;
+            <b>Invoice Date:</b>  &nbsp;<apex:outputText value="{0,date,MMM dd, yyyy}">
+                                <apex:param value="{!objInvoiceGroup.objInvoiceGroupQP.Original_License_Invoice_Date__c}"/>
+                           </apex:outputText>&nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:outputPanel rendered="{!strInternal == '1'}" layout="none">
+                <b>Invoice Rate:</b> &nbsp;<apex:outputField value="{!objInvoiceGroup.objInvoiceGroupQP.Invoice_Rate__c}"/>&nbsp;&nbsp;&nbsp;&nbsp;
+                <b>{!IF((PureConnectDirect),"Revised List Price","Revised Net")}:</b> &nbsp;<c:myOutputText myValue="{!objInvoiceGroup.objInvoiceGroupQP.Revised_Net_License_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>&nbsp;&nbsp;&nbsp;&nbsp;
+            </apex:outputPanel>
+            <b>PO#:</b> {!objInvoiceGroup.objInvoiceGroupQP.Original_PO__c}
+            <apex:outputPanel rendered="{!objQuote.Hide_ELA__c == false}" layout="none">
+                &nbsp;&nbsp;&nbsp;ELA: {!IF(objInvoiceGroup.invoiceELA, 'Yes', 'No')}
+            </apex:outputPanel>
+            <table width="100%" cellspacing="1" cellpadding="1" border="1" style="border-right:1px solid transparent !important;border-bottom:1px solid transparent !important;border-width:1px;border-collapse:collapse;border-color:black !important;text-align:center">
+                <tr style="font-size:80%;background-color:#DDDCDC">
+                    <th width="{!map_ColNameToColWidth['Product Name']}%"> Product Name</th>
+                     <apex:outputPanel rendered="{!objQuote.Show_Pricing_Model__c}" layout="none">
+                        <th width="10%">Unit Of Measure</th>
+                    </apex:outputPanel>
+                    
+                    
+                    <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                        <th width="{!map_ColNameToColWidth['Product Code']}%">Product Code</th>
+                    </apex:outputPanel>
+                   <apex:Outputpanel rendered="{!Downsize}" layout="none">
+                       <th width="{!map_ColNameToColWidth['Original Quantity']}%">Original Quantity</th>
+                       <th width="{!map_ColNameToColWidth['Quantity']}%">Current Quantity</th>
+                    </apex:Outputpanel>                  
+                	<apex:Outputpanel rendered="{!!Downsize}" layout="none">
+                        <th width="{!map_ColNameToColWidth['Quantity']}%">Quantity</th>
+                    </apex:Outputpanel> 
+                    <apex:outputPanel rendered="{!NOT(objQuote.Hide_Revised_Net__c) || strInternal == '1'}" layout="none">
+                       <th width="{!map_ColNameToColWidth['Revised Net']}%">{!IF((PureConnectDirect),"Revised List Price","Revised Net")}</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_EOS__c && NOT(objQuote.Show_EOS_Fees__c)}" layout="none">
+                       <th width="{!map_ColNameToColWidth['Extended EOS']}%">Extended EOS</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_EOS_Fees__c}" layout="none">
+                       <th width="{!map_ColNameToColWidth['Extended EOS']}%">Extended EOS Fees</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_Reinstatment__c}" layout="none">
+                        <th width="{!map_ColNameToColWidth['Reinstatement']}%"> Reinstatement</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!objQuote.Show_Shelving_Fees__c}" layout="none">
+                        <th width="{!map_ColNameToColWidth['Shelving Fees']}%">Shelving Fees</th>
+                    </apex:outputPanel>
+                    <th width="{!map_ColNameToColWidth['Maintenance Start Date']}%">Maintenance<br/>Start Date</th>
+                    <th width="{!map_ColNameToColWidth['Maintenance End Date']}%">Maintenance<br/>End Date</th>
+                    <apex:outputPanel rendered="{!NOT(objQuote.Hide_Maintenance_Due__c) || strInternal == '1'}" layout="none">
+                        <th width="{!map_ColNameToColWidth['Maintenance Due']}%">Maintenance Due</th>
+                    </apex:outputPanel>
+               
+                <apex:outputPanel rendered="{!objQuote.Show_Comments__c}" layout="none">
+                    <th>Comments</th>
+                </apex:outputPanel>
+               
+               
+                </tr>
+                <!--<apex:repeat value="{!map_InvoiceNumToQuoteProducts[strInvoiceNum]}" var="objQP">-->
+                <apex:repeat value="{!objInvoiceGroup.list_QouteProducts}" var="objQP">
+                    <tr style="font-size:90%;">
+                        <td style="text-align:left">
+                            <apex:outputText >{!objQP.Product_Description__c}</apex:outputText>
+                        </td>
+                        
+                         <apex:outputPanel rendered="{!objQuote.Show_Pricing_Model__c}" layout="none">
+                            <td>{!objQP.Product_Type__c}</td>
+                        </apex:outputPanel>
+                        
+                        
+                        <apex:outputPanel rendered="{!objQuote.Show_Product_Code__c}" layout="none">
+                            <td>
+                                <!-- {!objQP.BigMachines__Product__r.Name} -->
+                                <apex:outputText value="{!objQP.BigMachines__Product__r.APN_Number__c}" rendered="{!(NOT(ISBLANK(objQP.BigMachines__Product__r.OfferingType__c)) && contains(objQP.BigMachines__Product__r.OfferingType__c, 'PureConnect'))}"/>
+                                <apex:outputText value="{!objQP.BigMachines__Product__r.Name}" rendered="{!(ISBLANK(objQP.BigMachines__Product__r.OfferingType__c) || (NOT contains(objQP.BigMachines__Product__r.OfferingType__c, 'PureConnect')))}"/>
+
+                            </td>
+                        </apex:outputPanel>
+                       <apex:outputPanel rendered="{!Downsize}" layout="none">
+                         <td>
+                            <apex:outputField value="{!objQP.Original_Qty__c}"/>
+                            </td>
+                        </apex:outputPanel>      
+                           
+                        <td>
+                            <apex:outputField value="{!objQP.Current_Qty__c}"/>
+                            
+                        </td>
+                        <apex:outputPanel rendered="{!NOT(objQuote.Hide_Revised_Net__c) || strInternal == '1'}" layout="none">
+                            <td>
+                            <c:myOutputText myValue="{!objQP.Revised_Net_License_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                            </td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!objQuote.Show_EOS__c && NOT(objQuote.Show_EOS_Fees__c)}" layout="none">
+                            <td><apex:outputField value="{!objQP.Extended_End_of_Support__c}"/></td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!objQuote.Show_EOS_Fees__c}" layout="none">
+                            <td style="{!IF(intNumOfPeriods > 1 && NOT(objQuote.Hide_Periods__c),'text-align:left','')}">
+                                <apex:outputPanel rendered="{!NOT(objQuote.Hide_Periods__c) && 
+                                        OR(objQP.Period1_EOS_Fee__c != 0,objQP.Period2_EOS_Fee__c != 0,objQP.Period3_EOS_Fee__c != 0,
+                                        objQP.Period4_EOS_Fee__c != 0,objQP.Period5_EOS_Fee__c != 0)}" layout="none">
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 0}" layout="none">
+                                        <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                            Period 1 = &nbsp;
+                                        </apex:outputPanel>
+                                        <c:myOutputText myValue="{!objQP.Period1_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                        <br/>Period 2 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Period2_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 2}" layout="none">
+                                        <br/>Period 3 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Period3_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 3}" layout="none">
+                                        <br/>Period 4 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Period4_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 4}" layout="none">
+                                        <br/>Period 5 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Period5_EOS_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                                <c:myOutputText myValue="{!objQP.Adjustment__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" rendered="{!objQuote.Hide_Periods__c && objQP.Adjustment__c != 0}"/>
+                            </td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!objQuote.Show_Reinstatment__c}" layout="none">
+                            <td><apex:outputField value="{!objQP.Reinstatement__c}"/></td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!objQuote.Show_Shelving_Fees__c}" layout="none">
+                        <td style="{!IF(intNumOfPeriods > 1 && NOT(objQuote.Hide_Periods__c),'text-align:left','')}">
+                            <apex:outputPanel rendered="{!NOT(objQuote.Hide_Periods__c) && 
+                                    OR(objQP.Period1_Shelving_Fee__c != 0,objQP.Period2_Shelving_Fee__c != 0,objQP.Period3_Shelving_Fee__c != 0,
+                                    objQP.Period4_Shelving_Fee__c != 0,objQP.Period5_Shelving_Fee__c != 0)}" layout="none">
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 0}" layout="none">
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                        Period 1 = &nbsp;
+                                    </apex:outputPanel>
+                                    <c:myOutputText myValue="{!objQP.Period1_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                    <br/>Period 2 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period2_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 2}" layout="none">
+                                    <br/>Period 3 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period3_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 3}" layout="none">
+                                    <br/>Period 4 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period4_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!intNumOfPeriods > 4}" layout="none">
+                                    <br/>Period 5 = &nbsp;
+                                    <c:myOutputText myValue="{!objQP.Period5_Shelving_Fee__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                            <c:myOutputText myValue="{!objQP.Decreased_Quote_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" rendered="{!objQuote.Hide_Periods__c && objQP.Decreased_Quote_Value__c != 0}"/>
+                        </td>
+                    </apex:outputPanel>
+                        <td>
+                            <apex:outputText value="{0,date,MMM dd, yyyy}">
+                                 <apex:param value="{!objQP.Maintenance_Start_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                        <td>
+                            <apex:outputText value="{0,date,MMM dd, yyyy}">
+                                 <apex:param value="{!objQP.Maintenance_End_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                        <apex:outputPanel rendered="{!NOT(objQuote.Hide_Maintenance_Due__c) || strInternal == '1'}" layout="none">
+                            <td style="{!IF(intNumOfPeriods > 1 && NOT(objQuote.Hide_Periods__c),'text-align:left','')}">
+                                <apex:outputPanel rendered="{!NOT(objQuote.Hide_Periods__c)}" layout="none">
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 0}" layout="none">
+                                        <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                            Period 1 = &nbsp;
+                                        </apex:outputPanel>
+                                        <c:myOutputText myValue="{!objQP.Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 1}" layout="none">
+                                        <br/>Period 2 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Year2_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 2}" layout="none">
+                                        <br/>Period 3 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Year3_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 3}" layout="none">
+                                        <br/>Period 4 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Year4_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!intNumOfPeriods > 4}" layout="none">
+                                        <br/>Period 5 = &nbsp;
+                                        <c:myOutputText myValue="{!objQP.Year5_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                                <c:myOutputText myValue="{!objQP.Total_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" rendered="{!objQuote.Hide_Periods__c}"/>
+                            </td>
+                        </apex:outputPanel>
+                     <apex:outputPanel rendered="{!objQuote.Show_Comments__c}" layout="none">
+                      <td><apex:outputText value="{!objQP.Comment__c}"></apex:outputText></td>
+                      </apex:outputPanel>
+                   
+                   
+                   
+                    </tr>
+                </apex:repeat>
+            </table>
+            <br/>
+            <!-- <apex:outputPanel rendered="{!NOT(objQuote.Hide_Maintenance_Due__c) || strInternal == '1'}" layout="none"> -->
+            <apex:outputPanel layout="none">
+                <table cellspacing="1" align="right">
+                    <apex:outputPanel rendered="{!NOT(objQuote.Hide_Periods__c)}" layout="none">
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 0}" layout="none">
+                            <tr>
+                                <td width="200px" style="text-align:right">
+                                    <apex:outputText value="{!IF((PureConnectDirect),"Revised List Price","Revised Net")} =" rendered="{!objQuote.Show_Revised_Net_Sub_Totals__c || (NOT(objQuote.Hide_Revised_Net__c) && NOT(objQuote.Show_Revised_Net_Sub_Totals__c)) }"/>     
+                                </td>
+                                <td width="100px" style="text-align:left"><c:myOutputText rendered="{!objQuote.Show_Revised_Net_Sub_Totals__c || (NOT(objQuote.Hide_Revised_Net__c) && NOT(objQuote.Show_Revised_Net_Sub_Totals__c)) }" myValue="{!objInvoiceGroup.objInvoiceGroupQP.Revised_Net_License_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                                <td width="200px" style="text-align:right">
+                                    <apex:outputText value="Maintenance Due {!IF(intNumOfPeriods > 1,'Period 1 ','')}= " rendered="{!objQuote.Show_Maintenance_Due_Sub_Totals__c || (NOT(objQuote.Hide_Maintenance_Due__c) && NOT(objQuote.Show_Maintenance_Due_Sub_Totals__c)) }"/>
+                                </td>
+                                <td width="100px" style="text-align:left"><c:myOutputText rendered="{!objQuote.Show_Maintenance_Due_Sub_Totals__c || (NOT(objQuote.Hide_Maintenance_Due__c) && NOT(objQuote.Show_Maintenance_Due_Sub_Totals__c)) }" myValue="{!objInvoiceGroup.objInvoiceGroupQP.Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                            </tr>
+                            
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 1 && (objQuote.Show_Maintenance_Due_Sub_Totals__c || (NOT(objQuote.Hide_Maintenance_Due__c) && NOT(objQuote.Show_Maintenance_Due_Sub_Totals__c)) )}" layout="none">
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td style="text-align:right">Maintenance Due Period 2 = </td>
+                                <td style="text-align:left"><c:myOutputText myValue="{!objInvoiceGroup.objInvoiceGroupQP.Year2_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 2 && (objQuote.Show_Maintenance_Due_Sub_Totals__c || (NOT(objQuote.Hide_Maintenance_Due__c) && NOT(objQuote.Show_Maintenance_Due_Sub_Totals__c)) )}" layout="none">
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td style="text-align:right">Maintenance Due Period 3 = </td>
+                                <td style="text-align:left"><c:myOutputText myValue="{!objInvoiceGroup.objInvoiceGroupQP.Year3_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 3 && (objQuote.Show_Maintenance_Due_Sub_Totals__c || (NOT(objQuote.Hide_Maintenance_Due__c) && NOT(objQuote.Show_Maintenance_Due_Sub_Totals__c)) )}" layout="none">
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td style="text-align:right">Maintenance Due Period 4 = </td>
+                                <td style="text-align:left"><c:myOutputText myValue="{!objInvoiceGroup.objInvoiceGroupQP.Year4_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!intNumOfPeriods > 4 && (objQuote.Show_Maintenance_Due_Sub_Totals__c || (NOT(objQuote.Hide_Maintenance_Due__c) && NOT(objQuote.Show_Maintenance_Due_Sub_Totals__c)) )}" layout="none">
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td style="text-align:right">Maintenance Due Period 5 = </td>
+                                <td style="text-align:left"><c:myOutputText myValue="{!objInvoiceGroup.objInvoiceGroupQP.Year5_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                            </tr>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </table>
+                <table cellspacing="1" align="right">
+                    <apex:outputPanel rendered="{!objQuote.Hide_Periods__c}" layout="none">
+                        <tr>
+                            <td width="200px" style="text-align:right">
+                                <apex:outputText value="{!IF((PureConnectDirect),"Revised List Price","Revised Net")} =" rendered="{!objQuote.Show_Revised_Net_Sub_Totals__c || (NOT(objQuote.Hide_Revised_Net__c) && NOT(objQuote.Show_Revised_Net_Sub_Totals__c)) }"/>     
+                            </td>
+                            <td width="100px" style="text-align:left"><c:myOutputText rendered="{!objQuote.Show_Revised_Net_Sub_Totals__c || (NOT(objQuote.Hide_Revised_Net__c) && NOT(objQuote.Show_Revised_Net_Sub_Totals__c)) }" myValue="{!objInvoiceGroup.objInvoiceGroupQP.Revised_Net_License_Value__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                            <td width="200px" style="text-align:right">
+                                <apex:outputText value="Maintenance Due = "/>
+                            </td>
+                            <td width="100px" style="text-align:left"><c:myOutputText myValue="{!objInvoiceGroup.objInvoiceGroupQP.Total_Maintenance_Due__c}" hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}"/></td>
+                        </tr>
+                    </apex:outputPanel>
+                </table>
+                
+                <br/><br/><br/>
+                <apex:outputPanel rendered="{!intNumOfPeriods > 2 && NOT(objQuote.Hide_Periods__c)}" layout="none">
+                    <br/>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!intNumOfPeriods > 3 && NOT(objQuote.Hide_Periods__c)}" layout="none">
+                    <br/>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!intNumOfPeriods > 4 && NOT(objQuote.Hide_Periods__c)}" layout="none">
+                    <br/>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!objQuote.Hide_Maintenance_Due__c && strInternal != '1'}" layout="none">
+                <br/>
+            </apex:outputPanel>
+        </apex:repeat>
+        <br/><br/>
+    </apex:outputPanel>
+          
+    <apex:outputPanel rendered="{!objQuote.Show_Billing_Plan__c && objQuote.Quote_Billing_Plans__r.size > 0}">
+        Billing Plan:<br/><br/>
+        <table cellspacing="1" cellpadding="1" border="1" style="border-collapse:collapse;border-color:black;text-align:center">
+            <tr style="font-size:80%;background-color:#DDDCDC">
+                <th width="200px">Support Period Start Date</th>
+                <th width="200px">Support Period End Date</th>
+                <th width="120px">Amount</th>
+            </tr>
+            <apex:repeat value="{!objQuote.Quote_Billing_Plans__r}" var="objBillingPlan">
+                <tr style="font-size:90%;">
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objBillingPlan.Support_Period_Start_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td>
+                        <apex:outputText value="{0,date,MMM dd, yyyy}">
+                             <apex:param value="{!objBillingPlan.Support_Period_End_Date__c}"/>
+                        </apex:outputText>
+                    </td>
+                    <td style="text-align:right">
+                        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objBillingPlan.Amount__c}"/>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </table>
+        <br/><br/>
+    </apex:outputPanel>   
+         <div align="right">
+     <apex:panelGrid columns="2"  columnClasses="col1, col2, col3" border="1" style="border-collapse:collapse;border-color:black;">
+                                           
+        <apex:outputPanel style="font-size:90%;padding:5px;background: #DDDCDC;font-weight: bold;" layout="block" styleClass="myHeader">
+            <apex:outputText value="Totals"/>
+        </apex:outputPanel>
+        <apex:outputPanel style="font-size:90%;padding:5px;background: #DDDCDC;font-weight: bold;" layout="block" styleClass="myHeader">
+            <apex:outputText value="Amount"/>
+        </apex:outputPanel>
+        <!-- {!objQuote.Show_Revised_Net_Sub_Totals__c || (NOT(objQuote.Hide_Revised_Net__c) && NOT(objQuote.Show_Revised_Net_Sub_Totals__c)) }
+             {!NOT(objQuote.Hide_Revised_Net__c) || (objQuote.Hide_Revised_Net__c && (objQuote.Show_Revised_Net_Sub_Totals__c || objQuote.Show_Total_License_Net_Value__c)) }
+             {!NOT(objQuote.Hide_Revised_Net__c) || objQuote.Show_Total_License_Net_Value__c || strInternal == '1'}
+        -->
+        <apex:outputText value="{!IF((PureConnectDirect),"Revised List Price","Revised Net")}" rendered="{! strInternal == '1' || (NOT(objQuote.Hide_Revised_Net__c) || (objQuote.Hide_Revised_Net__c && (objQuote.Show_Revised_Net_Sub_Totals__c || objQuote.Show_Total_License_Net_Value__c)))}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Revised_Net_License_Value_Formula__c}" rendered="{! strInternal == '1' || (NOT(objQuote.Hide_Revised_Net__c) || (objQuote.Hide_Revised_Net__c && (objQuote.Show_Revised_Net_Sub_Totals__c || objQuote.Show_Total_License_Net_Value__c)))}"/>
+        
+        <!-- Period 1--> 
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} Maintenance Due" rendered="{!intNumOfPeriods > 0 && objQuote.Period1_Maintenance_Due_Formula__c != 0.0 && NOT(objQuote.Hide_Periods__c) && (NOT(objQuote.Hide_Maintenance_Due__c) || (objQuote.Hide_Maintenance_Due__c && (objQuote.Show_Maintenance_Due_Sub_Totals__c || objQuote.Show_Total_Maintenance_Due__c)))}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_Maintenance_Due_Formula__c}" rendered="{!intNumOfPeriods > 0 && objQuote.Period1_Maintenance_Due_Formula__c != 0.0 && NOT(objQuote.Hide_Periods__c) && (NOT(objQuote.Hide_Maintenance_Due__c) || (objQuote.Hide_Maintenance_Due__c && (objQuote.Show_Maintenance_Due_Sub_Totals__c || objQuote.Show_Total_Maintenance_Due__c)))}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} KPI1 Amount" rendered="{!objQuote.Period1_KPI1_Amount__c != null && objQuote.Period1_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_KPI1_Amount__c}" rendered="{!objQuote.Period1_KPI1_Amount__c != null && objQuote.Period1_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} KPI2 Amount" rendered="{!objQuote.Period1_KPI2_Amount__c != null && objQuote.Period1_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_KPI2_Amount__c}" rendered="{!objQuote.Period1_KPI2_Amount__c != null && objQuote.Period1_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} Flex Care Amount" rendered="{!objQuote.Period1_Flex_Care_Amount__c != null && objQuote.Period1_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_Flex_Care_Amount__c}" rendered="{!objQuote.Period1_Flex_Care_Amount__c != null && objQuote.Period1_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} Partner to Partner Uplift Fee" rendered="{!NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period1_P2P_Uplift_Fee__c != null && objQuote.Period1_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_P2P_Uplift_Fee__c}" rendered="{!NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period1_P2P_Uplift_Fee__c != null && objQuote.Period1_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} Quarterly Semi Annual Fee" rendered="{!NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period1_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period1_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_Quaterly_Semi_Annual_Fee__c}" rendered="{!NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period1_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period1_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} End of Support Fee" rendered="{!objQuote.Period1_EOS_Fee__c != null && objQuote.Period1_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_EOS_Fee__c}" rendered="{!objQuote.Period1_EOS_Fee__c != null && objQuote.Period1_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} Reinstatement Fee" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period1_Reinstatement_Fee__c != null && objQuote.Period1_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_Reinstatement_Fee__c}" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period1_Reinstatement_Fee__c != null && objQuote.Period1_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} Shelving Fee" rendered="{!objQuote.Period1_Shelving_Fee__c != null && objQuote.Period1_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period1_Shelving_Fee__c}" rendered="{!objQuote.Period1_Shelving_Fee__c != null && objQuote.Period1_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="{!IF(intNumOfPeriods > 1,'Period 1 ','')} Total" rendered="{!intNumOfPeriods > 0 && objQuote.Total_Due_Period1__c != 0.0 && objQuote.Total_Due_Period1__c != null && objQuote.Total_Due_Period1__c != objQuote.Period1_Maintenance_Due_Formula__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Due_Period1__c}" rendered="{!intNumOfPeriods > 0 && objQuote.Total_Due_Period1__c != 0.0 && objQuote.Total_Due_Period1__c != null && objQuote.Total_Due_Period1__c != objQuote.Period1_Maintenance_Due_Formula__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <!-- Period 2-->                            
+        <apex:outputText value="Period 2 Maintenance Due" rendered="{!intNumOfPeriods > 1 && objQuote.Period2_Maintenance_Due__c != 0.0 && objQuote.Period2_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_Maintenance_Due__c}" rendered="{!intNumOfPeriods > 1 && objQuote.Period2_Maintenance_Due__c != 0.0 && objQuote.Period2_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 KPI1 Amount" rendered="{!intNumOfPeriods > 1 && objQuote.Period2_KPI1_Amount__c != null && objQuote.Period2_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_KPI1_Amount__c}" rendered="{!objQuote.Period2_KPI1_Amount__c != null && objQuote.Period2_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 KPI2 Amount" rendered="{!intNumOfPeriods > 1 && objQuote.Period2_KPI2_Amount__c != null && objQuote.Period2_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_KPI2_Amount__c}" rendered="{!objQuote.Period2_KPI2_Amount__c != null && objQuote.Period2_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 Flex Care Amount" rendered="{!intNumOfPeriods > 1 && objQuote.Period2_Flex_Care_Amount__c != null && objQuote.Period2_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_Flex_Care_Amount__c}" rendered="{!intNumOfPeriods > 1 && objQuote.Period2_Flex_Care_Amount__c != null && objQuote.Period2_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 Partner to Partner Uplift Fee" rendered="{!intNumOfPeriods > 1 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period2_P2P_Uplift_Fee__c != null && objQuote.Period2_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_P2P_Uplift_Fee__c}" rendered="{!intNumOfPeriods > 1 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period2_P2P_Uplift_Fee__c != null && objQuote.Period2_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 Quarterly Semi Annual Fee" rendered="{!intNumOfPeriods > 1 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period2_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period2_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_Quaterly_Semi_Annual_Fee__c}" rendered="{!intNumOfPeriods > 1 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period2_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period2_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 End of Support Fee" rendered="{!objQuote.Period2_EOS_Fee__c != null && objQuote.Period2_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_EOS_Fee__c}" rendered="{!objQuote.Period2_EOS_Fee__c != null && objQuote.Period2_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 Reinstatement Fee" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period2_Reinstatement_Fee__c != null && objQuote.Period2_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_Reinstatement_Fee__c}" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period2_Reinstatement_Fee__c != null && objQuote.Period2_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 Shelving Fee" rendered="{!objQuote.Period2_Shelving_Fee__c != null && objQuote.Period2_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period2_Shelving_Fee__c}" rendered="{!objQuote.Period2_Shelving_Fee__c != null && objQuote.Period2_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 2 Total" rendered="{!intNumOfPeriods > 1 && ROUND(objQuote.Total_Due_Period2__c,2) != ROUND(objQuote.Period2_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Due_Period2__c}" rendered="{!intNumOfPeriods > 1 && ROUND(objQuote.Total_Due_Period2__c,2) != ROUND(objQuote.Period2_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <!-- Period 3-->                            
+        <apex:outputText value="Period 3 Maintenance Due" rendered="{!intNumOfPeriods > 2 && objQuote.Period3_Maintenance_Due__c != 0.0 && objQuote.Period3_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_Maintenance_Due__c}" rendered="{!intNumOfPeriods > 2 && objQuote.Period3_Maintenance_Due__c != 0.0 && objQuote.Period3_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 KPI1 Amount" rendered="{!intNumOfPeriods > 2 && objQuote.Period3_KPI1_Amount__c != null && objQuote.Period3_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_KPI1_Amount__c}" rendered="{!objQuote.Period3_KPI1_Amount__c != null && objQuote.Period3_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 KPI2 Amount" rendered="{!intNumOfPeriods > 2 && objQuote.Period3_KPI2_Amount__c != null && objQuote.Period3_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_KPI2_Amount__c}" rendered="{!objQuote.Period3_KPI2_Amount__c != null && objQuote.Period3_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 Flex Care Amount" rendered="{!intNumOfPeriods > 2 && objQuote.Period3_Flex_Care_Amount__c != null && objQuote.Period3_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_Flex_Care_Amount__c}" rendered="{!intNumOfPeriods > 2 && objQuote.Period3_Flex_Care_Amount__c != null && objQuote.Period3_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 Partner to Partner Uplift Fee" rendered="{!intNumOfPeriods > 2 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period3_P2P_Uplift_Fee__c != null && objQuote.Period3_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_P2P_Uplift_Fee__c}" rendered="{!intNumOfPeriods > 2 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period3_P2P_Uplift_Fee__c != null && objQuote.Period3_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 Quarterly Semi Annual Fee" rendered="{!intNumOfPeriods > 2 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period3_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period3_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_Quaterly_Semi_Annual_Fee__c}" rendered="{!intNumOfPeriods > 2 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period3_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period3_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 End of Support Fee" rendered="{!objQuote.Period3_EOS_Fee__c != null && objQuote.Period3_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_EOS_Fee__c}" rendered="{!objQuote.Period3_EOS_Fee__c != null && objQuote.Period3_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 Reinstatement Fee" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period3_Reinstatement_Fee__c != null && objQuote.Period3_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_Reinstatement_Fee__c}" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period3_Reinstatement_Fee__c != null && objQuote.Period3_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 Shelving Fee" rendered="{!objQuote.Period3_Shelving_Fee__c != null && objQuote.Period3_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period3_Shelving_Fee__c}" rendered="{!objQuote.Period3_Shelving_Fee__c != null && objQuote.Period3_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 3 Total" rendered="{!intNumOfPeriods > 2 && ROUND(objQuote.Total_Due_Period3__c,2) != ROUND(objQuote.Period3_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Due_Period3__c}" rendered="{!intNumOfPeriods > 2 && ROUND(objQuote.Total_Due_Period3__c,2) != ROUND(objQuote.Period3_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <!-- Period 4-->                            
+        <apex:outputText value="Period 4 Maintenance Due" rendered="{!intNumOfPeriods > 3 && objQuote.Period4_Maintenance_Due__c != 0.0 && objQuote.Period4_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_Maintenance_Due__c}" rendered="{!intNumOfPeriods > 3 && objQuote.Period4_Maintenance_Due__c != 0.0 && objQuote.Period4_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 KPI1 Amount" rendered="{!intNumOfPeriods > 3 && objQuote.Period4_KPI1_Amount__c != null && objQuote.Period4_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_KPI1_Amount__c}" rendered="{!objQuote.Period4_KPI1_Amount__c != null && objQuote.Period4_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 KPI2 Amount" rendered="{!intNumOfPeriods > 3 && objQuote.Period4_KPI2_Amount__c != null && objQuote.Period4_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_KPI2_Amount__c}" rendered="{!objQuote.Period4_KPI2_Amount__c != null && objQuote.Period4_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 Flex Care Amount" rendered="{!intNumOfPeriods > 3 && objQuote.Period4_Flex_Care_Amount__c != null && objQuote.Period4_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_Flex_Care_Amount__c}" rendered="{!intNumOfPeriods > 3 && objQuote.Period4_Flex_Care_Amount__c != null && objQuote.Period4_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 Partner to Partner Uplift Fee" rendered="{!intNumOfPeriods > 3 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period4_P2P_Uplift_Fee__c != null && objQuote.Period4_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_P2P_Uplift_Fee__c}" rendered="{!intNumOfPeriods > 3 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period4_P2P_Uplift_Fee__c != null && objQuote.Period4_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 Quarterly Semi Annual Fee" rendered="{!intNumOfPeriods > 3 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period4_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period4_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_Quaterly_Semi_Annual_Fee__c}" rendered="{!intNumOfPeriods > 3 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period4_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period4_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 End of Support Fee" rendered="{!objQuote.Period4_EOS_Fee__c != null && objQuote.Period4_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_EOS_Fee__c}" rendered="{!objQuote.Period4_EOS_Fee__c != null && objQuote.Period4_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 Reinstatement Fee" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period4_Reinstatement_Fee__c != null && objQuote.Period4_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_Reinstatement_Fee__c}" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period4_Reinstatement_Fee__c != null && objQuote.Period4_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 Shelving Fee" rendered="{!objQuote.Period4_Shelving_Fee__c != null && objQuote.Period4_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period4_Shelving_Fee__c}" rendered="{!objQuote.Period4_Shelving_Fee__c != null && objQuote.Period4_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 4 Total" rendered="{!intNumOfPeriods > 3 && ROUND(objQuote.Total_Due_Period4__c,2) != ROUND(objQuote.Period4_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Due_Period4__c}" rendered="{!intNumOfPeriods > 3 && ROUND(objQuote.Total_Due_Period4__c,2) != ROUND(objQuote.Period4_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+
+       <!-- Period 5-->                            
+        <apex:outputText value="Period 5 Maintenance Due" rendered="{!intNumOfPeriods > 4 && objQuote.Period5_Maintenance_Due__c != 0.0 && objQuote.Period5_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_Maintenance_Due__c}" rendered="{!intNumOfPeriods > 4 && objQuote.Period5_Maintenance_Due__c != 0.0 && objQuote.Period5_Maintenance_Due__c != null && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 KPI1 Amount" rendered="{!intNumOfPeriods > 4 && objQuote.Period5_KPI1_Amount__c != null && objQuote.Period5_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_KPI1_Amount__c}" rendered="{!objQuote.Period5_KPI1_Amount__c != null && objQuote.Period5_KPI1_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 KPI2 Amount" rendered="{!intNumOfPeriods > 4 && objQuote.Period5_KPI2_Amount__c != null && objQuote.Period5_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_KPI2_Amount__c}" rendered="{!objQuote.Period5_KPI2_Amount__c != null && objQuote.Period5_KPI2_Amount__c != 0.0 && objQuote.Show_KPIs__c && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 Flex Care Amount" rendered="{!intNumOfPeriods > 4 && objQuote.Period5_Flex_Care_Amount__c != null && objQuote.Period5_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_Flex_Care_Amount__c}" rendered="{!intNumOfPeriods > 4 && objQuote.Period5_Flex_Care_Amount__c != null && objQuote.Period5_Flex_Care_Amount__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 Partner to Partner Uplift Fee" rendered="{!intNumOfPeriods > 4 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period5_P2P_Uplift_Fee__c != null && objQuote.Period5_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_P2P_Uplift_Fee__c}" rendered="{!intNumOfPeriods > 4 && NOT(objQuote.Hide_P2P_Uplift_Fee__c) && objQuote.Period5_P2P_Uplift_Fee__c != null && objQuote.Period5_P2P_Uplift_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 Quarterly Semi Annual Fee" rendered="{!intNumOfPeriods > 4 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period5_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period5_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_Quaterly_Semi_Annual_Fee__c}" rendered="{!intNumOfPeriods > 4 && NOT(objQuote.Hide_Quaterly_Semi_Annual_Fee__c) && objQuote.Period5_Quaterly_Semi_Annual_Fee__c != null && objQuote.Period5_Quaterly_Semi_Annual_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 End of Support Fee" rendered="{!objQuote.Period5_EOS_Fee__c != null && objQuote.Period5_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_EOS_Fee__c}" rendered="{!objQuote.Period5_EOS_Fee__c != null && objQuote.Period5_EOS_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 Reinstatement Fee" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period5_Reinstatement_Fee__c != null && objQuote.Period5_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_Reinstatement_Fee__c}" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Period5_Reinstatement_Fee__c != null && objQuote.Period5_Reinstatement_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 Shelving Fee" rendered="{!objQuote.Period5_Shelving_Fee__c != null && objQuote.Period5_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Period5_Shelving_Fee__c}" rendered="{!objQuote.Period5_Shelving_Fee__c != null && objQuote.Period5_Shelving_Fee__c != 0.0 && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Period 5 Total" rendered="{!intNumOfPeriods > 4 && ROUND(objQuote.Total_Due_Period5__c,2) != ROUND(objQuote.Period5_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Due_Period5__c}" rendered="{!intNumOfPeriods > 4 && ROUND(objQuote.Total_Due_Period5__c,2) != ROUND(objQuote.Period5_Maintenance_Due__c,2) && NOT(objQuote.Hide_Periods__c)}"/>
+        
+        <!--Overall Totals-->
+        <apex:outputText value="Total KPI1 Amount" rendered="{!objQuote.Total_KPI1_Amount__c > 0.0 && objQuote.Show_KPIs__c && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_KPI1_Amount__c,2) == ROUND(objQuote.Total_KPI1_Amount__c,2)),objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_KPI1_Amount__c}" rendered="{!objQuote.Total_KPI1_Amount__c > 0.0 && objQuote.Show_KPIs__c && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_KPI1_Amount__c,2) == ROUND(objQuote.Total_KPI1_Amount__c,2)),objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Total KPI2 Amount" rendered="{!objQuote.Total_KPI2_Amount__c > 0.0 && objQuote.Show_KPIs__c && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_KPI2_Amount__c,2) == ROUND(objQuote.Total_KPI2_Amount__c,2)),objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_KPI2_Amount__c}" rendered="{!objQuote.Total_KPI2_Amount__c > 0.0 && objQuote.Show_KPIs__c && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_KPI2_Amount__c,2) == ROUND(objQuote.Total_KPI2_Amount__c,2)),objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Total Flex Care" rendered="{!NOT(ISBLANK(objQuote.Total_Flex_Care__c)) && objQuote.Total_Flex_Care__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_Flex_Care_Amount__c,2) == ROUND(objQuote.Total_Flex_Care__c,2)),objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Flex_Care__c}" rendered="{!NOT(ISBLANK(objQuote.Total_Flex_Care__c)) && objQuote.Total_Flex_Care__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_Flex_Care_Amount__c,2) == ROUND(objQuote.Total_Flex_Care__c,2)),objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Total Extended End of Support Fee" rendered="{!objQuote.Extended_End_of_Support_Formula__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_EOS_Fee__c,2) == ROUND(objQuote.Extended_End_of_Support_Formula__c,2)),objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Extended_End_of_Support_Formula__c}" rendered="{!objQuote.Extended_End_of_Support_Formula__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_EOS_Fee__c,2) == ROUND(objQuote.Extended_End_of_Support_Formula__c,2)),objQuote.Hide_Periods__c)}"/>
+        
+        <apex:outputText value="Total Reinstatement Fee" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Reinstatement_Fee_Formula__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_Reinstatement_Fee__c,2) == ROUND(objQuote.Reinstatement_Fee_Formula__c,2)),objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Reinstatement_Fee_Formula__c}" rendered="{!NOT(objQuote.Hide_Reinstatement_Fee__c) && objQuote.Reinstatement_Fee_Formula__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_Reinstatement_Fee__c,2) == ROUND(objQuote.Reinstatement_Fee_Formula__c,2)),objQuote.Hide_Periods__c)}"/>
+
+        <apex:outputText value="Total License Reduction Fee" rendered="{!objQuote.License_Reduction_Fee__c != NULL && objQuote.License_Reduction_Fee__c > 0.0}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.License_Reduction_Fee__c}" rendered="{!objQuote.License_Reduction_Fee__c != NULL && objQuote.License_Reduction_Fee__c > 0.0}"/>
+
+        <apex:outputText value="Total Shelving Fee" rendered="{!objQuote.Total_Shelving_Fee__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_Shelving_Fee__c,2) == ROUND(objQuote.Total_Shelving_Fee__c,2)),objQuote.Hide_Periods__c)}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Shelving_Fee__c}" rendered="{!objQuote.Total_Shelving_Fee__c > 0.0 && OR(NOT(intNumOfPeriods == 1 && ROUND(objQuote.Period1_Shelving_Fee__c,2) == ROUND(objQuote.Total_Shelving_Fee__c,2)),objQuote.Hide_Periods__c)}"/>
+
+        <apex:outputText value="Total Discount" rendered="{!objQuote.Hide_Discount__c == false && objQuote.Maintenance_Due_Discount_Amount__c != null && objQuote.Maintenance_Due_Discount_Amount__c != 0.0}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Maintenance_Due_Discount_Amount__c}" rendered="{!objQuote.Hide_Discount__c == false && objQuote.Maintenance_Due_Discount_Amount__c != null && objQuote.Maintenance_Due_Discount_Amount__c != 0.0}"/>
+
+        <apex:outputText value="Maintenance Due (After Discount)" rendered="{!objQuote.Hide_Discount__c == false && objQuote.Maintenance_Due_Discount_Amount__c != null && objQuote.Maintenance_Due_Discount_Amount__c != 0.0}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Maintenance_Due_After_Discount__c}" rendered="{!objQuote.Hide_Discount__c == false && objQuote.Maintenance_Due_Discount_Amount__c != null && objQuote.Maintenance_Due_Discount_Amount__c != 0.0}"/>
+        
+        <apex:outputText value="Total Taxes" rendered="{!objQuote.Total_Taxes__c != null && objQuote.Total_Taxes__c != 0.0}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Taxes__c}" rendered="{!objQuote.Total_Taxes__c != null && objQuote.Total_Taxes__c != 0.0}"/>
+
+        <apex:outputText value="Total Maintenance Due (Including Taxes)" rendered="{!objQuote.Total_Taxes__c != null && objQuote.Total_Taxes__c != 0.0}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Grand_Total__c}" rendered="{!objQuote.Total_Taxes__c != null && objQuote.Total_Taxes__c != 0.0}"/>
+        
+        <apex:outputText value="Total Maintenance Due (Excluding Taxes)" rendered="{!ISBLANK(objQuote.Total_Taxes__c) || objQuote.Total_Taxes__c = 0.0}"/>
+        <c:myOutputText hideDecimals="{!objQuote.Hide_Truncate_Decimals__c}" currencycode="{!objQuote.CurrencyISOCode}" myValue="{!objQuote.Total_Renewal_Without_Tax__c}" rendered="{!ISBLANK(objQuote.Total_Taxes__c) || objQuote.Total_Taxes__c = 0.0}"/>
+    </apex:panelGrid>
+    </div>
+</apex:page>

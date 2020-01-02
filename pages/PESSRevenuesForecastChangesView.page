@@ -1,0 +1,765 @@
+<apex:page controller="PESSRevenueForecastChangesCtlr" sidebar="false" showHeader="false" standardStylesheets="true" docType="html-5.0" >
+  <apex:form >
+    <html>
+     
+    <head>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.common.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.mobile.min.css" />
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/jquery.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/kendo.all.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jsZip, '/jszip/jszip.min.js')}"/>
+    </head>
+   <style>
+       .k-item{
+           margin-left: inherit;
+       }
+       .k-alt k-state-selected{
+           color: white;
+       }
+       .editColor{
+            background: linear-gradient(#79c6eb, #b4dff3, #79c6eb);
+            color: black;
+        }
+        .k-block>.k-header, .k-window-titlebar{
+            text-align:center;
+        }
+        .k-widget.k-notification.k-notification-info {
+            background-color: #2498bc;
+            color: white;
+            border-color: #2498bc;
+        }
+        .k-window-titlebar.k-dialog-titlebar.k-header{
+            display : none;
+        }
+        div.k-loading-mask{
+            z-index: 3; /* must be larger than the z-index:2 of #container */
+        }
+       .k-grid tbody .k-button {
+            min-width: auto;
+        }
+        #tabstrip h2 {
+            font-weight: lighter;
+            font-size: 5em;
+            line-height: 1;
+            padding: 0 0 0 30px;
+            margin: 0;
+        }
+    
+        #tabstrip h2 span {
+            background: none;
+            padding-left: 5px;
+            font-size: .3em;
+            vertical-align: top;
+        }
+    
+        #tabstrip p {
+            margin: 0;
+            padding: 0;
+        }
+        .error{
+            color:red;
+            margin-top:2px;
+        }
+        .k-widget.k-numerictextbox.currencyAmountorg{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-numerictextbox.currencyAmountclone{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-numerictextbox.currencylikelyclone{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-numerictextbox.currencylikelyorg{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-datepicker.k-header{
+            border-left: 2px solid red; 
+        }
+        .k-button.k-button-icontext.k-grid-C{
+                border-style: hidden ; 
+                border-color: white;
+                border-radius: 0px;
+                background-color: transparent; 
+        }
+        .k-button.k-button-icontext.k-grid-R{
+                border-style: hidden ; 
+                border-color: white;
+                border-radius: 0px;
+                background-color: transparent; 
+        }
+        .k-grid .k-button {
+            margin: 0;
+            padding: 0px 3px;
+        }
+        .colEnable.Change{
+            background-color : #fba0a0;
+        }
+        .coldisable.Change{
+            background-color : #fba0a0;
+        }
+        .k-icon.k-i-info{
+            display:none;
+        }
+    
+        .colDisable.even { 
+         background-color: #FDF5E6;
+        }
+        
+         .colDisable.odd { 
+         background-color: #F5F5F5;
+        }
+        .colEnable{
+            min-width:50px;
+        }
+    
+    </style>
+    
+    <body>
+        
+        <div id="confirmationTemplate" style="display:none;" >
+            <div class="popupMessage" style="text-align:center;"></div>
+            <br/>
+            <div class="dialog_buttons" style="text-align:center;">
+                <input type="button" class="confirm_yes k-button" value="Yes" style="width: 50px;background: #7bd2f6;" />
+                &nbsp;
+                <input type="button" class="confirm_no k-button" value="No" style="width: 50px;background: #7bd2f6;" />
+            </div>
+        </div>  
+        
+        <div id="example">
+            <div class="demo-section k-content" >
+                <div id="tabstrip">
+                    <ul>
+                        <li class="k-state" style="margin-top: 4px;font-size: larger;font-weight: 600;" id="monthlyForecast">
+                           <a onclick="monthlyForecast();" target='_self'> Monthly Forecast View </a>
+                        </li>
+                        <li class="k-state" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                           <a onclick="Riskupside();" target='_self'>Risk / Upside </a> 
+                        </li>
+                        <li class="k-state-active" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                           Change Comments 
+                        </li>
+                       <!-- <li class="k-state" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                            <a  onclick="NewForecastTab();" target='_self'> New Forecast</a>
+                        </li>-->
+                    </ul>
+                </div> 
+                <br/>
+                <div style="text-align: -webkit-center;"><br/>
+                    <div style="width: 99%;">   
+                        <div class="demo-section k-content" style="text-align: -webkit-center; border: 1px solid #67b1d2;border-radius: 15px;"><br/>
+                            <table style="width:100%;">
+                                <tr>
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;">Offering Type : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:12%;">
+                                        <input class="OfferingType" id="OfferingType" style="width: 90%;"/>
+                                    </td>
+                                    
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;">Year : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:12%;">
+                                        <input class="SelectYear" id="SelectYear" style="width: 90%;"/>
+                                    </td>
+                                    
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;">Current Week : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:12%;">
+                                        <input class="selectweek" id="week" style="width: 90%;" />
+                                    </td>
+                                    
+                                    <td style="width:5%;">
+                                        <h4 style="float: center;">Compared To : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;">Prior Week : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:12%;">
+                                        <input class="selectweekCompare" id="weekCompare" style="width: 90%;" />
+                                    </td>
+                                    
+                                    <td style="width:13%;">
+                                        <b class="checkAll"><a href="#" class="k-button" id="compare"  onclick="compareData();" style="font-weight: 700;padding: 2px 7px;">Compare </a>&nbsp; &nbsp; &nbsp;
+                                        <input type="checkbox" id="changeOnly" class="k-checkbox changeOnly" onclick="changesOnly();"/>
+                                        <label class="k-checkbox-label" for="changeOnly">Show All</label></b>
+                                    </td>
+                                    
+                                    <td style="width:15%;">
+                                        <a href="#" class="k-button" id="search"  onclick="searchdata();" style="font-weight: 700;padding: 2px 7px;">Search</a> &nbsp; &nbsp; &nbsp;
+                                        <a href="#" class="k-button" id="save" style="font-weight: 700;padding: 2px 7px;">Save</a>&nbsp; &nbsp; &nbsp;
+                                        <a href="#" class="k-button" id="export"    onclick="exportData();" style="font-weight: 700;padding: 2px 7px;">Export</a>&nbsp; &nbsp; &nbsp;
+                                    </td>
+                                    
+                                </tr>
+                            </table>
+                            <br/>
+                        </div>
+                       <br/>
+                    </div>
+                </div>
+                <div>
+                    <div id="gridRecords"></div><span id="notification" style=""></span>
+                    <div id="details"></div>
+                    <div id="confirm"></div>
+                </div>
+                <div id="windowExport" style="height: auto;display:none;">
+                    <div id="gridRecordsExport" style="display:none;"></div><br/>
+                    <div style="text-align: -webkit-center;">
+                        <a href="#" class="k-button" id="download" onclick="downloadData();" style="font-weight: 700;">Download</a> &nbsp;&nbsp;
+                        <a href="#" class="k-button" id="cancelDownload" onclick="cancelDownload()" style="font-weight: 700;">Cancel</a>
+                    </div> 
+                </div>
+                
+                <div id="windowCompare" style="height: auto;display:none;">
+                    <div id="gridRecordsCompare"></div><br/>
+                </div>
+                
+            </div>
+            <script>
+                var setIds = [];
+                var element = $(document.body);
+                var selectedYear = '';
+                var selectedOfferingType = '';
+                var selectedWeek = '';
+                var selectedWeekCompare = '';
+                var record= 0;
+                var wnd ;
+                var accountId = '';
+                $(document).ready(function() {
+                    $('#save').hide();
+                    $('#export').hide();
+                    $('#compare').hide();
+                    $('.checkAll').hide();
+                    debugger;
+                    $('.error').hide();
+                    
+                    selectedYear ="{!selectedyear}";
+                    
+                    selectedOfferingType ="{!selectedOfferingType}";
+                    
+                    selectedWeek ="{!selectedWeek}";
+                    selectedWeekCompare ="{!selectedWeekCompare}";
+                    
+                    $("#tabstrip").kendoTabStrip({
+                       
+                        animation:  {
+                            open: {
+                                duration: 600,
+                                effects: "fadeIn"
+                            }
+                        }
+                    });
+                    
+                    debugger;
+                    accountId = "{!accountId}";
+                    
+                    if(accountId != ''){
+                        $('#monthlyForecast').hide();
+                    }
+                    
+                     // Offering Type
+                    var dataOfferingType = [{ itemLabel: "-- Offering Type ---", itemValue: "" },
+                                            { itemLabel: "PureEngage", itemValue: "PureEngage" },
+                                            { itemLabel: "Premier", itemValue: "Premier" },
+                                            { itemLabel: "PureCloud", itemValue: "PureCloud" },
+                                            { itemLabel: "Outbound", itemValue: "Outbound" },
+                                            { itemLabel: "PureConnect", itemValue: "PureConnect" },
+                                            { itemLabel: "Cloud Solution Partner (PPU)", itemValue: "Cloud Solution Partner (PPU)" }];
+                                            
+                    $("#OfferingType").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: dataOfferingType,
+                    });
+                    var OType  = $("#OfferingType").data("kendoDropDownList");
+                    OType.value(selectedOfferingType);
+                    
+                    //Year 
+                    var datayear = [{ itemLabel: "--- Year --", itemValue: "" },
+                                    { itemLabel: "2017", itemValue: "2017" },
+                                    { itemLabel: "2018", itemValue: "2018" },
+                                    { itemLabel: "2019", itemValue: "2019" },
+                                    { itemLabel: "2020", itemValue: "2020" },
+                                    { itemLabel: "2021", itemValue: "2021" },];
+                                    
+                    $("#SelectYear").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: datayear,
+                    });
+                    var yearS  = $("#SelectYear").data("kendoDropDownList");
+                    yearS.value(selectedYear);
+                    
+                    selectWeekChange(false);
+                    
+                    searchdata();
+                    
+                    $("#save").click(function (e) {
+                        if(setIds.length > 0){  
+                        var grids = $("#gridRecords").data('kendoGrid');
+                            $.when(showConfirmationWindow('Do you want to save the changes?')).then(function(confirmed){
+                                if(confirmed){
+                                    //kendo.ui.progress(element, true);
+                                    e.preventDefault();
+                                    var jsonString = kendo.stringify(grids.dataSource.data());
+                                    var editJson = [];
+                                    $.each(JSON.parse(jsonString), function(idx, obj) {
+                                        if(setIds.includes(obj.arfcId)){
+                                            editJson.push(JSON.stringify(obj)); 
+                                        }
+                                    });
+                                    console.log('>>>> '+editJson);
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastChangesCtlr.saveARF}",editJson,setIds,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                console.log(result);
+                                                $("#gridRecords").data("kendoGrid").dataSource.read();
+                                                //kendo.ui.progress(element, false);
+                                                $("#notification").kendoNotification({
+                                                    autoHideAfter: 3000,
+                                                    width: "auto",
+                                                    position: {
+                                                        bottom: 40,
+                                                        right: 30
+                                                    }
+                                                });
+                                                setIds = [];
+                                                
+                                                $("#notification").getKendoNotification().show("Data Saved Successfully!");
+                                                
+                                            }
+                                        }
+                                    );
+                                }
+                            });
+                        }else{
+                            $("#notification").kendoNotification({
+                                autoHideAfter: 3000,
+                                width: "auto",
+                                position: {
+                                    bottom: 40,
+                                    right: 30
+                                }
+                            });
+                            setIds = [];
+                            $("#notification").getKendoNotification().show("No changes to Save.");
+                        }
+                    });
+                   
+                });
+                
+                function compareData(){
+                    searchdata();
+                }
+                
+                function changesOnly(){
+                    debugger;
+                    $("#gridRecords").empty();
+                    getsearcheddata($(".k-checkbox.changeOnly").prop("checked"));
+                }
+                
+                
+                function selectRow(e) {
+                    debugger;
+                    var myClass = $(e).attr("class");
+                    var mycls = myClass.split(' ');
+                    /* Added in lines-381- 387, to disable the checkboxes for read-only access to Cloud Revenue Forecast Page for incident-#INC0310589- Added by Subhashree Nanda on 18/12/19 */ 
+                    var checkboxreadonly="{!makeCheckboxReadOnly}";
+                    if(checkboxreadonly=='true')
+                    {
+                       $(e).prop("checked",false);
+                       $(e).prop("disabled",true);
+
+                    }
+                    else{
+                    if($(e).prop("checked") == true){
+                        $('.'  + mycls[0] + '.' + mycls[1]).prop('checked', true);
+                        setIds.push(mycls[1]); 
+                        $('.colEnable'+ '.'+ mycls[1]).prop("disabled",false);  
+                        $('.colEnable'+ '.'+ mycls[1]).addClass("editColor");
+                        
+                    }else{
+                       $('.'  + mycls[0] + '.' + mycls[1]).prop('checked', false);
+                       $('.colEnable'+ '.'+ mycls[1] + '.editColor').prop("disabled",true); 
+                       $('.colEnable'+ '.'+ mycls[1] + '.editColor').removeClass("editColor");
+                    }
+                }
+              } 
+                
+                function selectWeekChange(changeval){
+                    kendo.ui.progress(element, true);
+                    var ddl =  $("#week").data("kendoDropDownList");
+                    ddl = $("#week").kendoDropDownList({
+                        index: 0,
+                        width: "100%",
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastChangesCtlr.populateWeek}" ,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                 debugger;
+                                                console.log(result);
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                            schema: {
+                                model: {
+                                    fields: {
+                                        itemValue: { type : "string" },
+                                        itemLabel: { type: "string" },
+                                    }
+                                }
+                            },    
+                        }
+                    });
+                    var week = $("#week").data("kendoDropDownList");
+                    if(changeval == false){
+                        week.value(selectedWeek);
+                    }
+                    
+                    // For Compare Week
+                    var ddl =  $("#weekCompare").data("kendoDropDownList");
+                    ddl = $("#weekCompare").kendoDropDownList({
+                        index: 0,
+                        width: "100%",
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastChangesCtlr.populateWeek}" ,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                 debugger;
+                                                console.log(result);
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                            schema: {
+                                model: {
+                                    fields: {
+                                        itemValue: { type : "string" },
+                                        itemLabel: { type: "string" },
+                                    }
+                                }
+                            },    
+                        }
+                    });
+                    var week = $("#weekCompare").data("kendoDropDownList");
+                    if(changeval == false){
+                        week.value(selectedWeekCompare);
+                    }
+                    
+                    kendo.ui.progress(element, false);
+                }
+                
+                function searchdata(){
+                    $("#gridRecords").empty();
+                    debugger;
+                    
+                    var sOffer  = $("#OfferingType").data("kendoDropDownList");
+                    selectedOfferingType = sOffer.value();
+                    
+                    var sYear  = $("#SelectYear").data("kendoDropDownList");
+                    selectedYear = sYear.value();
+                    
+                    var sWeek  = $("#week").data("kendoDropDownList");
+                    selectedWeek = sWeek.value();
+                    
+                    var sWeekCompare  = $("#weekCompare").data("kendoDropDownList");
+                    selectedWeekCompare = sWeekCompare.value();
+                    
+                    
+                    if(selectedYear != '' && selectedOfferingType != '' && selectedWeek != '' && selectedWeekCompare != ''){
+                       getsearcheddata(false);
+                       
+                    }else{
+                        $.when(showConfirmationWindow('No data found, Try with different Search.')).then(function(confirmed){
+                            if(confirmed){
+                                wnd.center().close();
+                            }
+                        });
+                    }
+                }
+                
+                function monthlyForecast(){
+                    var url = '/apex/PESSRevenueForecastOutboundView?year=' +selectedYear + '&OfferingType=' + selectedOfferingType + '&week=' +selectedWeek  ;
+                    window.location.href = url;
+                }  
+                
+                function Riskupside(){
+                    debugger;
+                    var url = '/apex/PESSRevenueForecastCommentsView?year=' +selectedYear + '&OfferingType=' + selectedOfferingType + '&week=' +selectedWeek + '&accountId=' + accountId;
+                    window.location.href = url;
+                } 
+                
+                function NewForecastTab(){
+                    
+                    var url = '/apex/PESSRevenueForecastNew?year=' +selectedYear + '&OfferingType=' + selectedOfferingType + '&week=' +selectedWeek  ;
+                    window.location.href = url;
+                } 
+                
+                
+                function getsearcheddata(isChange){
+                    debugger;
+                    //kendo.ui.progress(element, true);
+                    var grid = $("#gridRecords").kendoGrid({
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastChangesCtlr.getAccountRevenueRecordCompare}",selectedOfferingType,selectedYear,selectedWeek,accountId,isChange,selectedWeekCompare,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                debugger;
+                                                console.log('+++++null '+JSON.stringify(result));
+                                                if(result != null){
+                                                    try {
+                                                        options.success(result);
+                                                        $('#export').show();
+                                                        $('#save').show();
+                                                        $('#compare').show();
+                                                        $('.checkAll').show();
+                                                    } catch (e) {
+                                                        $("#gridRecords").empty();
+                                                        $("#notification").kendoNotification({
+                                                            autoHideAfter: 3000,
+                                                            width: "auto",
+                                                            position: {
+                                                                bottom: 40,
+                                                                right: 30
+                                                            }
+                                                        });
+                                                        setIds = [];
+                                                        $("#notification").getKendoNotification().show(e);
+                                                    }
+                                                }else{
+                                                    debugger;
+                                                    $("#gridRecords").empty();
+                                                    $('#export').hide();
+                                                    $('#compare').hide();
+                                                    $('.checkAll').hide();
+                                                    $('#save').hide();
+                                                    $.when(showConfirmationWindow('No data found. Please, try with different search.')).then(function(confirmed){
+                                                        if(confirmed){
+                                                           
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25,
+                            sort: { field: "acntRType", dir: "asc" },
+                            group: {
+                                field: "riskUpsideShow",
+                                dir: "asc",
+                            },
+                            schema: {
+                                model: {
+                                    fields: {
+                                        amnt: { type: "number" },
+                                        comment: { type: "text", validation: { required: true} },
+                                    }
+                                }
+                            }
+                        },
+                        
+                        height: 600,
+                        sortable: true,
+                        reorderable: true,
+                        groupable: true,
+                        resizable: true,
+                        filterable: true,
+                        editable: true,
+                        dataBound:function(e){
+                            debugger;
+                             $('.coldisable').prop("disabled",true);  
+                             $('.colDisable').prop("disabled",true);  
+                             $('.colEnable').prop("disabled",true);  
+                             $('.hideshowAlafalse').text('');
+                        },
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [  
+                            
+                            {   field: "acntName",      title: "Account Name",      locked: true,   width: 300, attributes: { "class": "#if( ++record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"} ,encoded:false,},
+                            
+                            /*{   field: "Partner_Account__r.Name",
+                                locked: true, width: 120,attributes: { "class": "#if( record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"},
+                                title: "Partner Account",
+                                template: function (d) { return d.Offering_Type__c == 'Cloud Solution Partner (PPU)' ? d.Partner_Account__r.Name: ' '},
+                            },*/
+                            
+                            {   field: "acntRType",     title: "Revenue Type",      locked: true,   width: 250, attributes: { "class": "#if( record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"}, },
+                            
+                            {   field: "acntCSM",       title: "CSM Owner",         locked: true,   width: 200, attributes: { "class": "#if( record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"} },
+                            
+                            {   title: "Edit",  locked: true, template: "<input type='checkbox' class='k-checkbox #=arfcId#' onclick='selectRow(this)' id='#=arfcId#' /><label class='k-checkbox-label' for='#=arfcId#'/> ",
+                                width: 50,
+                            },
+                             {   field: "oldChange",    filterable: false, title: "Previous Amount",   width: 150, attributes:{ "class": "coldisable #=arfcId#"}, format: "{0:c}", },
+                            
+                            {   field: "newChange",     filterable: false, title: "Current Amount",    width: 150, attributes:{ "class": "coldisable #=arfcId#"}, format: "{0:c}",  },
+                            
+                            {   field: "amnt",          filterable: false, title: "Change Amount",     width: 150, attributes:{ "class": "coldisable #=arfcId#"}, format: "{0:c}",  },
+                            
+                            {   field: "comment",       filterable: false, title: "Comment",           width: "auto", attributes:{ "class": "colEnable #=arfcId#"}, },
+                            
+                           
+                            
+                            {   field: "riskUpsideShow",title: "Type",  hidden: true,},
+                            
+                        ]
+                    });
+                    /*if(selectedOfferingType != 'Cloud Solution Partner (PPU)'){
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        grid.hideColumn("Partner_Account__r.Name");
+                    }*/
+                }
+                
+                
+                function exportData(){
+                    var grid = $("#gridRecordsExport").kendoGrid({
+                        excel: {
+                          fileName: "CommentsChange.xlsx",
+                          filterable:true,
+                        },
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastChangesCtlr.getAccountRevenueRecordCompare}",selectedOfferingType,selectedYear,selectedWeek,accountId,true,selectedWeekCompare,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                        },
+                        sort: { field: "quarter", dir: "asc" },
+                        sortable: true,
+                        columns: [  {   field: "acntName",      title: "Account",      width: 150, },
+                                    {   field: "acntRegion",    title: "Region",      width: 150, },
+                                    {   field: "acntRType",     title: "LOB",      width: 150, },
+                                    {   field: "acntCSM",       title: "CSM",         width: 150, },
+                                    {   field: "comment",       title: "Reason",           width: 150, },
+                                    {   field: "amnt",          title: "Amount",     width: 150, },
+                                    {   field: "quarter",       title: "Quarter",           width: 150, },
+                                    {   field: "actnPlatForm",  title: "Platform Type",         width: 150, },
+                                    
+                                ]
+                    });
+                    
+                    debugger;
+                     wnd = $("#windowExport")
+                    .kendoWindow({
+                        title: "Export To Excel",
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 50
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "20%");
+                    wnd.center().open();
+                }
+                
+                // Close the Popup
+                function downloadData(){
+                    debugger;
+                    var grid = $("#gridRecordsExport").data("kendoGrid");
+                    
+                    grid.saveAsExcel();
+                    wnd.center().close();
+                }
+                
+                // Close the Popup
+                function cancelDownload(){
+                    wnd.center().close();
+                    
+                }
+                
+                
+                //To show confirmation message
+                function showConfirmationWindow(message) {
+                    return showWindow('#confirmationTemplate', message)
+                };
+            
+                function showWindow(template, message) {
+                    var dfd = new jQuery.Deferred();
+                    var result = false;
+            
+                    $("<div id='popupWindow'></div>")
+                        .appendTo("body")
+                        .kendoWindow({
+                        width: "auto",
+                        modal: true,
+                        title: "",
+                        modal: true,
+                        visible: false,
+                        close: function (e) {
+                        this.destroy();
+                        dfd.resolve(result);
+                      }
+                    }).data('kendoWindow').content($(template).html()).center().open();
+            
+                    $('.popupMessage').html(message);
+            
+                    $('#popupWindow .confirm_yes').val('Ok');
+                    $('#popupWindow .confirm_no').val('Cancel');
+            
+                    $('#popupWindow .confirm_no').click(function () {
+                        $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    $('#popupWindow .confirm_yes').click(function () {
+                      result = true;
+                      $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    return dfd.promise();
+                };
+               
+            </script>
+        </div>
+    </body>
+    </html>
+</apex:form>  
+
+</apex:page>

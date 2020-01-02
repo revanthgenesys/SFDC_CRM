@@ -1,0 +1,81 @@
+<!-- Ravi V - Sales Compliance -  10/16/2013 -->
+<apex:page standardController="Compliance_Response__c" extensions="compliance_extension" sidebar="false" >
+<font size="4">  <apex:messages styleClass="errorMsg"  /> </font>
+  <apex:form id="Form1" >
+    
+    <apex:pageblock title="Account Information">
+     <apex:pageblocksection >
+       <apex:outputtext label="Account Name" value="{!retaccount.name}" />
+       <apex:outputtext label="Account Owner" value="{!retaccount.owner.firstname} {!retaccount.owner.lastname}" />
+       <apex:inputField value="{!newchecklist.Countries__c}" required="true"/>   
+     </apex:pageblocksection>
+    </apex:pageblock>
+ 
+    <apex:pageblock title="Export Screening Checklist" helpUrl="{!$Resource.ECC_help}" helpTitle="Download Export Screening Instructions">
+     <apex:pageblocksection >
+       <apex:outputText value="{!escdisplay.name}"   id="name"   />
+       <apex:outputtext label="Export screening checklist created Date" value="{0,date,MM'/'dd'/'yyyy}" > <apex:param value="{!escdisplay.CreatedDate}"/></apex:outputText>
+      <apex:outputtext label="Status"  value="{!escdisplay.Status__c}"></apex:outputText>
+      </apex:pageblocksection>
+    </apex:pageblock>
+ 
+    <apex:pageblock helpUrl="{!$Resource.ECC_help}" helpTitle="Download help document"  > 
+     <apex:facet name="header" ><center> <br/> <h2 style="font-size:18px;"><b> EXPORT SCREENING CHECKLIST </b></h2><br/> <b> <i><u>Important:</u> </i> </b>Read the instructions carefully before completing.</center></apex:facet>
+     <apex:pageBlockButtons >
+      <apex:commandButton action="{!updatequestions}" value="Update" rendered="{!IF($Profile.Name =='GEN - Finance', false , true)}"/>
+      <apex:commandButton action="{!Cancel}" value="Cancel" />
+     </apex:pageBlockButtons>
+     
+     <apex:pageblocksection >
+      <apex:dataTable value="{!cwupdate}"   width="1450px" var="question" border="0"  cellpadding="5" cellspacing="0"   >  
+       <apex:column headerValue="No." width="2%"  ><b><apex:outputText value="{!question.questionname}"   Rendered="{!NOT(OR(IF(question.Questionnumber =='4.01',true,false),IF(question.Questionnumber =='4.02',true,false),IF(question.Questionnumber =='4.03',true,false),IF(question.Questionnumber =='4.04',true,false),IF(question.Questionnumber =='4.05',true,false),IF(question.Questionnumber =='4.06',true,false),IF(question.Questionnumber =='4.07',true,false),IF(question.Questionnumber =='4.08',true,false),IF(question.Questionnumber =='4.09',true,false),IF(question.Questionnumber =='11.01',true,false),IF(question.Questionnumber =='11.02',true,false),IF(question.Questionnumber =='11.03',true,false),IF(question.Questionnumber =='11.04',true,false),IF(question.Questionnumber =='11.05',true,false),IF(question.Questionnumber =='11.06',true,false),
+  IF(question.Questionnumber =='11.07',true,false),IF(question.Questionnumber =='11.08',true,false),IF(question.Questionnumber =='11.09',true,false),IF(question.Questionnumber =='11.1',true,false),IF(question.Questionnumber =='11.11',true,false),IF(question.Questionnumber =='11.12',true,false),
+ IF(question.Questionnumber =='11.13',true,false)))}"/></b> </apex:column>
+
+       <apex:column width="100%"  ><apex:facet name="header" ><center> Questions  </center></apex:facet> 
+      <apex:inputCheckbox value="{!question.multiselect}"   Rendered="{!OR(IF(question.Questionnumber =='4.01',true,false),IF(question.Questionnumber =='4.02',true,false),IF(question.Questionnumber =='4.03',true,false),IF(question.Questionnumber =='4.04',true,false),IF(question.Questionnumber =='4.05',true,false),IF(question.Questionnumber =='4.06',true,false),IF(question.Questionnumber =='4.07',true,false),IF(question.Questionnumber =='4.08',true,false),IF(question.Questionnumber =='4.09',true,false))}"  />
+      {!question.ComplianceQuestion} 
+          <apex:outputText rendered="{!IF(question.Questionnumber =='4',true,false)}"> 
+           <img src="/s.gif" rendered="{!IF(question.Questionnumber =='4',true,false)}" alt="Help" class="helpIcon" title="Please select below choice if Yes"/></apex:outputText>
+          <apex:outputText rendered="{!IF(question.Questionnumber =='5',true,false)}">
+           <img src="/s.gif" rendered="{!IF(question.Questionnumber =='5',true,false)}" alt="Help" class="helpIcon" title="Note: We are prohibited from selling Genesys Products in these Countries."/>
+          </apex:outputText>
+          <apex:outputText rendered="{!IF(question.Questionnumber =='6',true,false)}"  > 
+           <img src="/s.gif" rendered="{!IF(question.Questionnumber =='6',true,false)}" alt="Help" class="helpIcon" title="Note: You will require a Special Export License when selling export restricted products to these Countries."/>
+          </apex:outputText> <apex:outputText rendered="{!IF(question.Questionnumber =='7',true,false)}"  > 
+           <img src="/s.gif" rendered="{!IF(question.Questionnumber =='7',true,false)}" alt="Help" class="helpIcon" title="Note: If your answer is Yes on this question, it will be subject to a review by Legal team before the Export Screening Checklist can be Completed."/>
+          </apex:outputText>
+          <apex:outputText rendered="{!IF(question.Questionnumber =='8',true,false)}"  > 
+          <img src="/s.gif" rendered="{!IF(question.Questionnumber =='8',true,false)}" alt="Help" class="helpIcon" title="Note: If your answer is Yes on this question, it will be subject to a review by Legal team before the Export Screening Checklist can be Completed."/>
+          </apex:outputText>
+          <apex:outputText rendered="{!IF(question.Questionnumber =='9',true,false)}"  > 
+          <img src="/s.gif" rendered="{!IF(question.Questionnumber =='9',true,false)}" alt="Help" class="helpIcon" title="Note: If your answer is Yes on this question, it will be subject to a review by Legal team before the Export Screening Checklist can be Completed."/>
+          </apex:outputText>
+            <apex:outputText rendered="{!IF(question.Questionnumber =='10',true,false)}"  > 
+          <img src="/s.gif" rendered="{!IF(question.Questionnumber =='10',true,false)}" alt="Help" class="helpIcon" title="Note: If your answer is Yes on this question, it will be subject to a review by Legal team before the Export Screening Checklist can be Completed."/>
+          </apex:outputText>
+          <apex:outputText rendered="{!IF(question.Questionnumber =='11',true,false)}"  > 
+         <img src="/s.gif" rendered="{!IF(question.Questionnumber =='11',true,false)}" alt="Help" class="helpIcon" title="Note: If your answer is Yes on any of this sub-question, it will be subject to a review by Legal team before the Export Screening Checklist can be Completed."/>
+         </apex:outputText>
+        </apex:column>
+        <apex:column width="40%" >
+    <apex:outputPanel > 
+     <apex:pageBlockSection id="Section1" columns="1"  collapsible="false" Rendered="{!IF(question.Questionnumber =='1',true,false)}"> 
+   Third Party name, address, include city and state (in one box)<br/>
+   Country (in another box) 
+     <apex:inputTextarea value="{!question.Textarea}" rows="6" cols="50"/> 
+     <apex:outputLabel style="font-style:italic;font-weight:bold" > Enter the name and address(s) as you would on a mailing label.  The box will expand if you need more than 5 lines.</apex:outputLabel>
+     </apex:pageBlockSection>
+    <apex:pageBlockSection id="Section2" columns="2"  collapsible="false" Rendered="{!NOT(OR(IF(question.Questionnumber =='1',true,false),IF(question.Questionnumber =='4',true,false),IF(question.Questionnumber =='11',true,false),IF(question.Questionnumber =='4.01',true,false),IF(question.Questionnumber =='4.02',true,false),IF(question.Questionnumber =='4.03',true,false),IF(question.Questionnumber =='4.04',true,false),IF(question.Questionnumber =='4.05',true,false),IF(question.Questionnumber =='4.06',true,false),IF(question.Questionnumber =='4.07',true,false),IF(question.Questionnumber =='4.08',true,false),IF(question.Questionnumber =='4.09',true,false)))}" > 
+     <apex:selectRadio value="{!question.checkbox}" id="Radiobuttonval" >
+     <apex:selectOptions value="{!question.Optionsall}"/>
+     </apex:selectRadio><p/>
+     </apex:pageBlockSection>
+    </apex:outputPanel>
+    </apex:column>
+   </apex:dataTable>
+  </apex:pageblocksection>
+  </apex:pageblock>
+
+  </apex:form>
+</apex:page>

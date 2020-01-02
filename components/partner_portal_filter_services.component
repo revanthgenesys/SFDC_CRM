@@ -1,0 +1,32 @@
+<apex:component >
+    <apex:attribute name="serviceTypes" type="String" description="Semi-colon delimited list of content types" />
+    <apex:attribute name="srchController" type="PartnerPortalSearchController" description="controller for content search" />
+    <span id="serviceTypeFilter"></span>
+    <apex:inputHidden id="serviceType" value="{!srchController.ServiceFilter}"/>
+
+    <script>
+        var serviceTypes = Array();
+        var typesParam = "{!serviceTypes}";
+        
+        function changedCheckbox() {
+            var joinedTypes = '';
+            $('input:checkbox[name=serviceTypePick]:checked').each(function() {
+                joinedTypes += (joinedTypes=='' ? '' : ';') + $(this).val();
+            });
+            $(document.getElementById('{!$Component.serviceType}')).val(joinedTypes);
+        }
+        
+        function serviceTypeCheckbox(ct) {
+            var cthtml = ct.replace('&', '&amp;').replace('"', '&quot;').replace("'", '&apos;').replace("<", '&lt;').replace(">", '&gt;');
+            return ' &nbsp; &nbsp; <span class="serviceTypeCheckbox"><input type="checkbox" name="serviceTypePick" value="' + cthtml + '" />'+cthtml+'</span>';
+        }
+        
+        $(document).ready(function() {
+            serviceTypes = typesParam.split(';');
+            for (i=0; i<serviceTypes.length; i++) {
+                $('#serviceTypeFilter').append(serviceTypeCheckbox(serviceTypes[i]));           
+            }
+            $('input:checkbox[name=serviceTypePick]').change(changedCheckbox);
+        });     
+    </script>
+</apex:component>

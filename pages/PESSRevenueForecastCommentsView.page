@@ -1,0 +1,1263 @@
+<apex:page controller="PESSRevenueForecastCtlrView" sidebar="false" showHeader="false" standardStylesheets="true" docType="html-5.0" >
+  <apex:form >
+    <html>
+     
+    <head>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.common.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.mobile.min.css" />
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/jquery.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/kendo.all.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jsZip, '/jszip/jszip.min.js')}"/>
+    </head>
+   <style>
+       .k-item{
+           margin-left: inherit;
+       }
+       .k-alt k-state-selected{
+           color: white;
+       }
+       .editColor{
+            background: linear-gradient(#79c6eb, #b4dff3, #79c6eb);
+            color: black;
+        }
+        .k-block>.k-header, .k-window-titlebar{
+            text-align:center;
+        }
+        .k-widget.k-notification.k-notification-info {
+            background-color: #2498bc;
+            color: white;
+            border-color: #2498bc;
+        }
+        .k-window-titlebar.k-dialog-titlebar.k-header{
+            display : none;
+        }
+        div.k-loading-mask{
+            z-index: 3; /* must be larger than the z-index:2 of #container */
+        }
+       .k-grid tbody .k-button {
+            min-width: auto;
+        }
+        #tabstrip h2 {
+            font-weight: lighter;
+            font-size: 5em;
+            line-height: 1;
+            padding: 0 0 0 30px;
+            margin: 0;
+        }
+    
+        #tabstrip h2 span {
+            background: none;
+            padding-left: 5px;
+            font-size: .3em;
+            vertical-align: top;
+        }
+    
+        #tabstrip p {
+            margin: 0;
+            padding: 0;
+        }
+        .error{
+            color:red;
+            margin-top:2px;
+        }
+        .k-widget.k-numerictextbox.currencyAmountorg{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-numerictextbox.currencyAmountclone{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-numerictextbox.currencylikelyclone{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-numerictextbox.currencylikelyorg{
+            border-left: 2px solid red; 
+        }
+        .k-widget.k-datepicker.k-header{
+            border-left: 2px solid red; 
+        }
+        .k-button.k-button-icontext.k-grid-C{
+                border-style: hidden ; 
+                border-color: white;
+                border-radius: 0px;
+                background-color: transparent; 
+        }
+        .k-button.k-button-icontext.k-grid-R{
+                border-style: hidden ; 
+                border-color: white;
+                border-radius: 0px;
+                background-color: transparent; 
+        }
+        .k-grid .k-button {
+            margin: 0;
+            padding: 0px 3px;
+        }
+        .colEnable.Change{
+            background-color : #fba0a0;
+        }
+        .coldisable.Change{
+            background-color : #fba0a0;
+        }
+        .k-icon.k-i-info{
+            display:none;
+        }
+    
+        .colDisable.even { 
+         background-color: #FDF5E6;
+        }
+        
+         .colDisable.odd { 
+         background-color: #F5F5F5;
+        }
+        .colEnable{
+            min-width:50px;
+        }
+        .true{
+            background: linear-gradient(#e2dbdb, #e3eaef, #e2dbdb);
+            color: #003f59;
+        }
+        .Risk{
+            background-color: #fddfdf;;
+        }
+        
+        .Upside{
+            background-color: #e4ffe4;
+        }
+        
+        .k-grid td {
+            border-width: 1px 0 0 1px;
+        }
+    
+    </style>
+    
+    <body>
+        
+        <div id="confirmationTemplate" style="display:none;" >
+            <div class="popupMessage" style="text-align:center;"></div>
+            <br/>
+            <div class="dialog_buttons" style="text-align:center;">
+                <input type="button" class="confirm_yes k-button" value="Yes" style="width: 50px;background: #7bd2f6;" />
+                &nbsp;
+                <input type="button" class="confirm_no k-button" value="No" style="width: 50px;background: #7bd2f6;" />
+            </div>
+        </div>  
+        
+        <div id="example">
+            <div class="demo-section k-content" >
+                <div id="tabstrip">
+                    <ul>
+                        <li class="k-state" style="margin-top: 4px;font-size: larger;font-weight: 600;" id="monthlyForecast">
+                           <a  onclick="monthlyForecast();" target='_self'> Monthly Forecast View </a>
+                        </li>
+                        <li class="k-state-active" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                           Risk / Upside
+                        </li>
+                        <li class="k-state" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                           <a  onclick="commentsTab();" target='_self'>Change Comments</a>
+                        </li>
+                        <!--<li class="k-state" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                            <a  onclick="NewForecastTab();" target='_self'> New Forecast</a>
+                        </li>-->
+                        <div style="float:right;margin-top: 5px;">
+                            * Required &nbsp; &nbsp; 
+                            <a class="k-button" style="font-weight: 700;padding: 2px 7px;width: 25px;height: 17px;border-color:#cdd1d5;background: linear-gradient(#e2dbdb, #e3eaef, #e2dbdb); "></a>&nbsp;  Cloned     &nbsp;&nbsp;&nbsp;
+                            <a class="k-button" style="font-weight: 700;padding: 2px 7px;width: 25px;height: 17px;border-color:#fddfdf;background-color:#fddfdf;"></a>&nbsp;  Risk       &nbsp;&nbsp;&nbsp;
+                            <a class="k-button" style="font-weight: 700;padding: 2px 7px;width: 25px;height: 17px;border-color:#e4ffe4;background-color:#e4ffe4;"></a>&nbsp;  Upside     &nbsp;&nbsp;&nbsp;
+                        </div>
+                    </ul>
+                </div> 
+                <br/>
+                <div style="text-align: -webkit-center;"><br/>
+                    <div style="width: 99%;">   
+                        <div class="demo-section k-content" style="text-align: -webkit-center; border: 1px solid #67b1d2;border-radius: 15px;"><br/>
+                            <table style="width:100%;">
+                                <tr>
+                                     <td style="width:5%;">
+                                        <h4 style="float: right;">Offering Type : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:15%;">
+                                        <input class="OfferingType" id="OfferingType" style="width: 70%;"/>
+                                    </td>
+                                    
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;"> Year : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:15%;">
+                                        <input class="SelectYear" id="SelectYear" style="width: 70%;"/>
+                                    </td>
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;"> Period : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:15%;">
+                                        <input class="selectQuarter" id="Quarter" style="width: 70%;"/>
+                                    </td>
+                                    
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;">Week : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:15%;">
+                                        <input class="selectweek" id="week" style="width: 70%;" />
+                                    </td>
+                                    
+                                    <td style="width:5%;">
+                                        <h4 style="float: right;">CSM : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:15%;">
+                                        <input class="selectCSM" id="CSM" style="width: 70%;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:center;" colspan="10">
+                                        <br/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: -webkit-center;" colspan="10">
+                                        <a href="#" class="k-button" id="search"  onclick="searchdata();" style="font-weight: 700;padding: 2px 7px;">Search</a> &nbsp; &nbsp; &nbsp;
+                                        <a href="#" class="k-button" id="save" style="font-weight: 700;padding: 2px 7px;">Save</a>&nbsp; &nbsp; &nbsp;
+                                        <a href="#" class="k-button" id="export"  onclick="exportData();" style="font-weight: 700;padding: 2px 7px;">Export</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <br/>
+                        </div>
+                       <br/>
+                    </div>
+                </div>
+                <div>
+                    <div id="gridRecords"></div><span id="notification" style=""></span>
+                    <div id="details"></div>
+                    <div id="confirm"></div>
+                </div>
+                
+                <div id="window" style="height: auto;display:none;">
+                    
+                    <div class="demo-section k-content" style="text-align: -webkit-center;border: 2px solid #a3d0e5; border-radius: 10px;" >
+                        <table>
+                            <tr style="height: 35px;">
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;">CSM Account Owner :</label>
+                                </td>
+                                <td style="text-align:center; width:1%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:25%;">
+                                     <outputText  id="CMSOwner" style="width: 100%;" />
+                                </td> 
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;">Region</label>
+                                </td>
+                                <td style="text-align:center; width:1%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:25%;">
+                                    <outputText  id="acntRegion" style="width: 100%;" />
+                                </td>
+                            </tr>
+                            <tr style="height: 35px;">
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;">Key Account Type :</label>
+                                </td>
+                                <td style="text-align:center; width:1%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:25%;">
+                                    <outputText  id="keyAcntType" style="width: 100%;" />
+                                </td> 
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;">Revenue Type :</label>
+                                </td>
+                                <td style="text-align:center; width:1%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:25%;">
+                                    <outputText  id="RevenueType" style="width: 100%;" />
+                                </td>
+                            </tr>
+                        </table>
+                        </div>  
+                        <br/>
+                        <div class="demo-section k-content" style="text-align: -webkit-center;border: 2px solid #a3d0e5; border-radius: 10px;"><br/> <b style="color:red;float: right;margin-right: 3%;">| Required</b>
+                        <div class="error"  style="display:none;"><b>Required fields are missing.</b></div>
+                        <table style="width:95%;margin-left:-15%;">
+                            <tr style="height: 42px;">
+                                <td style="text-align:right; width:30%;">
+                                    <label style="color: #00435e;"> </label>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:center; width:33%;">
+                                   <b style="color: #00435e;"> New <outputText  class="riskUpside" /> </b>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:center; width:33%;">
+                                    <b style="color: #00435e;"> Existing <outputText  class="riskUpside" /> </b>
+                                </td>
+                            </tr>
+                            <tr style="height: 42px;">
+                                <td style="text-align:right; width:30%;">
+                                    <label style="color: #00435e;"> What's Needed?:</label>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <textarea id="Neededclone" class="k-textbox" style="width: 100%;border-left: 2px solid red;"></textarea>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <textarea id="Neededorg" class="k-textbox" style="width: 100%;border-left: 2px solid red;" ></textarea>
+                                </td>
+                            </tr>
+                            <tr style="height: 42px;">
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;"> From whom?  :</label>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input type="text" id="whomclone" class="k-textbox" style="width: 100%;border-left: 2px solid red;"/>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input type="text" id="whomorg" class="k-textbox" style="width: 100%;border-left: 2px solid red;" />
+                                </td>
+                            </tr>
+                            <tr style="height: 42px;">
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;"> By when? :</label>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input id="datepickerclone"  title="datepicker" style="width: 100%;" />
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input id="datepickerorg"  title="datepicker" style="width: 100%;" />
+                                </td>
+                            </tr>
+                            <tr style="height: 42px;">
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;"> Comment :</label>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <textarea id="Commentclone" class="k-textbox" style="width: 100%;border-left: 2px solid red;" ></textarea>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <textarea id="Commentorg" class="k-textbox" style="width: 100%;border-left: 2px solid red;" ></textarea>
+                                </td>
+                            </tr>
+                            <tr style="height: 42px;">
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;"> Amount :</label>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input id="currencyAmountclone" type="number" title="currency" class="currencyAmountclone" style="width: 100%;" value="0"/>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input id="currencyAmountorg" type="number" title="currency" class="currencyAmountorg" style="width: 100%;" value="0"/>
+                                </td>
+                            </tr>
+                            <tr style="height: 42px;">
+                                <td style="text-align:right; width:24%;">
+                                    <label style="color: #00435e;"> Likely :</label>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input id="currencylikelyclone" type="number" title="currency"  class="currencylikelyclone" style="width: 100%;" value="0"/>
+                                </td>
+                                <td style="text-align:center; width:2%;">
+                                    &nbsp;&nbsp;
+                                </td>
+                                <td style="text-align:left; width:33%;">
+                                    <input id="currencylikelyorg" type="number" title="currency" class="currencylikelyorg" style="width: 100%;" value="0"/>
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="display:none;">
+                            <outputText  id="arfId" />
+                            <outputText  id="arfcoid" />
+                            <outputText  id="quarter" />
+                            <outputText  id="reason" />
+                            <outputText  id="quarterUpside" />
+                        </div>
+                        <br/>
+                        <div>
+                            <h1>
+                                <a href="#" class="k-button" id="SavePopup" onclick="SavePopup();" style="font-weight: 700;">Save</a> &nbsp;&nbsp;
+                                <a href="#" class="k-button" id="CancelPopup" onclick="CancelPopup()" style="font-weight: 700;">Cancel</a>
+                            </h1>
+                        </div>
+                        <br/>
+                        </div>
+                    
+                </div>
+                <div id="windowExport" style="height: auto;display:none;">
+                    <div id="gridRecordsExport" style="display:none;"></div><br/>
+                    <div style="text-align: -webkit-center;">
+                        <a href="#" class="k-button" id="download" onclick="downloadData();" style="font-weight: 700;">Download</a> &nbsp;&nbsp;
+                        <a href="#" class="k-button" id="cancelDownload" onclick="cancelDownload()" style="font-weight: 700;">Cancel</a>
+                    </div> 
+                </div>
+            </div>
+            <script>
+                var setIds = [];
+                var element = $(document.body);
+                var wnd ;
+                var selectedQuarter = '';
+                var selectedYear = '';
+                var selectedOfferingType = '';
+                var selectedWeek = '';
+                var csmSelect = '';
+                var record= 0;
+                var accountId = '';
+                var ucname= '';
+                $(document).ready(function() {
+                    $('#save').hide();
+                    $('#export').hide();
+                    $('.error').hide();
+                    ucname= "{!uname}";
+                    selectedQuarter = "{!selectedQuarter}";
+                    selectedYear ="{!selectedyear}";
+                    selectedOfferingType ="{!selectedOfferingType}";
+                    selectedWeek ="{!selectedWeek}";
+                    
+                    $("#currencylikelyclone").kendoNumericTextBox();
+                    $("#currencyAmountclone").kendoNumericTextBox();
+                    $("#currencylikelyorg").kendoNumericTextBox();
+                    $("#currencyAmountorg").kendoNumericTextBox();
+                    $("#datepickerorg").kendoDatePicker();
+                    $("#datepickerclone").kendoDatePicker();
+                    
+                    
+                    $("#tabstrip").kendoTabStrip({
+                       
+                        animation:  {
+                            open: {
+                                duration: 600,
+                                effects: "fadeIn"
+                            }
+                        }
+                    });
+                    debugger;
+                    accountId = "{!accountId}";
+                    
+                    if(accountId != ''){
+                        $('#monthlyForecast').hide();
+                    }
+                    // Offering Type
+                    var dataOfferingType = [{ itemLabel: "-- Offering Type ---", itemValue: "" },
+                                            { itemLabel: "PureEngage", itemValue: "PureEngage" },
+                                            { itemLabel: "Premier", itemValue: "Premier" },
+                                            { itemLabel: "PureCloud", itemValue: "PureCloud" },
+                                            { itemLabel: "Outbound", itemValue: "Outbound" },
+                                            { itemLabel: "PureConnect", itemValue: "PureConnect" },
+                                            { itemLabel: "Cloud Solution Partner (PPU)", itemValue: "Cloud Solution Partner (PPU)" }];
+                                            
+                    $("#OfferingType").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: dataOfferingType,
+                        select: onSelectOfferingType
+                    });
+                    var OType  = $("#OfferingType").data("kendoDropDownList");
+                    OType.value(selectedOfferingType);
+                    
+                    //Year 
+                    var datayear = [{ itemLabel: "--- Year --", itemValue: "" },
+                                    { itemLabel: "2017", itemValue: "2017" },
+                                    { itemLabel: "2018", itemValue: "2018" },
+                                    { itemLabel: "2019", itemValue: "2019" },
+                                    { itemLabel: "2020", itemValue: "2020" },
+                                    { itemLabel: "2021", itemValue: "2021" },];
+                                    
+                    $("#SelectYear").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: datayear,
+                        select: onSelectYear
+                    });
+                    var yearS  = $("#SelectYear").data("kendoDropDownList");
+                    yearS.value(selectedYear);
+                    
+                    var selctedWeek = '';
+                    
+                    selectPeriodChange(false,selectedYear);
+                    
+                    var weeks =  $("#week").data("kendoDropDownList");
+                    weeks = $("#week").kendoDropDownList({
+                        index: 0,
+                        width: "100%",
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastCtlrView.populateWeek}" ,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                 debugger;
+                                                console.log(result);
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                            schema: {
+                                model: {
+                                    fields: {
+                                        itemValue: { type : "string" },
+                                        itemLabel: { type: "string" },
+                                    }
+                                }
+                            },    
+                        }
+                    });
+                    var week = $("#week").data("kendoDropDownList");
+                    week.value(selectedWeek);
+                    
+                    var OType  = $("#OfferingType").data("kendoDropDownList");
+                    selectedOfferingType = OType.value();
+                    
+                    var periodType = $("#Quarter").data("kendoDropDownList");
+                    selectedQuarter =  periodType.value();
+                    
+                    var sYear = $("#SelectYear").data("kendoDropDownList");
+                    selectedYear =  sYear.value();
+                    
+                    var week = $("#week").data("kendoDropDownList");
+                    selectedWeek = week.value();
+                    
+                    getCSM(true);
+                    
+                    //searchdata(true);
+                    
+                    $("#save").click(function (e) {
+                        debugger;
+                        if(setIds.length > 0){
+                            var grids = $("#gridRecords").data('kendoGrid');
+                            var isSave = true;
+                            $.when(showConfirmationWindow('Do you want to save the changes?')).then(function(confirmed){
+                                if(confirmed){
+                                    e.preventDefault();
+                                    console.log(kendo.stringify(grids.dataSource.data()));
+                                    var jsonString = kendo.stringify(grids.dataSource.data());
+                                    var editJson = [];
+                                    debugger;
+                                    var isSave = true;
+                                    $.each(JSON.parse(jsonString), function(idx, obj) {
+                                        if(setIds.includes(obj.arfcId)){
+                                            debugger;
+                                            if(obj.whatsNeeded == '' || obj.byWhen == null || obj.amnt == null || obj.likely == null || obj.fromHome == '' || obj.comment == undefined ){
+                                                isSave = false;
+                                            }else{
+                                                editJson.push(JSON.stringify(obj)); 
+                                            }
+                                        }
+                                    });
+                                    
+                                    if(isSave == true){
+                                        kendo.ui.progress(element, true);
+                                        debugger;
+                                        Visualforce.remoting.Manager.invokeAction(
+                                            "{!$RemoteAction.PESSRevenueForecastCtlrView.saveARF}",editJson,setIds,
+                                            function(result, event) {
+                                                if(event.status) {
+                                                    console.log(result);
+                                                    $("#gridRecords").data("kendoGrid").dataSource.read();
+                                                    kendo.ui.progress(element, false);
+                                                    $("#notification").kendoNotification({
+                                                        autoHideAfter: 3000,
+                                                        width: "auto",
+                                                        position: {
+                                                            bottom: 40,
+                                                            right: 30
+                                                        }
+                                                    });
+                                                    setIds = [];
+                                                    
+                                                    $("#notification").getKendoNotification().show("Data Saved Successfully!");
+                                                    
+                                                }
+                                            }
+                                        );
+                                    }else{
+                                        $("#notification").kendoNotification({
+                                            autoHideAfter: 4000,
+                                            width: "auto",
+                                            position: {
+                                                bottom: 40,
+                                                right: 30
+                                            }
+                                        });
+                                        $("#notification").getKendoNotification().show("* Required fields are missing.");
+                                    }
+                                }
+                            });
+                        }else{
+                            $("#notification").kendoNotification({
+                                autoHideAfter: 3000,
+                                width: "auto",
+                                position: {
+                                    bottom: 40,
+                                    right: 30
+                                }
+                            });
+                            setIds = [];
+                            $("#notification").getKendoNotification().show("No changes to Save.");
+                        }
+                    });
+                    
+                    function onSelectYear(e) {
+                        debugger;
+                        if (e.item) {
+                            var dataItem = this.dataItem(e.item);
+                            yearSelect = dataItem.itemValue;
+                            selectPeriodChange(true, yearSelect);
+                        } 
+                    };
+                    
+                    function onSelectOfferingType(e) {
+                        if (e.item) {
+                            debugger;
+                            var dataItem = this.dataItem(e.item);
+                            selectedOfferingType = dataItem.itemValue;
+                            selectPeriodChange(true, selectedYear);
+                            getCSM();
+                        } 
+                    };
+                    
+                });
+                
+                function onSelectPeriod(e) {
+                    if (e.item) {
+                        debugger;
+                        var dataItem = this.dataItem(e.item);
+                        selectedQuarter = dataItem.itemValue;
+                        searchdata(false);
+                    } 
+                };
+                
+                function getCSM(onStartload){
+                     $("#CSM").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        select: onSelectCSM,
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastCtlrView.populateCSMOwner}" ,selectedOfferingType, selectedYear, selectedWeek,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                console.log(result);
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                        }
+                    });
+                    var sCSM  = $("#CSM").data("kendoDropDownList");
+                    sCSM.value('All');
+                    debugger;
+                    
+                    if(onStartload == true){
+                        Visualforce.remoting.Manager.invokeAction(
+                            "{!$RemoteAction.PESSRevenueForecastCtlrView.checkCSMOwner}" ,selectedOfferingType, selectedYear, selectedWeek,
+                            function(result, event) {
+                                if(event.status) {
+                                    debugger;
+                                    console.log(result);
+                                    if(result == true){
+                                        sCSM.value(ucname);
+                                    }else{
+                                        sCSM.value('All');
+                                    }
+                                    var sCSMVal = $("#CSM").data("kendoDropDownList");
+                                    csmSelect =  sCSMVal.value();
+                                    searchdata();
+                                }
+                            }
+                        );
+                    }
+                    
+                }
+                
+                function onSelectCSM(e) {
+                    if (e.item) {
+                        var dataItem = this.dataItem(e.item);
+                        csmSelect = dataItem.itemValue;
+                        searchdata();
+                    } 
+                };
+                
+                function selectPeriodChange(changeval, yearSelect){
+                    debugger;
+                    var ddl =  $("#Quarter").data("kendoDropDownList");
+                    ddl = $("#Quarter").kendoDropDownList({
+                        index: 0,
+                        width: "100%",
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        select : onSelectPeriod,
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastCtlrView.PopulatePeriod}",yearSelect,selectedOfferingType,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                            schema: {
+                                model: {
+                                    fields: {
+                                        itemValue: { type : "string" },
+                                        itemLabel: { type: "string" },
+                                    }
+                                }
+                            },    
+                        }
+                    });
+                    debugger;
+                    if(changeval != true){
+                        var quart = $("#Quarter").data("kendoDropDownList");
+                        quart.value(selectedQuarter);
+                    }
+                }
+                
+                function searchdata(sdata){
+                    debugger;
+                    $("#gridRecords").empty();
+                    
+                    var OType  = $("#OfferingType").data("kendoDropDownList");
+                    selectedOfferingType = OType.value();
+                    
+                    if(sdata != false){
+                        var periodType = $("#Quarter").data("kendoDropDownList");
+                        selectedQuarter =  periodType.value();
+                    }
+                    var sYear = $("#SelectYear").data("kendoDropDownList");
+                    selectedYear =  sYear.value();
+                    
+                    var week = $("#week").data("kendoDropDownList");
+                    selectedWeek = week.value();
+                    
+                    
+                    if(selectedQuarter != '' && selectedYear != '' && selectedOfferingType != '' && selectedWeek != '' ){
+                    if($("#gridRecords").data("kendoGrid")) {
+                            $("#gridRecords").data("kendoGrid").destroy();
+                         } 
+                       getsearcheddata(selectedQuarter, selectedYear, selectedOfferingType , selectedWeek);
+                       
+                    }else{
+                        $.when(showConfirmationWindow('No data found, Try with different Search.')).then(function(confirmed){
+                            if(confirmed){
+                                wnd.center().close();
+                            }
+                        });
+                    }
+                }
+                
+                function getsearcheddata(){
+                    
+                    var grid = $("#gridRecords").kendoGrid({
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastCtlrView.getAccountRevenueRecord}",selectedOfferingType,selectedYear,selectedQuarter,selectedWeek,accountId,csmSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                debugger;
+                                                console.log(result);
+                                                if(result != null){
+                                                    try {
+                                                        options.success(result);
+                                                        $('#export').show();
+                                                        $('#save').show();
+                                                    } catch (e) {
+                                                        $("#gridRecords").empty();
+                                                        $("#notification").kendoNotification({
+                                                            autoHideAfter: 3000,
+                                                            width: "auto",
+                                                            position: {
+                                                                bottom: 40,
+                                                                right: 30
+                                                            }
+                                                        });
+                                                        setIds = [];
+                                                        $("#notification").getKendoNotification().show(e);
+                                                    }
+                                                }else{
+                                                    debugger;
+                                                    $("#gridRecords").empty();
+                                                    $('#export').hide();
+                                                    $('#save').hide();
+                                                    $.when(showConfirmationWindow('No data found. Please, try with different search.')).then(function(confirmed){
+                                                        if(confirmed){
+                                                           
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 25,
+                             sort: { field: "acntRType", dir: "asc" },
+                            group: {
+                                field: "riskUpside",
+                                dir: "asc",
+                            },
+                            schema: {
+                                model: {
+                                    fields: {
+                                        likely: { type: "number",},
+                                        amnt: { type: "number",},
+                                        wtAvg: { type: "number",},
+                                        whatsNeeded: { type: "text",},
+                                        fromHome: { type: "text",},
+                                        comment: { type: "text",},
+                                        byWhen : {type : "date"},
+                                        riskUpside : {type : "text"}
+                                    }
+                                }
+                            }
+                        },
+                        height: 600,
+                        sortable: true,
+                        reorderable: true,
+                        groupable: true,
+                        resizable: true,
+                        filterable: true,
+                        editable: true,
+                        dataBound:function(e){
+                            debugger;
+                             $('.coldisable').prop("disabled",true);  
+                             $('.colDisable').prop("disabled",true);  
+                             $('.colEnable').prop("disabled",true);  
+                             $('.hideshowAlafalse').text('');
+                             $('.k-button.k-button-icontext.k-grid-C').html('<span class="k-icon k-i-plus"></span>');
+                             $('.k-button.k-button-icontext.k-grid-R').html('<span class="k-icon k-i-delete"></span>');
+                             
+                        },
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [  
+                            
+                            {   field: "acntName",      title: "Account Name",      locked: true,   width: 150, attributes: { "class": "#if( ++record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"} ,encoded:false,},
+                            
+                            //{   field: "partnerAccount",      title: "Partner Account",      locked: true,   width: 150, attributes: { "class": "#if( ++record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"} ,encoded:false,},
+                            
+                            {   field: "acntType",      title: "Key Account Type",  locked: true,   width: 100, attributes: { "class": "#if( record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"}},
+                            
+                            {   field: "acntRegion",    title: "Region",            locked: true,   width: 100, attributes: { "class": "#if( record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"} },
+                            
+                            {   field: "acntCSM",       title: "CSM",               locked: true,   width: 100, attributes: { "class": "#if( record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"} },
+                            
+                            {   field: "acntRType",     title: "Revenue Type",      locked: true,   width: 100, attributes: { "class": "#if( record % 2 == 0) {#colDisable even#} else {#colDisable odd#}#"}, },
+                            
+                            {   title: "Edit",  locked: true, template: "<input type='checkbox' class='k-checkbox #=arfcId#' onclick='selectRow(this)' id='#=arfcId#' /><label class='k-checkbox-label' for='#=arfcId#'/> ",
+                                width: 50,
+                            },
+                            {command:   [   { text: "C" , click  :cloneModify },
+                                            { text: "R" , click :removeEle  },
+                                        ],
+                                        attributes: {"class": "hideshowAla#=isCreate# #=reason#" }, title: "Action", width : "60px",},
+                            
+                            {   field: "whatsNeeded",   filterable: false, title: "What's Needed? *",    width: "auto", attributes:{ "class": "colEnable #=arfcId# #=isCloned# #=reason#" }, },
+                            
+                            {   field: "fromHome",      filterable: false, title: "From Whom? *",        width: "auto", attributes:{ "class": "colEnable #=arfcId# #=isCloned# #=reason#"}, },
+                            
+                            {   field: "byWhen",        filterable: false, title: "By When *",          width: "auto", attributes:{ "class": "colEnable #=arfcId# #=isCloned# #=reason#"},  template: " #if(byWhen == null) {}else {##= kendo.toString(new Date(byWhen), 'd') ##}# ",}, 
+                            
+                            {   field: "comment",       filterable: false, title: "Comment *",           width: "auto", attributes:{ "class": "colEnable #=arfcId# #=isCloned# #=reason#"}, },
+                            
+                            {   field: "amnt",          filterable: false, title: "Amount *",            width: "auto", attributes:{ "class": "#if(isChanged) { #colEnable Change #=isCloned##} else {#colEnable#}# #=arfcId# #=isCloned# #=reason#"}, format: "{0:c}",  },
+                            
+                            {   field: "likely",        filterable: false, title: "Likely % *",            width: "auto", attributes:{ "class": "colEnable #=arfcId# #=isCloned# #=reason#"},  },
+                            
+                            {   field: "wtAvg",         filterable: false, title: "Weight Avg",      width: "auto", attributes:{ "class": "colEnable #=arfcId# #=isCloned# #=reason#"}, format: "{0:c}", },
+                            
+                            {   field: "riskUpside",    title: "Type",     width: "0px", hidden: true },
+                            
+                        ]
+                    });
+                    /*if(selectedOfferingType != 'Cloud Solution Partner (PPU)'){
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        grid.hideColumn("partnerAccount");
+                    }*/
+                }
+                
+                function exportData(){
+                    var grid = $("#gridRecordsExport").kendoGrid({
+                        excel: {
+                          fileName: "RiskUpside.xlsx",
+                          filterable:true,
+                        },
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastCtlrView.getAccountRevenueRecord}",selectedOfferingType,selectedYear,selectedQuarter,selectedWeek,accountId,csmSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                        },
+                        columns: [  {   field: "acntOfferingType",      title: "LOB/Soln", width: 150, },
+                                    {   field: "acntName",      title: "Account", width: 150, },
+                                    {   field: "acntRegion",    title: "Region", width: 150, },
+                                    {   field: "acntCSM",       title: "CSM", width: 150, },
+                                    {   field: "acntRType",     title: "Revenue Type", width: 150, },
+                                    {   field: "whatsNeeded",   title: "What's Needed?", width: 150, },
+                                    {   field: "fromHome",      title: "From Whom?", width: 150, },
+                                    {   field: "byWhen",        title: "By When ", width: 150, }, 
+                                    {   field: "comment",       title: "Comment", width: 150, },
+                                    {   field: "amnt",          title: "Amount", width: 150, },
+                                    {   field: "likely",        title: "Likely", width: 150, },
+                                    {   field: "wtAvg",         title: "Weight Avg %", width: 150, },
+                                    {   field: "acntPlatformType",     title: "Platform Type", width: 150, },
+                                    {   field: "riskUpside",    title: "Type", width: 150, },
+                                    {   field: "quarter",       title: "Quarter", width: 150, },
+                                ]
+                    });
+                    
+                    debugger;
+                     wnd = $("#windowExport")
+                    .kendoWindow({
+                        title: "Export To Excel",
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 50
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "20%");
+                    wnd.center().open();
+                }
+                
+                
+                // Close the Popup
+                function downloadData(){
+                    debugger;
+                    var grid = $("#gridRecordsExport").data("kendoGrid");
+                    grid.saveAsExcel();
+                    wnd.center().close();
+                }
+                
+                // Close the Popup
+                function cancelDownload(){
+                    wnd.center().close();
+                    
+                }
+                
+                function monthlyForecast(){
+                    var url = '/apex/PESSRevenueForecastOutboundView?year=' +selectedYear + '&OfferingType=' + selectedOfferingType + '&week=' +selectedWeek  ;
+                    window.location.href = url;
+                }  
+                
+                function commentsTab(){
+                    debugger;
+                    var url = '/apex/PESSRevenuesForecastChangesView?year=' +selectedYear + '&OfferingType=' + selectedOfferingType + '&week=' +selectedWeek + '&accountId=' + accountId ;
+                    window.location.href = url;
+                } 
+                
+                /*function NewForecastTab(){
+                    
+                    var url = '/apex/PESSRevenueForecastNew?year=' +selectedYear + '&OfferingType=' + selectedOfferingType + '&week=' +selectedWeek  ;
+                    window.location.href = url;
+                } */
+                
+                // Select row to Edit.
+                function selectRow(e) {
+                    var myClass = $(e).attr("class");
+                    var mycls = myClass.split(' ');
+                    /* Added in lines-1035- 1041, to disable the checkboxes for read-only access to Cloud Revenue Forecast Page for incident-#INC0310589- Added by Subhashree on 18/12/19 */ 
+                    var checkboxreadonly="{!makeCheckboxReadOnly}";
+                     if(checkboxreadonly=='true')
+                    {
+                       $(e).prop("checked",false);
+                       $(e).prop("disabled",true);
+
+                    }
+                    else{
+                    if($(e).prop("checked") == true){
+                        $('.'  + mycls[0] + '.' + mycls[1]).prop('checked', true);
+                        setIds.push(mycls[1]); 
+                        $('.colEnable'+ '.'+ mycls[1]).prop("disabled",false);  
+                        $('.colEnable'+ '.'+ mycls[1]).addClass("editColor");
+                    }else{
+                       $('.'  + mycls[0] + '.' + mycls[1]).prop('checked', false);
+                       $('.colEnable'+ '.'+ mycls[1] + '.editColor').prop("disabled",true);  
+                       $('.colEnable'+ '.'+ mycls[1] + '.editColor').removeClass("editColor");
+                    }
+                }
+              }  
+                
+                
+                // Clone and modify the record
+                function removeEle(e) {
+                    debugger;
+                   //Commented by Kartik To fix INC0430268.
+                  //  var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                  //  var el = e.target || e.srcElement;
+                  //  var dataItem = $("#gridRecords").data("kendoGrid").dataItem($(el).closest("tr"));
+                  /*Added in lines-1065-1070, to disable the delete button for read-only access to Cloud Revenue Forecast Page for incident-#INC0310589- Added by Subhashree on 18/12/19 */ 
+                    var checkboxreadonly="{!makeCheckboxReadOnly}";
+                     if(checkboxreadonly=='true')
+                    {
+                       $(e).prop("disabled",true);
+
+                    }
+                    else{
+                    var dataItem = $("#gridRecords").data("kendoGrid").dataItem($(e.currentTarget).closest("tr"));
+                    var removeId = dataItem.arfcoId;
+                    $.when(showConfirmationWindow('Do you want remove this record ?')).then(function(confirmed){
+                        if(confirmed){
+                            debugger;
+                            kendo.ui.progress(element, true);
+                             Visualforce.remoting.Manager.invokeAction(
+                                "{!$RemoteAction.PESSRevenueForecastCtlrView.Removerecord}",removeId,
+                                function(result, event) {
+                                    if(event.status) {
+                                        console.log(result);
+                                         $("#notification").kendoNotification({
+                                            autoHideAfter: 3000,
+                                            width: "auto",
+                                            position: {
+                                                bottom: 40,
+                                                right: 30
+                                            }
+                                        });
+                                        
+                                        $("#gridRecords").data("kendoGrid").dataSource.read();
+                                        $("#notification").getKendoNotification().show("Record removed Successfully!");
+                                        kendo.ui.progress(element, false);
+                                    }
+                                }
+                            );
+                       }
+                        else{
+                                //alert('Cancel');
+                        }
+                    });
+                }
+              } 
+                
+                // Clone and modify the record
+                function cloneModify(e) {
+                     debugger;
+                     /*Added in lines-1110-1116, to disable the clone button for read-only access to Cloud Revenue Forecast Page for incident-#INC0310589- Added by Subhashree on 18/12/19 */ 
+                    var checkboxreadonly="{!makeCheckboxReadOnly}";
+                     if(checkboxreadonly=='true')
+                    {
+                       $(e).prop("disabled",true);
+
+                    }
+                    else{
+                    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                    debugger;
+                    // Account related things
+                    $('.riskUpside').text(dataItem.reason);
+                    $('#arfId').text(dataItem.arfId);
+                    $('#arfcoid').text(dataItem.arfcoId);
+                    $('#quarter').text(dataItem.quarter);
+                    $('#reason').text(dataItem.reason);
+                    $('#quarterUpside').text(dataItem.riskUpside);
+                    $('#CMSOwner').text(dataItem.acntCSM);
+                    $('#acntRegion').text(dataItem.acntRegion);
+                    $('#keyAcntType').text(dataItem.acntType);
+                    $('#RevenueType').text(dataItem.acntRType);
+                    
+                    // Cloned Itmes
+                     $("#datepickerclone").val(kendo.toString(new Date(dataItem.byWhen), "d"));
+                    $('#Commentclone').val(dataItem.comment);
+                    $('#Neededclone').val(dataItem.whatsNeeded);
+                    $('#whomclone').val(dataItem.fromHome);
+                    $(".currencylikelyclone.k-input").val(dataItem.likely);
+                    $(".currencyAmountclone.k-input").val(dataItem.amnt);
+                   
+                    // Existing Values
+                    
+                    $("#datepickerorg").val(kendo.toString(new Date(dataItem.byWhen), "d"));
+                    $('#Commentorg').val(dataItem.comment);
+                    $('#Neededorg').val(dataItem.whatsNeeded);
+                    $('#whomorg').val(dataItem.fromHome);
+                    $(".currencylikelyorg.k-input").val(dataItem.likely);
+                    $(".currencyAmountorg.k-input").val(dataItem.amnt);
+                   
+                     wnd = $("#window")
+                    .kendoWindow({
+                        title: dataItem.acntName,
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 100
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "40%");
+                    wnd.center().open();
+                    
+                }
+               }   
+                
+                
+                 // Close the Popup
+                function CancelPopup(){
+                    $('.error').hide();
+                    wnd.center().close();
+                    
+                }
+                
+                // Save the The Popup 
+                function SavePopup(){
+                    debugger;
+                     if($('#Neededclone').val() == '' || $('#whomclone').val() == '' || $('#datepickerclone').val() == '' || $('#currencylikelyclone').val() == '' || 
+                            $('#Neededorg').val() == ''  || $('#whomorg').val() == ''  || $('#datepickerorg').val()== '' || $('#currencylikelyorg').val()== ''){
+                                $('.error').show();
+                                return;
+                            }
+                     $.when(showConfirmationWindow('Do you want to Save the Changes ?')).then(function(confirmed){
+                        $('.error').hide();
+                        if(confirmed){
+                            kendo.ui.progress(element, true);
+                            
+                            var insertRiskUpside =  $('#Neededclone').val() + ':' + $('#whomclone').val() +  ':' + $('#datepickerclone').val() +  ':'  + $('#Commentclone').val() + ':' + 
+                                                    $('#currencyAmountclone').val() + ':' + $('#currencylikelyclone').val() + ':' + $('#arfId').text() + ':' + $('#quarter').text() + ':' +
+                                                    $('#reason').text() + ':' + $('#quarterUpside').text();
+                                                     
+                            var upsertRiskUpside =   $('#Neededorg').val() + ':' + $('#whomorg').val() + ':' +$('#datepickerorg').val() + ':' + $('#Commentorg').val() + ':' + $('#currencyAmountorg').val() + ':' +$('#currencylikelyorg').val() + ':' + $('#arfcoid').text(); 
+                            
+                            Visualforce.remoting.Manager.invokeAction(
+                                "{!$RemoteAction.PESSRevenueForecastCtlrView.SavePopup}",insertRiskUpside,upsertRiskUpside,
+                                function(result, event) {
+                                    if(event.status) {
+                                        console.log(result);
+                                         $("#notification").kendoNotification({
+                                            autoHideAfter: 3000,
+                                            width: "auto",
+                                            position: {
+                                                bottom: 40,
+                                                right: 30
+                                            }
+                                        });
+                                        $('.error').hide();
+                                        wnd.center().close();
+                                        $("#gridRecords").data("kendoGrid").dataSource.read();
+                                        $("#notification").getKendoNotification().show("Data Saved Successfully!");
+                                        kendo.ui.progress(element, false);
+                                    }
+                                }
+                            );
+                        }
+                        else{
+                                //alert('Cancel');
+                        }
+                    });
+                }
+                
+                
+                //To show confirmation message
+                function showConfirmationWindow(message) {
+                    return showWindow('#confirmationTemplate', message)
+                };
+            
+                function showWindow(template, message) {
+                    var dfd = new jQuery.Deferred();
+                    var result = false;
+            
+                    $("<div id='popupWindow'></div>")
+                        .appendTo("body")
+                        .kendoWindow({
+                        width: "auto",
+                        modal: true,
+                        title: "",
+                        modal: true,
+                        visible: false,
+                        close: function (e) {
+                        this.destroy();
+                        dfd.resolve(result);
+                      }
+                    }).data('kendoWindow').content($(template).html()).center().open();
+            
+                    $('.popupMessage').html(message);
+            
+                    $('#popupWindow .confirm_yes').val('Ok');
+                    $('#popupWindow .confirm_no').val('Cancel');
+            
+                    $('#popupWindow .confirm_no').click(function () {
+                        $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    $('#popupWindow .confirm_yes').click(function () {
+                      result = true;
+                      $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    return dfd.promise();
+                };
+               
+            </script>
+        </div>
+    </body>
+    </html>
+</apex:form>  
+</apex:page>

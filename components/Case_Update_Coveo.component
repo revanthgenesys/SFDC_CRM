@@ -1,0 +1,64 @@
+<apex:component controller="CaseUpdateAddCoveoResults">
+	<apex:attribute name="caseUpdateId" type="String" required="true" assignto="{!caseId}" description="caseID"/>
+	<apex:includeScript value="/support/console/24.0/integration.js"/>
+	<apex:includeScript value="{!$Resource.pkb_jquery_1_6_2}"/>
+	<apex:stylesheet value="{!$Resource.ChatterCore}"/>
+	<apex:stylesheet value="{!$Resource.zencontainer}"/>
+	
+	<apex:pageBlockSection columns="1"  title="Coveo Articles" >
+
+	<apex:outputPanel id="articlesDisplay" rendered="{!ISPICKVAL($User.UserType,'Standard')}">
+	    <apex:outputText rendered="{!Articles.size == 0}">
+			No Results
+		</apex:outputText>
+	    <apex:pageBlockTable value="{!Articles}" var="currArticle" rows="50" rendered="{!Articles.size > 0 }" >
+	        <apex:column headerValue="Include" id="selected" styleClass="actionColumn"  > 
+				<apex:outputText rendered="{!currArticle.isValidUrl = True}" >
+					<div class="zen">
+						<div class="followUnfollowElement" >
+							<span class="zen-media zen-mediaExt" >
+								<a href="javascript:void(0);" id="{!currArticle.TheArticle.Id}" class="zen-mrs zen-img SelectedArticle1" nameCov="{!currArticle.TheArticle.Id}" kbUrlCov="{!currArticle.TheUrl}" kbTitleCov="{!currArticle.TheArticle.CoveoV2__Title__c}"> 									
+									<img src="/s.gif" alt="Add article to the description." width="1" height="1" class="chatter-iconSmall chatter-followIcon" title="Add article to the description."/>
+								</a>
+							</span>
+						</div>
+					</div>
+				</apex:outputText>
+	        </apex:column> 
+	        <apex:column headerValue="Title" ><label for="{!currArticle.TheArticle.Id}"/>
+				<apex:outputLink target="_blank" title="{!currArticle.TheArticle.CoveoV2__Title__c}" value="/{!currArticle.TheArticle.CoveoV2__ResultUrl__c}?popup=true&id={!currArticle.TheArticle.Id}&isdtp=vw&isWsVw=true&">{!currArticle.TheArticle.CoveoV2__Title__c}</apex:outputLink>				        
+	        </apex:column>
+
+	        <apex:column headerValue="Source" value="{!currArticle.TheArticle.CoveoV2__Source__c}"/>
+	    </apex:pageBlockTable>
+	    
+	    <script type="text/javascript">
+
+		    var embeddedAnchorCov = '<br/><a href="{fqdnUrl}" target="_blank" title="{nameCov}">{nameCov}</a>';
+		        
+		    var ck;
+		    
+		    for(var k in CKEDITOR.instances) {
+		        if(CKEDITOR.instances.hasOwnProperty(k)) {
+		            ck = CKEDITOR.instances[k];
+		        }
+		    }	    
+		    		    
+		    function injectArticleLink(url, title) {
+		        var s = embeddedAnchorCov.replace(/{fqdnUrl}/gim, url);
+		        s = s.replace(/{nameCov}/gim, title);	        			
+				ck.insertHtml(s);  
+		    }
+		
+			$(".SelectedArticle1").click(function(){
+				//push the initial message
+				var y_this = this;
+				injectArticleLink(jQuery(y_this).attr('kbUrlCov'), jQuery(y_this).attr('kbTitleCov'));
+			});
+		
+		</script>
+	    
+	</apex:outputPanel>
+	</apex:pageBlockSection>
+
+</apex:component>

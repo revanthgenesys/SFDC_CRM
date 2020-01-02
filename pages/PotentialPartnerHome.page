@@ -1,0 +1,72 @@
+<apex:page controller="PartnerApplicationController" sidebar="false" showheader="false">
+  
+  <apex:includeScript value="{!$Resource.jquery19}"/>
+  <script>  
+  
+  var path="{!URLFOR($Resource.GenesysPartnerLogo)}";
+  document.getElementById("phHeaderLogoImage").style.width = "175px";
+  document.getElementById("phHeaderLogoImage").style.height= "75px";
+  document.getElementById("phSearchInput").placeholder= "Search Partner Portal....";
+  $('#phSearchContainer').hide();  
+  var commName = "{!$Site.Prefix}";
+  var h2 = $("#sidebarDiv").find("h2");
+  $(h2).each(function() {
+  if( $(this).text() == 'Recent Items')
+  {
+   $(this).parent().parent().hide(); 
+  }
+  });  
+  </script> 
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="homepg"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">    
+
+                <apex:form >
+                    <!--<apex:sectionHeader title="Welcome to the home page." subtitle="Home"/> -->
+                    <apex:pageBlock title="Partner Application(s)">
+                        <apex:pageBlockButtons >
+                            <apex:commandButton value="New Application" onclick="location.href='/partner/Partner_Application?new=true'; return false;" rendered="{!showNewApplicationButton}"/>
+                            <apex:commandButton value="Click to Sign the Contract" onclick="location.href='/partner/PendingSignatures_Page'; return false;" rendered="{!showSignContractButton}" />
+                        </apex:pageBlockButtons>      
+                        
+                        <apex:pageBlockSection columns="1">
+                            <apex:pageBlockTable value="{!existingApplications}" var="app">
+                                <apex:column headerValue="Action">
+                                    <apex:outputPanel rendered="{!app.Status__c == 'In Progress'}" >
+                                        <apex:outputLink value="/Partner_Application" >Edit</apex:outputLink>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                    </apex:outputPanel>
+                                    <apex:outputLink value="/Partner_ApplicationDetail?id={!app.id}" >View</apex:outputLink>
+                                </apex:column>
+                                <apex:column headerValue="Account Name">
+                                    {!app.Account__r.Name}
+                                </apex:column>
+                                <apex:column headerValue="Application Number">
+                                    <apex:outputLink value="/Partner_ApplicationDetail?id={!app.id}" rendered="{!NOT(app.Status__c == 'In Progress')}">{!app.Name}</apex:outputLink> 
+                                    <apex:outputLink value="/Partner_ApplicationDetail?id={!app.id}" rendered="{!app.Status__c == 'In Progress'}">{!app.Name}</apex:outputLink>
+                                </apex:column>
+                                <apex:column headerValue="Status">
+                                    <b>{!app.Status__c}</b>
+                                </apex:column> 
+                                <apex:column headerValue="Contact Name">
+                                    {!app.Contact__r.Name}
+                                </apex:column>                  
+                            </apex:pageBlockTable>
+                        </apex:pageBlockSection>
+                        
+                    </apex:pageBlock>
+                    <!--<apex:outputText value="ATTENTION – If you are using IE11 as your browser, please " style="font-weight:bold; font-size:14px; color:red;"/><apex:outputLink value="{!URLFOR($Resource.IE11Setting)}" style="font-weight:bold; font-size:14px; color:blue;" target="_blank">click here</apex:outputLink><br/><br/>-->
+
+                  <!--  <c:PartnerKPI AccountId="{!newAccount.Id}"/> -->
+                </apex:form>
+        </apex:define>
+    </apex:composition>
+</apex:page>

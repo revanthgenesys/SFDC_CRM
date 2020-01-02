@@ -1,0 +1,329 @@
+<apex:page title="Quote : {!quote.Name}" controller="ExportToExcelCloudController" showheader="false" sidebar="false" contentType="application/vnd.ms-excel#{!quote.Name}{!IF(NOT(ISBLANK(quote.Revision_No__c)),'-' & TEXT(quote.Revision_No__c),'')}.xls" cache="true">       
+    <h1>{!quote.Name}</h1>
+    <apex:pageBlock >            
+        <!-- Header Section -->
+        <apex:pageBlockSection title="Quote Information"  collapsible="false">
+           
+            <apex:outputField value="{!quote.Name}"/>
+            <apex:pageBlockSectionItem />
+            <apex:outputField value="{!quote.End_User_ID__c}"/>
+            <apex:outputField value="{!quote.BigMachines__Opportunity__c}"/>
+            <apex:outputField value="{!quote.Sold_To_Name__c}"/>
+            <apex:outputField value="{!quote.BigMachines__Status__c}"/>
+            <apex:outputField value="{!quote.CreatedDate}"/>
+            <apex:pageBlockSectionItem />
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Expiry Date"/>
+                <apex:outputField value="{!quote.Expiration_Date__c}"/>
+            </apex:pageBlockSectionItem>
+            <apex:outputField value="{!quote.Revision_No__c}" />
+            <apex:outputField value="{!quote.Sold_To_Region__c}"/>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Quote Submitted Date"/>
+                <apex:outputField value="{!quote.Approval_Submission_Date__c}"/>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Sub Region"/>
+                <apex:outputField value="{!quote.Sub_Sub_Region__c}" />
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Quote Approved Date"/>
+                <apex:outputField value="{!quote.Approval_Date__c}"/>
+            </apex:pageBlockSectionItem>
+            <apex:outputField value="{!quote.Opp_Sold_To_Country__c}"/>
+            <apex:outputField value="{!quote.BigMachines__Description__c}"/>            
+            <apex:outputField value="{!quote.Order_Date_Submitted__c}" rendered="{!NOT(ISBLANK(quote.Order_Date_Submitted__c))}"/>
+            <apex:outputText rendered="{!ISBLANK(quote.Order_Date_Submitted__c)}"/>
+            <apex:outputField value="{!quote.Order_PO_Number__c}" rendered="{!(quote.BigMachines__Status__c = 'Order Submitted' || 
+                quote.BigMachines__Status__c = 'Order Accepted' || quote.BigMachines__Status__c = 'Order Rejected')}"/>
+            <apex:outputField value="{!quote.Order_PO_Date__c}" rendered="{!(quote.BigMachines__Status__c = 'Order Submitted' || 
+                quote.BigMachines__Status__c = 'Order Accepted' || quote.BigMachines__Status__c = 'Order Rejected')}"/>  
+            <apex:pageBlockSectionItem rendered="{!quote.BigMachines__Status__c = 'Order Submitted'}">
+                <apex:outputLabel value="Sent to Customer"/>
+                <apex:outputLabel value="{!IF(quote.Sent_to_Customer__c, 'Yes', 'No')}"/>
+            </apex:pageBlockSectionItem>
+            <apex:outputField value="{!quote.Product_Tier__c}"/>
+            <apex:outputField value="{!quote.CurrencyISOCode}"/>
+            <apex:outputField value="{!quote.Initial_Subscription_Term__c}"/>
+            <apex:outputField value="{!quote.No_Of_Months__c}"/>
+            <apex:outputField value="{!quote.Renewal_Subscription_Term__c}"/>
+            <apex:outputField value="{!quote.Deployment_Model__c}"/>
+            <apex:outputField value="{!quote.Ramp_Period__c}"/>
+            <apex:outputField value="{!quote.Pricing_Model__c}"/>
+            <apex:outputField value="{!quote.Billing_Period__c}"/>
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Customer PO Not Required"/>
+                <apex:outputText value="{!quote.Treat_SO_as_PO__c}"/>
+            </apex:pageBlockSectionItem>
+            <apex:outputField value="{!quote.MSA_Link__c}" />
+        </apex:pageBlockSection>
+        <table border="1" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr style="background-color:#504A4B;color:white">
+                  <!--  <th></th> -->
+                    <th class="headerRow" style="width: 45px;">Group</th>
+                    <th class="headerRow" style="width: 200px;">Product</th>
+                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Sub_Category__c}">
+                        <th class="headerRow" style="width: 150px;">Sub Category</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Unit_of_measure__c}">
+                        <th class="headerRow" style="width: 100px;">Unit of<br/>measure</th>
+                    </apex:outputPanel>
+                    <th class="headerRow" style="width: 50px;">Concurrent</th>
+                    <th class="headerRow" style="width: 50px;">Qty</th>
+                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c}">
+                        <th class="headerRow" style="width: 100px;">List Price</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Ext_List_Price__c}">
+                        <th class="headerRow" style="width: 100px;">Ext List<br/>Price</th>
+                    </apex:outputPanel>                   
+                    <th class="headerRow" style="width: 60px;">Discount</th>
+                    <th class="headerRow" style="width: 50px;">% / Amt</th>
+                    <th class="headerRow" style="width: 50px;">Adjustment %</th>
+                    <apex:outputPanel layout="none" rendered="{!blnHasBundles}">
+                        <th class="headerRow" style="width: 50px;">Bundle<br/>Discount %</th>
+                    </apex:outputPanel>
+                    <th class="headerRow" style="width: 50px;">Total<br/>Discount %</th>                    
+                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Net_Unit_Price__c}">
+                        <th class="headerRow" style="width: 100px;">Net Unit Price</th>
+                    </apex:outputPanel>
+                    <th class="headerRow" style="width: 100px;">Ext Net Price</th>
+                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Third_Party__c}">
+                        <th class="headerRow" style="width: 50px;">3rd<br/>Party</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.PM_Approver__c}">
+                        <th class="headerRow" style="width: 50px;">PM<br/>Approver</th>
+                    </apex:outputPanel>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:variable value="{!1}" var="rowNumLevel1"/>
+                <apex:repeat value="{!list_QuoteProducts}" var="objQPWrapper">
+                    <!-- Quote Product Rows -->
+                    <tr>
+                     <!--   <td >{!rowNumLevel1}.</td> -->
+                        <td >
+                            <apex:outputField value="{!objQPWrapper.record.Group_Number__c}" rendered="{!objQPWrapper.record.Third_Party__c != 'TRUE'}"/>
+                        </td>
+                        <td>
+                            <apex:outputField value="{!objQPWrapper.record.BigMachines__Product__r.Name}" />
+                            (<apex:outputField value="{!objQPWrapper.record.APN_Number__c}" rendered="{!if(objQPWrapper.record.BigMachines__Product__r.Type__c<>'Bundle',true,false)}"/>)
+                            <apex:outputText value="{!objQPWrapper.record.Flavor__c}" style="color:blue"/>
+                        </td>
+                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Sub_Category__c}">
+                            <td >
+                                <apex:outputField value="{!objQPWrapper.record.BigMachines__Product__r.Sub_Category__c}"/>
+                            </td>
+                        </apex:outputPanel>
+                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Unit_of_measure__c}">
+                            <td >
+                                <apex:outputField value="{!objQPWrapper.record.Unit_of_Measure__c}"/>
+                            </td>
+                        </apex:outputPanel>                        
+                        <td class="dataCell">
+                            <apex:outputText value="{!objQPWrapper.record.BigMachines__Product__r.Is_Concurrent__c}"/>
+                        </td>
+                        
+                        <td >
+                            <apex:outputField value="{!objQPWrapper.record.Quantity__c}"/>
+                        </td>
+                        <!--Mukunth modified for 6 digit project-->
+                        <!--<apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c}">
+                            <td >
+                                <apex:outputField value="{!objQPWrapper.record.List_Price__c}"/>
+                            </td>
+                        </apex:outputPanel>-->
+                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c}">
+                            <td >
+                                <apex:outputText value="{!strQuoteCurcy} {0, number,###,###,##0.00}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null || objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                    <apex:param value="{!objQPWrapper.record.List_Price__c}"/>
+                                </apex:outputText>
+                                <apex:outputText value="{!strQuoteCurcy} {0, number,###,###,##0.0000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                    <apex:param value="{!objQPWrapper.record.List_Price__c}"/>
+                                </apex:outputText>
+                                <apex:outputText value="{!strQuoteCurcy} {0, number,###,###,##0.000000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                    <apex:param value="{!objQPWrapper.record.List_Price__c}"/>
+                                </apex:outputText>
+                            </td>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Ext_List_Price__c}">
+                            <td >
+                                <apex:outputField value="{!objQPWrapper.record.Ext_List__c}"/>
+                            </td>
+                        </apex:outputPanel>
+                        <td >
+                            <apex:outputField value="{!objQPWrapper.record.Disc__c}"/>
+                        </td>
+                        <td >
+                            <apex:outputField value="{!objQPWrapper.record.or_Amount__c}"/>
+                        </td>
+                        <td >
+                            <apex:outputField value="{!objQPWrapper.record.Adjustment__c}"/>
+                        </td>
+                        <apex:outputPanel layout="none" rendered="{!blnHasBundles}">
+                            <td >
+                                <apex:outputField value="{!objQPWrapper.record.Bundle_Discount__c}"/>
+                            </td>
+                        </apex:outputPanel>
+                        <td >
+                            <apex:outputField value="{!objQPWrapper.record.Total_Discount__c}"/>
+                        </td>      
+                        <!--Mukunth modified for 6 digit project-->                  
+                        <!--<apex:outputPanel layout="none" rendered="{!objColumnPreference.Net_Unit_Price__c}">
+                            <td >
+                                <apex:outputField value="{!objQPWrapper.record.Net_Unit_Price__c}"/>
+                            </td>
+                        </apex:outputPanel>-->
+                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Net_Unit_Price__c}">
+                            <td >
+                                <apex:outputText value="{!strQuoteCurcy} {0, number,###,###,##0.00}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null || objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                    <apex:param value="{!objQPWrapper.record.Net_Unit_Price__c}"/>
+                                </apex:outputText>
+                                <apex:outputText value="{!strQuoteCurcy} {0, number,###,###,##0.0000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                    <apex:param value="{!objQPWrapper.record.Net_Unit_Price__c}"/>
+                                </apex:outputText>
+                                <apex:outputText value="{!strQuoteCurcy} {0, number,###,###,##0.000000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                    <apex:param value="{!objQPWrapper.record.Net_Unit_Price__c}"/>
+                                </apex:outputText>
+                            </td>
+                        </apex:outputPanel>
+                        <td >
+                            <apex:outputField value="{!objQPWrapper.record.Ext_Net_Price__c}"/>
+                        </td>
+                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Third_Party__c}">
+                            <td >
+                                <apex:outputText value="{!IF(objQPWrapper.record.Third_Party__c == 'TRUE','Yes','No')}"/>
+                            </td>
+                        </apex:outputPanel>                        
+                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.PM_Approver__c}">
+                            <td >
+                                <apex:outputField value="{!objQPWrapper.record.Pm_Approver__c}"
+                                    rendered="{!objQPWrapper.record.BigMachines__Product__r.Shipment_Approval__c = 'Required for all Orders' ||
+                                        objQPWrapper.record.BigMachines__Product__r.Shipment_Approval__c = 'Required for New Orders Only'}"/>
+                            </td>
+                        </apex:outputPanel>
+                    </tr>
+                    <apex:variable value="{!rowNumLevel1 + 1}" var="rowNumLevel1"/>
+                </apex:repeat>           
+            </tbody>
+        </table>
+        <br/><br/>
+        <apex:pageBlockSection showHeader="false" columns="2">
+            <apex:outputPanel >
+                <!-- Proposal Groups Table -->
+                <apex:pageBlock title="Proposal Groups">
+                    <apex:outputPanel >
+                        <b>Ungrouped Items Sub Total : </b>
+                        <apex:outputField value="{!objUngrouped.Sub_Total__c}"/>
+                        <br/>
+                        <apex:pageBlockTable value="{!list_ProposalGroups}" var="objPG" rendered="{!list_ProposalGroups.size > 0}">
+                            <apex:column value="{!objPG.Group_Number__c}"/>
+                            <apex:column value="{!objPG.Name__c}"/>
+                            <apex:column value="{!objPG.Description__c}"/>
+                            <apex:column value="{!objPG.Discount__c}"/>
+                            <apex:column value="{!objPG.Sub_Total__c}"/>
+                        </apex:pageBlockTable>
+                    </apex:outputPanel>
+                </apex:pageBlock>
+            </apex:outputPanel>
+            <apex:outputText />
+            <!-- Totals Table -->
+            <apex:pageBlock title="Totals" id="TotalsBlock">
+                <table class="list " border="0" cellpadding="0" cellspacing="0">
+                    <tr class="headerRow">
+                      <th class="headerRow"></th>
+                      <th class="headerRow">Amount</th>
+                    </tr>
+                     <tr class="dataRow">
+                        <th class="dataCell">Commited Monthly Recurring Revenue Pre Discount</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.CMRR_Pre_Discount__c}"/>
+                        </td>
+                    </tr>    
+                     <tr class="dataRow">
+                        <th class="dataCell">Annual Contract Value Pre Discount</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.ACV_Pre_Discount__c}"/>
+                        </td>
+                    </tr>  
+                    <tr class="dataRow">
+                        <th class="dataCell">Total Contract Value Pre Discount</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.TCV_Pre_Discount__c}"/>
+                        </td>
+                    </tr> 
+                    <tr class="dataRow" style="display: {!IF(quote.Base_Agent_Discount__c=null || quote.Base_Agent_Discount__c=0.00, 'none', 'table-row')};">
+                        <th class="dataCell">Base Agent Discount %</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Base_Agent_Discount__c}"/>
+                        </td>
+                     </tr>
+                     <tr class="dataRow" style="display: {!IF(quote.Hardware_Discount__c=null || quote.Hardware_Discount__c=0.00, 'none', 'table-row')};">
+                        <th class="dataCell">Telco, MPLS, Hardware, 3rd Party, and Miscellaneous Costs Discount %</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Hardware_Discount__c}"/>
+                        </td>
+                    </tr>
+                    <tr class="dataRow" style="display: {!IF(quote.Business_Users_Add_On__c=null || quote.Business_Users_Add_On__c=0.00, 'none', 'table-row')};">
+                        <th class="dataCell">Business Users and Add-On Discount %</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Business_Users_Add_On__c}"/>
+                        </td>
+                    </tr>
+                    <!--<tr class="dataRow" style="display: {!IF(quote.Business_Users_Provisioning_Discount__c=null || quote.Business_Users_Provisioning_Discount__c=0.00, 'none', 'table-row')};">
+                        <th class="dataCell">Business Users Provisioning Discount %</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Business_Users_Provisioning_Discount__c}"/>
+                        </td>
+                     </tr>-->
+                     <tr class="dataRow" style="display: {!IF(quote.Data_Center_Provisioning_Discount__c=null || quote.Data_Center_Provisioning_Discount__c=0.00, 'none', 'table-row')};">
+                        <th class="dataCell">Data Center Provisioning Discount %</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Data_Center_Provisioning_Discount__c}"/>
+                        </td>
+                    </tr>             
+                    <tr class="dataRow">
+                        <th class="dataCell">Total Discount (Genesys and Third-Party Products) %</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Total_Discount_Genesys_and_Third_Party__c}"/>
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <th class="dataCell">Total Discount (Genesys Products Only) %</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Total_Discount_Genesys_Products_Only__c}"/>
+                        </td>
+                    </tr>
+                    <tr class="dataRow">
+                        <th class="dataCell">Total Discount (Genesys and Third-Party Products) Amount</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Total_Discount__c}"/>
+                        </td>
+                    </tr>     
+                  
+                    <tr class="dataRow" style="background-color:#ffff99;">
+                        <th class="dataCell">Commited Monthly Recurring Revenue (CMRR)</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.CMRR__c}"/>
+                        </td>
+                    </tr>                   
+                    <tr class="dataRow" style="background-color:#ffff99;">
+                        <th class="dataCell">Annual Contract Value (ACV)</th>
+                        <td class="dataCell">
+                            <apex:outputField value="{!quote.Annual_Contract_Value__c}"/>
+                        </td>
+                    </tr>
+                    <tr class="dataRow" style="background-color:#b3e6ff;">
+                        <th class="dataCell">Total Contract Value (TCV)</th>
+                        <td class="dataCell">
+                            <b>
+                            <apex:outputField value="{!quote.Total_Contract_Value__c}"/>
+                            </b>
+                        </td>
+                    </tr>
+               </table>
+            </apex:pageBlock>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+</apex:page>

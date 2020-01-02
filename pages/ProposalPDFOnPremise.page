@@ -1,0 +1,1030 @@
+<apex:page sidebar="false" controller="ProposalPDFOnPremiseController" showHeader="false" standardStylesheets="false" 
+    readOnly="true"  language="{!quote.Proposal_Language__c}" renderAs="PDF">
+    <apex:stylesheet value="{!URLFOR($Resource.ProposalCss1)}" />    
+    <style type="text/css">
+       .Signatureblock {page-break-before:auto;page-break-inside:avoid;}
+   </style>
+    <apex:outputPanel rendered="{!OR(quote.Show_Cover_Page__c, IF(TEXT($User.UserType) == 'PowerPartner', true, false))}">
+    <table style="width:100%;" border="0">
+        <tr style="height:175px;">
+            <td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="text-align:center;">
+                <img src="{!$Resource.GenesysLogo}" width="250px;"/>                           
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td></td><td></td><td></td>
+        </tr> 
+        <tr>
+            <td></td>
+            <td style="text-align:center;">
+                <h1>{!$Label.ProposalPDF_Genesys_Quote}</h1>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="text-align:center;">
+                <h2>{!quote.Name}</h2>
+                <apex:outputLabel rendered="{!NOT(quote.Hide_Quote_Version__c)}">
+                    ({!$Label.ProposalPDF_Version} : {!quote.Revision_No__c})
+                </apex:outputLabel>                
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="text-align:center;">
+                
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="text-align:center;font-size:13pt;font-weight:bold;">
+                {!$Label.ProposalPDF_Presented_To} : {!quote.Sold_To_Name__r.Name}
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="text-align:center;font-size:13pt;font-weight:bold;">
+                <apex:outputPanel rendered="{!NOT(quote.Hide_End_User__c)}">
+                {!$Label.ProposalPDF_Presented_For} : {!quote.End_User_ID__r.Name}
+                </apex:outputPanel>
+            </td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td style="text-align:center;font-size:13pt;font-weight:bold;">
+                {!$Label.ProposalPDF_Presented_By} : {!quote.Owner.FirstName} {!quote.Owner.LastName}
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr>
+            <td></td><td></td><td></td>
+        </tr>
+    </table>
+    <div class="page-break"></div>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!NOT(quote.Hide_Table_of_Contents__c)}">
+        <table style="width:100%;" border="0" class="smallText">
+            <tr>
+                <td colspan="2" style="font-size:9pt;width:70%;">
+                    <img src="{!$Resource.GenesysLogo}" width="250px;"/><br/>
+                    <apex:outputText value="{!quote.BigMachines__Opportunity__r.Country__r.PureConnect_Cloud_Selling_Entity__c}" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" />
+                    <apex:outputText value="{!if(Quote.Is_GU_EMEA__c,$Label.EMEA_Legal_Entity,quote.BigMachines__Opportunity__r.Country_Selling_Entity__c)}" rendered="{!quote.Offering_Type__c != 'PureConnect On Premise'}" />
+                    <br/>
+                </td>
+                <td style="width:30%;">
+                    <table style="width:100%">
+                    <tr>
+                        <td width="50%">
+                            {!$Label.ProposalPDF_Date}
+                        </td>
+                        <td width="5%">
+                            :
+                        </td>
+                        <td width="45%">
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Proposal_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Number}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <b>{!quote.Name}</b>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Expires_On}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Expiration_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                         <tr>
+                        
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Currency}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                           {!IF(quote.CAD_Override__c, 'CAD', quote.currencyIsoCode)}
+                        </td>                       
+                    </tr>                     
+                </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <hr />
+                </td>
+            </tr>
+            <tr>
+                <td ></td>
+                <td >
+                    <apex:outputText escape="false" value="{!$Label.PorposalPDF_Table_Of_Contents}" />                  
+                </td>
+                <td ></td>
+            </tr>
+        </table>
+        <div class="page-break"></div>
+    </apex:outputPanel>
+     <apex:outputPanel rendered="{!OR(quote.Show_Cover_Letter__c, IF(TEXT($User.UserType) == 'PowerPartner', true, false))}">
+    <table style="width:100%;" border="0" class="smallText" cellpadding="5px">      
+        <tr>            
+            <td style="width:50%;font-size:9pt;">
+                <img src="{!$Resource.GenesysLogo}" width="250px;"/><br/>
+                <apex:outputText value="{!quote.BigMachines__Opportunity__r.Country__r.PureConnect_Cloud_Selling_Entity__c}" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" />
+                <apex:outputText value="{!if(Quote.Is_GU_EMEA__c,$Label.EMEA_Legal_Entity,quote.BigMachines__Opportunity__r.Country_Selling_Entity__c)}" rendered="{!quote.Offering_Type__c != 'PureConnect On Premise'}" />
+                <br/>
+            </td>
+            <td style="width:5%">
+            </td>
+            <td style="width:45%;">
+                <table style="width:100%">
+                    <tr>
+                        <td width="20%">
+                            
+                        </td>
+                        <td width="40%">
+                            {!$Label.ProposalPDF_Date}
+                        </td>
+                        <td width="5%">
+                            :
+                        </td>
+                        <td width="%">
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Proposal_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Number}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <b>{!quote.Name}</b>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Expires_On}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Expiration_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr> 
+                     <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Currency}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                           {!IF(quote.CAD_Override__c, 'CAD', quote.currencyIsoCode)}
+                        </td>                       
+                    </tr>                    
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <hr />
+            </td>
+        </tr>
+        <tr>        
+            <td style="font-size:12pt;">
+                <b>{!$Label.ProposalPDF_Presented_To} : </b><br/>
+                    {!quote.Sold_To_Name__r.Name}    <br/>
+                    {!quote.Sold_To_Name__r.Street1__c} {!quote.Sold_To_Name__r.Street2__c} {!quote.Sold_To_Name__r.Street3__c}   <br/>
+                    {!quote.Sold_To_Name__r.City__c} <br/>
+                    {!quote.Sold_To_Name__r.StateProvince__c}  {!quote.Sold_To_Name__r.ZipCode__c} <br/>
+                    {!quote.Sold_To_Name__r.Country__r.Name}
+            </td>
+            <td></td>
+            <td style="vertical-align:text-top;font-size:12pt;">
+                <b>
+                {!$Label.ProposalPDF_Presented_By} :</b> <br/>
+                {!quote.Owner.FirstName} {!quote.Owner.LastName} <br/>
+                {!quote.Owner.Email} <br/> 
+                {!quote.Owner.Phone}
+            </td>
+        </tr>
+        <tr style="height:20px;">
+            <td></td><td></td><td></td>
+        </tr>
+        <tr>
+            <td style="font-size:12pt;">
+                <apex:outputPanel rendered="{!IF(TEXT($User.UserType) == 'Standard', true, false)}">
+                Dear {!quote.Contact__r.FirstName},
+                </apex:outputPanel>
+            </td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <apex:outputText value="{!quote.Cover_Letter_Text__c}" escape="false"/>             
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>{!quote.Owner.FirstName} {!quote.Owner.LastName}</b> <br/>
+                {!quote.Owner.Email} <br/> 
+                {!quote.Owner.Phone}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <apex:outputPanel rendered="{!IF(TEXT($User.UserType) == 'Standard', true, false)}">
+                    {!$Label.ProposalPDF_Approved_By} : {!if(Quote.Is_GU_EMEA__c,$Label.EMEA_Legal_Entity,quote.BigMachines__Opportunity__r.Country_Selling_Entity__c)}              
+                </apex:outputPanel>                    
+            </td>
+        </tr>
+    </table>
+    <div class="page-break"></div>
+    </apex:outputPanel> 
+    <table style="width:100%;" border="0" class="smallText" cellpadding="5px">
+        <tr style="height:20px;">
+            <td></td><td></td><td></td>
+        </tr>
+        <tr>            
+            <td style="width:55%;font-size:9pt;">
+                <img src="{!$Resource.GenesysLogo}" width="250px;"/><br/>
+                <apex:outputText value="{!quote.BigMachines__Opportunity__r.Country__r.PureConnect_Cloud_Selling_Entity__c}" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" />
+                <apex:outputText value="{!if(Quote.Is_GU_EMEA__c,$Label.EMEA_Legal_Entity,quote.BigMachines__Opportunity__r.Country_Selling_Entity__c)}" rendered="{!quote.Offering_Type__c != 'PureConnect On Premise'}" />
+                <br/>
+            </td>
+            <td style="width:5%">
+            </td>
+            <td style="width:40%;">
+                <table style="width:100%">
+                    <tr>
+                        <td width="15%">                            
+                        </td>
+                        <td width="45%">
+                            {!$Label.ProposalPDF_Date}
+                        </td>
+                        <td width="5%">
+                            :
+                        </td>
+                        <td width="45%">
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Proposal_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Number}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <b>{!quote.Name}</b>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Expires_On}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Expiration_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr> 
+                         <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Currency}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            {!IF(quote.CAD_Override__c, 'CAD', quote.currencyIsoCode)}
+                        </td>                       
+                    </tr>                    
+                </table>                
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <hr />
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size:12pt;">
+                <table style="width:100%">
+                    <tr>
+                        <td width="30%">
+                            {!$Label.ProposalPDF_Presented_To}
+                        </td>
+                        <td width="5%">
+                            :
+                        </td>
+                        <td width="65%">
+                            {!quote.Sold_To_Name__r.Name}
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td width="30%">
+                            <apex:outputPanel rendered="{!NOT(quote.Hide_End_User__c)}">
+                                {!$Label.ProposalPDF_Presented_For}
+                            </apex:outputPanel>
+                        </td>
+                        <td width="5%">
+                            <apex:outputPanel rendered="{!NOT(quote.Hide_End_User__c)}">
+                                :
+                            </apex:outputPanel>
+                        </td>
+                        <td width="65%">
+                            <apex:outputPanel rendered="{!NOT(quote.Hide_End_User__c)}">
+                                {!quote.End_User_ID__r.Name}
+                            </apex:outputPanel>
+                        </td>                       
+                    </tr>
+                    
+                    <tr>
+                        <td width="30%">
+                            <apex:outputText rendered="{!TEXT($User.UserType) != 'PowerPartner'}">
+                                {!$Label.ProposalPDF_Pricing_Model}
+                            </apex:outputText>
+                        </td>
+                        <td width="5%">
+                            <apex:outputText rendered="{!TEXT($User.UserType) != 'PowerPartner'}">
+                                :
+                            </apex:outputText>                            
+                        </td>
+                        <td width="65%">
+                            <apex:outputText rendered="{!TEXT($User.UserType) != 'PowerPartner'}">
+                                {!IF(quote.Pricing_Model__c == '', 'Enabled', quote.Pricing_Model__c)}
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                     <tr>
+                        <td width="30%">
+                            <apex:outputText rendered="{!TEXT($User.UserType) != 'PowerPartner'}">
+                                {!$Label.ProposalPDF_End_User_GARN_Code}
+                            </apex:outputText>
+                        </td>
+                        <td width="5%">
+                            <apex:outputText rendered="{!TEXT($User.UserType) != 'PowerPartner'}">
+                                :
+                            </apex:outputText>
+                        </td>
+                        <td width="65%">
+                            <apex:outputText rendered="{!TEXT($User.UserType) != 'PowerPartner'}">
+                                {!quote.End_User_ID__r.SAP_Account_Code__c}
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                    <!--
+                    <tr>
+                        <td width="30%">
+                            {!$Label.ProposalPDF_Quote_Currency}
+                        </td>
+                        <td width="5%">
+                            :
+                        </td>
+                        <td width="65%">
+                            {!IF(quote.CAD_Override__c, 'CAD', quote.currencyIsoCode)}
+                        </td>                       
+                    </tr>
+                    -->                   
+                </table>                
+            </td>
+            <td></td>
+            <td style="font-size:12pt;vertical-align:text-top;">
+                <table style="width:100%;">
+                     <tr>
+                        <td width="45%;vertical-align:text-top;">
+                            {!$Label.ProposalPDF_Presented_By}
+                        </td>
+                        <td width="2%;vertical-align:text-top;">
+                            :
+                        </td>
+                        <td width="50%">
+                            {!quote.Owner.FirstName} {!quote.Owner.LastName} <br/>
+                            {!quote.Owner.Email} <br/> 
+                            {!quote.Owner.Phone}
+                        </td>                       
+                    </tr>  
+                    <tr>
+                        <td width="45%;vertical-align:text-top;">
+                            <apex:outputLabel value="{!$Label.ProposalPDF_Term_Length}" rendered="{!quote.Pricing_Model__c == 'PPU'}"/>
+                        </td>
+                        <td width="5%;vertical-align:text-top;">
+                            <apex:outputPanel rendered="{!quote.Pricing_Model__c == 'PPU'}">                            
+                            :
+                            </apex:outputPanel>
+                        </td>
+                        <td width="50%">
+                            <apex:outputPanel rendered="{!quote.Pricing_Model__c == 'PPU'}">                            
+                                <apex:outputText value="{0, number, ##0}">
+                                    <apex:param value="{!quote.No_Of_Months__c}" />
+                                </apex:outputText>
+                                Month(s)
+                            </apex:outputPanel>
+                        </td>                       
+                    </tr>  
+                </table>    
+            </td>
+        </tr>       
+    </table>
+    <br/>
+    <apex:outputPanel rendered="{!AND(NOT(quote.Hide_Adjustments__c), showAdjustment)}">
+        Adjustment : {!quote.Adjustment__c}% ({!currencySymbol}{!quote.Total_Adjustments__c})
+        <br/><br/>
+    </apex:outputPanel>
+    <!-- Quote Summary -->
+    <apex:dataTable value="{!quoteTotalSummary}" var="eachRecord" id="tblTotalSummary" cellspacing="1" cellpadding="5" 
+        border="1" style="font-family:Courier;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;"
+        headerClass="header">
+        <apex:column style="width:30%;{!eachRecord.rowStyle}" headerValue="{!$Label.ProposalPDF_Quote_Summary}">
+            {!eachRecord.summaryName}
+        </apex:column>
+        <apex:column style="width:30%;{!eachRecord.rowStyle}" headerValue="{!$Label.ProposalPDF_Category_Bundle}">
+            {!eachRecord.categoryOrBundleName}
+        </apex:column>
+        
+        <apex:column style="width:13%;text-align:right;{!eachRecord.rowStyle}" headerValue="{!$Label.ProposalPDF_List_Price}" rendered="{!NOT(quote.Hide_List_Price__c)}">
+            <apex:outputText value="{0, number, {!currencySymbol}{!eachRecord.outputFormat}}" rendered="{!AND(OR(NOT(quote.Hide_Line_Item_Pricing__c), eachRecord.categoryOrBundleName != ''), eachRecord.summaryName != 'Total Quote')}">
+                <apex:param value="{!eachRecord.record.List_Price__c}" />
+            </apex:outputText>
+        </apex:column>
+        <!--
+        <apex:column style="width:14%;text-align:right;{!eachRecord.rowStyle}" headerValue="{!$Label.ProposalPDF_VolumeDiscount}" rendered="{!NOT(quote.Hide_Volume_Discount__c)}">
+            <apex:outputText value="{0, number, 0.00}" rendered="{!OR(NOT(quote.Hide_Line_Item_Pricing__c), eachRecord.categoryOrBundleName != '')}">
+                <apex:param value="{!eachRecord.record.Accepted_Volume_Discount__c}" />
+            </apex:outputText>
+            <apex:outputText value="%" rendered="{!eachRecord.record.Accepted_Volume_Discount__c != null}" />
+        </apex:column>
+        -->
+        <apex:column style="width:14%;text-align:right;{!eachRecord.rowStyle}" headerValue="{!$Label.ProposalPDF_Applied_Discount}" rendered="{!NOT(quote.Hide_Discount__c)}">
+            <apex:outputText value="{0, number, 0.00}" rendered="{!OR(NOT(quote.Hide_Line_Item_Pricing__c), eachRecord.categoryOrBundleName != '')}">
+                <apex:param value="{!eachRecord.record.Total_Discount__c}" />
+            </apex:outputText>
+            <apex:outputText value="%" rendered="{!eachRecord.record.Total_Discount__c != null}" />
+        </apex:column>
+        <apex:column style="width:13%;text-align:right;{!eachRecord.rowStyle}" headerValue="{!$Label.ProposalPDF_Net_Price}" rendered="{!NOT(quote.Hide_Extended_Net_Price__c)}">
+            <!--Mukunth modified below code for 6 digit project-->
+			<apex:outputText value="{0, number, {!currencySymbol}###,##0.00}" rendered="{!AND(OR(NOT(quote.Hide_Line_Item_Pricing__c), eachRecord.categoryOrBundleName != '', eachRecord.summaryName == 'Total Quote'),NOT(quote.Hide_Decimal_In_Total__c))}"> 
+                <apex:param value="{!eachRecord.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+            <apex:outputText value="{0, number, {!currencySymbol}###,###}" rendered="{!AND(OR(NOT(quote.Hide_Line_Item_Pricing__c), eachRecord.categoryOrBundleName != '', eachRecord.summaryName == 'Total Quote'),quote.Hide_Decimal_In_Total__c)}"> 
+                <apex:param value="{!eachRecord.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+        </apex:column>      
+    </apex:dataTable>
+    Hardware will be billed when shipped. Taxes and shipping will be calculated upon invoicing
+    <div class="page-break"></div>
+    <table style="width:100%;" border="0" class="smallText" cellpadding="5px">
+        <tr style="height:20px;">
+            <td></td><td></td><td></td>
+        </tr>
+        <tr>            
+            <td style="width:70%;font-size:9pt;">
+                <img src="{!$Resource.GenesysLogo}" width="250px;"/><br/>
+                <apex:outputText value="{!quote.BigMachines__Opportunity__r.Country__r.PureConnect_Cloud_Selling_Entity__c}" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" />
+                <apex:outputText value="{!if(Quote.Is_GU_EMEA__c,$Label.EMEA_Legal_Entity,quote.BigMachines__Opportunity__r.Country_Selling_Entity__c)}" rendered="{!quote.Offering_Type__c != 'PureConnect On Premise'}" />
+                <br/>
+            </td>
+            <td style="width:0%">
+            </td>
+            <td style="width:40%">
+                <table style="width:100%">
+                    <tr>
+                        <td width="60%">
+                            {!$Label.ProposalPDF_Date}
+                        </td>
+                        <td width="5%">
+                            :
+                        </td>
+                        <td width="35%">
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Proposal_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Number}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <b>{!quote.Name}</b>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Expires_On}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Expiration_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                         <tr>
+                        
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Currency}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                           {!IF(quote.CAD_Override__c, 'CAD', quote.currencyIsoCode)}
+                        </td>                       
+                    </tr>                     
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <hr />
+            </td>
+        </tr>
+    </table>
+    <apex:outputPanel rendered="{!AND(quote.End_User_ID__c != quote.Sold_To_Name__c, NOT(quote.Hide_Partner_Margin__c), TEXT($User.UserType) != 'PowerPartner')}">
+        <table style="font-family:Courier;font-size:13px;width:100%;">        
+            <tr>
+                <td>
+                    Deal Registeration Discount: <b>{!$Label.Partner_Margin}%</b>
+                </td>    
+                <td>   
+                    Partner Product Margin: <b>{!quote.Sold_To_Name__r.Partner_Product_Margin__c}%</b>
+                </td>             
+                <td>
+                    Partner GU Margin: <b>{!quote.Sold_To_Name__r.Partner_GU_Margin__c}%</b>
+                </td>
+             </tr>
+        </table>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!AND(quote.End_User_ID__c != quote.Sold_To_Name__c, NOT(quote.Hide_Partner_Margin__c), TEXT($User.UserType) == 'PowerPartner')}">
+        <table style="font-family:Courier;font-size:13px;width:100%;">        
+            <tr>
+                <td>
+                    Deal Registeration Discount: <b>{!$Label.Partner_Margin}%</b>
+                </td>    
+                <td>   
+                    Partner Product Discount: <b>{!quote.Sold_To_Name__r.Partner_Product_Margin__c}%</b>
+                </td>             
+                <td>
+                    Partner GU Discount: <b>{!quote.Sold_To_Name__r.Partner_GU_Margin__c}%</b>
+                </td>
+             </tr>
+        </table>
+    </apex:outputPanel>
+    <!-- Quote Products except Bundles  -->
+    <apex:dataTable value="{!quoteProducts}" var="eachProduct" id="theTable" cellspacing="1" cellpadding="5" border="1" 
+        style="font-family:Courier;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;"
+            headerClass="header">
+        <apex:column headerValue="{!$Label.ProposalPDF_Base_Item}" style="{!eachProduct.rowStyle}">            
+            <apex:outputText value="{!eachProduct.record.Product_Description__c}" rendered="{!AND(quote.Offering_Type__c != 'PureConnect On Premise',Not(eachProduct.record.Pass_Through__c))}" />
+            <apex:outputText value="{!eachProduct.record.Name}" rendered="{!AND(quote.Offering_Type__c != 'PureConnect On Premise',eachProduct.record.Pass_Through__c)}" />
+            <apex:outputText value="{!eachProduct.record.Name}" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" />
+            {!eachProduct.headerName}
+            <apex:outputPanel rendered="{!eachProduct.headerDescription != null}">
+                - {!eachProduct.headerDescription}
+            </apex:outputPanel>
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Product_Number}" style="{!eachProduct.rowStyle}">
+            <apex:outputText value="{!eachProduct.record.APN_Number__c}"/>
+            
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Units}" style="{!eachProduct.rowStyle}text-align:right;">
+            <apex:outputText value="{0, number, ######}" rendered="{!eachProduct.record.BigMachines__Product__r.Type__c != 'Shipping Charges'}">
+                <apex:param value="{!eachProduct.record.BigMachines__Quantity__c}" />
+            </apex:outputText>
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Per}" style="{!eachProduct.rowStyle}">
+            {!eachProduct.record.Unit_of_Measure__c}
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_List_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;" headerClass="headerStyle"  rendered="{!NOT(quote.Hide_List_Price__c)}">
+            <apex:outputPanel rendered="{!NOT(OR(eachProduct.record.BigMachines__Product__r.Type__c == 'Genesys Care', eachProduct.record.BigMachines__Product__r.Type__c == 'Maintenance'))}">
+                <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}" rendered="{!OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow)}">
+                    <apex:param value="{!eachProduct.record.List_Price__c}" />
+                </apex:outputText> 
+            </apex:outputPanel>    
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Partner_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;" headerClass="headerStyle"  rendered="{!AND(NOT(quote.Hide_Partner_Price__c), quote.End_User_ID__c != quote.Sold_To_Name__c)}">
+            <!--Mukunth modified below code for 6 digit project-->
+			<apex:outputText value="{0, number, {!currencySymbol}###,##0.00}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),NOT(quote.Hide_Decimal_In_Total__c))}">
+                <apex:param value="{!eachProduct.record.Partner_Price__c}" />
+            </apex:outputText>
+            <apex:outputText value="{0, number, {!currencySymbol}###,###}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),quote.Hide_Decimal_In_Total__c)}">
+                <apex:param value="{!eachProduct.record.Partner_Price__c}" />
+            </apex:outputText>
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Net_Unit_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;" headerClass="headerStyle" rendered="{!quote.Pricing_Model__c == 'PPU'}" >
+            <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}" rendered="{!OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow)}">
+                <apex:param value="{!eachProduct.record.Net_Unit_Price__c}" />
+            </apex:outputText> 
+        </apex:column>      
+        
+        <apex:column headerValue="{!$Label.ProposalPDF_Extended_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;"  rendered="{!NOT(quote.Hide_Ext_List_Price__c)}">
+            <!--Mukunth modified below code for 6 digit project-->
+			<apex:outputText value="{0, number, {!currencySymbol}###,##0.00}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),NOT(quote.Hide_Decimal_In_Total__c))}">
+                <apex:param value="{!eachProduct.record.Ext_List__c}" />
+            </apex:outputText>
+			<apex:outputText value="{0, number, {!currencySymbol}###,###}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),quote.Hide_Decimal_In_Total__c)}">
+                <apex:param value="{!eachProduct.record.Ext_List__c}" />
+            </apex:outputText>
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_VolumeDiscount}" style="{!eachProduct.rowStyle}text-align:right;width:70px;" rendered="{!NOT(quote.Hide_Volume_Discount__c)}">
+            <apex:outputText value="{0, number, 0.00}" rendered="{!OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow)}">
+                <apex:param value="{!eachProduct.record.Accepted_Volume_Discount__c}" />
+            </apex:outputText> <apex:outputText value="%" rendered="{!OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow)}" />  
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Discount}" style="{!eachProduct.rowStyle}text-align:right;width:70px;" rendered="{!NOT(quote.Hide_Discount__c)}">
+            <apex:outputText value="{0, number, 0.00}" rendered="{!OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow)}">
+                <apex:param value="{!eachProduct.record.Total_Discount__c}" />
+            </apex:outputText> <apex:outputText value="%" rendered="{!OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow)}" />  
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Net_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;" rendered="{!NOT(quote.Hide_Extended_Net_Price__c)}">
+            <!--Mukunth modified below code for 6 digit project-->
+			<apex:outputText value="{0, number, {!currencySymbol}###,##0.00}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),NOT(quote.Hide_Decimal_In_Total__c))}">
+                <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+			<apex:outputText value="{0, number, {!currencySymbol}###,###}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),quote.Hide_Decimal_In_Total__c)}">
+                <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+        </apex:column>      
+        <apex:column headerValue="{!$Label.ProposalPDF_Maintenance_Due}" style="{!eachProduct.rowStyle}text-align:right;width:100px;" rendered="{!NOT(quote.Hide_Maintenance_Due__c)}">
+            <!--Mukunth modified below code for 6 digit project-->
+			<apex:outputText value="{0, number, {!currencySymbol}###,##0.00}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),NOT(quote.Hide_Decimal_In_Total__c))}">
+                <apex:param value="{!eachProduct.record.Maintenance_Due__c}" />
+            </apex:outputText>
+			<apex:outputText value="{0, number, {!currencySymbol}###,###}" rendered="{!AND(OR(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)), eachProduct.isHeaderRow),quote.Hide_Decimal_In_Total__c)}">
+                <apex:param value="{!eachProduct.record.Maintenance_Due__c}" />
+            </apex:outputText>
+        </apex:column>
+    </apex:dataTable>
+    <br/>    
+    <!-- Bundles  -->
+    <apex:outputLabel value="Bundles" rendered="{!showBundles}" />
+    <apex:dataTable value="{!quoteProductsBundles}" var="eachProduct" id="theTableBundles" cellspacing="1" cellpadding="5" border="1" 
+        style="font-family:Courier;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;"
+            headerClass="header" rendered="{!showBundles}">
+        <apex:column headerValue="{!$Label.ProposalPDF_Bundle_Name}" style="{!eachProduct.rowStyle}">
+            {!eachProduct.record.Product_Description__c}
+            {!eachProduct.headerName}            
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Product_Number}" style="{!eachProduct.rowStyle}">
+            {!eachProduct.record.BigMachines__Product__r.Name}
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Units}" style="{!eachProduct.rowStyle}text-align:right;">
+            <apex:outputText value="{0, number, ######}">
+                <apex:param value="{!eachProduct.record.BigMachines__Quantity__c}" />
+            </apex:outputText>
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Per}" style="{!eachProduct.rowStyle}">
+            {!eachProduct.record.Unit_of_Measure__c}
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_List_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;" headerClass="headerStyle"  rendered="{!NOT(quote.Hide_List_Price__c)}">
+            <apex:outputText value="{0, number, {!currencySymbol}{!eachProduct.outputFormat}}"  rendered="{!NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c))}">
+                <apex:param value="{!eachProduct.record.List_Price__c}" />
+            </apex:outputText> 
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Extended_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;"  rendered="{!NOT(quote.Hide_Ext_List_Price__c)}">
+            <!--Mukunth modified below code for 6 digit project-->
+			<apex:outputText value="{0, number, {!currencySymbol}###,##0.00}"  rendered="{!AND(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)),NOT(quote.Hide_Decimal_In_Total__c))}">
+                <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+			<apex:outputText value="{0, number, {!currencySymbol}###,###}"  rendered="{!AND(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)),quote.Hide_Decimal_In_Total__c)}">
+                <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Discount}" style="{!eachProduct.rowStyle}text-align:right;width:70px;" rendered="{!NOT(quote.Hide_Discount__c)}">
+            <apex:outputText value="{0, number, 0.00}" rendered="{!NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c))}">
+                <apex:param value="{!eachProduct.record.Total_Discount__c}" />
+            </apex:outputText> <apex:outputText value="%" rendered="{!NOT(eachProduct.hideNumbers)}"/>  
+        </apex:column>
+        <apex:column headerValue="{!$Label.ProposalPDF_Net_Price}" style="{!eachProduct.rowStyle}text-align:right;width:100px;">
+            <!--Mukunth modified below code for 6 digit project-->
+			<apex:outputText value="{0, number, {!currencySymbol}###,##0.00}"  rendered="{!AND(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)),NOT(quote.Hide_Decimal_In_Total__c))}">
+                <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+			<apex:outputText value="{0, number, {!currencySymbol}###,###}"  rendered="{!AND(NOT(OR(eachProduct.hideNumbers, quote.Hide_Line_Item_Pricing__c)),quote.Hide_Decimal_In_Total__c)}">
+                <apex:param value="{!eachProduct.record.Ext_Net_Price__c}" />
+            </apex:outputText>
+        </apex:column>      
+    </apex:dataTable> 
+    <br/><br/><br/>
+    <apex:outputPanel rendered="{!NOT(quote.Hide_Product_Description__c)}">
+        <b>{!$Label.ProposalPDF_Additional_Product_Information} </b><br/><br/>
+        <apex:outputText value="{!quote.Product_Description__c}" escape="fasle" />
+        <div class="page-break"></div>
+    </apex:outputPanel>    
+    <apex:outputPanel rendered="{!NOT(quote.Hide_Table_of_Contents__c)}">
+        <table style="width:100%;" border="0" class="smallText">
+            <tr>
+                <td colspan="2" style="font-size:9pt;">
+                    <img src="{!$Resource.GenesysLogo}" width="250px;"/><br/>
+                <apex:outputText value="{!quote.BigMachines__Opportunity__r.Country__r.PureConnect_Cloud_Selling_Entity__c}" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" />
+                <apex:outputText value="{!if(Quote.Is_GU_EMEA__c,$Label.EMEA_Legal_Entity,quote.BigMachines__Opportunity__r.Country_Selling_Entity__c)}" rendered="{!quote.Offering_Type__c != 'PureConnect On Premise'}" />
+                <br/>
+                </td>
+                <td>
+                    <table style="width:100%">
+                    <tr>
+                        <td width="55%"></td>
+                        <td width="25%">
+                            {!$Label.ProposalPDF_Date}
+                        </td>
+                        <td width="1%">
+                            :
+                        </td>
+                        <td width="19%">
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Proposal_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Number}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <b>{!quote.Name}</b>
+                        </td>                       
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Expires_On}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                            <apex:outputText value="{0,date,MM-dd-yyyy}">
+                                <apex:param value="{!quote.Expiration_Date__c}" />
+                            </apex:outputText>
+                        </td>                       
+                    </tr> 
+                         <tr>
+                        <td></td>
+                        <td >
+                            {!$Label.ProposalPDF_Quote_Currency}
+                        </td>
+                        <td >
+                            :
+                        </td>
+                        <td >
+                           {!IF(quote.CAD_Override__c, 'CAD', quote.currencyIsoCode)}
+                        </td>                       
+                    </tr>                    
+                </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <hr />
+                </td>
+            </tr>
+        </table>        
+    </apex:outputPanel>
+    <table cellspacing="1" cellpadding="5" border="1" style="font-family:Courier;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+        <th colspan="3" class="header">
+            {!$Label.ProposalPDF_Export_Control_Classification_Numbers}         
+        </th>
+        <tr class="subHeader">
+            <td style="width:40%;">
+                {!$Label.ProposalPDF_Product_Name}
+            </td>
+            <td style="width:20%;">
+                {!$Label.ProposalPDF_Product_Number}
+            </td>
+            <td style="width:40%;">
+                {!$Label.ProposalPDF_ECCN_Number}
+            </td>               
+        </tr>
+        <apex:repeat value="{!quoteProductRecordsECCNs}" var="eachRecord">
+           <tr >
+                <td >
+                    <apex:outputText value="{!eachRecord.Product_Description__c}" rendered="{!AND(quote.Offering_Type__c != 'PureConnect On Premise',Not(eachRecord.Pass_Through__c))}" />
+                    <apex:outputText value="{!eachRecord.Name}" rendered="{!AND(quote.Offering_Type__c != 'PureConnect On Premise',eachRecord.Pass_Through__c)}" />   
+                    <apex:outputText value="{!eachRecord.Name}" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" /> 
+               </td>
+                <td >
+                    {!eachRecord.BigMachines__Product__r.APN_Number__c}
+                </td>
+                <td>
+                    {!eachRecord.BigMachines__Product__r.ECCN__c}    
+                </td>                          
+            </tr>              
+        </apex:repeat>
+        <apex:repeat value="{!quoteProductBundlesRecords}" var="eachRecord">
+            <tr>
+                <td>
+                    {!eachRecord.Product_Description__c}    
+                </td>
+                <td>
+                    {!eachRecord.BigMachines__Product__r.Name}  
+                </td>
+                <td>
+                    {!eachRecord.BigMachines__Product__r.ECCN__c}   
+                </td>                   
+            </tr>
+        </apex:repeat>
+    </table>
+    <apex:outputPanel rendered="{!quote.Special_Offer_Terms__c != ''}">
+        <br/><br/>
+        <apex:outputText value="{!$Label.ProposalPDF_Special_Offers_Business_Exceptions}" escape="false"/>    
+        <br/><br/>
+        <apex:outputText value="{!quote.Special_Offer_Terms__c}" escape="false" />
+    </apex:outputPanel>
+    <br/><br/>
+    <apex:outputText value="{!$Label.ProposalPDF_Genesys_Terms_and_Conditions}" escape="false" rendered="{!quote.Pricing_Model__c != 'PPU'}" />
+    <apex:outputText value="{!$Label.ProposalPDF_Genesys_Terms_Conditions_PPU}" escape="false" rendered="{!quote.Pricing_Model__c == 'PPU'}" />
+    <br/><br/>
+    <apex:outputText value="{!$Label.ProposalPDF_Genesys_Terms_and_Conditions_2}" escape="false" rendered="{!quote.Offering_Type__c == 'PureConnect On Premise'}" />
+    
+    <br/><br/>
+    <apex:outputText value="{!$Label.ProposalPDF_Branch_Office_Conditions}" rendered="{!if(Quote.Pricing_Model__c=='Branch Office',true,false)}" escape="false" />
+    <br/><br/>
+    <apex:outputText value="{!$Label.ProposalPDF_Australia_terms}" escape="false" rendered="{!if(Quote.Opp_Sold_To_Country__c=='Australia',true,false)}" />
+    <br/><br/>
+    <apex:outputText value="{!$Label.ProposalPDF_Genesys_Terms_and_Conditions_1}" escape="false" />
+     <br/><br/>    
+    <apex:outputText value="{!$Label.ProposalPDF_Hardware_Sh}" rendered="{!if(Quote.Shipping_Handling__c!=null,true,false)}" escape="false" />
+    <br/><br/>  
+    <apex:outputText value="{!$Label.ProposalPDF_Software_and_License_Agreement}" rendered="{!Quote.Conversion_Quote__c == 'Concurrent to Enabled'}"  />
+    <!--
+    <br/><br/>
+    <apex:outputLink value="{!$Label.EMEA_T_C_Link}">Genesys University Terms and Conditions</apex:outputLink>
+    -->
+     <br/> 
+    <apex:outputPanel rendered="{!isPSRDPProduct}">
+        <apex:outputText value="{!$Label.ProposalPDF_PS_Conditions}" escape="false" />    
+        <br/>
+        {!$Label.ProposalPDF_PSRDP_Table_Header_Info}
+        <br/>
+        <table cellspacing="1" cellpadding="5" border="1" style="font-family:Courier;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+            <apex:repeat value="{!quotePSRDPProducts}" var="eachRecord">
+                <tr>
+                    <td>
+                        {!eachRecord.Product_Description__c}
+                    </td>
+                    <td>
+                        <a href="{!eachRecord.BigMachines__Product__r.PSRDP_Product_T_C_Url__c}">
+                        {!eachRecord.Product_Description__c}
+                        </a>
+                    </td>
+                </tr>           
+            </apex:repeat>
+        </table>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!quote.Treat_SO_as_PO__c}">
+        <br/><br/>
+        <apex:outputText value="{!$Label.ProposalPDF_PO_Not_Required_Verbiage}" escape="false" />
+        <!--<apex:outputText value="{!$Label.ProposalPDF_PO_Not_Required_Verbiage2}" escape="false" />        -->
+    </apex:outputPanel>
+    <br/><br/>
+    <apex:outputPanel rendered="{!quote.End_User_ID__c != quote.Sold_To_Name__c}">
+        <apex:outputText value="{!$Label.Indirect_Output_Message}" escape="false" />
+        <br/><br/>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!quote.Show_MSA_in_Output__c}">
+        MSA: <a href="{!quote.MSA_Link__c}" target="_blank">{!quote.MSA_Link__c}</a>  
+    </apex:outputPanel>
+    <br/><br/>
+    <apex:outputPanel styleClass="Signatureblock" rendered="{!OR($CurrentPage.parameters.deliveryOption != 'Download PDF' && $CurrentPage.parameters.deliveryOption != 'Download' && $CurrentPage.parameters.deliveryOption != '', quote.Show_Signature_Box__c) && IF(TEXT($User.UserType) == 'PowerPartner', false, true)}">
+        <table cellspacing="1" cellpadding="5" border="1" style="font-family:Courier;font-size:13px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+            <th colspan="3" class="header">
+                Required Approvals      
+            </th>
+            <tr class="subHeader">
+                <td style="width:20%;">
+                    Role
+                </td>
+                <td style="width:40%;">
+                    Name
+                </td>
+                <td style="width:40%;">
+                    Initials
+                </td>               
+            </tr>
+            <tr>
+                <td height="30px">Legal</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td height="30px">Finance</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <!--<tr>
+                <td height="30px">Revenue Accounting</td>
+                <td></td>
+                <td></td>
+            </tr> -->
+        </table>
+    </apex:outputPanel>
+      <apex:outputPanel styleClass="Signatureblock" layout="none" rendered="{!OR($CurrentPage.parameters.deliveryOption != 'Download PDF' && $CurrentPage.parameters.deliveryOption != 'Download' && $CurrentPage.parameters.deliveryOption != '', quote.Show_Signature_Box__c) && IF(TEXT($User.UserType) == 'PowerPartner', false, true)}">
+        
+   
+    <br/><br/><br/><br/><br/>
+    <table width="100%" cellpadding="10">
+        
+           <!-- <tr>
+                
+                <th width="50%">Customer</th>
+                <th width="50%">
+                    {!quote.Selling_Entity_Formula__c}
+                </th>
+                
+            </tr>-->
+            
+            
+            <tr >           
+            
+            <th width="50%">{!quote.Sold_To_Name__r.name} (&quot;Customer&quot;)</th>
+            <th width="50%">
+                {!CASE(quote.Opp_Sold_To_Country__c,
+                'United Kingdom','Genesys Telecommunications Laboratories B.V.',
+                'Ireland','Genesys Telecommunications Laboratories B.V.',
+                'Genesys Telecommunications Laboratories, Inc. (\"Genesys\")')}
+            </th>
+            
+            
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Signature</td>
+            <td>___________________________________<br/>Signature</td>
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Print name</td>
+            <td>___________________________________<br/>Print name</td>
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Title</td>
+            <td>___________________________________<br/>Title</td>
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Date</td>
+            <td>___________________________________<br/>Date</td>
+        </tr>
+    </table>
+    </apex:outputPanel>
+</apex:page>

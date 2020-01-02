@@ -1,0 +1,36 @@
+<apex:page controller="SearchPortalCaseResultsController">
+	<apex:outputPanel id="casesPanel">
+		<apex:form >
+			<apex:actionFunction rerender="casesPanel" name="lazyLoad"
+				action="{!lazyLoad}" />
+			<apex:pageBlock title="Search Results" id="mycases">
+				<apex:outputPanel rendered="{!!activated}">
+					<apex:image value="/img/loading.gif" />
+                    Loading... 
+                </apex:outputPanel>
+				<apex:outputPanel rendered="{!activated}">
+					<div class="scroll"><c:DynamicOffsetPaginator pController="{!controller}" panel="casesPanel" id="pginatorComp" />
+					<apex:pageBlockTable value="{!cases}" var="case">
+						<apex:repeat value="{!$ObjectType.Case.FieldSets.Portal_Case_Search_Fields}"
+							var="f">
+							<apex:column >
+								<apex:facet name="header">
+									<c:SortOffsetHeader sController="{!controller}"
+										header="{!f.Label}" column="{!f.FieldPath}" panel="casesPanel" />
+								</apex:facet>
+								<apex:outputLink value="/apex/CaseDetail?id={!case.Id}"
+									rendered="{!IF((f.FieldPath=='CaseNumber'),true,false)}"
+									target="_parent"> {!case[f]}</apex:outputLink>
+								<apex:outputField value="{!case[f]}"
+									rendered="{!IF((f.FieldPath=='CaseNumber'),false,true)}" />
+							</apex:column>
+						</apex:repeat>
+					</apex:pageBlockTable></div>
+				</apex:outputPanel>
+			</apex:pageBlock>
+		</apex:form>
+	</apex:outputPanel>
+	<script>
+        setTimeout(lazyLoad, 1000);
+    </script>
+</apex:page>

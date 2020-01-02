@@ -1,0 +1,61 @@
+<apex:page controller="DealSupportQueryController" tabstyle="Deal_Support__c">
+    <apex:sectionHeader title="POR Review" subtitle="{!BLANKVALUE(strRecordName,objOppty.Name)}"/>
+    <apex:form >
+        <apex:pageMessages />
+        <apex:pageBlock title="POR Review Details : {!objDS.Name}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save and Submit" action="{!saveBtnHandler}" rendered="{!(ISBLANK(objDS.POR_Disposition__c) && objDS.Id == null)}" onclick="return confirm('Please remember to attach a document after Save and Submit');"/>
+                <apex:commandButton value="Save" action="{!saveBtnHandler}" rendered="{!((ISBLANK(objDS.POR_Disposition__c) || $Permission.POR_DSR_Super_User) && objDS.Id != null)}"/>
+                <apex:commandButton value="Cancel" rendered="{!objDS.Id == null}" onclick="location.href='/apex/DealSupportRequest?area=POR Review&{!strIdParameter}';return false;"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection >
+                <apex:outputField value="{!objDS.Support_Area__c}"/>
+                <apex:outputField value="{!objDS.Request_Type__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Opportunity Details">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Opportunity Name"/>
+                    <apex:outputLink value="/{!objOppty.Id}">{!objOppty.Name}</apex:outputLink>
+                </apex:pageBlockSectionItem>
+                <apex:repeat value="{!$ObjectType.Opportunity.FieldSets.POR_DSR}" var="f">                            
+                    <apex:outputField value="{!objOppty[f]}"/> 
+                </apex:repeat>
+                <apex:outputField value="{!objDS.Requester__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="SC Section" rendered="{!ISBLANK(objDS.POR_Disposition__c) || $Permission.POR_DSR_Super_User}">
+                <apex:inputField value="{!objDS.POR_Type__c}" required="true"/>
+                <!--<apex:outputField value="{!objDS.SC_Engagement_Form__c}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="SC Engagement Form"/>
+                    <apex:outputLink value="/apex/wow_Request_Form?id={!objOppty.Id}" target="_blank">View</apex:outputLink>
+                </apex:pageBlockSectionItem>-->
+                <apex:inputField value="{!objDS.Key_Team_Members__c}"/>
+            </apex:pageBlockSection>
+            <!-- Read Only -->
+            <apex:pageBlockSection title="SC Section" rendered="{!NOT(ISBLANK(objDS.POR_Disposition__c)) && NOT($Permission.POR_DSR_Super_User)}">
+                <apex:outputField value="{!objDS.POR_Type__c}"/>
+                <!--<apex:outputField value="{!objDS.SC_Engagement_Form__c}"/>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="SC Engagement Form"/>
+                    <apex:outputLink value="/apex/wow_Request_Form?id={!objOppty.Id}" target="_blank">View</apex:outputLink>
+                </apex:pageBlockSectionItem>-->
+                <apex:outputField value="{!objDS.Key_Team_Members__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="CTO Section" rendered="{!$Permission.POR_DSR_Super_User}">
+                <apex:inputField value="{!objDS.POR_Lead__c}"/>
+                <apex:inputField value="{!objDS.POR_Schedule_Date__c}"/>
+                <apex:inputField value="{!objDS.POR_Disposition__c}"/>
+                <apex:inputField value="{!objDS.CTO_Comments__c}"/>
+            </apex:pageBlockSection>
+            <!-- Read Only -->
+            <apex:pageBlockSection title="CTO Section" rendered="{!$Permission.POR_Lead && NOT($Permission.POR_DSR_Super_User)}">
+                <apex:outputField value="{!objDS.POR_Lead__c}"/>
+                <apex:outputField value="{!objDS.POR_Schedule_Date__c}"/>
+                <apex:outputField value="{!objDS.POR_Disposition__c}"/>
+                <apex:outputField value="{!objDS.CTO_Comments__c}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>  
+    </apex:form>
+    <apex:relatedList subject="{!objDS}" list="CombinedAttachments"/>
+   
+</apex:page>

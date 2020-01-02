@@ -1,0 +1,81 @@
+<apex:component controller="QuoteProductsEmailTemplateController" access="global">
+    <apex:attribute name="QuoteIds" description="Quote Id" type="Id" assignTo="{!quoteId}" />
+     <apex:attribute name="DQIds" description="DQ Id" type="Id" assignTo="{!dqId}" />
+    <div style='text-align:left;'>
+        <table>
+            <th style="padding:3px;font-size:13px;font-family:Verdana;font-weight:bold;text-align:left;">
+                Product Number
+            </th>
+            <th style="padding:3px;font-size:13px;font-family:Verdana;font-weight:bold;text-align:left;">
+                Product Name
+            </th>
+            <th style="padding:3px;font-size:13px;font-family:Verdana;font-weight:bold;text-align:left;">
+                
+            </th>
+            <th style="padding:3px;font-size:13px;font-family:Verdana;font-weight:bold;text-align:right;">
+                Quantity
+            </th>
+            <th style="padding:3px;font-size:13px;font-family:Verdana;font-weight:bold;text-align:right;">
+                Discount
+            </th>
+            <th style="padding:3px;font-size:13px;font-family:Verdana;font-weight:bold;text-align:right;">
+                Product Specific Discount
+            </th>            
+            <apex:repeat value="{!products}" var="eachProduct" rendered="{!If(Not(ISNULL(quoteId)),true,false)}">
+                <tr>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                        {!eachProduct.Name}
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                        {!eachProduct.Product_Description__c}
+                        <apex:outputPanel rendered="{!eachProduct.Bundle__c != null}">
+                            &nbsp; [{!eachProduct.Bundle__r.Name}]
+                        </apex:outputPanel>
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                        :
+                    </td>                    
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:right;"> 
+                        <apex:outputText value="{0, number, ###,##0}">
+                            <apex:param value="{!eachProduct.BigMachines__Quantity__c}" />
+                        </apex:outputText>
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:right;"> 
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!eachProduct.Total_Discount__c}" />
+                        </apex:outputText>
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:right;"> 
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!eachProduct.Product_Specific_Discount__c}" />
+                        </apex:outputText>
+                    </td>                                       
+                </tr>
+            </apex:repeat>           
+            <apex:repeat value="{!DQProducts}" var="eachProduct" rendered="{!If(Not(ISNULL(dqId)),true,false)}">
+                <tr>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                        {!eachProduct.Product__r.Name}
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                        {!eachProduct.Product__r.Description__c}                        
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                        :
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:right;"> 
+                        <apex:outputText value="{0, number, ###,##0}">
+                            <apex:param value="{!eachProduct.Quantity__c}" />
+                        </apex:outputText>
+                    </td>
+                    <td style="padding:3px;font-size:13px;font-family:Verdana;font-weight:normal;text-align:right;"> 
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!eachProduct.Discount__c}" />
+                        </apex:outputText>
+                    </td>                   
+                </tr>
+            </apex:repeat>           
+               
+        </table>        
+    </div>
+</apex:component>

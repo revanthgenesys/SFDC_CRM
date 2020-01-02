@@ -1,0 +1,379 @@
+<apex:page sidebar="false" controller="DSRSolutioOverviewCtlr" >
+    <apex:form >
+    
+        <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <head>
+                <apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            </head>
+        </html>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                
+            });
+            
+            function onbtnClick(aval){
+                debugger;
+                aval.value = 'Generating Solution Overview...';
+            }
+            
+            function onbtnComplete(aval){
+                debugger;
+                aval.value = 'Generate Solution Overview';
+            }
+        </script>
+        <style type="text/css">
+            .custPopup{
+                background-color: white;
+                border-width: 2px;
+                border-style: outset;
+                z-index: 9999;
+                left: 50%;
+                padding:10px;
+                position: absolute;
+                /* These are the 3 css properties you will need to change so the popup 
+                displays in the center of the screen. First set the width. Then set 
+                margin-left to negative half of what the width is. You can add 
+                the height property for a fixed size pop up if you want.*/
+                //width: 500px;
+                margin-left: -250px;
+                top:100px;
+                border-color: #0070d2;
+                border-radius: 15px;
+            }
+            .popupBackground{
+                background-color:black;
+                opacity: 0.20;
+                filter: alpha(opacity = 20);
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                z-index: 9998;
+            }
+            .messageTable{
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .message .messageText h4 { 
+                display: none;
+            } 
+            .errorM3{
+                width: 40%;
+            }
+            
+            .confirmM3{
+                width: 30%;
+            }
+            .errorM3 .msgIcon, .errorMedium {
+                background-image:
+                background-position: 0 0;
+                width: 0;
+                height: 0;
+            }
+            .message .messageText {
+                color: red;
+                text-align: center;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            .spinnerBg{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-color: #000;
+                opacity: 0.2;
+                z-index: 999999;
+            }
+            .spinner{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-image: url("/img/loading32.gif");
+                background-size: 16px;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-position: center;
+                z-index: 9999999;
+                opacity: 1;
+            }
+            
+        </style>
+        <body>
+            <apex:actionStatus id="spinnerStatus">
+                <apex:facet name="start">
+                    <div class="spinnerBg">Generating Solution Overview..</div>
+                    <div class="spinner" > Generating Solution Overview..</div>
+                </apex:facet>
+            </apex:actionStatus>
+            <div class="slds"> 
+                <div class="slds-card">
+                    <div class="slds-page-header" role="banner" style="background:">
+                        <div class="slds-grid">
+                            <div class="slds-media__body">
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <h1 class="slds-text-heading--small">
+                                                <a  href="/apex/DSR_Deliver?id={!sceId}" target="_self">
+                                                    <apex:image id="theImage" value="{!$Resource.aerrow_left}" width="20" height="20" />
+                                                </a>
+                                            </h1>
+                                        </td>
+                                        <td><h1 style="font-weight: 600;font-size: x-large;">Solution Overview Creator </h1></td>
+                                        <td style="text-align: -webkit-right;"><h1 class="slds-text-heading--small"><a href="{!map_OverviewLinks['Solution Overview How To']}" target="_blank">Solution Overview How To</a></h1></td>
+                                        <td style="text-align: -webkit-right;"><h1 class="slds-text-heading--small"><a  href="{!map_OverviewLinks['Solution Overview Assets']}" target="_blank">Solution Overview Assets</a></h1></td>
+                                        <td style="text-align: -webkit-right;"><h1 class="slds-text-heading--small"><b><a  href="/apex/SC_Engagement_DSR?id={!sceId}" target="_self">Home</a></b></h1></td>
+                                    </tr>
+                                </table>
+                                <br/>
+                                <apex:outputPanel id="themsg">
+                                    <div style="text-align:-webkit-center;"><apex:pageMessages /></div>
+                                </apex:outputPanel>
+                                <table>
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:10%;text-align:right;"><b>SC DSR Name :</b></td>
+                                        <td style="width:1%"></td>
+                                        <td style="width:10%;text-align:left;"><a href="/apex/SC_Engagement_DSR?id={!dsrEngagement.Id}">{!dsrEngagement.Name}</a></td>
+                                        
+                                        <td style="width:10%;text-align:right;"><b>Opportunity : </b></td>
+                                        <td style="width:1%"></td>
+                                        <td style="width:10%;text-align:left;"><a href="/{!dsrEngagement.Opportunity_ID__C}" target="_blank">{!dsrEngagement.Opportunity_ID__r.Name}</a></td>
+                                        
+                                        <td style="width:10%;text-align:right;"></td>
+                                        <td style="width:1%"></td>
+                                        <td style="width:10%;text-align:left;color:red;"> | Required Fields</td>
+                                    </tr>
+                                    <!-- Added by Debora Lane 14-May-18 -->
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 50px;">    
+                                      <td class="" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity Current Stage : </b></td>
+                                      <td style="width:1%"></td>
+                                      <td class="" data-label="Monthlyrent" style="width:10%;text-align:left;"><apex:outputField value="{!dsrEngagement.Opportunity_ID__r.StageName}"/></td>
+                                    </tr>
+                                </table>
+                                <br/>
+                                <br/>
+                                
+                                <apex:variable value="{!1}" var="visionCounter"/>
+                                <apex:variable value="{!1}" var="designCounter"/>
+                                <apex:variable value="{!1}" var="discoveryCounter"/>
+                                <apex:variable value="{!1}" var="deliverCounter"/>
+                                <apex:variable value="{!1}" var="creationCounter"/>
+                                <table>
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:Center;"><b style="font-size:large">Input Options</b></td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:25%"></td>
+                                        <td style="width:25%;"></td>
+                                        <td style="width:25%;"></td>
+                                    </tr>
+                                    <!--
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:right;"><b>Vision Options :</b></td>
+                                        <td style="width:3%;"></td>
+                                        <apex:repeat value="{!lstclsWrapperVisionOptions}" var="record">
+                                            <td><apex:inputCheckbox value="{!record.isSelect}"/> &nbsp;{!record.name}</td>
+                                            <apex:outputText rendered="{!(MOD(visionCounter, 3) == 0)}" value="</tr><tr style='width: auto;height: 40px;'><td style='width:20%;text-align:right;'></td> <td style='width:3%;'></td>" escape="false"></apex:outputText>
+                                            <apex:variable value="{!visionCounter+1}" var="visionCounter"/>
+                                        </apex:repeat>
+                                    </tr>
+                                    
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:right;"><b>Discovery Options :</b></td>
+                                        <td style="width:3%;"></td>
+                                        <apex:repeat value="{!lstclsWrapperDiscoveryOptions}" var="record">
+                                            <td><apex:inputCheckbox value="{!record.isSelect}"/> &nbsp;{!record.name}</td>
+                                            <apex:outputText rendered="{!(MOD(discoveryCounter, 3) == 0)}" value="</tr><tr style='width: auto;height: 40px;'><td style='width:20%;text-align:right;'></td> <td style='width:3%;'></td>" escape="false"></apex:outputText>
+                                            <apex:variable value="{!discoveryCounter+1}" var="discoveryCounter"/>
+                                        </apex:repeat>
+                                    </tr>
+                                    -->
+                                    <apex:outputPanel rendered="{!isPrimaryDesign}">
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:right;"><b>Design Options :</b></td>
+                                        <td style="width:3%;"></td>
+                                        <td colspan = "3" style="width:75%"><b>Primary Design : <a href="apex/SC_Engagement_Design_Overview?id={!lstclsWrapperDesign.Id}" target="_self"> &nbsp;{!lstclsWrapperDesign.name} ({!lstclsWrapperDesign.cname})</a> &nbsp;</b></td>
+                                        <!--
+                                        <td style="width:25%;"><img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/> &nbsp;Is Selected Design Primary?</td>
+                                        <td style="width:25%;"></td>
+                                        -->
+                                    </tr>
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:right;"><b></b></td>
+                                        <td style="width:3%;"></td>
+                                        <apex:repeat value="{!lstclsWrapperDesignOptions}" var="record">
+                                            <td><apex:inputCheckbox value="{!record.isSelect}"/> &nbsp;{!record.name}</td>
+                                            <apex:outputText rendered="{!(MOD(designCounter, 3) == 0)}" value="</tr><tr style='width: auto;height: 40px;'><td style='width:20%;text-align:right;'></td> <td style='width:3%;'></td>" escape="false"></apex:outputText>
+                                            <apex:variable value="{!designCounter+1}" var="designCounter"/>
+                                        </apex:repeat>
+                                    </tr>
+                                    </apex:outputPanel>
+                                    <!--
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:right;"><b>Delivery Options :</b></td>
+                                        <td style="width:3%;"></td>
+                                        <apex:repeat value="{!lstclsWrapperDeliverOptions}" var="record">
+                                            <td><apex:inputCheckbox value="{!record.isSelect}"/> &nbsp;{!record.name}</td>
+                                            <apex:outputText rendered="{!(MOD(deliverCounter, 3) == 0)}" value="</tr><tr style='width: auto;height: 40px;'><td style='width:20%;text-align:right;'></td> <td style='width:3%;'></td>" escape="false"></apex:outputText>
+                                            <apex:variable value="{!deliverCounter+1}" var="deliverCounter"/>
+                                        </apex:repeat>
+                                      
+                                    </tr>
+                                    --> 
+                                    
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 50px;">
+                                        <td style="width:20%;text-align:right;"><b>Creation Options :</b></td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:25%"><b>   Region/Sub Region  : &nbsp;</b>
+                                            <apex:selectList value="{!region}" size="1"  styleClass="slds-input" style="width:50%;border-left: 2px solid red;">
+                                              <apex:selectOptions value="{!selectRegion}"/>
+                                            </apex:selectList>
+                                        </td>
+                                        <td style="width:25%;"><b>Language : &nbsp;</b>
+                                            <apex:selectList value="{!language}" size="1"  styleClass="slds-input" style="width:50%;border-left: 2px solid red;">
+                                              <apex:selectOptions value="{!selectLanguage}"/>
+                                            </apex:selectList>
+                                        </td>
+                                        <td style="width:25%;"><b>  Generation Mode : &nbsp;</b>
+                                            <apex:selectList value="{!generation}" size="1"  styleClass="slds-input" style="width:50%;border-left: 2px solid red;">
+                                              <apex:selectOptions value="{!selectGeneration}"/>
+                                            </apex:selectList>
+                                        </td>
+                                    </tr>
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 50px;">
+                                        <td style="width:20%;text-align:right;">
+                                            
+                                        </td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:75%;" colspan="3"><b>Template : &nbsp;</b>
+                                        
+                                            <apex:outputPanel id="thetemp">
+                                                <apex:selectList value="{!template}" size="1"  styleClass="slds-input" style="width:40%;border-left: 2px solid red;">
+                                                  <apex:selectOptions value="{!selectTemplate}"/>
+                                                </apex:selectList>
+                                            </apex:outputPanel>
+                                        </td>
+                                        
+                                    </tr>
+                                     <tr class="slds-hint-parent"  style="width: auto;height: 50px;">
+                                        <td style="width:20%;text-align:right;">
+                                        </td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:78%;" colspan="3">
+                                            <table>
+                                                <tr>
+                                                    <td style="width:20%;">
+                                                        <b>AE to list in the document : &nbsp;</b>
+                                                    </td>
+                                                    <td>
+                                                        <apex:inputField value="{!dsrEngagement.AE_Name__c}"/>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 50px;">
+                                        <td style="width:20%;text-align:right;">
+                                        </td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:78%;" colspan="3">
+                                            <table>
+                                                <tr>
+                                                    <td style="width:20%;">
+                                                        <b>SC to list in the document : &nbsp;</b>
+                                                    </td>
+                                                    <td>
+                                                        <apex:inputField value="{!dsrEngagementSC.ActionPerformedBy__c}"/>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                        
+                                    </tr>
+                                   
+                                    
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:Center;"><b style="font-size:large">Output Options</b></td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:25%" colspan="3"><b>Note:</b> Generated documents are always sent to the Sales COE Sharepoint, as found here <a href="https://genesyslab.sharepoint.com/sites/SalesCOE/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FSalesCOE%2FShared%20Documents%2FSC%20Engagement%20DSR%2FSolution%20Overview%20Documents%2FGenerated"><u>Generated Solution Overview Folder </u></a></td>
+                                        
+                                    </tr>
+                                   
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:right;"><b>Email Options :</b></td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:25%;"> <apex:inputCheckbox disabled="true" value="{!myself}"/> &nbsp;<b>Myself&nbsp;</b>({!ownerName})</td>
+                                        <!--<td style="width:25%;" colspan="3"> <apex:inputCheckbox value="{!aeUser}"/> &nbsp;<b>AE&nbsp;</b>({!dsrEngagement.AE_Name__r.Email})</td>-->
+                                        
+                                    </tr>
+                                    <!--
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:20%;text-align:right;"><b></b></td>
+                                        <td style="width:3%;"></td>
+                                        <td style="width:25%;"> 
+                                            <apex:inputCheckbox value="{!leader}"/> &nbsp;
+                                            <b>All Sub Regional Leaders </b>
+                                            <div>(<apex:repeat value="{!lstDSRVirtualTeamRegion}" var="rec">
+                                                {!rec.Virtual_Team_Member_Name__r.Email},
+                                            </apex:repeat>)<br/></div>
+                                        </td>
+                                        <td style="width:25%; vertical-align: top;" colspan="3"> <apex:inputCheckbox value="{!VTUser}"/> &nbsp;
+                                            <b>All Virtual Team Members</b>
+                                            <div>(<apex:repeat value="{!lstDSRVirtualTeamVT}" var="rec">
+                                                {!rec.Virtual_Team_Member_Name__r.Email},
+                                            </apex:repeat>)<br/></div>
+                                            </td>
+                                        
+                                    </tr>
+                                    -->
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="width:19%;text-align:right;"><b></b></td>
+                                        <td style="width:8%"></td>
+                                        <td style="width:25%;"></td>
+                                        <td style="width:25%;"></td>
+                                    </tr>
+                                    <tr class="slds-hint-parent"  style="width: auto;height: 40px;">
+                                        <td style="text-align:center;" colspan="5">
+                                            <apex:commandButton oncomplete="onbtnComplete(this);" onclick="onbtnClick(this);" value="Generate Solution Overview" action="{!postSolutionOverview}" style="font-weight: bolder;border-radius: 12px;width: 30%;height: 44px;font-size: large;" styleClass="slds-button slds-button--brand slds-button--larger" rerender="thetemp,themsg," disabled="{!!isPrimaryDesign || !!istemplateAvailable}" status="spinnerStatus"/>
+                                        </td>
+                                        
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="slds-col slds-no-flex slds-grid slds-align-top">
+                                <div class="slds-button" role="group">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="myapp">
+                    <div class="slds-grid slds-m-top--large" >
+                        <div style="width:100%;">
+                            <div class="slds-card"  >
+                                <header class="slds-card__header slds-grid">
+                                    <div class="slds-col slds-media slds-media--center">
+                                        <div class="slds-media__figure">
+                                            <h3 class="slds-text-heading--small"><b></b></h3>
+                                        </div>
+                                        <div class="slds-media__body" style=" text-align: center;">
+                                           
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-no-flex">
+                           
+                                    </div>
+                                </header>
+                                <div class="slds-card__body" >
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>    
+        </body>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,264 @@
+<apex:page controller="CPRController" cache="false" sidebar="false" tabStyle="CPR_Report__c" action="{!loadCPRComments}">
+    <style>
+        .Highlight {
+        	background-color:yellow;
+        }
+        /* This is for the full screen DIV */
+        .statusPopupBackground {
+            /* Background color */
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+        
+            /* Dimensions */
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 998;
+            position: absolute;
+        
+            /* Mouse */
+            cursor:wait;
+        }
+        
+        /* This is for the message DIV */
+        .statusPopupPanel {
+            /* Background color */
+            border: solid 2px #CBE2EA;
+            background-color: #EBF5FB;
+        
+            /* Dimensions */
+            left: 45%;
+            width: 200px;
+            margin-left: -100px;
+            top: 30%;
+            height: 40px;
+            margin-top: -25px;
+            z-index: 999;
+            position: fixed;
+        
+            /* Mouse */
+            cursor:pointer;
+        }
+    </style>
+    <script>
+        function openCommentPopup(url){
+            window.open(url, 'myWindow', 'width=800,height=600,channelmode=1,location=0,menubar=0,resizable=0,toolbar=0,top=200,left=300', true);
+        }           
+    </script>
+    
+    <apex:form >
+        <!-- Common Status of Requests being made to the Server -->
+        <apex:actionStatus id="status" stopText="">
+            <apex:facet name="start">
+                <div>
+                    <div class="statusPopupBackground" />
+                    <div class="statusPopupPanel">
+                        <table border="0" width="100%" height="100%">
+                            <tr>
+                                <td align="center"><img src="/img/loading.gif"/> <b>Loading ... Please Wait</b></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        
+        <apex:pageBlock id="pgblkHeader" title="Customer Purchase Report (CPR)">
+            <apex:pageBlockSection columns="2">
+                <apex:pageBlockSectionItem >           
+                    <apex:outputLabel value="Account" for="acct" />
+                    <apex:outputPanel >
+                        <apex:outputPanel rendered="{!cprFrom == 'tab'}">
+                            <apex:inputField value="{!accountInput.Account__c}" id="acct" style="width:400px;" required="true">
+                                <apex:actionSupport event="onchange" action="{!accountSelectionChanged}" rerender="pgblkHeader, commentsPanel, productsPanel, attachmentsPanel" status="status"/>
+                            </apex:inputField>
+                             <apex:outputLink value="/{!accountInput.Account__c}" target="_blank" rendered="{!cprFrom == 'tab' && accountInput.Account__c != NULL}">Account Details</apex:outputLink>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!cprFrom == 'account'}">
+                            <apex:outputField value="{!accountInput.Account__c}" id="acctOutput" style="width:400px;" />
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!accountInput.Account__c != NULL}">           
+                    <apex:outputLabel value="Offering Type" for="platform" />
+                    <apex:outputPanel id="platformTypePanel">
+                        <apex:selectList value="{!platformType}" multiselect="false" size="1" disabled="{!platformTypes.size == 1}">
+                            <apex:selectOptions value="{!platformTypes}"/>
+                            <apex:actionSupport event="onchange" action="{!platformSelectionChanged}" rerender="commentsPanel, productsPanel, attachmentsPanel" status="status"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+			</apex:pageBlockSection>
+            <!--
+            <apex:pageBlockButtons location="bottom" rendered="{!accountInput.Account__c != NULL && (cprFrom == 'tab' || (cprFrom == 'account' && platformTypes.size > 1))}"> 
+                <apex:commandButton value="Show CPR" action="{!createCPR}" status="status" reRender="commentsPanel, productsPanel, attachmentsPanel" />
+            </apex:pageBlockButtons>
+			-->
+        </apex:pageBlock>
+        <apex:outputPanel id="commentsPanel" >
+            <apex:pageBlock title="CPR Comments" rendered="{!accountInput.Account__c != NULL && cprFrom == 'tab'}">
+                <apex:pageBlockSection columns="1">
+                    <apex:inputField value="{!pureEngageCPRReport.CPR_Comments__c}" rendered="{!accountInput.Account__c != NULL && cprFrom == 'tab' && platformType == 'PureEngage'}" style="width:800px; height:60px"/>
+                    <apex:outputField value="{!pureEngageCPRReport.CPR_Comments__c}" rendered="{!accountInput.Account__c != NULL && cprFrom == 'account' && platformType == 'PureEngage'}" style="width:800px; height:60px"/>
+                    <apex:inputField value="{!pureConnectCPRReport.CPR_Comments__c}" rendered="{!accountInput.Account__c != NULL && cprFrom == 'tab' && platformType == 'PureConnect'}" style="width:800px; height:60px"/>
+                    <apex:outputField value="{!pureConnectCPRReport.CPR_Comments__c}" rendered="{!accountInput.Account__c != NULL && cprFrom == 'account' && platformType == 'PureConnect'}" style="width:800px; height:60px"/>
+                </apex:pageBlockSection>
+                <apex:pageBlockButtons location="bottom" rendered="{!cprFrom == 'tab'}"> 
+                    <apex:commandButton action="{!saveComments}" value="Save Comments" status="status" reRender="commentsPanel, attachmentsPanel" rendered="{!accountInput.Account__c != NULL && cprFrom == 'tab'}"/>    
+                </apex:pageBlockButtons>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:outputPanel id="productsPanel">
+            <apex:pageBlock rendered="{!cprItems != NULL}" title="{!platformType} On Premise - Products">
+				<TABLE WIDTH="100%">
+                    <TR>
+                        <TD ALIGN="LEFT" WIDTH="50%">
+                            <apex:outputText rendered="{!platformType == 'PureConnect'}">
+                                <b>Note:</b> Subscription purchases are not visible in CPR
+                        	</apex:outputText>
+                        </TD>
+                    	<TD ALIGN="RIGHT" WIDTH="50%">
+							<apex:commandButton value="Export to Excel" onclick="window.open('/apex/CPRExport?accid={!accountInput.Account__c}&platformType={!platformType}', '_blank'); return false;" rendered="{!cprFrom == 'tab'}"/>
+                			<apex:commandButton value="CPR Instructions" onclick="window.open('{!URLFOR($Resource.CPRInstructions)}', '_blank'); return false;" />
+                        </TD>
+                    </TR>
+                </TABLE>
+                
+                <apex:pageBlockTable value="{!cprItems}" var="cprItem">
+                    <apex:column >
+                        <apex:facet name="header">Product</apex:facet>
+                        <apex:outputText value="{!cprItem.ProductName}" />  
+                    </apex:column>
+                    <apex:column style="width:125px" >
+                        <apex:facet name="header">APN Number</apex:facet>
+                        <apex:outputText value="{!cprItem.ProductAPNNumber}" /> 
+                    </apex:column>
+                    <apex:column rendered="{!platformType == 'PureConnect'}">
+                        <apex:facet name="header">Product Category</apex:facet>
+                        <apex:outputText value="{!cprItem.productCategoryVersion}" /> 
+                    </apex:column>
+                    <!-- 
+                    <apex:column style="width:50px" rendered="{!platformType == 'PureConnect'}">
+                        <apex:facet name="header">Upgrade</apex:facet>
+                        <apex:outputText rendered="{!cprItem.versionUpgrade}">
+                            *
+                        </apex:outputText>
+                        <apex:outputText rendered="{!cprItem.purchaseUpgrade}">
+                            #
+                        </apex:outputText>
+                    </apex:column>
+                     -->
+                    <apex:column style="width:100px">
+                        <apex:facet name="header">Maintenance<br/>Grants</apex:facet>
+                        <a href="/00OU0000001cEB8?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.maintenanceGrantsLineItemIds}&pv4=Active&pv5={!URLENCODE(cprItem.ProductName)}" target="_blank">
+                            <apex:outputText value="{!cprItem.maintenanceGrants}" />  
+                        </a>
+                    </apex:column>
+                    <apex:column style="width:75px">
+                        <!-- 00O21000000SXxz -->
+                        <apex:facet name="header">Pending/<br/>In Negotiation</apex:facet>
+                        <a href="/00O0B000003SLAm?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.pendingInNegotiationLineItemIds}&pv4=Pending,In Negotiation&pv5={!URLENCODE(cprItem.ProductName)}" target="_blank">
+                        	<apex:outputText value="{!cprItem.pendingInNegotiation}" />  
+                        </a>
+                    </apex:column>
+                    <apex:column style="width:75px">
+                        <apex:facet name="header">Current<br/>Entitlements</apex:facet>
+                        <apex:outputText value="{!cprItem.currentEntitlements}" />  
+                    </apex:column>
+                    <apex:column style="width:75px">
+                        <apex:facet name="header">Original<br/>License<br/>Grants</apex:facet>
+                        <a href="/00OU0000001csqR?&pv1={!URLENCODE(cprItem.ProductName)}&pv0={!cprItem.originalLicenseGrantsLineItemIds}&pv2={!URLENCODE(cprItem.ProductName)}" target="_blank">
+	                        <apex:outputText value="{!cprItem.originalLicenseGrants}" />  
+                        </a>
+                    </apex:column>
+                    <apex:column style="width:60px">
+                        <apex:facet name="header">Transfer</apex:facet>
+						<div class="{!IF(cprItem.transferActive != cprItem.transfer,'Highlight','')}">
+                            <a href="/00OU0000001dmUn?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.transferLineItemIds}&pv4=Split&pv5={!URLENCODE(cprItem.ProductName)}&pv6={!LEFT(accountInput.Account__c,15)}" target="_blank">
+                                <apex:outputText value="{!cprItem.transferredFinal}" style="color:red"/>  
+                            </a>
+                        </div>    
+                    </apex:column>
+                    <apex:column style="width:60px">
+                        <apex:facet name="header">Downsize</apex:facet>
+                        <div class="{!IF(cprItem.dropDownsizeActive != cprItem.dropDownsize,'Highlight','')}">
+                            <a href="/00OU0000001dni1?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.dropDownsizeLineItemIds}&pv4=Drop,Downsize&pv5={!URLENCODE(cprItem.ProductName)}" target="_blank">
+                                <apex:outputText value="{!cprItem.dropDownsizeActive}" /> 
+                            </a>
+                        </div>
+                    </apex:column>
+                    <apex:column style="width:60px" rendered="{!platformType == 'PureEngage'}">
+                        <apex:facet name="header">Retired</apex:facet>
+                        <div class="{!IF(cprItem.retiredActive != cprItem.retired,'Highlight','')}">
+                            <a href="/00OU0000002pzKN?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.retiredLineItemIds}&pv4=Retired&pv5={!URLENCODE(cprItem.ProductName)}" target="_blank">
+                                <apex:outputText value="{!cprItem.retiredActive}" /> 
+                            </a>
+                        </div>
+                    </apex:column>
+                    <apex:column style="width:60px">
+                        <apex:facet name="header">Shelved</apex:facet>
+                        <div class="{!IF(cprItem.shelvedActive != cprItem.shelved,'Highlight','')}">
+                            <a href="/00OU0000002KAtA?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.shelvedLineItemIds}&pv4=Shelved&pv5={!URLENCODE(cprItem.ProductName)}" target="_blank">
+                                <apex:outputText value="{!cprItem.shelvedActive}" />  
+                            </a>
+                        </div>
+                    </apex:column>
+                    <apex:column style="width:60px">
+                        <apex:facet name="header">Canceled</apex:facet>
+                        <div class="{!IF(cprItem.canceledActive != cprItem.canceled,'Highlight','')}">
+                            <a href="/00OU0000002KAtP?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.canceledLineItemIds}&pv4=Cancelled&pv5={!URLENCODE(cprItem.ProductName)}" target="_blank">
+                                <apex:outputText value="{!cprItem.canceledActive}" />
+                            </a>
+                        </div>
+                    </apex:column>
+                    <apex:column style="width:75px">
+                        <apex:facet name="header">Non-Perpetual</apex:facet>
+                        <div class="{!IF(cprItem.nroActive != cprItem.nro,'Highlight','')}">
+                            <a href="/00OU0000003hHZl?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!LEFT(accountInput.Account__c,15)}&pv2={!URLENCODE(cprItem.ProductName)}&pv3={!cprItem.nroLineItemIds}&pv4=Active,Closed&pv5={!URLENCODE(cprItem.ProductName)}" target="_blank">
+                               <apex:outputText value="{!cprItem.nroActive}" />
+                            </a>
+                        </div>    
+                    </apex:column>
+                    
+                    <apex:column style="width:75px" rendered="{!platformType == 'PureConnect'}">
+                        <apex:facet name="header">Upgraded</apex:facet>
+                        <apex:outputText value="{!cprItem.upgraded}" />
+                    </apex:column>
+                    
+                    
+                    <apex:column style="width:75px">
+                        <apex:facet name="header">Entitlement<br/>Adjustments</apex:facet>
+                        <apex:outputPanel rendered="{!cprItem.entitlementAdjustments != 0}">
+                            <a href="/00OU0000001cSS5?pv0={!LEFT(accountInput.Account__c,15)}&pv1={!URLENCODE(cprItem.ProductName)}&pv2={!URLENCODE(cprItem.ProductName)}" target="_blank">     
+		                        <apex:outputText value="{!cprItem.entitlementAdjustments}" />  
+                            </a>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!cprItem.entitlementAdjustments == 0 && cprFrom == 'tab'}">
+                            <a href="/a0v/e?CF00NU0000003VFzi={!account.Name}&CF00NU0000003VFzi_lkid={!account.id}&CF00NU0000003VFzo={!URLENCODE(cprItem.ProductName)}&CF00NU0000003VFzo_lkid={!cprItem.productId}" target="_blank">     
+                                New
+                            </a>
+                        </apex:outputPanel>
+                    </apex:column>
+                    <apex:column style="width:75px" rendered="{!cprFrom == 'tab'}">
+                        <apex:facet name="header">Comment</apex:facet>
+                        <apex:outputPanel rendered="{!cprItem.comment != ''}">
+                            <a href="#" onclick="openCommentPopup('/{!cprItem.comment}'); return false;" style="color:#33CC33;font-weight:bold;">                 
+                                View
+                            </a>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!cprItem.comment == ''}">
+                            <a href="#" onclick="openCommentPopup('/a9i/e?CF00NU0000005Wyl9={!URLENCODE(cprItem.ProductName)}&CF00NU0000005Wyl9_lkid={!cprItem.ProductId}&CF00NU0000005Wyl7={!account.Name}&CF00NU0000005Wyl7_lkid={!account.id}'); return false;">
+                                New
+                            </a>
+                        </apex:outputPanel>         
+                    </apex:column>
+                </apex:pageBlockTable>	
+			</apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+    <apex:outputPanel id="attachmentsPanel" rendered="{!cprFrom == 'tab'}">
+		<apex:relatedList id="Attachments" list="CombinedAttachments" title="Attached Documents" subject="{!IF(platformType == 'PureEngage', pureEngageCPRReport.Id, pureConnectCPRReport.Id)}"  rendered="{!accountInput.Account__c != NULL}"/>
+    </apex:outputPanel>        
+</apex:page>

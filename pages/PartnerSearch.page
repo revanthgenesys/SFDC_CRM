@@ -1,0 +1,194 @@
+<apex:page showHeader="true" sidebar="false" standardStylesheets="true" controller="PartnerSearchController">
+	<style>
+        .header{
+           font-weight:bold;
+            font-size: 15px;
+        }
+        .label{
+            font-size:12px;
+            color:gray;
+        }
+        .headerRow{
+        	padding: 0px 15px 5px 0px;
+			color: #000;
+			line-height: 1.1em;
+			font-size: 14px;
+			font-weight: bold;
+			text-transform: uppercase;
+			vertical-align: bottom;
+			text-align: left;
+        }
+        .normalRow{
+        	border-bottom: 1px dotted #d3d3d3;
+			color: #666;
+			font-size: 13px;
+        }
+        .sortRow{
+        	color:#B9B9B9;
+        	font-size: 12px;
+        	font-weight:bold;
+        }
+        .bottomBorder {
+		    border-bottom:thin solid;
+		    border-color:black;
+		}
+    </style>
+    <apex:form style="width:100%;">
+		<apex:actionFunction name="sortResult" action="{!searchPartner}" reRender="resultPnl, pnlMsg" status="status">
+			<apex:param name="sortBy" value="" assignTo="{!sortBy}" />
+		</apex:actionFunction>		
+		<table style="width:100%;">
+			<tr>
+				<td width="15%"></td>
+				<td width="70%">
+					<div style="width:100%; text-align:center;">
+						<table style="width:100%; text-align:left;" cellpadding="3" cellspacing="3" >
+							<tr>
+								<td></td>
+								<td></td>
+								<td>
+									<apex:outputPanel id="pnlMsg">
+										<div style="color:red; font-weight:bold;">
+											{!errorMsg}
+										</div>
+									</apex:outputPanel>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2" class="header">
+									Find a Partner
+								</td>
+								<td>
+									<apex:actionStatus id="status">
+				                    	<apex:facet name="start">
+				                        	<apex:image value="/img/loading.gif"/>
+				                        </apex:facet>
+				                    </apex:actionStatus>
+				                </td>
+							</tr>
+							<tr class="label">
+								<td>
+									PARTNER NAME
+								</td>
+								<td></td>
+								<td>
+									<apex:inputText value="{!partnerName}" style="width:250px"/>
+								</td>
+							</tr>
+							<tr class="label">
+								<td>
+									COUNTRY
+								</td>
+								<td></td>
+								<td>
+									<apex:selectList value="{!selectedCountryId}" multiselect="false" size="1" style="width:250px">
+							            <apex:selectOptions value="{!countryList}"/>
+							        </apex:selectList>
+								</td>
+							</tr>
+							<tr class="label">
+								<td>
+									PARTNER TYPE
+								</td>
+								<td></td>
+								<td>
+									<apex:selectList value="{!selectedPartnerType}" multiselect="false" size="1" style="width:250px">
+							            <apex:selectOptions value="{!partnerTypes}"/>
+							        </apex:selectList>
+								</td>
+							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td>									
+									<a href="#" onclick="window.open('/{!urlPart}/GenesysPartnerTypeAndTiers','_blank','toolbar=yes, scrollbars=yes, resizable=yes, top=250, left=500, width=400, height=400');return false;"> Genesys Partner Type and Tiers </a>
+								</td>					
+							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td>
+									<apex:commandButton action="{!searchPartner}" status="status" value="Search" reRender="resultPnl, pnlMsg"/>
+								</td>
+							</tr>	
+									
+						</table>
+						<br/>			
+						<apex:outputPanel id="resultPnl">	
+							<apex:outputPanel rendered="{!noResultFound}">			
+								<table style="width:100%; text-align:left;" cellpadding="3" cellspacing="3" >
+									<tr>
+										<td style="color:red;font-weight:bold;">
+												No Partner Found
+										</td>
+									</tr>
+								</table>
+							</apex:outputPanel>
+							<apex:outputPanel rendered="{!isResult}">
+								<table style="width:80%; text-align:left;" cellpadding="3" cellspacing="3" >
+									<tr class="sortRow">
+										<td >
+											{!resultSize} Result(s).
+										</td>
+										<td colspan="3">
+											SORT BY : 
+											<a href="#" onclick="sortResult('Partner_Name__c'); return false;">PARTNER NAME</a> 
+											&nbsp;|&nbsp; 
+											<!-- 
+											<a href="#" onclick="sortResult('Country__c'); return false;">COUNTRY</a>
+											&nbsp;| &nbsp;
+											 -->
+											<a href="#" onclick="sortResult('Tier__c'); return false;">PARTNER TIER</a>
+											<!-- 
+											&nbsp;|&nbsp; 
+											<a href="#" onclick="sortResult('Partner_Type__c'); return false;">PARTNER TYPE</a>
+											 -->
+										</td>			
+									</tr>
+									<tr class="headerRow">
+										<td width="15%">
+											PARTNER NAME
+										</td>
+										<td width="55%">
+											COUNTRY
+										</td>
+										<td  width="15%">
+											PARTNER TIER
+										</td>
+										<td  width="15%">
+											PARTNER TYPE
+										</td>					
+									</tr>
+									<apex:repeat value="{!result}" var="eachRecord" >
+										<tr style="height:30px;">
+											<td>
+												<b>
+													<a href="/{!urlPart}/PartnerDetails?id={!eachRecord.accId}" style="color:red;"> {!eachRecord.accName} </a>
+												</b>
+											</td>
+											<td>
+												{!eachRecord.accCountryName} 
+											</td>
+											<td>
+												{!eachRecord.accTier}
+											</td>
+											<td>
+												{!eachRecord.accPartnerType} 
+											</td>								
+										</tr>										
+										<tr>
+											<td colspan="4">
+												<hr size="1" width="100%"/>
+											</td>
+										</tr>
+									</apex:repeat>
+								</table>
+							</apex:outputPanel>
+						</apex:outputPanel>
+					</div>					
+				</td>
+				<td width="15%"></td>
+			</tr>
+		</table>		
+	</apex:form>
+</apex:page>

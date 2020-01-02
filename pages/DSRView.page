@@ -1,0 +1,192 @@
+<apex:page controller="DSRViewController" sidebar="false" standardStylesheets="false" docType="html-5.0" readOnly="true" >
+    <html>
+        <!--<apex:stylesheet value="{!URLFOR($Resource.VKendo, 'styles/kendo.common.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.KendoUICustomTheme, '/kendo.custom.css')}" />
+        
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.mobile.min.css" />
+        <apex:includeScript value="{!URLFOR($Resource.VKendo, '/js/jquery.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.VKendo, '/js/kendo.all.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.KendoUICustomTheme, '/kendo.custom.js')}" />
+        -->
+        
+        <head>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.common.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.mobile.min.css" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/jquery.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/kendo.all.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jsZip, '/jszip/jszip.min.js')}"/>
+        </head>
+        
+    <body>
+        <style>
+            .k-link{
+                font-weight:500;
+            }
+        </style>
+        <div id="example">
+            <div>
+                <div class="k-block"><br/><h1 style="font-size: large;margin-left: 2%;">DSR SC Engagement Requests List</h1><br/><br/></div>
+            </div><br/>
+            <div id="grid"></div>
+             <div>
+                        <div id="gridRecords"></div><span id="notification" style=""></span>
+                    </div>
+            <script>
+                $(document).ready(function () {
+                //var ds = $("#order-line-detail-grid").data("kendoGrid").dataSource;
+                
+                var setString = [];
+                
+                debugger;
+                    $("#grid").kendoGrid({
+                        dataSource: {
+                            
+                            //type: "odata",
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.DSRViewController.getDSR}",setString,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                
+                                                if(result != null){
+                                                    try {
+                                                        for(i=0 ; i < result.length ; i++){
+                                                            setString.push(result[i].Id);
+                                                        }
+                                                        
+                                                        if(setString.length >= 10000){
+                                                            
+                                                            Visualforce.remoting.Manager.invokeAction(
+                                                                "{!$RemoteAction.DSRViewController.getDSR}",setString,
+                                                                function(result1, event) {
+                                                                    if(event.status) {
+                                                                        debugger;
+                                                                        console.log(result1);
+                                                                        result1.remove(undefined, 0);
+                                                                        if(result1 != null){
+                                                                            for(i=0 ; i < result1.length ; i++){
+                                                                                debugger;
+                                                                                result.push(result1[i]);
+                                                                            }
+                                                                            debugger;
+                                                                            options.success(result);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            );
+                                                        }else{
+                                                            debugger;
+                                                            options.success(result);
+                                                        }
+                                                       
+                                                    } catch (e) {
+                                                        
+                                                        $("#notification").getKendoNotification().show(e);
+                                                    }
+                                               //options.success(result);
+                                            }
+                                         }
+                                        }    
+                                    );
+                                }
+                            },
+                            pageSize: 25
+                        },
+                        height: 600,
+                        groupable: true,
+                        sortable: true,
+                        resizable: true,
+                        reorderable: true,
+                        pageable: true,
+                        columnMenu: false,
+                        filterable: true,
+                        
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [{
+                            field: "Name",
+                            title: "SC DSR Name",
+                            template:'<a href="/#=Id#" target="_blank">#=Name#</a>',
+                            width: 100,
+                            
+                        },
+                        
+                        {
+                            field: "Is_Partner_DSR__c",
+                            title: "Is Partner",
+                            width: 100,
+                            
+                        },
+                        
+                        {
+                            field: "Opportunity_ID__r.Name",
+                            title: "Opportunity Name",
+                            template:'<a href="/#=Opportunity_ID__c#" target="_blank">#=Opportunity_ID__r.Name#</a>',
+                            width: 200,
+                            
+                        },{
+                            title: "Account Name",
+                            field: "Account_ID__r.Name",
+                            template: function(data) { return data.link === data.Account_ID__c? " <span>" + '-' + "</span>" : " <a target='_blank' href='/" + data.Account_ID__c + "' target='_blank'>" + data.Account_ID__r.Name + "</a>"},
+                            //template:'<a href="/#=Account_ID__c#" target="_blank">#=Account_ID__r.Name#</a>',
+                            width: 200,
+                            
+                        },{
+                            title: "SC Status",
+                            field: "SC_Engagement_Status__c",
+                            width: 100,
+                            
+                        },{
+                            title: "AE Name",
+                            field: "AE_Name__r.Name",
+                            width: 100,
+                            
+                        },
+                        /*
+                        {
+                            title: "Leader",
+                            field: "SC_Engagement_Status__c",
+                            width: 100,
+                            
+                        },
+                        */
+                        {
+                            title: "Created By",
+                            field: "CreatedBy.Name",
+                            width: 100,
+                            
+                        },{
+                            title: "Created Date",
+                            field: "CreatedDate",
+                            template: '#= kendo.toString(new Date(CreatedDate), "G") #' ,
+                            width: 100,
+                            
+                        },{
+                            title: "Lastmodified By",
+                            field: "LastModifiedBy.Name",
+                            width: 100,
+                            
+                        },{
+                            title: "Lastmodified Date",
+                            field: "LastModifiedDate",
+                            template: '#= kendo.toString(new Date(LastModifiedDate), "G") #' ,
+                            width: 100,
+                            
+                        }
+                        
+                        ]
+                    });
+                });
+            </script>
+        </div>
+    </body>
+    </html>
+    
+</apex:page>

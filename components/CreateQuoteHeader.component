@@ -1,0 +1,195 @@
+<apex:component >
+<style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: fixed;
+            /* These are the 3 css properties you will need to change so the popup 
+            displays in the center of the screen. First set the width. Then set 
+            margin-left to negative half of what the width is. You can add 
+            the height property for a fixed size pop up if you want.*/
+            width: 500px;
+            margin-left: -250px;
+            top: 40%;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }        
+        .wordwrap {           
+           white-space: pre-wrap;      
+           white-space: -moz-pre-wrap;    
+           white-space: -pre-wrap;      
+           white-space: -o-pre-wrap;       
+           word-wrap: break-word;      
+        }
+        .headerColumn{
+            background-color:#D4D4CF;
+            word-wrap:break-word; 
+            border:solid 1px color;
+            height:25px;
+        }
+        .tableColumn{
+            border-left:1px solid gray;
+            border-right:1px solid gray;
+            border-collapse:collapse;
+        }
+        .tableClass{
+            border-left:1px solid gray;
+            border-right:1px solid gray;
+            border-collapse:collapse;
+            max-width: 300%;
+            overflow: hidden;
+        }
+        .newRow{
+            background-color:#85E085;
+        }
+        tr.dataRow {
+            background-color:white;
+        }
+        tr.dataRow:hover {
+            background-color: #e3f3ff;
+        }
+</style>
+<apex:includeScript value="{!URLFOR($Resource.JqueryFreezeHeader, 'JqueryFreezeHeader/jquery-1.9.1.js')}"/>
+<script>    
+
+    (function ($) {
+    $.fn.freezeHeader = function (params) {
+        var copiedHeader = false;
+        var idObj = this.selector.replace('#', '');        
+        var container;
+        var grid;
+        var conteudoHeader;
+        var openDivScroll = '';
+        var closeDivScroll = '';
+        
+        if (params && params.height !== undefined) {
+            divScroll = '<div id="hdScroll' + idObj + '" style="height: ' + params.height + '; overflow-y: scroll">';
+            closeDivScroll = '</div>';
+        }
+
+        grid = $('table[id$="' + idObj + '"]');
+        conteudoHeader = grid.find('thead');
+        if (params && params.height !== undefined) {
+            if ($('#hdScroll' + idObj).length == 0) {
+                grid.wrapAll(divScroll);
+            }
+        }
+
+        var obj = params && params.height !== undefined
+           ? $('#hdScroll' + idObj)
+           : $(window);
+
+        if ($('#hd' + idObj).length == 0) {
+            grid.before('<div id="hd' + idObj + '"></div>');
+        }
+
+        obj.scroll(function () { freezeHeader(); })
+
+        function freezeHeader() {
+            
+            if ($('table[id$="' + idObj + '"]').length > 0) {               
+                container = $('#hd' + idObj);                
+                if (conteudoHeader.offset() != null) {
+                    if (limiteAlcancado(params)) {
+                        if (!copiedHeader) {
+                            cloneHeaderRow(grid);
+                            copiedHeader = true;
+                        }
+                    }
+                    else {
+
+                        if (($(document).scrollTop() > conteudoHeader.offset().top)) {
+                            container.css("position", "absolute");
+                            container.css("top", (grid.find("tr:last").offset().top - conteudoHeader.height()) + "px");
+                        }
+                        else {
+                            container.css("visibility", "hidden");
+                            container.css("top", "0px");
+                            container.width(0);
+                        }
+
+                        copiedHeader = false;
+
+                    }
+                }
+            }
+			
+        }
+
+        function limiteAlcancado(params) {
+            if (params && params.height !== undefined) {
+                return (conteudoHeader.offset().top <= obj.offset().top);
+            }
+            else {
+                return ($(document).scrollTop() > conteudoHeader.offset().top && $(document).scrollTop() < (grid.height() - conteudoHeader.height() - grid.find("tr:last").height()) + conteudoHeader.offset().top);
+            }
+        }
+
+        function cloneHeaderRow() {
+            container.html('');
+            container.val('');
+            var tabela = $('<table style="margin: 0 0;"></table>');
+            var atributos = grid.prop("attributes");
+
+            $.each(atributos, function () {
+
+                if (this.name != "id") {
+                    tabela.attr(this.name, this.value);
+                }
+            });
+
+            tabela.append('<thead>' + conteudoHeader.html() + '</thead>');
+
+            container.append(tabela);
+            container.width(conteudoHeader.width());
+            container.height(conteudoHeader.height);
+            container.find('th').each(function (index) {
+                var cellWidth = grid.find('th').eq(index).width();
+                $(this).css('width', cellWidth);
+            });
+
+            container.css("visibility", "visible");
+
+            if (params && params.height !== undefined) {
+                container.css("top", obj.offset().top + "px");
+                container.css("position", "absolute");
+            } else {
+                container.css("top", "0px");
+                container.css("position", "fixed");
+            }
+        }
+    };
+})(jQuery);
+    
+    $(document).ready(function () {
+            $("#quoteProdGrid").freezeHeader();
+        })
+    
+    function deleteQP(decisionInputId)
+    {
+        var r = confirm("Are you sure you want to delete this record ?");
+        if(r == true)
+        {
+            document.getElementById(decisionInputId).value = 'yes';
+        }
+        else
+        {
+            document.getElementById(decisionInputId).value = 'no';
+        }
+    }
+    
+</script>
+</apex:component>

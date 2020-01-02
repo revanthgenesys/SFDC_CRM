@@ -1,0 +1,157 @@
+<apex:page standardController="Opportunity" extensions="opportunityExtnLOB">
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
+    <apex:form >
+        <apex:actionFunction name="Change_PB" action="{!Change_PB}" rerender="out"/>
+    </apex:form>
+    <apex:outputPanel id="out">
+    </apex:outputPanel>
+  
+<style>
+ .fewerMore {display: none;}
+</style>
+
+<apex:form id="theform">
+<apex:outputpanel rendered="{!quoteExists}" id="quotepanel">
+   <apex:pageBlock > 
+   
+   <apex:pageBlockSection title="Cloud Quote Summary" collapsible="false"  rendered="{!If(CONTAINS(Opportunity.Primary_Line_of_Business__c,'On Premise'),true,false)}">
+   <apex:outputField value="{!mapQuotes["Cloud"].name}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Cloud_Term_Commitment__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Monthly_Commitment__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Total_Discount_Genesys_and_Third_Party__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Setup_Provisioning_Charges__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Monthly_Contract_Value__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Annual_Contract_Value__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Total_Contract_Value__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Pricing_Model__c}"/>
+   </apex:pageBlockSection>
+  
+   <apex:pageBlockSection title="Cloud Quote Summary" collapsible="false" rendered="{!If(CONTAINS(Opportunity.Primary_Line_of_Business__c,'Cloud'),true,false)}" >
+   <apex:outputField value="{!mapQuotes["Cloud"].name}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Initial_Subscription_Term__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Quote_Business_Type__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Renewal_Subscription_Term__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Minimum_Fees_Period__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Period__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Selected_Packages__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Order_Payment_Terms__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Upgrade_Type__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Billing_Period__c}"/>
+   </apex:pageBlockSection>
+   
+   <apex:pageBlockSection title="Totals" collapsible="false" rendered="{!If(CONTAINS(Opportunity.Primary_Line_of_Business__c,'Cloud'),true,false)}" >
+   <apex:outputField value="{!mapQuotes["Cloud"].Monthly_Commitment__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Minutes_of_use_Per_Port_Per_Month__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Cloud_Total__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Cloud_Term_Commitment__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Additional_Discount_Cloud__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Monthly_Contract_Value__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Setup_Provisioning_Charges__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Annual_Contract_Value__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].Total_Contract_Value__c}"/>
+   <apex:outputField value="{!mapQuotes["Cloud"].BigMachines__Total_Amount__c}"/>
+   </apex:pageBlockSection>
+     
+     
+     
+   <br></br>
+       <apex:repeat value="{!mapQuotes}" var="quo">    
+                             
+                <apex:pageBlocktable value="{!mapQuotes[quo].BigMachines__BigMachines_Quote_Products__r}" var="quoprd">
+                 <apex:column headerValue="Product Name/Number">
+                     <apex:outputLink target="_new" value="/{!quoprd.BigMachines__Product__c}">
+                         {!quoprd.BigMachines__Product__r.name}
+                     </apex:outputLink>
+                 </apex:column> 
+                 <apex:column value="{!quoprd.BigMachines__Description__c}"/> 
+                 <apex:column value="{!quoprd.BigMachines__Product__r.SI_Version_Number__c}"/>    
+                 <apex:column value="{!quoprd.Overage_Charge__c}"/> 
+                 <apex:column value="{!quoprd.Committed_Quantity__c}"/> 
+                 <apex:column value="{!quoprd.BigMachines__Quantity__c}"/> 
+                 <apex:column value="{!quoprd.List_Price__c}"/> 
+                 <apex:column value="{!quoprd.Ext_List__c}"/> 
+                 <apex:column value="{!quoprd.Total_Discount__c}"/>                  
+                </apex:pageBlocktable>
+        </apex:repeat>
+   </apex:pageBlock> 
+</apex:outputpanel>
+<apex:outputpanel rendered="{!!quoteExists}" id="prdpanel">
+    <apex:outputpanel rendered="{opplines.size>0}">
+       <apex:pageBlock > 
+            <apex:pageBlockTable value="{!opplines}" var="o">    
+                <apex:variable value="{!}" var="showHide"/>
+                <apex:column styleClass="actionColumn" headerValue="Action">
+                    <apex:outputpanel layout="block" styleclass="actionLink">
+                    <a href="/{!o.Id}/e?retURL=%2F{!left(opportunity.id,15)}" target="_parent" id="editLink" class="actionLink"><b>Edit</b></a>        
+                    &nbsp;|&nbsp;
+                    <a href="javascript:deleteRecord('{!o.Id}');" id="delLink" class="actionLink"><b>Del</b></a>
+                     </apex:outputpanel>       
+                </apex:column>
+                <apex:column headerValue="Product Name/Number"><apex:outputLink target="_new" value="/{!o.PricebookEntry.Product2.Id}">{!o.PricebookEntry.Product2.Name}</apex:outputLink></apex:column>
+                <apex:column headerValue="Description" value="{!o.PricebookEntry.Product2.Description}"/>
+                <apex:column rendered="{!NOT(isRenewalOppy)}" headerValue="SI Version" value="{!o.PricebookEntry.Product2.SI_Version_Number__c}"/>
+                <apex:column rendered="{!NOT(isRenewalOppy)}" headerValue="Pricing Model" value="{!o.PricebookEntry.Product2.Pricing_Model__c}"/>
+                <apex:column headerValue="Quantity" value="{!o.Quantity__c}"/>
+                <apex:column headerValue="Sales Price" value="{!o.UnitPrice}" rendered="{!AND(quotecheck!='none',NOT(isRenewalOppy))})"/>
+                <apex:column headerValue="List Price" value="{!o.UnitPrice}" rendered="{!AND(quotecheck='none',NOT(isRenewalOppy))}"/>
+                <apex:column rendered="{!NOT(isRenewalOppy)}" headerValue="Total Price" value="{!o.TotalPrice }"/>
+                <apex:column rendered="{!NOT(isRenewalOppy)}" headerValue="Discount" value="{!o.Discount}"/>
+                <apex:column rendered="{!NOT(isRenewalOppy)}" headerValue="Total Discount" value="{!o.Total_Discount__c}"/>
+            </apex:pageBlockTable>
+       </apex:pageBlock> 
+   </apex:outputpanel>
+</apex:outputpanel>
+
+
+<!--
+<apex:pageblock id="ProductList" title="Genesys Products">
+<apex:pageBlockButtons location="top">
+   <input value="Add Genesys Product" class="btn" name="addProd" title="Add Genesys Product" type="button" />
+   <input value="Edit All" class="btn" name="editProd" title="Edit All" type="button" />
+</apex:pageBlockButtons>
+
+
+<apex:outputLabel value="No records to display" rendered="{!(ISNULL(oppline))}" styleClass="noRowsHeader"></apex:outputLabel> 
+</apex:pageblock>
+ -->
+ 
+<apex:actionFunction action="{!DeleteLineItem}" name="DeleteLineItem" oncomplete="reDirect()">
+  <apex:param name="oppLineId" value="" assignTo="{!SelectedOppLineId}"/>
+</apex:actionFunction>
+
+<apex:actionFunction action="{!setLobvalue}" name="lob" reRender="theform,quotepanel,prdpanel">
+  <apex:param name="lob" value="Cloud" assignTo="{!lob}"/>
+</apex:actionFunction>
+
+</apex:form>
+
+ <script>
+    $( document ).ready(function() {
+        lob();
+    });
+ 
+   $('input[name="addProd"]').unbind('click').click(function() {
+      Change_PB();
+      top.location.replace( "/p/opp/SelectSearch?addTo={!left(opportunity.id,15)}&retURL=%2F{!left(opportunity.id,15)}" );
+   });
+
+   $('input[name="editProd"]').unbind('click').click(function() {
+      Change_PB();
+      top.location.replace( "/oppitm/multilineitem.jsp?oppId={!left(opportunity.id,15)}&retURL=%2F{!left(opportunity.id,15)}" );
+   });
+     
+   function deleteRecord(lineId){
+     if(window.confirm('Are you sure?')) {
+         DeleteLineItem(lineId);
+     }
+   }
+   
+   function reDirect(){
+     window.top.location.href = '/{!left(opportunity.id,15)}';
+   }
+   
+   $(".btn").css({ 'display': '{!quotecheck}'});
+   $(".actionLink").css({ 'display': '{!quotecheck}'});
+ </script>
+ 
+</apex:page>

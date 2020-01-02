@@ -1,0 +1,136 @@
+<apex:page controller="OrderAddressPureCloudController">
+    <apex:form >
+        <!--<apex:pageMessages id="pgmsgs"/>  -->   
+        <apex:actionFunction name="editAddress" action="{!editAddress}" reRender="popPanel, msgs"  status="status">
+            <apex:param name="addressId" value="" assignTo="{!addressId}" />
+        </apex:actionFunction>
+        <apex:actionFunction name="deleteAddress" action="{!deleteAddress}" reRender="pgblkAddress, msgs"  status="status">
+            <apex:param name="addressId" value="" assignTo="{!addressId}" />
+        </apex:actionFunction>      
+        <apex:actionFunction name="makeAddressTypeEditable" action="{!makeAddressTypeEditable}" reRender="pgblkAccountAddress, msgs"  status="status" />
+        <apex:actionFunction name="hideCreateNewPopup" action="{!hideCreateNewPopup}" reRender="popPanel, msgs"  status="status" immediate="true"/>
+        <div style="color:blue;font-size:9pt;">
+        <b>Choose from the available addresses below or create a new address . Please note that Bill to, End User and Sold to addresses are mandatory to Submit Order.</b><br/><br/>
+        </div>        
+        <apex:pageBlock title="Order Addresses" id="pgblkAddress">
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="Create New Address" action="{!showCreateNewPopup}" reRender="popPanel, msgs" status="status"/>                  
+                <apex:commandButton value="Save" action="{!save}" status="status" reRender="msgs" rendered="{!showOrderAddress}"/>
+            </apex:pageBlockButtons>
+            <apex:outputLabel value="No records to display" rendered="{!NOT(showOrderAddress)}" />
+            <apex:pageBlockTable value="{!orderAddressOnOrder}" var="eachAddress" rendered="{!showOrderAddress}" >
+                <apex:column width="7%" headerValue="Action">
+                    &nbsp; <a href="#" onclick="editAddress('{!eachAddress.id}'); return false;">Edit</a> &nbsp;|&nbsp;<a href="#" onclick="var result = confirm('Are you sure?');if(result == true){deleteAddress('{!eachAddress.id}'); return false;}" style="color:red">Del</a> 
+                </apex:column>
+                <apex:column headerValue="Address Type">
+                    {!eachAddress.Address_Type__c}
+                </apex:column>
+                <apex:column headerValue="Address 1">
+                    {!eachAddress.Address__c}
+                </apex:column>
+                <apex:column headerValue="Address 2">
+                    {!eachAddress.Address2__c}
+                </apex:column>
+                <apex:column headerValue="City">
+                    {!eachAddress.City__c}
+                </apex:column>
+                <apex:column headerValue="State">
+                    {!eachAddress.State__c}
+                </apex:column>
+                <apex:column headerValue="Country">
+                    {!eachAddress.Country__c}
+                </apex:column>
+                <apex:column headerValue="Zip">
+                    {!eachAddress.Zip_Code__c}
+                </apex:column>              
+                <apex:column headerValue="Phone">
+                    <apex:inputField value="{!eachAddress.Phone__c}" />
+                </apex:column>              
+                <apex:column headerValue="Fax">
+                    <apex:inputField value="{!eachAddress.Fax__c}" />
+                </apex:column>              
+                <apex:column headerValue="Email">
+                   <!-- <apex:inputField value="{!eachAddress.Email__c}"/>-->
+                    <apex:inputField value="{!eachAddress.Email__c}" rendered="{!eachAddress.Address_Type__c!='Ship To'}" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!eachAddress.Address_Type__c='Ship To'}">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                       <apex:inputText value="{!eachAddress.Email__c}" />
+                    </apex:outputPanel>                    
+                </apex:column>              
+                
+            </apex:pageBlockTable>  
+        </apex:pageBlock>
+        <apex:pageBlock title="Available Addresses" id="pgblkAccountAddress">
+            <apex:pageBlockButtons location="top">  
+                <apex:commandButton value="Add Selected" action="{!addSelected}" reRender="pgblkAddress, pgblkAccountAddress, msgs" status="status"/>              
+            </apex:pageBlockButtons>
+            <apex:outputLabel value="No records to display" rendered="{!NOT(showAccountAddress)}" />
+            <apex:pageBlockTable value="{!accountAddresses}" var="eachAddress" rendered="{!showAccountAddress}" >
+                <apex:column >
+                    <apex:inputCheckbox value="{!eachAddress.check}" onclick="makeAddressTypeEditable(); return false;"/>
+                </apex:column>
+                <apex:column headerValue="Address Type">
+                    <apex:outputLabel value="{!eachAddress.address.Address_Type__c}" rendered="{!NOT(eachAddress.isEditable)}"  />
+                    <apex:outputPanel rendered="{!eachAddress.isEditable}">
+                        Add as 
+                        <apex:inputField value="{!eachAddress.address.Type__c}" /> 
+                        <!--<apex:selectList value="{!eachAddress.address.Type__c}" size="1">
+                            <apex:selectOptions value="{!addressTypes}"/>
+                        </apex:selectList>-->
+                    </apex:outputPanel>             
+                </apex:column>
+                <apex:column headerValue="Account">
+                    {!eachAddress.address.Account__r.Name}
+                </apex:column>              
+                <apex:column headerValue="Address 1">
+                    {!eachAddress.address.Address_Line_1__c}
+                </apex:column>
+                <apex:column headerValue="Address 2">
+                    {!eachAddress.address.Address_Line_2__c}
+                </apex:column>
+                <apex:column headerValue="City">
+                    {!eachAddress.address.City__c}
+                </apex:column>
+                <apex:column headerValue="State">
+                    {!eachAddress.address.State__c}
+                </apex:column>
+                <apex:column headerValue="Country">
+                    {!eachAddress.address.Country__c}
+                </apex:column>
+                <apex:column headerValue="Zip">
+                    {!eachAddress.address.Zipcode__c}
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>               
+        <apex:outputPanel id="popPanel" >
+            <apex:outputPanel rendered="{!showCreateNewPopupFlag}">             
+                <apex:outputPanel styleClass="popupBackground" layout="block" />
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:center;">
+                        <apex:pageBlock title="{!popupTitle}">
+                            <apex:pageBlockButtons location="bottom">
+                                <apex:commandButton value="Save" action="{!createNewAddress}" reRender="popPanel, pgblkAddress, msgs, pgblkAccountAddress" status="status" />
+                                <apex:commandButton value="Cancel" onclick="hideCreateNewPopup(); return false;" immediate="true"/>                          
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="2">
+                                <apex:inputField value="{!newAddress.Address_Type__c}" required="true"/>
+                                <!--<apex:selectList value="{!newAddress.Address_Type__c}" size="1" required="true">
+                                    <apex:selectOptions value="{!addressTypes}"/>
+                                </apex:selectList>-->
+                                <apex:inputField value="{!newAddress.Address__c}" required="true"/>
+                                <apex:inputField value="{!newAddress.Address2__c}" />
+                                <apex:inputField value="{!newAddress.City__c}" required="true"/>
+                                <apex:inputField value="{!newAddress.State__c}" />
+                                <apex:inputField value="{!newAddress.Country__c}"  required="true"/>
+                                <apex:inputField value="{!newAddress.Zip_Code__c}" />       
+                                <apex:inputField value="{!newAddress.Phone__c}" />
+                                <apex:inputField value="{!newAddress.Fax__c}" />
+                                <apex:inputField value="{!newAddress.Email__c}" required="true" />                      
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

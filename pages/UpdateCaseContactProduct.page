@@ -1,0 +1,63 @@
+<apex:page standardController="Case" extensions="UpdateCaseProductControllerExtn">
+<apex:form >
+    <apex:pageBlock title="Case" id="pgblk">
+        <apex:outputPanel style="height:15px;">
+            &nbsp;
+            <apex:actionstatus id="status">             
+                <apex:facet name="start">
+                    <apex:outputLabel value="Working, Please wait..."/>
+                </apex:facet>
+            </apex:actionstatus>
+        </apex:outputPanel>
+        <apex:pageMessages />
+        
+        <apex:pageBlockButtons location="bottom">
+            <apex:commandButton value="Save" action="{!next}" status="status"  rendered="{!NOT(showSaveButton)}"/>
+            <apex:commandButton value="Save" rendered="{!showSaveButton}" action="{!save}" status="status"/>
+            <apex:commandButton value="Cancel" action="{!cancel}" onclick="history.go(-1); return false;"/>
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection columns="1" id="dynFldPBSection">
+                <apex:pageBlockSectionItem id="contact" >
+                    <apex:outputLabel value="Contact" />
+                    <apex:actionStatus startText=" Processing"
+                        stopText=" Done " id="counterStatus">
+                        <apex:facet name="start">Processing...
+          <!--<img src="/apexpages/devmode/img/saveStatus.gif" />-->
+                        </apex:facet>
+                        <apex:facet name="stop">
+                            <apex:inputField value="{!currentCase.ContactId}" required="true">
+                                <apex:actionSupport event="onchange" action="{!chooseContact}"
+                                    rerender="pgblk" status="counterStatus">
+                                </apex:actionSupport>
+                            </apex:inputField>
+                        </apex:facet>
+                    </apex:actionStatus>
+                </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecProductLine">
+            <apex:selectList value="{!currentCase.Product_Line__c}" size="1" label="Product Line" >               
+                <apex:selectOptions value="{!prodLines}" />             
+                <apex:actionSupport event="onchange" rerender="pgblk" action="{!populatesProds}" status="status" />
+            </apex:selectList>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecProduct">
+            <apex:selectList value="{!currentCase.Support_Product__c}" size="1" label="Product">                  
+                <apex:selectOptions value="{!prods}" />             
+                <apex:actionSupport event="onchange" rerender="pgblk" action="{!populatesComponents}" status="status" />
+            </apex:selectList>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecComponent">
+            <apex:selectList value="{!currentCase.Component__c}" size="1" label="Component">                  
+                <apex:selectOptions value="{!components}" />                
+                <apex:actionSupport event="onchange" rerender="pgblk" action="{!populatesProductVersions}" status="status" />
+            </apex:selectList>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecProductVersion">
+            <apex:selectList value="{!currentCase.Product_Version__c}" size="1" label="Product Version">                  
+                <apex:selectOptions value="{!productVersions}" />
+            </apex:selectList>
+        </apex:pageBlockSection>
+        
+    </apex:pageBlock>
+</apex:form>
+</apex:page>

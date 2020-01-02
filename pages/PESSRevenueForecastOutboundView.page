@@ -1,0 +1,2121 @@
+<apex:page controller="PESSRevenueForecastControllerView" sidebar="false" showHeader="false" standardStylesheets="true" docType="html-5.0" >
+  <apex:form >
+    <html>
+     
+    <head>
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.common.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.min.css" />
+        <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2017.3.1026/styles/kendo.blueopal.mobile.min.css" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/jquery.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.kendoResource, '/kendoResource/kendo.all.min.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jsZip, '/jszip/jszip.min.js')}"/>
+    </head>
+   <style>
+       .k-item{
+           margin-left: inherit;
+       }
+       .k-alt k-state-selected{
+           color: white;
+       }
+       .editColor{
+            background: linear-gradient(#80cef3, #b4dff3, #80cef3);
+            color: black;
+        }
+        .noneditColor{
+            background: #e4e1e1;
+            color: #000000;
+        }
+        .k-block>.k-header, .k-window-titlebar{
+            text-align:center;
+        }
+        .k-widget.k-notification.k-notification-info {
+            background-color: #2498bc;
+            color: white;
+            border-color: #2498bc;
+        }
+        .k-window-titlebar.k-dialog-titlebar.k-header{
+            display : none;
+        }
+        div.k-loading-mask{
+            z-index: 3; /* must be larger than the z-index:2 of #container */
+        }
+       
+        .colEnable.Risks{
+            background-color : #fba0a0;
+        }
+        .colEnable.Upside{
+            background-color : #9fe29f;
+        }
+        
+        .colDisable.PureEngage { 
+         background-color: #FAF0E6;
+        }
+        
+         .colDisable.PureEngageOdd { 
+         background-color: #F5F5F5;
+        }
+  
+       .colDisable.PureConnect { 
+         background-color: #FFE4E1;
+        }
+        
+         .colDisable.PureConnectOdd { 
+         background-color: #F5F5F5;
+        }
+  
+       .colDisable.PureCloud { 
+         background-color: #FDF5E6;
+        }
+        
+         .colDisable.PureCloudOdd { 
+         background-color: #F5F5F5;
+        }
+  
+       .colDisable.Premier { 
+         background-color: #CCFFCC;
+        }
+        
+         .colDisable.PremierOdd { 
+         background-color: #F5F5F5;
+        }
+  
+        .colDisable.Outbound { 
+         background-color: #FFF5EE;
+        }
+        
+         .colDisable.OutboundOdd { 
+         background-color: #F5F5F5;
+        }
+        
+        #tabstrip h2 {
+            font-weight: lighter;
+            font-size: 5em;
+            line-height: 1;
+            padding: 0 0 0 30px;
+            margin: 0;
+        }
+    
+        #tabstrip h2 span {
+            background: none;
+            padding-left: 5px;
+            font-size: .3em;
+            vertical-align: top;
+        }
+    
+        #tabstrip p {
+            margin: 0;
+            padding: 0;
+        }
+        .k-icon.k-i-info{
+            display:none;
+        }
+        .k-grid-header th.k-header {
+            vertical-align: initial;
+        }
+        .filter{
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .filterClick{
+            text-decoration: underline;
+            font-weight: 600;
+        }
+    </style>
+    
+    <body>
+        
+        <div id="confirmationTemplate" style="display:none;" >
+            <div class="popupMessage" style="text-align:center;"></div>
+            <br/>
+            <div class="dialog_buttons" style="text-align:center;">
+                <input type="button" class="confirm_yes k-button" value="Yes" style="width: 70px;background: #7bd2f6;" />
+                &nbsp;
+                <input type="button" class="confirm_no k-button" value="No" style="width: 70px;background: #7bd2f6;" />
+            </div>
+        </div>
+        <div id="example">
+            <div class="demo-section k-content" >
+                    <div id="tabstrip">
+                        <ul>
+                            <li class="k-state-active" style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                                  Monthly Forecast View 
+                            </li>
+                            <li class="k-state " style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                                <a  onclick="Riskupside();" target='_self'> Risk / Upside</a>
+                            </li>
+                             <li class="k-state " style="margin-top: 4px;font-size: larger;font-weight: 600;">
+                                <a  onclick="commentsTab();" target='_self'> Change Comments</a>
+                            </li>
+                            <div style="float:right;margin-top: 5px;">
+                                <a class="k-button" style="font-weight: 700;padding: 2px 7px;width: 25px;height: 17px;border-color:#cdd1d5;background-color:#e4e1e1;"></a>&nbsp;  Non-Editable     &nbsp;&nbsp;&nbsp;
+                                <a class="k-button" style="font-weight: 700;padding: 2px 7px;width: 25px;height: 17px;border-color:#9ad7f3;background-color:#9ad7f3;"></a>&nbsp;  Editable    &nbsp; &nbsp;&nbsp;
+                                <a class="k-button" style="font-weight: 700;padding: 2px 7px;width: 25px;height: 17px;border-color:#fba0a0;background-color:#fba0a0;"></a>&nbsp;  High Risk       &nbsp;&nbsp;&nbsp;
+                                <a class="k-button" style="font-weight: 700;padding: 2px 7px;width: 25px;height: 17px;border-color:#9fe29f;background-color:#9fe29f;"></a>&nbsp;  High Upside     &nbsp;&nbsp;&nbsp;
+                                <a class="k-button" style="font-weight: 700;padding: 2px 7px;background-color: #00435e;border-color:#00435e;color: white;" href="/home/home.jsp">Home</a>&nbsp; &nbsp;&nbsp;&nbsp;
+                            </div>
+                        </ul>
+                    </div> 
+                    <div style="text-align: -webkit-center;"><br/>
+                         <div style="width: 99%;">   
+                            <div class="demo-section k-content" style="text-align: -webkit-center; border: 1px solid #67b1d2;border-radius: 15px;"><br/>
+                                <table style="width:100%;">
+                                    <tr>
+                                        <td style="width:5%;">
+                                           <!--------------------- Added by Priyank class below ---------------------->
+                                            <h4 class="OfferingTypeLabel" style="float: right;">Offering Type : </h4>&nbsp;
+                                        </td>
+                                        <!------------------- Added by priyank -- id and Class below ------------------>
+                                        <td style="width:15%;" id="OfferingTypeID" class="OfferingTypeID">
+                                            <input class="OfferingType" id="OfferingType" style="width: 100%;"/>
+                                        </td>
+                                        <!------- Priyank Added below code - To display count of offering type -------->
+                                        <td>
+                                            <div id="tabstrip">
+                                            
+                                            <a href="#" id="pureEngageCount" onclick="clickOfferringTypeCount('PureEngage');" style="display:none;color:blue;align:left;padding-right: 10px;" class="offer">PureEngage-
+                                            <span id="pureEngageCountfromDB" class="pureEngageCountfromDB"></span>
+                                            </a>
+                                            
+                                           <a href="#" id="pureCloudCount"  onclick="clickOfferringTypeCount('PureCloud');" style="display:none;color:blue;align:right;padding-right: 10px;" class="offer">PureCloud-
+                                            <span id="pureCloudCountfromDB" class="pureCloudCountfromDB"></span>
+                                            </a> 
+                                            
+                                            <a href="#" id="outboundCount"  onclick="clickOfferringTypeCount('Outbound');" style="display:none;color:blue;align:left;padding-right: 10px;" class="offer">Outbound-
+                                            <span id="outboundCountfromDB" class="outboundCountfromDB"></span>
+                                            </a>
+                                            
+                                            <a href="#" id="premierCount"  onclick="clickOfferringTypeCount('Premier');" style="display:none;color:blue;align:right;padding-right: 10px;" class="offer">Premier-
+                                            <span id="premierCountfromDB" class="premierCountfromDB"></span>
+                                            </a>
+                                            
+                                            <a href="#" id="pureConnectCount"  onclick="clickOfferringTypeCount('PureConnect');" style="display:none;color:blue;align:left;padding-right: 10px;" class="offer">PureConnect-
+                                            <span id="pureConnectCountfromDB" class="pureConnectCountfromDB"></span>
+                                            </a> 
+                                            
+                                            <a href="#" id="cloudSolutionPartnerCount"  onclick="clickOfferringTypeCount('Cloud Solution Partner (PPU)');" style="display:none;color:blue;align:left;padding-right: 10px;" class="offer">Cloud Solution Partner (PPU)-
+                                            <span id="cloudSolutionPartnerCountfromDB" class="cloudSolutionPartnerCountfromDB"></span>
+                                            </a> 
+                                                
+                                            </div>
+                                        </td>
+                                        <!------- Priyank code End - To display count of offering type -------->
+                                        <td style="width:5%;">
+                                            <h4 style="float: right;">Year : </h4>&nbsp;
+                                        </td>
+                                        
+                                        <td style="width:15%;">
+                                            <input class="SelectYear" id="SelectYear" style="width: 100%;"/>
+                                        </td>
+                                        
+                                        <td style="width:5%;">
+                                            <h4 style="float: right;">Week : </h4>&nbsp;
+                                        </td>
+                                        
+                                        <td style="width:15%;">
+                                            <input class="selectweek" id="week" style="width: 100%;" />
+                                        </td>
+                                        
+                                        <td style="width:5%;">
+                                            <h4 style="float: right;">CSM : </h4>&nbsp;
+                                        </td>
+                                        
+                                        <td style="width:15%;">
+                                            <input class="selectCSM" id="CSM" style="width: 100%;" />
+                                        </td>
+                                       
+                                        <td style="width:5%;">
+                                            <h4 style="float: right;">Hide : </h4>&nbsp;
+                                        </td>
+                                        
+                                        <td style="width:15%;text-align: -webkit-left;">
+                                            <b><input type="checkbox" id="q1" class="k-checkbox q1"/>
+                                            <label class="k-checkbox-label" for="q1">Q1</label></b> &nbsp;
+                                            
+                                            <b><input type="checkbox" id="q2" class="k-checkbox q2"/>
+                                            <label class="k-checkbox-label" for="q2">Q2</label></b>&nbsp;
+                                            
+                                            <b><input type="checkbox" id="q3" class="k-checkbox q3"/>
+                                            <label class="k-checkbox-label" for="q3">Q3</label></b>&nbsp;
+                                            
+                                            <b><input type="checkbox" id="q4" class="k-checkbox q4"/>
+                                            <label class="k-checkbox-label" for="q4">Q4</label></b>
+                                        </td>
+                                       
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;" colspan="10">
+                                            <br/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:center;" colspan="10">
+                                            <input id="word" value="" placeholder="Search Account" class="k-textbox" onchange="customFilterforAccount(this.value)" style="width: 12%;height: 26px;"/>&nbsp;&nbsp;&nbsp;
+                                            <!--<a href="#" class="k-button" id="search" onclick="searchdata();" style="font-weight: 700;padding: 2px 7px;">Search</a>&nbsp;&nbsp;&nbsp;-->
+                                            <a href="#" class="k-button" id="save" style="font-weight: 700;padding: 2px 7px;">Save</a>&nbsp;&nbsp;&nbsp;
+                                            <a href="#" class="k-button" id="export"  onclick="exportData();" style="font-weight: 700;padding: 2px 7px;">Export</a>&nbsp;&nbsp;&nbsp;
+                                            <a href="#" class="k-button" id="SubmitForecast"  onclick="submitForecast();" style="font-weight: 700;padding: 2px 7px;">Submit Forecast</a>&nbsp;&nbsp;&nbsp;
+                                            <a href="#" class="k-button" id="changesReport"  onclick="changeReportView(false);" style="font-weight: 700;padding: 2px 7px;display:none;">Changes Report</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br/>
+                            </div>
+                           <br/>
+                        </div>
+                    </div>
+                    <div style="margin-top:8px;float: right;z-index: 1000;position: sticky;margin-right: 30px;display:none;" class="alphaPaging">
+                        <a class="filter A" onclick="customFilter(this);">A</a> | <a class="filter B" onclick="customFilter(this);">B</a> | <a class="filter C" onclick="customFilter(this);">C</a> |  
+                        <a class="filter D" onclick="customFilter(this);">D</a> | <a class="filter E" onclick="customFilter(this);">E</a> | <a class="filter F" onclick="customFilter(this);">F</a> | 
+                        <a class="filter G" onclick="customFilter(this);">G</a> | <a class="filter H" onclick="customFilter(this);">H</a> | <a class="filter I" onclick="customFilter(this);">I</a> | 
+                        <a class="filter J" onclick="customFilter(this);">J</a> | <a class="filter K" onclick="customFilter(this);">K</a> | <a class="filter L" onclick="customFilter(this);">L</a> | 
+                        <a class="filter M" onclick="customFilter(this);">M</a> | <a class="filter N" onclick="customFilter(this);">N</a> | <a class="filter O" onclick="customFilter(this);">O</a> | 
+                        <a class="filter P" onclick="customFilter(this);">P</a> | <a class="filter Q" onclick="customFilter(this);">Q</a> | <a class="filter R" onclick="customFilter(this);">R</a> | 
+                        <a class="filter S" onclick="customFilter(this);">S</a> | <a class="filter T" onclick="customFilter(this);">T</a> | <a class="filter U" onclick="customFilter(this);">U</a> | 
+                        <a class="filter V" onclick="customFilter(this);">V</a> | <a class="filter W" onclick="customFilter(this);">W</a> | <a class="filter X" onclick="customFilter(this);">X</a> | 
+                        <a class="filter Y" onclick="customFilter(this);">Y</a> | <a class="filter Z" onclick="customFilter(this);">Z</a> | <a class="filter ALL" onclick="customFilter(this);">ALL</a> 
+                    </div>
+                    
+                    <div>
+                        <div id="gridRecords"></div><span id="notification" style=""></span>
+                    </div>
+                    <div id="details"></div>
+                    <div id="confirm"></div>
+                    </div>   
+                    <br/>
+                    <div id="windowExport" style="height: auto;display:none;">
+                        <div id="gridRecordsExport" style="display:none;"></div><br/>
+                        <div style="text-align: -webkit-center;">
+                            <a href="#" class="k-button" id="download" onclick="downloadData();" style="font-weight: 700;">Download</a> &nbsp;&nbsp;
+                            <a href="#" class="k-button" id="cancelDownload" onclick="cancelDownload()" style="font-weight: 700;">Cancel</a>
+                        </div> 
+                    </div>
+                    
+                    <div id="windowRU" style="height: auto;display:none;">
+                        <div style="text-align: -webkit-center;" id="windowRUData">
+                            
+                        </div> 
+                    </div>
+                    
+                    <div id="windowReportChange" style="height: auto;display:none;">
+                        <div style="text-align: -webkit-center;">
+                            <table style="width:80%;">
+                                <tr>
+                                    <td style="width:10%;">
+                                        <h4 style="float: right;">Week : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:20%;">
+                                        <input class="selectweekC" id="weekC" style="width: 100%;" />
+                                    </td>
+                                    
+                                    <td style="width:10%;">
+                                        <h4 style="float: right;">Compared To </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:10%;">
+                                        <h4 style="float: right;">Week : </h4>&nbsp;
+                                    </td>
+                                    
+                                    <td style="width:20%;">
+                                        <input class="selectweekP" id="weekP" style="width: 100%;" />
+                                    </td>
+                                    
+                                    <td style="width:10%;text-align:center;">
+                                        <a href="#" class="k-button" id="compare"  onclick="changesReport(false);" style="font-weight: 700;padding: 2px 7px;">Compare </a>
+                                    </td>
+                                    
+                                    <td style="width:20%;">
+                                        <b><input type="checkbox" id="changeOnly" class="k-checkbox changeOnly" onclick="changesOnly();"/>
+                                        <label class="k-checkbox-label" for="changeOnly">Changes Only</label></b>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <br/>
+                        <div id="gridChangeReport">
+                            
+                        </div> 
+                    </div>
+               
+            <script>
+                var setIds = [];
+                var element = $(document.body);
+                var wnd ;
+                var OfferSelect = '';
+                var yearSelect = '';
+                var weekSelect = '';
+                var csmSelect = '';
+                var record = 0;
+                var riskthresholdval = 0;
+                var upsidethresholdval = 0;
+                var quarterSelection = 'all';
+                var curentYear = '';
+                var currentQaurter = '';
+                var baseURL = '';
+                var myMap = new Map();
+                var editYearLock = new Map();
+                var ucname= '';
+                var weekCCR = '';
+                var weekPPR = '';
+                var myMonth = new Map();
+                var setString = [];
+                $(document).ready(function() {
+                    debugger;
+                    
+                    OfferSelect = '{!sOfferingType}';
+                    yearSelect = '{!syear}';
+                    weekSelect = '{!sWeek}';
+                    weekCCR = '{!sWeek}';
+                    weekPPR = '{!pWeek}';
+                    riskthresholdval = '{!riskthresholdVal}';
+                    upsidethresholdval = '{!upsidethresholdVal}';
+                    curentYear = '{!currentYear}';
+                    currentQaurter = '{!currentQuart}';
+                    baseURL = "{!baseUrl}";
+                    ucname = "{!uname}";
+                    
+                    <apex:repeat value="{!mapOfferType}" var="acct">
+                        myMap.set('{!acct}' , '{!mapOfferType[acct]}');
+                    </apex:repeat>
+                    
+                    <apex:repeat value="{!mapYearOfferType}" var="acct1">
+                        editYearLock.set('{!acct1}' , '{!mapYearOfferType[acct1]}');
+                    </apex:repeat>
+                    
+                    if('{!hideQ1}' == 'true'){
+                        $('#q1').prop('checked',true);
+                    }
+                    if('{!hideQ2}' == 'true'){
+                        $('#q2').prop('checked',true);
+                    }
+                    if('{!hideQ3}' == 'true'){
+                        $('#q3').prop('checked',true);
+                    }
+                    if('{!hideQ4}' == 'true'){
+                        $('#q4').prop('checked',true);
+                    }
+                    debugger;
+                    $('#changesReport').hide();
+                    $('#save').hide();
+                    $('#word').hide();
+                    $('#export').hide();
+                    $('#SubmitForecast').hide();
+                    $("#tabstrip").kendoTabStrip({
+                        animation:  {
+                            open: {
+                                duration: 600,
+                                effects: "fadeIn"
+                            }
+                        }
+                    });
+                    
+                    // Offering Type
+                    var dataOfferingType = [{ itemLabel: "-- Offering Type ---", itemValue: "" },
+                                            { itemLabel: "PureEngage", itemValue: "PureEngage" },
+                                            { itemLabel: "Premier", itemValue: "Premier" },
+                                          //  { itemLabel: "PureCloud", itemValue: "PureCloud" },
+                                            { itemLabel: "Outbound", itemValue: "Outbound" },
+                                            { itemLabel: "PureConnect", itemValue: "PureConnect" },
+                                            { itemLabel: "Cloud Solution Partner (PPU)", itemValue: "Cloud Solution Partner (PPU)" }];
+                                            
+                    $("#OfferingType").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: dataOfferingType,
+                        select: onSelectOffer
+                    });
+                    var OType  = $("#OfferingType").data("kendoDropDownList");
+                    OType.value(OfferSelect);
+                    
+                    //Year 
+                    var datayear = [{ itemLabel: "--- Year --", itemValue: "" },
+                                    { itemLabel: "2017", itemValue: "2017" },
+                                    { itemLabel: "2018", itemValue: "2018" },
+                                    { itemLabel: "2019", itemValue: "2019" },
+                                    { itemLabel: "2020", itemValue: "2020" },
+                                    { itemLabel: "2021", itemValue: "2021" },];
+                                    
+                    $("#SelectYear").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: datayear,
+                        select: onSelectYear
+                    });
+                    var yearS  = $("#SelectYear").data("kendoDropDownList");
+                    yearS.value(yearSelect);
+                    
+                    
+                    var weeks =  $("#week").data("kendoDropDownList");
+                    weeks = $("#week").kendoDropDownList({
+                        index: 0,
+                        width: "100%",
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        select: onSelectWeek,
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.populateWeek}" ,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                 
+                                                console.log(result);
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                        }
+                    });
+                    var week = $("#week").data("kendoDropDownList");
+                    week.value(weekSelect);
+                    
+                    var offerType  = $("#OfferingType").data("kendoDropDownList");
+                    OfferSelect =  offerType.value();
+                    
+                    var yearType = $("#SelectYear").data("kendoDropDownList");
+                    yearSelect =  yearType.value();
+                    
+                    var week = $("#week").data("kendoDropDownList");
+                    weekSelect =  week.value();
+                    
+                    getCSM();
+                    debugger;
+                    
+                    var sCSM  = $("#CSM").data("kendoDropDownList");
+                    debugger;
+                    
+                    getMonthlySelection(OfferSelect);
+                    
+                    Visualforce.remoting.Manager.invokeAction(
+                        "{!$RemoteAction.PESSRevenueForecastControllerView.checkCSMOwner}" ,OfferSelect, yearSelect, weekSelect,
+                        function(result, event) {
+                            if(event.status) {
+                                debugger;
+                                console.log(result);
+                                if(result == true){
+                                    sCSM.value(ucname);
+                                }else{
+                                    sCSM.value('All');
+                                }
+                                var sCSMVal = $("#CSM").data("kendoDropDownList");
+                                csmSelect =  sCSMVal.value();
+                                if(result){
+                                    csmName = $('.selectCSM').text();
+                                    getCSMOnSelect(OfferSelect, yearSelect, weekSelect, csmName);
+                                }else{
+                                    searchdata();
+                                }
+                            }
+                        }
+                    );
+                    
+                    function onSelectOffer(e) {
+                        if (e.item) {
+                            var dataItem = this.dataItem(e.item);
+                            OfferSelect = dataItem.itemValue;
+                            csmSelect = 'All';
+                            searchdata();
+                            getCSM();
+                            getMonthlySelection(OfferSelect);
+                        } 
+                    };
+                    
+                    function onSelectYear(e) {
+                        if (e.item) {
+                            var dataItem = this.dataItem(e.item);
+                            yearSelect = dataItem.itemValue;
+                            searchdata();
+                        } 
+                    };
+                    
+                    function onSelectWeek(e) {
+                        if (e.item) {
+                            var dataItem = this.dataItem(e.item);
+                            weekSelect = dataItem.itemValue;
+                            //searchdata();
+                            //getCSM();
+                            //Added by Priyank
+                            if(csmSelect == 'All'){
+                                searchdata();
+                                getCSM();
+                            }else{
+                                //Added by Priyank
+                                getCSMOnSelect(OfferSelect, yearSelect, weekSelect, csmSelect);
+                            }
+                        } 
+                    };
+                    
+                    
+                        
+                //******************************************************** Save Your Data **********************************************************//
+                    
+                    $("#save").click(function (e) {
+                        setString = [];
+                        if(setIds.length > 0){
+                            var grids = $("#gridRecords").data('kendoGrid');
+                            $.when(showConfirmationWindow('Do you want to save the changes?')).then(function(confirmed){
+                                if(confirmed){
+                                    e.preventDefault();
+                                    var jsonString = kendo.stringify(grids.dataSource.data());
+                                    var editJson = [];
+                                    $.each(JSON.parse(jsonString), function(idx, obj) {
+                                        debugger;
+                                        if(setIds.includes(obj.Account__c)){
+                                             debugger;
+                                            editJson.push(JSON.stringify(obj).replace(null,0)); 
+                                        }
+                                    });
+                                    
+                                    kendo.ui.progress(element, true);
+                                    
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.saveARF}",editJson, $('#q1').prop("checked"), $('#q2').prop("checked"), $('#q3').prop("checked"), $('#q4').prop("checked"),yearSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                console.log(result);
+                                                $("#notification").kendoNotification({
+                                                    autoHideAfter: 3000,
+                                                    width: "auto",
+                                                    position: {
+                                                        bottom: 40,
+                                                        right: 30
+                                                    }
+                                                });
+                                                setIds = [];
+                                                $("#notification").getKendoNotification().show("Data Saved Successfully!");
+                                                $("#gridRecords").data("kendoGrid").dataSource.read();
+                                                kendo.ui.progress(element, false);
+                                            }
+                                        }
+                                    );
+                                }
+                            });
+                        }else{
+                            $("#notification").kendoNotification({
+                                autoHideAfter: 3000,
+                                width: "auto",
+                                position: {
+                                    bottom: 40,
+                                    right: 30
+                                }
+                            });
+                            setIds = [];
+                            $("#notification").getKendoNotification().show("No changes to Save.");
+                        }
+                    });
+                    
+                    $('#q1').click(function () {
+                        
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        if($("#q1").prop("checked")){
+                            grid.hideColumn("Jan_" + yearSelect + "__c");
+                            grid.hideColumn("Feb_" + yearSelect + "__c");
+                            grid.hideColumn("Mar_" + yearSelect + "__c");
+                            grid.hideColumn("Q1_"  + yearSelect +"_Land__c");
+                            grid.hideColumn("Q1_"  + yearSelect +"_Low__c");
+                            grid.hideColumn("Q1_"  + yearSelect +"_Best__c");
+                        }else{
+                            grid.showColumn("Jan_" + yearSelect + "__c");
+                            grid.showColumn("Feb_" + yearSelect + "__c");
+                            grid.showColumn("Mar_" + yearSelect + "__c");
+                            grid.showColumn("Q1_"  + yearSelect +"_Land__c");
+                            grid.showColumn("Q1_"  + yearSelect +"_Low__c");
+                            grid.showColumn("Q1_"  + yearSelect +"_Best__c");
+                        }
+                    });
+                    
+                    $('#q2').click(function () {
+                        
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        if($("#q2").prop("checked")){
+                            grid.hideColumn("Apr_" + yearSelect + "__c");
+                            grid.hideColumn("May_" + yearSelect + "__c");
+                            grid.hideColumn("June_" + yearSelect + "__c");
+                            grid.hideColumn("Q2_"  + yearSelect +"_Land__c");
+                            grid.hideColumn("Q2_"  + yearSelect +"_Low__c");
+                            grid.hideColumn("Q2_"  + yearSelect +"_Best__c");
+                        }else{
+                            grid.showColumn("Apr_" + yearSelect + "__c");
+                            grid.showColumn("May_" + yearSelect + "__c");
+                            grid.showColumn("June_" + yearSelect + "__c");
+                            grid.showColumn("Q2_"  + yearSelect +"_Land__c");
+                            grid.showColumn("Q2_"  + yearSelect +"_Low__c");
+                            grid.showColumn("Q2_"  + yearSelect +"_Best__c");
+                        }
+                    });
+                    
+                    $('#q3').click(function () {
+                        debugger;
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        if($("#q3").prop("checked")){
+                            grid.hideColumn("July_" + yearSelect + "__c");
+                            grid.hideColumn("Aug_" + yearSelect + "__c");
+                            grid.hideColumn("Sept_" + yearSelect + "__c");
+                            grid.hideColumn("Q3_"  + yearSelect +"_Land__c");
+                            grid.hideColumn("Q3_"  + yearSelect +"_Low__c");
+                            grid.hideColumn("Q3_"  + yearSelect +"_Best__c");
+                        }else{
+                            grid.showColumn("July_" + yearSelect + "__c");
+                            grid.showColumn("Aug_" + yearSelect + "__c");
+                            grid.showColumn("Sept_" + yearSelect + "__c");
+                            grid.showColumn("Q3_"  + yearSelect +"_Land__c");
+                            grid.showColumn("Q3_"  + yearSelect +"_Low__c");
+                            grid.showColumn("Q3_"  + yearSelect +"_Best__c");
+                        }
+                    });
+                    
+                    $('#q4').click(function () {
+                        
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        if($("#q4").prop("checked")){
+                            grid.hideColumn("Oct_" + yearSelect + "__c");
+                            grid.hideColumn("Nov_" + yearSelect + "__c");
+                            grid.hideColumn("Dec_" + yearSelect + "__c");
+                            grid.hideColumn("Q4_"  + yearSelect +"_Land__c");
+                            grid.hideColumn("Q4_"  + yearSelect +"_Low__c");
+                            grid.hideColumn("Q4_"  + yearSelect +"_Best__c");
+                        }else{
+                            grid.showColumn("Oct_" + yearSelect + "__c");
+                            grid.showColumn("Nov_" + yearSelect + "__c");
+                            grid.showColumn("Dec_" + yearSelect + "__c");
+                            grid.showColumn("Q4_"  + yearSelect +"_Land__c");
+                            grid.showColumn("Q4_"  + yearSelect +"_Low__c");
+                            grid.showColumn("Q4_"  + yearSelect +"_Best__c");
+                        }
+                    });
+                });
+                
+                function customFilter(cls){
+                    debugger;
+                    $('.filter').removeClass('filterClick');
+                    var grids = $("#gridRecords").data("kendoGrid");
+                    var value = cls.text;
+                    if (value != 'ALL') {
+                        grids.dataSource.filter({ 
+                            field: "Account__r.Name", 
+                            operator: "startswith", 
+                            value: value 
+                        });
+                        $('.filter.' + value).addClass('filterClick');
+                    } else {
+                        grids.dataSource.filter({});
+                        $('.filter.' + value).addClass('filterClick');
+                    }
+                }
+                
+                 function getMonthlySelection(Oselect){
+                    debugger;
+                    myMonth = new Map();
+                    Visualforce.remoting.Manager.invokeAction(
+                        "{!$RemoteAction.PESSRevenueForecastControllerView.getMonthLocking}", Oselect,
+                            function(result, event) {
+                            debugger;
+                            if(event.status) {
+                                myMonth = result;
+                            }
+                    });
+                }
+                
+                
+                function customFilterforCSM(cls){
+                    debugger;
+                    var grids = $("#gridRecords").data("kendoGrid");
+                    if (cls != 'All') {
+                        grids.dataSource.filter({ 
+                            field: "Account__r.CSM_Account_Owner_Name__c", 
+                            operator: "startswith", 
+                            value: cls 
+                        });
+                    } else {
+                        grids.dataSource.filter({});
+                    }
+                }
+                
+                function customFilterforAccount(cls){
+                    debugger;
+                    var grids = $("#gridRecords").data("kendoGrid");
+                    if (cls != 'All') {
+                        grids.dataSource.filter({ 
+                            field: "Account__r.Name", 
+                            operator: "contains", 
+                            value: cls 
+                        });
+                    } else {
+                        grids.dataSource.filter({});
+                    }
+                }
+                
+                function callRiskUpside(e){
+                    var accountId = '';
+                    var myClass = $(e).attr("class");
+                    var mycls = myClass.split('aaa');
+                    var acntname = mycls[1];
+                    debugger;
+                     var wnd1 = $("#windowRU")
+                    .kendoWindow({
+                        title: "Risk Upside",
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: "100%",
+                        actions: [
+                            "Pin",
+                            "Minimize",
+                            "Maximize",
+                            "Close"
+                        ],
+                    }).data("kendoWindow");
+                    
+                    $(".k-widget.k-window").css("width", "80%");
+                    $(".k-widget.k-window").css("left", "220px");
+                    
+                    Visualforce.remoting.Manager.invokeAction(
+                        "{!$RemoteAction.PESSRevenueForecastControllerView.getAccoutnId}" ,OfferSelect,weekSelect,acntname, 
+                        function(result, event) {
+                            if(event.status) {
+                               var bindata = '<iframe height="650px" id="theIframe" name="theIframe"' + 
+                                  'src=" '+ baseURL + '?year='+ yearSelect + '&OfferingType='+OfferSelect +'&week='+ weekSelect+'&accountId='+result +'" width="100%"></iframe>';
+                                $('#windowRUData').html(bindata);
+                                wnd1.center().open();
+                            }
+                        }
+                    );
+                }
+                
+                function changesOnly(){
+                     $("#gridChangeReport").empty();
+                     changesReport($(".k-checkbox.changeOnly").prop("checked"));
+                }
+                
+                function changeReportView(inval){
+                    var weeksC =  $("#weekC").data("kendoDropDownList");
+                    weeksC = $("#weekC").kendoDropDownList({
+                        index: 0,
+                        width: "100%",
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.populateWeek}" ,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                        }
+                    });
+                    debugger;
+                    var weeksCC =  $("#weekC").data("kendoDropDownList");
+                    weeksCC.value(weekCCR);
+                    
+                    
+                    var weeksP =  $("#weekP").data("kendoDropDownList");
+                    weeksP = $("#weekP").kendoDropDownList({
+                        index: 0,
+                        width: "100%",
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.populateWeek}" ,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                        }
+                    });
+                    debugger;
+                    var weeksPP =  $("#weekP").data("kendoDropDownList");
+                    weeksPP.value(weekPPR);
+                    $("#gridChangeReport").empty();
+                    changesReport(inval);
+                }
+                
+                function changesReport(isChange){
+                    
+                    debugger;
+                    var weekCC = $("#weekC").data("kendoDropDownList");
+                    
+                    var weekPP = $("#weekP").data("kendoDropDownList");
+                    weekPPR =  weekPP.value();
+                    var grid = $("#gridChangeReport").kendoGrid({
+                        toolbar: ["excel"],
+                        excel: {
+                            fileName: "Account Revenue YOY " + yearSelect,
+                            allPages: true
+                        },
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.getchangesReport}", OfferSelect, yearSelect, weekCCR,weekPPR, isChange,
+                                        function(result, event) {
+                                            debugger;
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            schema:{
+                                model: {
+                                    fields: {
+                                        acntName:               { type: "string" },
+                                        partnerAccount:         { type: "string" },
+                                        acntGranCode:           { type: "string" },
+                                        acntRevType:            { type: "string" },
+                                        acntCountryRegion:      { type: "string" },
+                                        acntCSMOwner:           { type: "string" },
+                                        acntContractValue:      { type: "number" },
+                                        q1Sub:                  { type: "number" },
+                                        q1PrevSub:              { type: "number" },
+                                        q1ChangeSub:            { type: "number" },
+                                        q2Sub:                  { type: "number" },
+                                        q2PrevSub:              { type: "number" },
+                                        q2ChangeSub:            { type: "number" },
+                                        q3Sub:                  { type: "number" },
+                                        q3PrevSub:              { type: "number" },
+                                        q3ChangeSub:            { type: "number" },
+                                        q4Sub:                  { type: "number" },
+                                        q4PrevSub:              { type: "number" },
+                                        q4ChangeSub:            { type: "number" },
+                                        totalChanges:           { type: "number" },
+                                        total:                  { type: "number" },
+                                    }
+                                }
+                            },
+                            pageSize: 200,
+                            aggregate: [
+                                { field: "q1Sub",       aggregate: "sum" },
+                                { field: "q1PrevSub",   aggregate: "sum" },
+                                { field: "q1ChangeSub", aggregate: "sum" },
+                                { field: "q2Sub",       aggregate: "sum" },
+                                { field: "q2PrevSub",   aggregate: "sum" },
+                                { field: "q2ChangeSub", aggregate: "sum" },
+                                { field: "q3Sub",       aggregate: "sum" },
+                                { field: "q3PrevSub",   aggregate: "sum" },
+                                { field: "q3ChangeSub", aggregate: "sum" },
+                                { field: "q4Sub",       aggregate: "sum" },
+                                { field: "q4PrevSub",   aggregate: "sum" },
+                                { field: "q4ChangeSub", aggregate: "sum" },
+                                { field: "total",       aggregate: "sum" },
+                                { field: "totalChanges",aggregate: "sum" },
+                                
+                            ]
+                        },
+                        
+                        sort: { field: "Account__r.Name", dir: "asc" },
+                        filterable : true,
+                        height: 600,
+                        sortable: true,
+                        reorderable: true,
+                        groupable: true,
+                        resizable: true,
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: [  {   field: "acntName",              title: "Account Name",                                      width: 100, },
+                                    {   field: "partnerAccount",        title: "Partner Account",                                   width: 100, },
+                                    {   field: "acntGranCode",          title: "GARN Code",                                         width: 100, },
+                                    {   field: "acntContractValue",     title: "Annual Contract Value",                             width: 100, format: "{0:c}"},
+                                    {   field: "acntRevType",           title: "Revenue Type",                                      width: 100, },
+                                    {   field: "acntCountryRegion",     title: "Region",                                            width: 100, },
+                                    {   field: "acntCSMOwner",          title: "CSM Owner"  ,                                       width: 100, footerTemplate: "Total"},
+                                    {   field: "cloudPlatformtype",     title: "Cloud Platform Type",                               width: 100, },
+                                    {   field: "q1Sub",                 title: "Q1 " + yearSelect + " Subscription",                width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q1PrevSub",             title: "Previous Week : Q1 " + yearSelect + " Subscription",width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q1ChangeSub",           title: "Change Q1",                                         width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    
+                                    {   field: "q2Sub",                 title: "Q2 " + yearSelect + " Subscription",                width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q2PrevSub",             title: "Previous Week : Q2 " + yearSelect + " Subscription",width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q2ChangeSub",           title: "Change Q2" ,                                        width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                        
+                                    {   field: "q3Sub",                 title: "Q3 " + yearSelect + " Subscription",                width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q3PrevSub",             title: "Previous Week : Q3 " + yearSelect + " Subscription",width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q3ChangeSub",           title: "Change Q3" ,                                        width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    
+                                    {   field: "q4Sub",                 title: "Q4 " + yearSelect + " Subscription",                width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q4PrevSub",             title: "Previous Week : Q4 " + yearSelect + " Subscription",width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "q4ChangeSub",           title: "Change Q4" ,                                        width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "totalChanges",          title: "Total Changes" ,                                    width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    {   field: "total",                 title: "Total" ,                                            width: 120, format: "{0:c}", footerTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                                    
+                        ]
+                    });
+                    if(OfferSelect != 'Cloud Solution Partner (PPU)'){
+                        var grid = $("#gridChangeReport").data("kendoGrid");
+                        grid.hideColumn("partnerAccount");
+                    } 
+                    
+                    wnd = $("#windowReportChange")
+                    .kendoWindow({
+                        title: "Account Revenue YOY " ,
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 50
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "80%");
+                    wnd.center().open();
+                }
+                
+                function getCSM(){
+                     $("#CSM").kendoDropDownList({
+                        index: 0,
+                        filter: "startswith",
+                        dataTextField: "itemLabel",
+                        dataValueField: "itemValue",
+                        select: onSelectCSM,
+                        dataSource: {
+                            autoSync: true,
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.populateCSMOwner}" ,OfferSelect, yearSelect, weekSelect,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                console.log(result);
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }, 
+                            },
+                        }
+                    });
+                    var sCSM  = $("#CSM").data("kendoDropDownList");
+                    sCSM.value('All');
+                }
+                
+                function onSelectCSM(e) {
+                    if (e.item) {
+                        var dataItem = this.dataItem(e.item);
+                        csmSelect = dataItem.itemLabel;
+                        //Added by priyank and commented line 973,974.
+                        getCSMOnSelect(OfferSelect, yearSelect, weekSelect, csmSelect);
+                        //customFilterforCSM(csmSelect);
+                        //csmSelect = dataItem.itemValue;
+                        //searchdata();
+                    } 
+                };
+                
+                function submitForecast(){
+                    debugger;
+                    $.when(showConfirmationWindow('Please, Save the changes before Submiting Forecast.')).then(function(confirmed){
+                        if(confirmed){
+                            Visualforce.remoting.Manager.invokeAction(
+                                "{!$RemoteAction.PESSRevenueForecastControllerView.submitForecast}" ,weekSelect,
+                                function(result, event) {
+                                    if(event.status) {
+                                        $("#notification").kendoNotification({
+                                            autoHideAfter: 3000,
+                                            width: "auto",
+                                            position: {
+                                                bottom: 40,
+                                                right: 30
+                                            }
+                                        });
+                                        $("#notification").getKendoNotification().show('Forecast submitted Successfully.');
+                                    }
+                                }
+                            );
+                        }
+                    });
+                }
+                
+                function Riskupside(){
+                    
+                    var url = '/apex/PESSRevenueForecastCommentsView?year=' +yearSelect + '&OfferingType=' + OfferSelect + '&week=' +weekSelect  ;
+                    window.location.href = url;
+                } 
+                
+                function commentsTab(){
+                    
+                    var url = '/apex/PESSRevenuesForecastChangesView?year=' +yearSelect + '&OfferingType=' + OfferSelect + '&week=' +weekSelect  ;
+                    window.location.href = url;
+                } 
+                
+                //******************************************************** Edit Your Data **********************************************************//
+                
+                function selectRow(e) {
+                    var myClass = $(e).attr("class");
+                    var mycls = myClass.split(' ');
+                    /* Added in lines-1071- 1077, to disable the checkboxes for read-only access to Cloud Revenue Forecast Page for incident-#INC0310589- Added by Subhashree Nanda on 17/12/19 */ 
+                    var checkboxreadonly="{!makeCheckboxReadOnly}";
+                    if(checkboxreadonly=='true')
+                    {
+                       $(e).prop("checked",false);
+                       $(e).prop("disabled",true);
+
+                    }
+                    else{
+                    if($(e).prop("checked") == true){
+                        if(mycls[1] != 'all'){
+                            $('.'  + mycls[0] + '.ch.' + mycls[2]).prop('checked', true);
+                            $('.'  + mycls[0]+ '.all').prop('checked', false);
+                            
+                            setIds.push(mycls[2]); 
+                        }else{
+                            $('.'  + mycls[0]+ '.ch').prop('checked', true);
+                            //$('.colEnable').prop("disabled",false);  
+                            //$('.colEnable').addClass("editColor");
+                            $( ".k-checkbox.ch" ).each(function( index ) {
+                                var myglobal = $(this).attr("class");
+                                var myclsglobal = myglobal.split(' ');
+                                setIds.push(myclsglobal[2]); 
+                            });
+                        }
+                        
+                        debugger;
+                        if((myMap.get(OfferSelect) == 'true' && curentYear == yearSelect) || (editYearLock.get(OfferSelect) == yearSelect)){
+                            if(mycls[1] != 'all'){
+                                if(currentQaurter == '1'){
+                                    quarterEnableNotAll(mycls[2] , 'one');
+                                    quarterEnableNotAll(mycls[2] , 'two');
+                                    quarterEnableNotAll(mycls[2] , 'three');
+                                    quarterEnableNotAll(mycls[2] , 'four');
+                                    
+                                }else if(currentQaurter == '2'){
+                                    quarterEnableNotAll(mycls[2] , 'two');
+                                    quarterEnableNotAll(mycls[2] , 'three');
+                                    quarterEnableNotAll(mycls[2] , 'four');
+                                    
+                                    disableColorNotall(mycls[2] , 'one');
+                                }else if(currentQaurter == '3'){
+                                    quarterEnableNotAll(mycls[2] , 'three');
+                                    quarterEnableNotAll(mycls[2] , 'four');
+                                    
+                                    disableColorNotall(mycls[2] , 'one');
+                                    disableColorNotall(mycls[2] , 'two');
+                                    
+                                }else if(currentQaurter == '4'){
+                                    quarterEnableNotAll(mycls[2] , 'four');
+                                    disableColorNotall(mycls[2] , 'one');
+                                    disableColorNotall(mycls[2] , 'two');
+                                    disableColorNotall(mycls[2] , 'three');
+                                }
+                            }else{
+                                if(currentQaurter == '1'){
+                                    quarterEnable('one');
+                                    quarterEnable('two');
+                                    quarterEnable('three');
+                                    quarterEnable('four');
+                                }else if(currentQaurter == '2'){
+                                    quarterEnable('two');
+                                    quarterEnable('three');
+                                    quarterEnable('four');
+                                    
+                                    disableColor('one');
+                                }else if(currentQaurter == '3'){
+                                    quarterEnable('three');
+                                    quarterEnable('four');
+                                    
+                                    disableColor('one');
+                                    disableColor('two');
+                                }else if(currentQaurter == '4'){
+                                    quarterEnable('four');
+                                    
+                                    disableColor('one');
+                                    disableColor('two');
+                                    disableColor('three');
+                                }
+                            }
+                        }else{
+                            if(mycls[1] != 'all'){
+                                $('.colEnable'+ '.'+ mycls[2]).prop("disabled",false);  
+                                $('.colEnable'+ '.' + 'Risks' + '.'+ mycls[2]).prop("disabled",false);  
+                                $('.colEnable'+ '.' + 'Upside' + '.'+ mycls[2]).prop("disabled",false);  
+                                $('.colEnable'+ '.'+ mycls[2]).addClass("editColor");
+                            }else{
+                                $('.colEnable').prop("disabled",false);  
+                                $('.colEnable').addClass("editColor");
+                            }
+                        }
+                        
+                        // to hide show based on the Monthly View
+                        /*for(i=1; i <= 12 ; i++){
+                            debugger;
+                            if( myMonth[i] == true){
+                                debugger;
+                                if(mycls[1] != 'all'){
+                                    $('.'+ i + '.' + mycls[2]).addClass("noneditColor"); 
+                                    $('.'+ i + '.' + mycls[2]).prop("disabled",true);
+                                } else{
+                                    $('.'+ i).addClass("noneditColor"); 
+                                    $('.'+ i).prop("disabled",true);
+                                }
+                            }
+                        }*/
+                        
+                        // to hide show based on the Monthly View
+                        if(yearSelect == curentYear){
+                            for(i=1; i <= 12 ; i++){
+                                if( myMonth[i] == true){
+                                    if(mycls[1] != 'all'){
+                                        $('.'+ i + '.' + mycls[2]).addClass("noneditColor"); 
+                                        $('.'+ i + '.' + mycls[2]).prop("disabled",true);
+                                    } else{
+                                        $('.'+ i).addClass("noneditColor"); 
+                                        $('.'+ i).prop("disabled",true);
+                                    }
+                                }
+                            }
+                        }else if((editYearLock.get(OfferSelect) != yearSelect) && yearSelect < curentYear){
+                             
+                             if(mycls[1] != 'all'){
+                                 $('.'+ mycls[2]).addClass("noneditColor"); 
+                                 $('.'+ mycls[2]).prop("disabled",true);
+                                 debugger;
+                                 $('.k-checkbox.ch.'+ mycls[2]).prop("disabled",false);
+                                 $('.k-checkbox.ch.'+ mycls[2]).removeClass("noneditColor");
+                             }else{
+                                 $('.colEnable').prop("disabled",true);  
+                                 $('.colEnable').addClass("noneditColor");
+                             }
+                        }
+                        
+                    }else{
+                        if(mycls[1] != 'all'){
+                             $('.'  + mycls[0]+ '.all').prop('checked', false);
+                            $('.'  + mycls[0] + '.ch.' + mycls[2]).prop('checked', false);
+                            $('.colEnable'+ '.'+ mycls[2] + '.editColor').prop("disabled",true);  
+                            $('.colEnable'+ '.' + 'Risks' + '.'+ mycls[2]).prop("disabled",true);  
+                            $('.colEnable'+ '.' + 'Upside' + '.'+ mycls[2]).prop("disabled",true);  
+                            
+                            $('.colEnable'+ '.' + 'Risks' + '.'+ mycls[2] + '.editColor').removeClass("editColor")
+                            $('.colEnable'+ '.' + 'Upside' + '.'+ mycls[2] + '.editColor').removeClass("editColor")
+                            $('.colEnable'+ '.'+ mycls[2] + '.editColor').removeClass("editColor");
+                            
+                            $('.colEnable'+ '.' + 'Risks' + '.'+ mycls[2] + '.noneditColor').removeClass("noneditColor")
+                            $('.colEnable'+ '.' + 'Upside' + '.'+ mycls[2] + '.noneditColor').removeClass("noneditColor")
+                            $('.colEnable'+ '.'+ mycls[2] + '.noneditColor').removeClass("noneditColor");
+                        }else{
+                            $('.'  + mycls[0] + '.ch').prop('checked', false);
+                            $('.colEnable').prop("disabled",true);  
+                            $('.colEnable').removeClass("editColor");
+                            $('.colEnable').removeClass("noneditColor");
+                        }
+                    }
+                }
+                }
+                
+                function quarterEnableNotAll(subclass, quarter){
+                    debugger;
+                    $('.colEnable'+ '.'+ quarter + '.'+ subclass).prop("disabled",false);  
+                    $('.colEnable'+ '.' + 'Risks' + '.'+ quarter + '.'+subclass).prop("disabled",false);  
+                    $('.colEnable'+ '.' + 'Upside' + '.'+ quarter + '.'+subclass).prop("disabled",false);  
+                    
+                    $('.colEnable'+ '.'+ quarter + '.'+ subclass).addClass("editColor");
+                    $('.colEnable'+ '.' + 'Risks' + '.'+ quarter + '.'+subclass).addClass("editColor");
+                    $('.colEnable'+ '.' + 'Upside' + '.'+quarter + '.'+ subclass).addClass("editColor");
+                }
+                function quarterEnable(quarter){
+                    debugger;
+                    $('.colEnable'+ '.'+ quarter).prop("disabled",false);  
+                    $('.colEnable'+ '.' + 'Risks' + '.'+ quarter).prop("disabled",false);  
+                    $('.colEnable'+ '.' + 'Upside' + '.'+ quarter).prop("disabled",false);  
+                    $('.colEnable'+ '.'+ quarter).addClass("editColor");
+                    $('.colEnable'+ '.' + 'Risks' + '.'+ quarter).addClass("editColor");
+                    $('.colEnable'+ '.' + 'Upside' + '.'+quarter).addClass("editColor");
+                }
+                
+                function disableColorNotall(subclass , quarter){
+                    $('.colEnable'+ '.'+ quarter + '.'+ subclass).addClass("noneditColor");
+                    $('.colEnable'+ '.' + 'Risks' + '.'+ quarter + '.'+ subclass).addClass("noneditColor");
+                    $('.colEnable'+ '.' + 'Upside'+ '.'+ quarter + '.'+ subclass).addClass("noneditColor");
+                }
+                function disableColor(quarter){
+                    debugger;
+                    $('.colEnable'+ '.'+ quarter).addClass("noneditColor");
+                    $('.colEnable'+ '.' + 'Risks' + '.'+ quarter).addClass("noneditColor");
+                    $('.colEnable'+ '.' + 'Upside' + '.'+quarter).addClass("noneditColor");
+                }
+                
+                /*****************************************Added by Priyank to search the CSM when Selected from Dropdown*****************************/ 
+                
+                function getCSMOnSelect(OfferSelect, yearSelect, weekSelect, csmSelect){
+                    setString = [];
+                    if(csmSelect != 'All'){
+                        //Hiding offerring Label and Picklist
+                        $('.OfferingTypeID').hide();
+                        $('.OfferingTypeLabel').hide();
+                        $('#pureEngageCount').hide();
+                        $('#pureCloudCount').hide();
+                        $('#outboundCount').hide();
+                        $('#premierCount').hide();
+                        $('#pureConnectCount').hide();
+                        $('#cloudSolutionPartnerCount').hide();
+                        resetBoldOfferringType();
+                        Visualforce.remoting.Manager.invokeAction(
+                                            "{!$RemoteAction.PESSRevenueForecastControllerView.getCSMSearchRecord}", OfferSelect, yearSelect, weekSelect,csmSelect,setString,true,
+                                            function(result, event) {
+                                                if(event.status) {
+                                                    if(result != null){
+                                                        var defaultOfferringTypeToBeLoaded = '';
+                                                        for(i=0 ; i < result.length ; i++){
+                                                            if(result[i].offeringType == 'PureEngage'){
+                                                                $('#pureEngageCount').show();
+                                                                $("#tabstrip span#pureEngageCountfromDB").html(result[i].offeringTypeCount);
+                                                                defaultOfferringTypeToBeLoaded = 'PureEngage';
+                                                                $('#pureEngageCount').css('font-weight','bold');
+                                                                //alert(defaultOfferringTypeToBeLoaded);
+                                                            }    
+                                                            if(result[i].offeringType == 'PureCloud'){
+                                                                $('#pureCloudCount').show();
+                                                                $("#tabstrip span#pureCloudCountfromDB").html(result[i].offeringTypeCount);
+                                                                if(defaultOfferringTypeToBeLoaded == null || defaultOfferringTypeToBeLoaded == ''){
+                                                                    defaultOfferringTypeToBeLoaded = 'PureCloud';
+                                                                    $('#pureCloudCount').css('font-weight','bold');
+                                                                    //alert(defaultOfferringTypeToBeLoaded);
+                                                                }
+                                                            }      
+                                                            if(result[i].offeringType == 'Outbound'){
+                                                                $('#outboundCount').show();
+                                                                $("#tabstrip span#outboundCountfromDB").html(result[i].offeringTypeCount);
+                                                                if(defaultOfferringTypeToBeLoaded == null || defaultOfferringTypeToBeLoaded == ''){
+                                                                    defaultOfferringTypeToBeLoaded = 'Outbound';
+                                                                    $('#outboundCount').css('font-weight','bold');
+                                                                    //alert(defaultOfferringTypeToBeLoaded);
+                                                                }
+                                                            }    
+                                                                
+                                                            if(result[i].offeringType == 'Premier'){
+                                                                $('#premierCount').show();
+                                                                $("#tabstrip span#premierCountfromDB").html(result[i].offeringTypeCount);
+                                                                if(defaultOfferringTypeToBeLoaded == null || defaultOfferringTypeToBeLoaded == ''){
+                                                                    defaultOfferringTypeToBeLoaded = 'Premier';
+                                                                    $('#premierCount').css('font-weight','bold');
+                                                                    //alert(defaultOfferringTypeToBeLoaded);
+                                                                }
+                                                            }    
+                                                                
+                                                            if(result[i].offeringType == 'PureConnect'){
+                                                                $('#pureConnectCount').show();
+                                                                $("#tabstrip span#pureConnectCountfromDB").html(result[i].offeringTypeCount);
+                                                                if(defaultOfferringTypeToBeLoaded == null || defaultOfferringTypeToBeLoaded == ''){
+                                                                    defaultOfferringTypeToBeLoaded = 'PureConnect';
+                                                                    $('#pureConnectCount').css('font-weight','bold');
+                                                                    //alert(defaultOfferringTypeToBeLoaded);
+                                                                }
+                                                            }   
+                                                            
+                                                            if(result[i].offeringType == 'Cloud Solution Partner (PPU)'){
+                                                                $('#cloudSolutionPartnerCount').show();
+                                                                $("#tabstrip span#cloudSolutionPartnerCountfromDB").html(result[i].offeringTypeCount);
+                                                                if(defaultOfferringTypeToBeLoaded == null || defaultOfferringTypeToBeLoaded == ''){
+                                                                    defaultOfferringTypeToBeLoaded = 'Cloud Solution Partner (PPU)';
+                                                                    $('#cloudSolutionPartnerCount').css('font-weight','bold');
+                                                                    //alert(defaultOfferringTypeToBeLoaded);
+                                                                }
+                                                            } 
+                                                        }
+                                                        clickOfferringTypeCount(defaultOfferringTypeToBeLoaded);
+                                                    }
+                                                    
+                                                }
+                                            });
+                    } else{
+                        //Showing offerring Label and Picklist
+                        $('.OfferingTypeLabel').show();
+                       // $('.OfferingType').css('display','none');
+                        $('.OfferingTypeID').show();
+                        $('#pureEngageCount').hide();
+                        $('#pureCloudCount').hide();
+                        $('#outboundCount').hide();
+                        $('#premierCount').hide();
+                        $('#pureConnectCount').hide();
+                        $('#cloudSolutionPartnerCount').hide();
+                        searchdata();
+                    }           
+                }
+                
+                function clickOfferringTypeCount(offerSel){
+                    OfferSelectForCSM = offerSel;
+                    searchdataForCSM();
+                    //getCSM();
+                    getMonthlySelection(OfferSelectForCSM);
+                    resetBoldOfferringType();
+                    $('#pureEngageCount').removeClass("selected");
+                    $('#pureCloudCount').removeClass("selected");
+                    $('#outboundCount').removeClass("selected");
+                    $('#premierCount').removeClass("selected");
+                    $('#pureConnectCount').removeClass("selected");
+                    $('#cloudSolutionPartnerCount').removeClass("selected");
+                    if(OfferSelectForCSM == 'PureEngage'){
+                        $('#pureEngageCount').css('font-weight','bold');
+                        $('#pureEngageCount').addClass("selected");
+                    }else if(OfferSelectForCSM == 'PureCloud'){
+                        $('#pureCloudCount').css('font-weight','bold');
+                        $('#pureCloudCount').addClass("selected");
+                    }else if(OfferSelectForCSM == 'Outbound'){
+                        $('#outboundCount').css('font-weight','bold');
+                        $('#outboundCount').addClass("selected");
+                    }else if(OfferSelectForCSM == 'Premier'){
+                        $('#premierCount').css('font-weight','bold');
+                        $('#premierCount').addClass("selected");
+                    }else if(OfferSelectForCSM == 'PureConnect'){
+                        $('#pureConnectCount').css('font-weight','bold');
+                        $('#pureConnectCount').addClass("selected");
+                    }else if(OfferSelectForCSM == 'Cloud Solution Partner (PPU)'){
+                        $('#cloudSolutionPartnerCount').css('font-weight','bold');
+                        $('#cloudSolutionPartnerCount').addClass("selected");
+                    }                       
+                }
+                
+                function resetBoldOfferringType(){
+                    $('#pureEngageCount').css('font-weight','normal');
+                    $('#pureCloudCount').css('font-weight','normal');
+                    $('#outboundCount').css('font-weight','normal');
+                    $('#premierCount').css('font-weight','normal');
+                    $('#pureConnectCount').css('font-weight','normal');
+                    $('#cloudSolutionPartnerCount').css('font-weight','normal');
+                }
+
+                
+                function searchdataForCSM(){
+                    debugger;
+                    $("#gridRecords").empty();
+                    // Change the condition if WeekSelect requires add ( && periodSelect != '')
+                    //alert('OfferSelect ' + OfferSelect);
+                    //alert('yearSelect ' + yearSelect);
+                    //alert('weekSelect ' + weekSelect);
+                    //alert('csmSelect ' + csmSelect);
+                    if(OfferSelectForCSM != '' && yearSelect != '' && weekSelect != '' ){
+                        getGridCompleteForCSM(OfferSelectForCSM, yearSelect  , weekSelect);
+                       
+                    }else{
+                        $.when(showConfirmationWindow('No data found, Try with different Search.')).then(function(confirmed){
+                            if(confirmed){
+                                wnd.center().close();
+                            }
+                        });
+                    }
+                }
+                
+                function getGridCompleteForCSM(OfferSelectForCSM, yearSelect , weekSelect) {   
+                   csmSelect = $('.selectCSM').text();
+                   setString = [];
+                    var grid = $("#gridRecords").kendoGrid({
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.getAccountRevenueRecordForCSM}", OfferSelectForCSM, yearSelect, weekSelect,csmSelect,setString,true,
+                                        function(result, event) {
+                                            debugger
+                                            if(event.status) {
+                                                console.log(result);
+                                                if(result != null){
+                                                    try {
+                                                        for(i=0 ; i < result.length ; i++){
+                                                            setString.push(result[i].Id);
+                                                        }
+                                                        if(setString.length >= 7000){
+                                                            Visualforce.remoting.Manager.invokeAction(
+                                                                "{!$RemoteAction.PESSRevenueForecastControllerView.getAccountRevenueRecordForCSM}", OfferSelectForCSM, yearSelect, weekSelect,csmSelect,setString,true,
+                                                                 function(result1, event) {
+                                                                    if(event.status) {
+                                                                        debugger;
+                                                                        console.log(result1);
+                                                                        result1.remove(undefined, 0);
+                                                                        if(result1 != null){
+                                                                            for(i=0 ; i < result1.length ; i++){
+                                                                                debugger;
+                                                                                result.push(result1[i]);
+                                                                            }
+                                                                            debugger;
+                                                                            options.success(result);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            );
+                                                        }else{
+                                                            debugger;
+                                                            options.success(result);
+                                                        }
+                                                        $('#save').show();
+                                                        $('#word').show();
+                                                        $('.alphaPaging').show();
+                                                        $('#SubmitForecast').show();
+                                                        $('#export').show();
+                                                        $('#changesReport').show();
+                                                    } catch (e) {
+                                                        $("#gridRecords").empty();
+                                                        $("#notification").kendoNotification({
+                                                            autoHideAfter: 3000,
+                                                            width: "auto",
+                                                            position: {
+                                                                bottom: 40,
+                                                                right: 30
+                                                            }
+                                                        });
+                                                        setIds = [];
+                                                        $("#notification").getKendoNotification().show(e);
+                                                    }
+                                                }else{
+                                                    $("#gridRecords").empty();
+                                                    $('#save').hide();
+                                                    $('#word').hide();
+                                                    $('#export').hide();
+                                                    $('#SubmitForecast').hide();
+                                                    $('.alphaPaging').hide();
+                                                    $('#changesReport').hide();
+                                                    $.when(showConfirmationWindow('No data found. Please, try with different search.')).then(function(confirmed){
+                                                        if(confirmed){
+                                                           
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 200,
+                            sort: { field: "Revenue_Type__c", dir: "asc" },
+                            group: {
+                                field: "Account__r.Name",
+                                dir: "asc",
+                                
+                                aggregates:[{ field: "Account__r.Name",                 aggregate: "min",},
+                                            { field: "Jan_" + yearSelect + "__c",       aggregate: "sum",},
+                                            { field: "Feb_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Mar_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q1_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q1_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q1_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "Apr_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "May_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "June_"+ yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q2_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q2_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q2_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "July_"+ yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Aug_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Sept_"+ yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q3_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q3_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q3_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "Oct_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Nov_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Dec_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q4_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q4_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q4_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Target__c", aggregate: "sum" }]
+                            },
+                            
+                        },
+                        
+                        height: 750,
+                        sortable: true,
+                        reorderable: true,
+                        groupable: true,
+                        resizable: true,
+                        filterable: true,
+                        editable: true,
+                        dataBound:function(e){
+                            debugger;
+                             $('.coldisable').prop("disabled",true);  
+                             $('.colDisable').prop("disabled",true);  
+                             $('.colEnable').prop("disabled",true);  
+                             if($(".k-checkbox.q1").prop("checked")){
+                                  this.hideColumn("Jan_" + yearSelect + "__c");
+                                  this.hideColumn("Feb_" + yearSelect + "__c");
+                                  this.hideColumn("Mar_" + yearSelect + "__c");
+                                  this.hideColumn("Q1_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q1_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q1_"  + yearSelect +"_Best__c");
+                             }
+                             if($(".k-checkbox.q2").prop("checked")){
+                                  this.hideColumn("Apr_" + yearSelect + "__c");
+                                  this.hideColumn("May_" + yearSelect + "__c");
+                                  this.hideColumn("June_" + yearSelect + "__c");
+                                  this.hideColumn("Q2_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q2_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q2_"  + yearSelect +"_Best__c");
+                             }
+                             if($(".k-checkbox.q3").prop("checked")){
+                                  this.hideColumn("July_" + yearSelect + "__c");
+                                  this.hideColumn("Aug_" + yearSelect + "__c");
+                                  this.hideColumn("Sept_" + yearSelect + "__c");
+                                  this.hideColumn("Q3_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q3_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q3_"  + yearSelect +"_Best__c");
+                             }
+                             if($(".k-checkbox.q4").prop("checked")){
+                                  this.hideColumn("Oct_" + yearSelect + "__c");
+                                  this.hideColumn("Nov_" + yearSelect + "__c");
+                                  this.hideColumn("Dec_" + yearSelect + "__c");
+                                  this.hideColumn("Q4_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q4_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q4_"  + yearSelect +"_Best__c");
+                             }
+                        },
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [  
+                            {   field: "Account__r.Name",  groupFooterTemplate: '<a class="k-button aaa#=min#" onclick="callRiskUpside(this);" style="font-size: x-small;" >Risk Upside & Change Comments</a>' ,  title: "Account Name",  
+                                locked: true,   lockable: false, encoded:false,   width: 200, attributes: { "class": "#if( ++record % 2 == 0) {#colDisable #=OfferSelectForCSM##} else {#colDisable #=OfferSelectForCSM#Odd#}#"} },
+                            {   field: "Account__r.SAP_Account_Code__c", title: "Garn Code", locked: true, width: 120,attributes: {"class": "colEnable one 1 #=Account__c#"} },
+                            
+                            //{   field: "Account__r.CSM_Account_Owner_Name__c", title: "CSM Account Owner", locked: true, width: 120,attributes: {"class": "#if( record % 2 == 0) {#colDisable #=OfferSelect##} else {#colDisable #=OfferSelect#Odd#}#"} }, 
+                           
+                            { title: "CSM Account Owner", locked: true, template: "<label value='#=csmSelect#' />#=csmSelect#</label>", 
+                                width: 120,
+                                },
+                            
+                            {   field: "Account__r.Total_CMRR__c", title: "CMMR",locked: true, width: 100, attributes: {"class": "#if( record % 2 == 0) {#colDisable #=OfferSelectForCSM##} else {#colDisable #=OfferSelectForCSM#Odd#}#"} },
+                            
+                            /*{   field: "Partner_Account__r.Name",
+                                locked: true, width: 120,attributes: {"class": "colEnable one 1 #=Account__c#"},
+                                title: "Partner Account",
+                                template: function (d) { return d.Offering_Type__c == 'Cloud Solution Partner (PPU)' ? d.Partner_Account__r.Name: ' '},
+                            },*/
+                            
+                            {   field: "Revenue_Type__c", title: "Revenue Type", locked: true, width: 180, attributes: {"class": "#if( record % 2 == 0) {#colDisable #=OfferSelectForCSM##} else {#colDisable #=OfferSelectForCSM#Odd#}#"},},
+                            
+                            {   title: "<input type='checkbox' class='k-checkbox all' onclick='selectRow(this)' id='all' /><label class='k-checkbox-label' for='all'/>", locked: true, template: "<input type='checkbox' class='k-checkbox ch #=Account__c#' onclick='selectRow(this)' id='#=Account__c#' /><label class='k-checkbox-label' for='#=Account__c#'/>",
+                                width: 50,
+                                groupFooterTemplate: "Total",
+                            },
+                            {   field: "Jan_" + yearSelect + "__c",         filterable: false, title: "Jan " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable one 1 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Feb_" + yearSelect +"__c",          filterable: false, title: "Feb " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable one 2 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Mar_" + yearSelect +"__c",          filterable: false, title: "Mar " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable one 3 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q1_"  + yearSelect +"_Land__c",     filterable: false, title: "Q1 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q1_"  + yearSelect +"_Low__c",      filterable: false, title: "Q1 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if("+ riskthresholdval +" > Q1_" + yearSelect +"_Low__c) { #colEnable one#} else {#colEnable Risks one#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q1_"  + yearSelect +"_Best__c",     filterable: false, title: "Q1 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if("+ upsidethresholdval +" > Q1_" + yearSelect +"_Best__c) { #colEnable one#} else {#colEnable Upside one#}# #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Apr_" + yearSelect +"__c",          filterable: false, title: "Apr "   + yearSelect,           format: "{0:c}", width: 100, attributes:{ "class": "colEnable two 4 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "May_" + yearSelect +"__c",          filterable: false, title: "May "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable two 5 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "June_"+ yearSelect +"__c",          filterable: false, title: "June " + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable two 6 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q2_"  + yearSelect +"_Land__c",     filterable: false, title: "Q2 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q2_"  + yearSelect +"_Low__c",      filterable: false, title: "Q2 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if(Q2_" + yearSelect +"_Low__c < "+ riskthresholdval +") { #colEnable two#} else {#colEnable Risks two#}# #=Account__c# " }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                            
+                            {   field: "Q2_"  + yearSelect +"_Best__c",     filterable: false, title: "Q2 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if(Q2_" + yearSelect +"_Best__c < "+ upsidethresholdval +") { #colEnable two#} else {#colEnable Upside two#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                         
+                            {   field: "July_"+ yearSelect +"__c",          filterable: false, title: "July " + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable three 7 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Aug_" + yearSelect +"__c",          filterable: false, title: "Aug " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable three 8 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Sept_"+ yearSelect +"__c",          filterable: false, title: "Sept " + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable three 9 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q3_"  + yearSelect +"_Land__c",     filterable: false, title: "Q3 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q3_"  + yearSelect +"_Low__c",      filterable: false, title: "Q3 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if(Q3_" + yearSelect +"_Low__c < "+ riskthresholdval +") { #colEnable three#} else {#colEnable Risks three#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                            
+                            {   field: "Q3_"  + yearSelect +"_Best__c",     filterable: false, title: "Q3 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if(Q3_" + yearSelect +"_Best__c < "+ upsidethresholdval +") { #colEnable three#} else {#colEnable Upside three#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                         
+                            {   field: "Oct_" + yearSelect +"__c",          filterable: false, title: "Oct "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable four 10 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Nov_" + yearSelect +"__c",          filterable: false, title: "Nov "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable four 11 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Dec_" + yearSelect +"__c",          filterable: false, title: "Dec "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable four 12 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q4_"  + yearSelect +"_Land__c",     filterable: false, title: "Q4 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q4_"  + yearSelect +"_Low__c",      filterable: false, title: "Q4 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if(Q4_" + yearSelect +"_Low__c < "+ riskthresholdval +") { #colEnable four#} else {#colEnable Risks four#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n0')#" },
+                            
+                            {   field: "Q4_"  + yearSelect +"_Best__c",     filterable: false, title: "Q4 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if(Q4_" + yearSelect +"_Best__c < "+ upsidethresholdval +") { #colEnable four#} else {#colEnable Upside four#}# #=Account__c #" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                            
+                            {   field: "X"    + yearSelect +"_Low__c",      filterable: false, title: yearSelect + " Risk",            format: "{0:c}", width: 120, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "X"    + yearSelect +"_Land__c",     filterable: false, title: yearSelect + " Forecast",        format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "X"    + yearSelect +"_Best__c",     filterable: false, title: yearSelect + " Upside",          format: "{0:c}", width: 130, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "X"    + yearSelect +"_Target__c",   filterable: false, title: yearSelect + " Target",          format: "{0:c}", width: 130, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"}
+                                 
+                        ],
+                    });
+                    /*if(OfferSelectForCSM != 'Cloud Solution Partner (PPU)'){
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        grid.hideColumn("Partner_Account__r.Name");
+                    }*/
+                }
+                
+                 /*******************************************************Ended by Priyank **********************************************************/
+                //******************************************************** Edit Your Data **********************************************************//
+                
+                //******************************************************** Saerch Your Data **********************************************************//
+                
+                function searchdata(){
+                    debugger;
+                    $("#gridRecords").empty();
+                    
+                    // Change the condition if WeekSelect requires add ( && periodSelect != '')
+                    
+                    if(OfferSelect != '' && yearSelect != '' && weekSelect != '' ){
+                        getGridComplete(OfferSelect, yearSelect  , weekSelect);
+                       
+                    }else{
+                        $.when(showConfirmationWindow('No data found, Try with different Search.')).then(function(confirmed){
+                            if(confirmed){
+                                wnd.center().close();
+                            }
+                        });
+                    }
+                }
+                
+                //******************************************************** Saerch Your Data **********************************************************//
+               
+                //*********************************************************** 2017  Data *************************************************************//
+                function getGridComplete(OfferSelect, yearSelect , weekSelect) {
+                    
+                   setString = [];
+                   
+                    var grid = $("#gridRecords").kendoGrid({
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.getAccountRevenueRecord}", OfferSelect, yearSelect, weekSelect,csmSelect,setString,true,
+                                        function(result, event) {
+                                            debugger
+                                            if(event.status) {
+                                                console.log(result);
+                                                if(result != null){
+                                                    try {
+                                                        for(i=0 ; i < result.length ; i++){
+                                                            setString.push(result[i].Id);
+                                                        }
+                                                        
+                                                        if(setString.length >= 7000){
+                                                            
+                                                            Visualforce.remoting.Manager.invokeAction(
+                                                                "{!$RemoteAction.PESSRevenueForecastControllerView.getAccountRevenueRecord}", OfferSelect, yearSelect, weekSelect,csmSelect,setString,true,
+                                                                function(result1, event) {
+                                                                    if(event.status) {
+                                                                        debugger;
+                                                                        console.log(result1);
+                                                                        result1.remove(undefined, 0);
+                                                                        if(result1 != null){
+                                                                            for(i=0 ; i < result1.length ; i++){
+                                                                                debugger;
+                                                                                result.push(result1[i]);
+                                                                            }
+                                                                            debugger;
+                                                                            options.success(result);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            );
+                                                        }else{
+                                                            debugger;
+                                                            options.success(result);
+                                                        }
+                                                        $('#save').show();
+                                                        $('#word').show();
+                                                        $('.alphaPaging').show();
+                                                        $('#SubmitForecast').show();
+                                                        $('#export').show();
+                                                        $('#changesReport').show();
+                                                    } catch (e) {
+                                                        $("#gridRecords").empty();
+                                                        $("#notification").kendoNotification({
+                                                            autoHideAfter: 3000,
+                                                            width: "auto",
+                                                            position: {
+                                                                bottom: 40,
+                                                                right: 30
+                                                            }
+                                                        });
+                                                        setIds = [];
+                                                        $("#notification").getKendoNotification().show(e);
+                                                    }
+                                                }else{
+                                                    $("#gridRecords").empty();
+                                                    $('#save').hide();
+                                                    $('#word').hide();
+                                                    $('#export').hide();
+                                                    $('#SubmitForecast').hide();
+                                                    $('.alphaPaging').hide();
+                                                    $('#changesReport').hide();
+                                                    $.when(showConfirmationWindow('No data found. Please, try with different search.')).then(function(confirmed){
+                                                        if(confirmed){
+                                                           
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                            pageSize: 200,
+                            sort: { field: "Revenue_Type__c", dir: "asc" },
+                            group: {
+                                field: "Account__r.Name",
+                                dir: "asc",
+                                
+                                aggregates:[{ field: "Account__r.Name",                 aggregate: "min",},
+                                            { field: "Jan_" + yearSelect + "__c",       aggregate: "sum",},
+                                            { field: "Feb_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Mar_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q1_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q1_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q1_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "Apr_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "May_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "June_"+ yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q2_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q2_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q2_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "July_"+ yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Aug_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Sept_"+ yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q3_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q3_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q3_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "Oct_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Nov_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Dec_" + yearSelect + "__c",       aggregate: "sum" },
+                                            { field: "Q4_"  + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "Q4_"  + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "Q4_"  + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Low__c",   aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Land__c",  aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Best__c",  aggregate: "sum" },
+                                            { field: "X"    + yearSelect + "_Target__c", aggregate: "sum" }]
+                            },
+                            
+                        },
+                        
+                        height: 770,
+                        sortable: true,
+                        reorderable: true,
+                        groupable: true,
+                        resizable: true,
+                        filterable: true,
+                        editable: true,
+                        dataBound:function(e){
+                            debugger;
+                             $('.coldisable').prop("disabled",true);  
+                             $('.colDisable').prop("disabled",true);  
+                             $('.colEnable').prop("disabled",true);  
+                             if($(".k-checkbox.q1").prop("checked")){
+                                  this.hideColumn("Jan_" + yearSelect + "__c");
+                                  this.hideColumn("Feb_" + yearSelect + "__c");
+                                  this.hideColumn("Mar_" + yearSelect + "__c");
+                                  this.hideColumn("Q1_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q1_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q1_"  + yearSelect +"_Best__c");
+                             }
+                             if($(".k-checkbox.q2").prop("checked")){
+                                  this.hideColumn("Apr_" + yearSelect + "__c");
+                                  this.hideColumn("May_" + yearSelect + "__c");
+                                  this.hideColumn("June_" + yearSelect + "__c");
+                                  this.hideColumn("Q2_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q2_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q2_"  + yearSelect +"_Best__c");
+                             }
+                             if($(".k-checkbox.q3").prop("checked")){
+                                  this.hideColumn("July_" + yearSelect + "__c");
+                                  this.hideColumn("Aug_" + yearSelect + "__c");
+                                  this.hideColumn("Sept_" + yearSelect + "__c");
+                                  this.hideColumn("Q3_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q3_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q3_"  + yearSelect +"_Best__c");
+                             }
+                             if($(".k-checkbox.q4").prop("checked")){
+                                  this.hideColumn("Oct_" + yearSelect + "__c");
+                                  this.hideColumn("Nov_" + yearSelect + "__c");
+                                  this.hideColumn("Dec_" + yearSelect + "__c");
+                                  this.hideColumn("Q4_"  + yearSelect +"_Land__c");
+                                  this.hideColumn("Q4_"  + yearSelect +"_Low__c");
+                                  this.hideColumn("Q4_"  + yearSelect +"_Best__c");
+                             }
+                        },
+                        pageable: {
+                            alwaysVisible: true,
+                            pageSizes: [25, 50, 100, 200]
+                        },
+                        columns: 
+                        [  
+                            {   field: "Account__r.Name",  groupFooterTemplate: '<a class="k-button aaa#=min#" onclick="callRiskUpside(this);" style="font-size: x-small;" >Risk Upside & Change Comments</a>' ,  title: "Account Name",  
+                                locked: true,   lockable: false, encoded:false,   width: 200, attributes: { "class": "#if( ++record % 2 == 0) {#colDisable #=OfferSelect##} else {#colDisable #=OfferSelect#Odd#}#"} },
+                            {   field: "Account__r.SAP_Account_Code__c", title: "Garn Code", locked: true, width: 120,attributes: {"class": "colEnable one 1 #=Account__c#"} }, 
+                            {   field: "CSM_Account_Owner__c", title: "CSM Account Owner", locked: true, width: 120,attributes: {"class": "#if( record % 2 == 0) {#colDisable #=OfferSelect##} else {#colDisable #=OfferSelect#Odd#}#"} },
+                            
+                            {   field: "Account__r.Total_CMRR__c", title: "CMMR",locked: true, width: 100, attributes: {"class": "#if( record % 2 == 0) {#colDisable #=OfferSelect##} else {#colDisable #=OfferSelect#Odd#}#"} },
+                            
+                            /*{   field: "Partner_Account__r.Name",
+                                locked: true, width: 120,attributes: {"class": "colEnable one 1 #=Account__c#"},
+                                title: "Partner Account",
+                                template: function (d) { return d.Offering_Type__c == 'Cloud Solution Partner (PPU)' ? d.Partner_Account__r.Name: ' '},
+                            },*/
+                            
+                            {   field: "Revenue_Type__c", title: "Revenue Type", locked: true, width: 180, attributes: {"class": "#if( record % 2 == 0) {#colDisable #=OfferSelect##} else {#colDisable #=OfferSelect#Odd#}#"},},
+                            
+                            {   title: "<input type='checkbox' class='k-checkbox all' onclick='selectRow(this)' id='all' /><label class='k-checkbox-label' for='all'/>", locked: true, template: "<input type='checkbox' class='k-checkbox ch #=Account__c#' onclick='selectRow(this)' id='#=Account__c#' /><label class='k-checkbox-label' for='#=Account__c#'/>",
+                                width: 50,
+                                groupFooterTemplate: "Total",
+                            },
+                            {   field: "Jan_" + yearSelect + "__c",         filterable: false, title: "Jan " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable one 1 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Feb_" + yearSelect +"__c",          filterable: false, title: "Feb " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable one 2 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Mar_" + yearSelect +"__c",          filterable: false, title: "Mar " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable one 3 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q1_"  + yearSelect +"_Land__c",     filterable: false, title: "Q1 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q1_"  + yearSelect +"_Low__c",      filterable: false, title: "Q1 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if("+ riskthresholdval +" > Q1_" + yearSelect +"_Low__c) { #colEnable one#} else {#colEnable Risks one#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q1_"  + yearSelect +"_Best__c",     filterable: false, title: "Q1 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if("+ upsidethresholdval +" > Q1_" + yearSelect +"_Best__c) { #colEnable one#} else {#colEnable Upside one#}# #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Apr_" + yearSelect +"__c",          filterable: false, title: "Apr "   + yearSelect,           format: "{0:c}", width: 100, attributes:{ "class": "colEnable two 4 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "May_" + yearSelect +"__c",          filterable: false, title: "May "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable two 5 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "June_"+ yearSelect +"__c",          filterable: false, title: "June " + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable two 6 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q2_"  + yearSelect +"_Land__c",     filterable: false, title: "Q2 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q2_"  + yearSelect +"_Low__c",      filterable: false, title: "Q2 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if(Q2_" + yearSelect +"_Low__c < "+ riskthresholdval +") { #colEnable two#} else {#colEnable Risks two#}# #=Account__c# " }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                            
+                            {   field: "Q2_"  + yearSelect +"_Best__c",     filterable: false, title: "Q2 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if(Q2_" + yearSelect +"_Best__c < "+ upsidethresholdval +") { #colEnable two#} else {#colEnable Upside two#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                         
+                            {   field: "July_"+ yearSelect +"__c",          filterable: false, title: "July " + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable three 7 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Aug_" + yearSelect +"__c",          filterable: false, title: "Aug " + yearSelect,             format: "{0:c}", width: 100, attributes:{ "class": "colEnable three 8 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Sept_"+ yearSelect +"__c",          filterable: false, title: "Sept " + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable three 9 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q3_"  + yearSelect +"_Land__c",     filterable: false, title: "Q3 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q3_"  + yearSelect +"_Low__c",      filterable: false, title: "Q3 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if(Q3_" + yearSelect +"_Low__c < "+ riskthresholdval +") { #colEnable three#} else {#colEnable Risks three#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                            
+                            {   field: "Q3_"  + yearSelect +"_Best__c",     filterable: false, title: "Q3 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if(Q3_" + yearSelect +"_Best__c < "+ upsidethresholdval +") { #colEnable three#} else {#colEnable Upside three#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                         
+                            {   field: "Oct_" + yearSelect +"__c",          filterable: false, title: "Oct "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable four 10 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Nov_" + yearSelect +"__c",          filterable: false, title: "Nov "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable four 11 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Dec_" + yearSelect +"__c",          filterable: false, title: "Dec "  + yearSelect,            format: "{0:c}", width: 100, attributes:{ "class": "colEnable four 12 #=Account__c#"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q4_"  + yearSelect +"_Land__c",     filterable: false, title: "Q4 "  + yearSelect + " Forecast",format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "Q4_"  + yearSelect +"_Low__c",      filterable: false, title: "Q4 "  + yearSelect + " Risk",   format: "{0:c}", width: 120, attributes:{ "class": "#if(Q4_" + yearSelect +"_Low__c < "+ riskthresholdval +") { #colEnable four#} else {#colEnable Risks four#}# #=Account__c#" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n0')#" },
+                            
+                            {   field: "Q4_"  + yearSelect +"_Best__c",     filterable: false, title: "Q4 "  + yearSelect + " Upside", format: "{0:c}", width: 130, attributes:{ "class": "#if(Q4_" + yearSelect +"_Best__c < "+ upsidethresholdval +") { #colEnable four#} else {#colEnable Upside four#}# #=Account__c #" }, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#" },
+                            
+                            {   field: "X"    + yearSelect +"_Low__c",      filterable: false, title: yearSelect + " Risk",            format: "{0:c}", width: 120, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "X"    + yearSelect +"_Land__c",     filterable: false, title: yearSelect + " Forecast",        format: "{0:c}", width: 140, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "X"    + yearSelect +"_Best__c",     filterable: false, title: yearSelect + " Upside",          format: "{0:c}", width: 130, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"},
+                            
+                            {   field: "X"    + yearSelect +"_Target__c",   filterable: false, title: yearSelect + " Target",          format: "{0:c}", width: 130, attributes:{ "class": "coldisable noneditColor"}, aggregates: ["sum"], groupFooterTemplate: "$ #=kendo.toString(sum, 'n')#"}
+                                 
+                        ],
+                    });
+                    /*if(OfferSelect != 'Cloud Solution Partner (PPU)'){
+                        var grid = $("#gridRecords").data("kendoGrid");
+                        grid.hideColumn("Partner_Account__r.Name");
+                    }*/
+                }
+                
+                function exportData(){
+                    var offeringType = $('.OfferingTypeID').text();
+                    var OfferSelectOffering;
+                    $('.offer').each(function(){
+                        if($(this).hasClass('selected')){
+                            offeringType = $('.selected').text();
+                        }
+                    });
+                    if(offeringType.includes('PureEngage')){
+                        OfferSelectOffering = 'PureEngage';
+                    }else if(offeringType.includes('PureCloud')){
+                        OfferSelectOffering = 'PureCloud';
+                    }else if(offeringType.includes('Outbound')){
+                        OfferSelectOffering = 'Outbound';
+                    }else if(offeringType.includes('Premier')){
+                        OfferSelectOffering = 'Premier';
+                    }else if(offeringType.includes('PureConnect')){
+                        OfferSelectOffering = 'PureConnect';
+                    }else if(offeringType.includes('Cloud Solution Partner (PPU)')){
+                        OfferSelectOffering = 'Cloud Solution Partner (PPU)';
+                    }else{
+                        OfferSelectOffering = '';
+                    }
+                    var grid = $("#gridRecordsExport").kendoGrid({
+                        excel: {
+                          fileName: "MonthlyForecast.xlsx",
+                          filterable:true,
+                        },
+                        dataSource: {
+                            transport: {
+                                read: function(options) {
+                                    Visualforce.remoting.Manager.invokeAction(
+                                        "{!$RemoteAction.PESSRevenueForecastControllerView.getAccountRevenueRecord}", OfferSelectOffering, yearSelect, weekSelect,csmSelect,setString,false,
+                                        function(result, event) {
+                                            if(event.status) {
+                                                options.success(result);
+                                            }
+                                        }
+                                    );
+                                }
+                            },
+                        },
+                        sort: { field: "Account__r.Name", dir: "asc" },
+                        sortable: true,
+                        columns: [  {   field: "Account__r.Name",                   title: "Account Name",                  width: 100, },
+                                    {   field: "CSM_Account_Owner__c", title: "CSM Account Owner",          width: 100, },
+                                    {   field: "Account__r.Total_CMRR__c",          title: "CMMR", width: 100,              width: 100, },
+                                    {   field: "Revenue_Type__c",                   title: "Revenue Type",                  width: 100, },
+                                    {   field: "Jan_" + yearSelect + "__c",         title: "Jan " + yearSelect ,            width: 100, },
+                                    {   field: "Feb_" + yearSelect +"__c",          title: "Feb " + yearSelect,             width: 100, },
+                                    {   field: "Mar_" + yearSelect +"__c",          title: "Mar " + yearSelect,             width: 100, },
+                                    {   field: "Q1_"  + yearSelect +"_Land__c",     title: "Q1 "  + yearSelect + " Forecast",width: 100, },
+                                    {   field: "Q1_"  + yearSelect +"_Low__c",      title: "Q1 "  + yearSelect + " Risk",   width: 100, },
+                                    {   field: "Q1_"  + yearSelect +"_Best__c",     title: "Q1 "  + yearSelect + " Upside", width: 100, },
+                                    {   field: "Apr_" + yearSelect +"__c",          title: "Ap"   + yearSelect,             width: 100, },
+                                    {   field: "May_" + yearSelect +"__c",          title: "May "  + yearSelect,            width: 100, },
+                                    {   field: "June_"+ yearSelect +"__c",          title: "June " + yearSelect,            width: 100, },
+                                    {   field: "Q2_"  + yearSelect +"_Land__c",     title: "Q2 "  + yearSelect + " Forecast",width: 100, },
+                                    {   field: "Q2_"  + yearSelect +"_Low__c",      title: "Q2 "  + yearSelect + " Risk",   width: 100, },
+                                    {   field: "Q2_"  + yearSelect +"_Best__c",     title: "Q2 "  + yearSelect + " Upside", width: 100, },
+                                    {   field: "July_"+ yearSelect +"__c",          title: "July " + yearSelect,            width: 100, },
+                                    {   field: "Aug_" + yearSelect +"__c",          title: "Aug " + yearSelect,             width: 100, },
+                                    {   field: "Sept_"+ yearSelect +"__c",          title: "Sept " + yearSelect,            width: 100, },
+                                    {   field: "Q3_"  + yearSelect +"_Land__c",     title: "Q3 "  + yearSelect + " Forecast",width: 100, },
+                                    {   field: "Q3_"  + yearSelect +"_Low__c",      title: "Q3 "  + yearSelect + " Risk",   width: 100, },
+                                    {   field: "Q3_"  + yearSelect +"_Best__c",     title: "Q3 "  + yearSelect + " Upside", width: 100, },
+                                    {   field: "Oct_" + yearSelect +"__c",          title: "Oct "  + yearSelect,            width: 100, },
+                                    {   field: "Nov_" + yearSelect +"__c",          title: "Nov "  + yearSelect,            width: 100, },
+                                    {   field: "Dec_" + yearSelect +"__c",          title: "Dec "  + yearSelect,            width: 100, },
+                                    {   field: "Q4_"  + yearSelect +"_Land__c",     title: "Q4 "  + yearSelect + " Forecast",width: 100, },
+                                    {   field: "Q4_"  + yearSelect +"_Low__c",      title: "Q4 "  + yearSelect + " Risk",   width: 100, },
+                                    {   field: "Q4_"  + yearSelect +"_Best__c",     title: "Q4 "  + yearSelect + " Upside", width: 100, },
+                                    {   field: "X"    + yearSelect +"_Low__c",      title: yearSelect + " Risk",            width: 100, },
+                                    {   field: "X"    + yearSelect +"_Land__c",     title: yearSelect + " Forecast",        width: 100, },
+                                    {   field: "X"    + yearSelect +"_Best__c",     title: yearSelect + " Upside",          width: 100, },
+                                    {   field: "X"    + yearSelect +"_Target__c",   title: yearSelect + " Target",          width: 100, }
+                        ]
+                    });
+                    
+                    
+                     wnd = $("#windowExport")
+                    .kendoWindow({
+                        title: "Export To Excel",
+                        modal: true,
+                        visible: false,
+                        resizable: false,
+                        width: 50
+                    }).data("kendoWindow");
+                    $(".k-widget.k-window").css("width", "20%");
+                    wnd.center().open();
+                }
+                
+                // Close the Popup
+                function downloadData(){
+                    
+                    var grid = $("#gridRecordsExport").data("kendoGrid");
+                    
+                    grid.saveAsExcel();
+                    wnd.center().close();
+                }
+                
+                // Close the Popup
+                function cancelDownload(){
+                    wnd.center().close();
+                    
+                }
+                
+                //*********************************************************** Data *************************************************************//
+                
+                //To show confirmation message
+                function showConfirmationWindow(message) {
+                    return showWindow('#confirmationTemplate', message)
+                };
+            
+                function showWindow(template, message) {
+                    var dfd = new jQuery.Deferred();
+                    var result = false;
+            
+                    $("<div id='popupWindow'></div>")
+                        .appendTo("body")
+                        .kendoWindow({
+                        width: "auto",
+                        modal: true,
+                        title: "",
+                        modal: true,
+                        visible: false,
+                        close: function (e) {
+                        this.destroy();
+                        dfd.resolve(result);
+                      }
+                    }).data('kendoWindow').content($(template).html()).center().open();
+                    
+                    $('.popupMessage').html(message);
+                    debugger;
+                    if(message.includes('Forecast')){
+                        $('#popupWindow .confirm_yes').val('Submit');
+                        $('#popupWindow .confirm_no').val('Cancel');
+                    }else{
+                        $('#popupWindow .confirm_yes').val('Ok');
+                        $('#popupWindow .confirm_no').val('Cancel');
+                    }
+            
+                    $('#popupWindow .confirm_no').click(function () {
+                        $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    $('#popupWindow .confirm_yes').click(function () {
+                      result = true;
+                      $('#popupWindow').data('kendoWindow').close();
+                    });
+            
+                    return dfd.promise();
+                };
+                //*********************************************************** 2018  Data *************************************************************//
+               
+            </script>
+        </div>
+    </body>
+    </html>
+</apex:form>  
+
+</apex:page>

@@ -1,0 +1,241 @@
+<apex:page cache="false"
+  controller="pkb_categorySubscription">
+  <apex:includeScript value="{!$Resource.pkb_jquery_1_6_2}"/>
+  	<script type="text/javascript">
+		var $$ = jQuery.noConflict();
+	</script>	
+	
+	<style>
+		.pbSubheader h3{color:black;}
+		.bPageBlock .detailList tr td{border-bottom: none;}
+		div.pbBody>div{border-bottom: 5px solid grey;padding-bottom: 10px;} 
+	</style>
+	
+	<apex:form >
+	
+		<apex:pageBlock >
+			<apex:pageBlockSection columns="1"  title="Category Alerts" >
+			  	<apex:outputPanel layout="block" styleClass="searchDrill" rendered="{!displayCategory1}">
+			       <c:pkb_subscriptionCategorySelectors catNum="1" 
+			         catGroup="{!categoryGroup1}" 
+			         catGroupLabel="{!categoryLabel1}" 
+			         rootCat="{!rootCategory1}" />
+			     </apex:outputPanel>
+			
+			    <!--  <apex:outputPanel layout="block" styleClass="searchDrill" rendered="{!displayCategory2}">
+			       <c:pkb_categoryselect catNum="2" 
+			         catGroup="{!categoryGroup2}" 
+			         catGroupLabel="{!categoryLabel2}" 
+			         rootCat="{!rootCategory2}" />
+			     </apex:outputPanel>
+			
+			     <apex:outputPanel layout="block" styleClass="searchDrill" rendered="{!displayCategory3}">
+			       <c:pkb_categoryselect catNum="3" 
+			         catGroup="{!categoryGroup3}" 
+			         catGroupLabel="{!categoryLabel3}" 
+			         rootCat="{!rootCategory3}" />
+			     </apex:outputPanel> -->
+			     
+			     Alert Preference
+			     <br/>
+			     <select class="freqSubCat">
+			     	<option value="New And Updated Articles" selected="selected">New And Updated Articles</option>
+			     	<option value="New And Updated Articles">Only New Articles</option>
+			     	<option value="New And Updated Articles">Only Updated Articles</option>
+			     </select>
+			     
+			     
+			     <input value="Create Alert" type="button" onclick="subscribeToCats();"/>
+		     
+		     </apex:pageBlockSection>
+		     <apex:actionFunction name="SubscribeCat" action="{!addCatsubscribe}" oncomplete="alert('Subscription Added');window.location.reload();">
+		               <apex:param name="catJson" value="" />
+		                <apex:param name="ArticlePreference" value="" />
+		        </apex:actionFunction>
+		     
+		     <apex:pageBlockSection columns="1"  title="Article Type Alerts" >
+		
+				<c:pkb_articletypeselector articleTypes="{!articleTypes}" articleTypesLabels="{!articleTypeLabels}" ></c:pkb_articletypeselector>
+			  	
+			  	
+			  	 
+			  	
+			  	 Alert Preference
+			     <br/>
+			     <select class="freqSubType">
+			     	<option value="New And Updated Articles" selected="selected">New And Updated Articles</option>
+			     	<option value="New And Updated Articles">Only New Articles</option>
+			     	<option value="New And Updated Articles">Only Updated Articles</option>
+			     </select>
+			  	<input value="Create Alert" type="button" onclick="subscribeToArticleType();"/>
+			  	
+		  	</apex:pageBlockSection>
+		  	<apex:actionFunction name="SubscribeType" action="{!addArticleTypesubscribe}"  oncomplete="alert('Subscription Added');window.location.reload();">
+		               <apex:param name="typeId" value="" />
+		               <apex:param name="typeTitle" value="" />
+		               <apex:param name="ArticlePreference" value="" />
+		        </apex:actionFunction>
+		  	
+		  	<apex:pageBlockSection columns="1"  title="Category and Article Type Alerts" >
+		
+		
+			<apex:outputPanel layout="block" styleClass="searchDrill" rendered="{!displayCategory1}">
+			       <c:pkb_subscriptionCategorySelectors catNum="1" 
+			         catGroup="{!categoryGroup1}" 
+			         catGroupLabel="{!categoryLabel1}" 
+			         rootCat="{!rootCategory1}" 
+			         occurenceKey="Second"/>
+			     </apex:outputPanel>
+		
+		
+			<c:pkb_articletypeselector articleTypes="{!articleTypes}" articleTypesLabels="{!articleTypeLabels}" occurenceKey="Second"></c:pkb_articletypeselector>
+			  	
+		
+			  	
+			  	 
+			  	
+			  	 Alert Preference
+			     <br/>
+			     <select class="freqSubCatType">
+			     	<option value="New And Updated Articles" selected="selected">New And Updated Articles</option>
+			     	<option value="New And Updated Articles">Only New Articles</option>
+			     	<option value="New And Updated Articles">Only Updated Articles</option>
+			     </select>
+			  	<input value="Create Alert" type="button" onclick="subscribeToArticleAndCatType();"/>
+			  	
+		  	</apex:pageBlockSection>
+		  	<apex:actionFunction name="SubscribeTypeAndCat" action="{!addCatAndTypesubscribe}"  oncomplete="alert('Subscription Added');window.location.reload();">
+		               <apex:param name="catJson" value="" />
+		               <apex:param name="typeId" value="" />
+		               <apex:param name="typeTitle" value="" />
+		               <apex:param name="ArticlePreference" value="" />
+		        </apex:actionFunction>
+		</apex:pageBlock>
+  	</apex:form>
+   <script type="text/javascript">
+   
+    var catLabelArray = new Array();
+    
+
+   	function subscribeToCats(){
+		
+		var found = false;
+  		var jsonIds = [];
+		
+		jQuery('#multicategorySelect1sub input:checked').each(function() {
+			//push the initial message
+			jsonIds.push({catId: jQuery(this).attr('name'),catValue:jQuery(this).attr('label')});
+			found = true;
+		});
+		
+   	
+   		var catFrequency = $$('.freqSubCat').find(":selected").text();
+   	
+   		if(!found){
+   			var hasValue = $$('#categorySelect1 :selected').is('[value]');
+   			var catID = $$('#categorySelect1 :selected').attr('value');
+   			var catName = $$('#categorySelect1 :selected').text();
+   			if(!hasValue){
+   				alert('Please select a category.');
+   			}else{
+   				jsonIds.push({catId: catID,catValue:catName});
+   				SubscribeCat(JSON.stringify(jsonIds),catFrequency);
+   			}
+   		}else{
+   			SubscribeCat(JSON.stringify(jsonIds),catFrequency);
+   		}
+   	
+   	}
+   	
+   	function subscribeToArticleType(){
+   		var hasValue = $$('#articleTypeSelector :selected').is('[value]');
+   		var articleTypeID = $$('#articleTypeSelector :selected').attr('value');
+   		var articleTypeName = $$('#articleTypeSelector :selected').text();
+   	
+   		var catFrequency = $$('.freqSubType').find(":selected").text();
+   	
+   	
+   		if(!hasValue){
+   			alert('Please select an article type.');
+   		}else{
+   			SubscribeType(articleTypeID,articleTypeName,catFrequency);
+   		}
+   		
+   	
+   	}
+   	
+   	
+   	
+   	function subscribeToArticleAndCatType(){
+   		var hasValue = $$('#articleTypeSelectorSecond :selected').is('[value]');
+   		var articleTypeID = $$('#articleTypeSelectorSecond :selected').attr('value');
+   		var articleTypeName = $$('#articleTypeSelectorSecond :selected').text();
+   	
+   		var catFrequency = $$('.freqSubCatType').find(":selected").text();
+   	
+   	
+   		if(!hasValue){
+   			alert('Please select an article type.');
+   		}else{
+   		
+   			var found = false;
+	  		var jsonIds = [];
+			
+			jQuery('#multicategorySelect1subSecond input:checked').each(function() {
+				//push the initial message
+				jsonIds.push({catId: jQuery(this).attr('name'),catValue:jQuery(this).attr('label')});
+				found = true;
+			});
+   		
+	   		if(!found){
+	   			var hasValue = $$('#categorySelect1Second :selected').is('[value]');
+	   			var catID = $$('#categorySelect1Second :selected').attr('value');
+	   			var catName = $$('#categorySelect1Second :selected').text();
+	   			if(!hasValue){
+	   				alert('Please select a category.');
+	   			}else{
+	   				jsonIds.push({catId: catID,catValue:catName});
+	   				SubscribeTypeAndCat(JSON.stringify(jsonIds),articleTypeID,articleTypeName,catFrequency);
+	   			}
+	   		}else{
+	   			SubscribeTypeAndCat(JSON.stringify(jsonIds),articleTypeID,articleTypeName,catFrequency);
+	   		}
+   			
+   		}
+   		
+   	
+   	}
+   	
+   	function setCategory(elem){
+   		selectSubCategory($$(elem).find(":selected").val());
+   	}
+   	
+   	function setCategorySecond(elem){
+   		selectSubCategorySecond($$(elem).find(":selected").val());
+   	}
+   	
+   	function sortDropDownListByText(selectId) {
+	    var foption = $$('#'+ selectId + ' option:first');
+	    var soptions = $$('#'+ selectId + ' option:not(:first)').sort(function(a, b) {
+	       return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+	    });
+	    $$('#' + selectId).html(soptions).prepend(foption);              
+	
+	};
+   	
+   	$$(document).ready(function(){
+	   	sortDropDownListByText('parentCatSelect1');
+	    sortDropDownListByText('categorySelect1sub');
+	    sortDropDownListByText('parentCatSelect1Second');
+	    sortDropDownListByText('categorySelect1subSecond');
+	    sortDropDownListByText('articleTypeSelector');
+	    sortDropDownListByText('articleTypeSelectorSecond');
+   	});
+   	
+   	
+   
+   </script>
+   
+   
+
+</apex:page>

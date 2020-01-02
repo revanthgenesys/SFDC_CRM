@@ -1,0 +1,187 @@
+<apex:page controller="SoldToTransferToolController">
+    <script type="text/javascript">
+    	function disableEnterKey(e){
+            var key;     
+            if(window.event)
+                key = window.event.keyCode; //IE
+            else
+                key = e.which; //firefox     
+            return (key != 13);
+        }
+    </script>
+    <apex:form >
+	    <apex:sectionHeader subtitle="Sold To Transfer" title="Transfer Request" />
+	    <apex:outputPanel id="unauthorizedUserPanel" rendered="{!authorizedUser == false}">
+	        <br />
+	        <p align="center" style="font-size:20px;color:red;">
+	            You are not authorized to access this application, Please contact Genesys Support.
+	        </p>
+	    </apex:outputPanel>
+	    <apex:actionStatus id="status">
+	        <apex:facet name="start">
+	            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+	                &nbsp;
+	            </div>
+	            <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+	                <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+	                    <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+	                    <span class="waitingDescription">Please Wait...</span>
+	                </div>
+	            </div>
+	        </apex:facet>
+		</apex:actionStatus>
+    	<apex:pageBlock >
+            <apex:outputPanel id="accountSelectionPanel" rendered="{!authorizedUser == true}">
+                <TABLE WIDTH="100%">
+                    <TR>
+                        <TD>
+                            <b>Account Name:</b>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <apex:inputField value="{!accountSelection.AccountId}" onkeypress="return disableEnterKey(event);" style="width:400px;"/>
+                            <apex:commandButton value=" GO " action="{!goClicked}" reRender="serviceContractPanel,targetSelectionPanel" status="status"/>
+                        </TD>
+                    </TR>
+                </TABLE>
+            </apex:outputPanel>
+		</apex:pageBlock>
+		<apex:outputPanel id="serviceContractPanel" >
+			
+			<apex:outputPanel rendered="{!accountSelection.AccountId != NULL && pendingRequests != NULL && pendingRequests.size > 0}"> 
+				<p align="center" style="font-size:15px;color:red;">
+		            Pending Sold To Transfer Requests exists for selected End User, Please review before creating new Request.
+		        </p>
+				<apex:pageBlock title="Pending Sold To Transfer Requests">
+	                <apex:pageBlockTable value="{!pendingRequests}" var="sttItem">
+	                      <apex:column headerValue="Request#">
+	                 		<apex:outputLink value="/{!sttItem.Id}" target="_blank">{!sttItem.Name}</apex:outputLink>
+	                      </apex:column>
+	                      <apex:column headerValue="Target Sold To">
+	                 		<apex:outputLink value="/{!sttItem.Target_Sold_To__c}" target="_blank">{!sttItem.Target_Sold_To__r.Name}</apex:outputLink>
+	                      </apex:column>
+	                      <apex:column headerValue="Status" value="{!sttItem.Status__c}" />
+	                      <apex:column headerValue="Created Date" value="{!sttItem.CreatedDate}" />
+	                      <apex:column headerValue="Created By" value="{!sttItem.CreatedBy.Name}" />
+	                 </apex:pageBlockTable> 
+				</apex:pageBlock>
+			</apex:outputPanel>
+			<apex:outputPanel rendered="{!accountSelection.AccountId != NULL && atleastOneServiceSelected == false  && serviceContracts != NULL && serviceContracts.size > 0}">
+				<p align="center" style="font-size:15px;color:red;">
+		            Please select at least one Service Contract to Transfer.
+		        </p>
+			</apex:outputPanel>
+			<apex:outputPanel rendered="{!accountSelection.AccountId != NULL && serviceContracts != NULL && serviceContracts.size > 0}">  
+                <apex:pageBlock title="Service Contracts">
+	                <apex:pageBlockTable value="{!serviceContracts}" var="scItem">
+						<apex:column headerValue="Select" width="45px;" >
+							<apex:facet name="header"> 
+								<apex:inputCheckbox value="{!selectAll}">
+                            		<apex:actionSupport event="onclick" action="{!selectAllServiceContracts}" rerender="serviceContractPanel,targetSelectionPanel"/>
+                            	</apex:inputCheckbox>
+                        	</apex:facet>
+							<apex:inputCheckbox value="{!scItem.selected}">
+								<apex:actionSupport event="onclick" action="{!serviceContractSelectionChanged}" rerender="serviceContractPanel,targetSelectionPanel"/>
+							</apex:inputCheckbox>
+						</apex:column>
+	                     <apex:column headerValue="Service Contract">
+	                 		<apex:outputLink value="/{!scItem.sc.Id}" target="_blank">{!scItem.sc.Name}</apex:outputLink>
+	                      </apex:column>
+	                      <apex:column value="{!scItem.sc.Sold_To_Name__c}" />
+	                      <apex:column value="{!scItem.sc.StartDate}" />
+	                      <apex:column value="{!scItem.sc.EndDate}" />
+	                      <apex:column value="{!scItem.sc.Agreement_Status__c}" />
+	                      <apex:column value="{!scItem.sc.Opp_Status__c}" />
+	                      <apex:column value="{!scItem.sc.Service_Contract_Type__c}" />
+	                      <apex:column value="{!scItem.sc.Offering_Type__c}" />
+	                 </apex:pageBlockTable> 
+	                 <apex:pageBlockButtons location="bottom">
+	                 	<apex:commandButton value=" Proceed" action="{!proceed}" reRender="targetSelectionPanel" status="status"/>	
+	                 	<apex:commandButton value=" Cancel" action="{!cancel}" reRender="accountSelectionPanel,serviceContractPanel,targetSelectionPanel" status="status"/>	
+	                 </apex:pageBlockButtons>                           
+                </apex:pageBlock>  
+			</apex:outputPanel> 
+			<apex:outputPanel rendered="{!accountSelection.AccountId != NULL && (serviceContracts == NULL || serviceContracts.size == 0)}">
+		        <br />
+		        <p align="center" style="font-size:15px;color:red;">
+		            No Service Contracts exists for the Selected Account.
+		        </p>
+			</apex:outputPanel> 		
+       	</apex:outputPanel>
+       	
+       	<apex:outputPanel id="targetSelectionPanel">
+			<apex:outputPanel id="pendingOrdersPanel" >
+				<apex:outputPanel rendered="{!accountSelection.AccountId != NULL && validationCompleted == true && pendingOrders != NULL && pendingOrders.size > 0}">  
+	                <apex:outputPanel >
+				        <p align="center" style="font-size:15px;color:red;">
+				            Pending Orders exists on selected Accounts, Please review before proceeding.
+				        </p>
+				    </apex:outputPanel>
+	                <apex:pageBlock title="Pending Orders">
+		                <apex:pageBlockTable value="{!pendingOrders}" var="order">
+		                      <apex:column headerValue="Order#">
+		                 		<apex:outputLink value="/{!order.Id}" target="_blank">{!order.Name}</apex:outputLink>
+		                      </apex:column>
+		                      <apex:column headerValue="Status" value="{!order.status__c}" />
+		                      <apex:column headerValue="End User">
+		                 		<apex:outputLink value="/{!order.End_User_Name__c}" target="_blank">{!order.End_User_Name__r.Name}</apex:outputLink>
+		                      </apex:column>
+		                      <apex:column headerValue="Sold To">
+		                 		<apex:outputLink value="/{!order.Sold_To_Name__c}" target="_blank">{!order.Sold_To_Name__r.Name}</apex:outputLink>
+		                      </apex:column>
+		                 </apex:pageBlockTable>                            
+	                </apex:pageBlock>  
+				</apex:outputPanel>    
+	        </apex:outputPanel>
+	        
+	        <apex:outputPanel id="pendingQuotesPanel" >
+				<apex:outputPanel rendered="{!accountSelection.AccountId != NULL && validationCompleted == true && pendingQuotes != NULL && pendingQuotes.size > 0}">  
+	                <apex:outputPanel >
+				        <p align="center" style="font-size:15px;color:red;">
+				            Pending Quotes exists on selected Accounts, Please review before proceeding.
+				        </p>
+				    </apex:outputPanel>
+	                <apex:pageBlock title="Pending Quotes">
+		                <apex:pageBlockTable value="{!pendingQuotes}" var="quote">
+		                      <apex:column headerValue="Quote#">
+		                 		<apex:outputLink value="/{!quote.Id}" target="_blank">{!quote.Name}</apex:outputLink>
+		                      </apex:column>
+		                      <apex:column headerValue="Status" value="{!quote.BigMachines__Status__c}" />
+		                      <apex:column headerValue="End User">
+		                 		<apex:outputLink value="/{!quote.End_User_ID__c}" target="_blank">{!quote.End_User_Id__r.Name}</apex:outputLink>
+		                      </apex:column>
+		                      <apex:column headerValue="Sold To">
+		                 		<apex:outputLink value="/{!quote.Sold_To_Name__c}" target="_blank">{!quote.Sold_To_Name__r.Name}</apex:outputLink>
+		                      </apex:column>
+		                 </apex:pageBlockTable>                            
+	                </apex:pageBlock>  
+				</apex:outputPanel>    
+	        </apex:outputPanel>
+	        <apex:outputPanel id="targetSoldToPanel" >
+				<apex:outputPanel rendered="{!accountSelection.AccountId != NULL && validationCompleted == true}">  
+			        <apex:pageBlock >
+			            <apex:outputPanel >
+			                <TABLE WIDTH="100%">
+			                    <TR>
+			                        <TD>
+			                            <b>Target Sold To:</b>
+			                            &nbsp;&nbsp;&nbsp;&nbsp;
+			                            <apex:inputField value="{!targetSoldTo.AccountId}" onkeypress="return disableEnterKey(event);" style="width:400px;"/>
+			                            <apex:commandButton value=" Transfer " action="{!doTransfer}" reRender="serviceContractPanel,targetSelectionPanel" status="status"/>
+			                        </TD>
+			                    </TR>
+			                </TABLE>
+			            </apex:outputPanel>
+					</apex:pageBlock>     
+				</apex:outputPanel>
+				<apex:outputPanel rendered="{!soldToSelectionError == true}">  
+	                <apex:outputPanel >
+				        <p align="center" style="font-size:15px;color:red;">
+				            One or more selected Service Contracts has Same "Sold To" Account as Traget "Sold To" Account, Please review.
+				        </p>
+				    </apex:outputPanel>
+				</apex:outputPanel>
+			</apex:outputPanel>
+		</apex:outputPanel>
+
+		
+    </apex:form>
+</apex:page>

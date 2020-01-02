@@ -1,0 +1,188 @@
+<apex:component controller="LMSInstallSitesComponentController" allowDML="true">
+    <apex:attribute name="paramAccountId" description="End User Account Id" type="String" required="true" assignTo="{!endUserAccountId}"/>
+     <apex:attribute name="paramSoldToAccountIds" description="List of Sold To Account Ids" type="String[]" required="true"  assignTo="{!soldToAccountIds}"/>
+    <apex:attribute name="paramUserType" description="Logged in User Type" type="String" required="true" assignTo="{!userType}"/>
+    <style type="text/css">
+        .custPopup1 {
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            padding:10px;
+            position:fixed;
+            left: 50%;
+            top: 50%;
+            width: 400px;
+            margin-left: -200px;
+		    margin-top: -200px; // 1/2 height
+        }
+        .popupBackground1 {
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+        .pbTitle{
+        	white-space: nowrap
+        }
+    </style>
+    <apex:form id="frm">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <apex:outputPanel id="popupInstallSite">
+            <apex:outputPanel styleClass="popupBackground1" layout="block" rendered="{!displayPopUp}"/>
+			<apex:outputPanel styleClass="custPopup1" layout="block" rendered="{!displayPopUp}">
+				<apex:pageBlock title="Install Site Details">                   
+                        <TABLE WIDTH="100%">
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>Name *</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.name}" required="true" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>Address Line 1</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.addressLine1}" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>Address Line 2</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.addressLine2}" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>Address Line 3</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.addressLine3}" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>City</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.City}" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>State</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.State}" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>Country</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.Country}" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>Postal Code</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputtext value="{!installSite.PostalCode}" /></TD>
+                            </TR>
+                            <TR>
+                            	<TD WIDTH="35%" ALIGN="RIGHT"><b>Active</b>&nbsp;&nbsp;</TD>
+                                <TD WIDTH="65%"><apex:inputCheckbox value="{!installSite.Active}" /></TD>
+                            </TR>
+                        </TABLE>
+                </apex:pageBlock>
+                <p ALIGN="CENTER">
+                    <apex:commandButton value="Save" action="{!saveInstallSite}" rerender="popupInstallSite" reRender="popupInstallSite,InstallSitesData" status="status"/>
+                    <apex:commandButton value="Cancel" action="{!cancelInstallSite}" rerender="popupInstallSite" reRender="popupInstallSite" status="status" immediate="true" />
+                </p>
+            </apex:outputPanel>
+        </apex:outputPanel>
+    
+        
+    	<apex:pageBlock id="InstallSitesData">
+            <TABLE WIDTH="100%">
+                    <TR>
+                        <TD WIDTH="25%" ALIGN="LEFT" >
+                            <b>Active:</b>
+                            <apex:selectList value="{!selectedActiveInactive}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!ActiveInactive}"/>
+                                <apex:actionSupport event="onchange" reRender="InstallSitesData" status="status" />
+                            </apex:selectList>
+                            &nbsp;&nbsp;
+                            <!--apex:commandButton value="Apply Filters" reRender="InstallSitesData" status="status" /-->
+                        </TD>
+                        <TD ALIGN="CENTER">
+                			<apex:commandButton value="New Install Site" action="{!addInstallSite}" rerender="popupInstallSite" status="status"/>
+                        </TD>
+                        <TD ALIGN="RIGHT" WIDTH="25%">
+                            <apex:outputPanel id="DataTableCount">
+                                Number of Total Results # <b>{!totalRecords}</b>
+                            </apex:outputPanel>
+                        </TD>
+                        <TD WIDTH="25px;" ALIGN="RIGHT">
+                            &nbsp;
+                        </TD>
+                    </TR>
+                </TABLE>
+                <table width="100%" class="list" border="0" cellpadding="0" cellspacing="0">
+                        <tr class="headerRow">  
+                            <th  class="headerRow" style="Width:50px;"  scope="col">View</th>
+                            <th class="headerRow" scope="col" style="vertical-align:top;">Actions</th>
+                            <th  class="headerRow" scope="col" style="vertical-align:top;">Name</th>
+                            <th  class="headerRow" scope="col" style="vertical-align:top;">Address</th>
+                            <th class="headerRow" scope="col" style="vertical-align:top;">City</th>
+                            <th  class="headerRow" scope="col" style="vertical-align:top;">State</th>
+                            <th  class="headerRow" scope="col" style="vertical-align:top;">Country</th>
+                            <th  class="headerRow" scope="col" style="vertical-align:top;">Postal Code</th>
+                           
+                        </tr>
+                        <apex:repeat value="{!InstallSites}" var="site">
+                            <tr class="dataRow" style="vertical-align:top;">
+                                      <td class="dataCell" style="Width:50px;">
+                                          <apex:commandLink action="{!editInstallSite}" value="Edit"  rerender="popupInstallSite">
+                                            <apex:param assignTo="{!selectedInstallSite}" value="{!site.id}" name="selectedInstallSite" />
+                                        </apex:commandLink>
+                                    </td>
+                                    <td class="dataCell" >{!site.Name}</td>
+                                <td class="dataCell" > 
+                                    {!site.addressLine1}
+                                        <apex:outputText rendered="{!(site.addressLine1 != NULL && site.addressLine2 != '')}">, </apex:outputText>
+                                        {!site.addressLine2}
+                                        <apex:outputText rendered="{!(site.addressLine1 != NULL && site.addressLine2 != '')}">, </apex:outputText>
+                                        {!site.addressLine3}</td>
+                                <td class="dataCell" >{!site.city}</td>
+                                <td class="dataCell" >{!site.state}</td>
+                                <td class="dataCell" >{!site.country}</td>
+                                <td class="dataCell" >{!site.postalCode}</td>
+                                <td class="dataCell" ><apex:outputText >{!IF(site.active == true,'Yes','No')}</apex:outputText></td>
+                            
+                            </tr>
+                        </apex:repeat>
+                    </table> 
+                    <!--
+                       
+        	<apex:pageBlockTable value="{!InstallSites}" var="site">
+                <apex:column headerValue="Actions" style="Width:50px;">
+                    <apex:commandLink action="{!editInstallSite}" value="Edit"  rerender="popupInstallSite">
+                        <apex:param assignTo="{!selectedInstallSite}" value="{!site.id}" name="selectedInstallSite" />
+                    </apex:commandLink>
+                </apex:column>
+				<apex:column value="{!site.Name}" headerValue="Name"/>
+				<apex:column headerValue="Address">
+                    {!site.addressLine1}
+                    <apex:outputText rendered="{!(site.addressLine1 != NULL && site.addressLine2 != '')}">, </apex:outputText>
+                    {!site.addressLine2}
+                    <apex:outputText rendered="{!(site.addressLine1 != NULL && site.addressLine2 != '')}">, </apex:outputText>
+                    {!site.addressLine3}
+                </apex:column>
+				<apex:column value="{!site.city}" headerValue="City"/>
+				<apex:column value="{!site.state}" headerValue="State"/>
+                <apex:column value="{!site.country}" headerValue="Country"/>
+                <apex:column value="{!site.postalCode}" headerValue="Postal Code"/>
+                <apex:column headerValue="Active">
+                    <apex:outputText >{!IF(site.active == true,'Yes','No')}</apex:outputText>
+                </apex:column>
+            </apex:pageBlockTable>-->
+            <apex:outputPanel id="NoRecordsPanel">
+                <apex:pageMessage summary="No records to display." severity="Info" strength="2" rendered="{!InstallSites.size == 0}" />
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

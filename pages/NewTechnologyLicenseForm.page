@@ -1,0 +1,191 @@
+<apex:page standardController="Technology_License_Form__c" extensions="NewTechLicenseFormController" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" />
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js" />
+<apex:styleSheet value="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/smoothness/jquery-ui.css" />
+    <style>
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+   </style>
+    
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="appfoundry"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">  
+    
+              <apex:form >
+                    <div style="height:15px;">
+                        <apex:actionStatus id="status">
+                            <apex:facet name="start">    
+                                <apex:outputPanel >
+                                    <apex:outputPanel styleClass="popupBackground" layout="block" style="position:absolute;"/>
+                                    <apex:outputPanel layout="block" style="text-align:center;">
+                                        <apex:image value="/img/loading.gif"/>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </apex:facet>                           
+                        </apex:actionStatus>
+                    </div>
+                     
+                    <apex:outputPanel id="pgblk">
+                        <apex:pageMessages id="pgmsg" />
+                        <apex:pageMessage severity="info" strength="3" summary="There is no approved AppFoundry Application so you cannot view License report." rendered="{!(hasAppFoundryApproved == false && appFoundryApplicationNotRequired == false)}"></apex:pageMessage>
+                        <apex:pageMessage severity="info" id="confirmationId" strength="2" summary="Thank you for your submission. We are going to send a confirmation email shortly - Your Genesys Technology Partner Management Team." rendered="{!isSubmitted == true}"></apex:pageMessage>
+                        <br/>
+                        <apex:commandLink value="Back" action="/partner/TechnologyLicenseForm" styleClass="btn" immediate="true"
+                                style="text-decoration:none" rendered="{!isSubmitted == true}"></apex:commandLink>
+                        <apex:pageBlock title="New AppFoundry License Report" rendered="{!AND(isNew == true, OR(hasAppFoundryApproved == true, appFoundryApplicationNotRequired))}">
+                            <apex:pageBlockButtons >
+                                <apex:commandButton value="Next" action="{!save}" status="status" rendered="{!step == 0}"/>
+                                <apex:commandButton value="Submit" action="{!submit}" status="status" rendered="{!step == 1}"/>
+                                <apex:commandLink value="Cancel" action="/partner/TechnologyLicenseForm" styleClass="btn" immediate="true"
+                                style="text-decoration:none" ></apex:commandLink>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="1" id="calculation" rendered="{!step == 0}">
+                                    <apex:inputField value="{!newLicenseForm.Product_Sold__c }" required="true" />
+                                    
+                                
+                                    <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Number of Licenses sold " for="file" />
+                                            <!--<apex:actionRegion > --> 
+                                            <apex:inputField value="{!newLicenseForm.Number_of_Licenses_sold__c}" required="true" id="licenseSold">    
+                                                <!--<apex:actionSupport event="onchange" reRender="calculation" status="statusId" action="{!calculateTotalSalesPrice}">
+                                                    <apex:actionStatus id="statusId" >
+                                                        <apex:facet name="start" >
+                                                            <img src="/img/loading.gif" />                    
+                                                        </apex:facet>
+                                                    </apex:actionStatus>
+                                                </apex:actionSupport> -->
+                                            </apex:inputField>
+                                            <!--</apex:actionRegion> -->
+                                        </apex:pageBlockSectionItem>
+                                
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Sales price per license " for="file"/>
+                                            <!--<apex:actionRegion> -->
+                                            <apex:inputField value="{!newLicenseForm.Sales_price_per_license__c}" required="true" id="salesPrice">    
+                                                <!--<apex:actionSupport event="onchange" reRender="calculation" status="statusId1" action="{!calculateTotalSalesPrice}">
+                                                    <apex:actionStatus id="statusId1" >
+                                                        <apex:facet name="start" >
+                                                            <img src="/img/loading.gif" />                    
+                                                        </apex:facet>
+                                                    </apex:actionStatus>
+                                                </apex:actionSupport> -->
+                                            </apex:inputField>
+                                            <!-- </apex:actionRegion> -->
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Total sales price" for="totalSale" />
+                                            <apex:inputText value="{!newLicenseForm.Total_sale__c}" id="totalSale"/>
+                                        </apex:pageBlockSectionItem>
+                                    <apex:repeat value="{!$ObjectType.Technology_License_Form__c.FieldSets.Technology_License_Form_1}" var="f">                       
+                                        <apex:inputField value="{!newLicenseForm[f]}" rendered="{!NOT(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}" />
+                                        <apex:inputField value="{!newLicenseForm[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                                                            
+                                    </apex:repeat>
+                                    <apex:inputField value="{!newLicenseForm.Customer_Name__c}" required="true" />
+                                    <apex:inputField value="{!newLicenseForm.Country_of_sale__c}" required="true" />
+                                    <apex:inputField value="{!newLicenseForm.Involved_Genesys_Sales_Person_s__c}" required="true" />
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection rendered="{!step == 1}">
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Purchase Order" for="att"/>
+                                    <apex:inputFile value="{!licenseAttachment[0].body}" filename="{!licenseAttachment[0].name}" id="att"/>
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+                            
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Technology License Form" rendered="{!AND(isView == true ,OR(hasAppFoundryApproved == true, appFoundryApplicationNotRequired))}">
+                            <apex:pageBlockButtons >
+                                <apex:commandLink value="Back" action="/partner/TechnologyLicenseForm" styleClass="btn" immediate="true"
+                                style="text-decoration:none"></apex:commandLink>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="1">
+                                    <apex:outputField value="{!newLicenseForm.Product_Sold__c }"  />
+                                <apex:outputField value="{!newLicenseForm.Number_of_Licenses_sold__c}"/>
+                                <apex:outputField value="{!newLicenseForm.Sales_price_per_license__c}"/> 
+                                    <apex:outputField value="{!newLicenseForm.Total_sale__c}"/>
+                                        
+                                    <apex:repeat value="{!$ObjectType.Technology_License_Form__c.FieldSets.Technology_License_Form_1}" var="f">                       
+                                        <apex:outputField value="{!newLicenseForm[f]}" rendered="{!NOT(f.type =='textarea')}" label="{!mapFieldLabelVsHelpText[f.label]}" />
+                                        <apex:outputField value="{!newLicenseForm[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                                                            
+                                    </apex:repeat>
+                                    <apex:outputField value="{!newLicenseForm.Customer_Name__c}" />
+                                    <apex:outputField value="{!newLicenseForm.Country_of_sale__c}" />
+                                <apex:outputField value="{!newLicenseForm.Involved_Genesys_Sales_Person_s__c}" />     
+                            </apex:pageBlockSection> 
+                            
+                            <apex:pageBlockSection title="Purchase Order" rendered="{!licenseAttachment.size > 0}">
+                            <apex:pageBlockSectionItem >
+                            <apex:pageBlockTable value="{!licenseAttachment}" var="eachRecord"> 
+                                <apex:column >
+                                    <apex:outputLink value="/servlet/servlet.FileDownload?file={!eachRecord.Id}" style="color:red" target="_blank">View</apex:outputLink>
+                                </apex:column>
+                                <apex:column headerValue="Purchase Order">
+                                    <apex:outputField value="{!eachRecord.Name}" />
+                                </apex:column>
+                            </apex:pageBlockTable>
+                            </apex:pageBlockSectionItem>    
+                            <br/> 
+                         </apex:pageBlockSection>
+                        </apex:pageBlock>
+                  </apex:outputPanel>
+                  
+               </apex:form>
+        </apex:define>
+    </apex:composition>
+    
+   <script>
+    
+    var j$ = jQuery.noConflict();
+       j$(document).ready(function(){
+           //var qval = j$("[id$='licenseSold']").val();
+           //var qval1 = j$("[id$='salesPrice']").val();
+           j$("[id$='licenseSold']").keyup(function(){
+               var unitCost = j$("[id$='salesPrice']").val();
+               var quantity = j$("[id$='licenseSold']").val();
+               var totCost = unitCost*quantity;
+               j$("[id$='totalSale']").val(totCost);
+           });
+           j$("[id$='salesPrice']").keyup(function(){
+               var unitCost = j$("[id$='salesPrice']").val();
+               var quantity = j$("[id$='licenseSold']").val();
+               var totCost = unitCost*quantity;
+               j$("[id$='totalSale']").val(totCost);
+           });
+       });
+    
+    
+    
+    
+    
+  </script> 
+    
+</apex:page>

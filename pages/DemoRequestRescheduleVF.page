@@ -1,0 +1,167 @@
+<apex:page sidebar="false" standardStylesheets="false" docType="html-5.0" standardController="Demo_Request__c" extensions="DemoRequestRescheduleExtension">
+    <apex:composition template="DemoRequestNavigation">
+        <apex:define name="content">
+            <apex:includeScript value="{!URLFOR($Resource.BootstrapDatePicker)}"/>
+            <apex:stylesheet value="{!URLFOR($Resource.BootstrapDatePickerCSS)}"/>
+            <apex:includeScript value="{!URLFOR($Resource.jQueryTimePicker)}"/>
+            <apex:stylesheet value="{!URLFOR($Resource.jQueryTimePickerCSS)}"/>
+            
+            <apex:outputPanel id="pageBody">
+                <apex:pageMessages ></apex:pageMessages>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="page-header">
+                                <h2>Demo Reschedule</h2>
+                            </div>                  
+                        </div>
+                    </div>
+                </div>    
+                <apex:pageBlock rendered="{!cannotReschedule}" >
+                    <apex:form styleClass="container">
+                        <div class="row">
+                            This demo can no longer be rescheduled. There may be an approval process blocking reschedule. 
+                            You can return to the demo and recall that request to allow rescheduling. <br/>
+                            <a class="btn btn-default" href="{!URLFOR('/'+Id)}">Return to Demo</a>
+                        </div>
+                    </apex:form>
+                </apex:pageBlock>
+                <apex:pageBlock id="mainBlock" rendered="{!canReschedule}">
+                    <apex:form styleClass="container">
+                        <apex:pageBlock rendered="{!showReschedule}">
+                            <div class="row">
+                                <div class="col-md-8 col-sm-10 col-xs-12">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <apex:outputLink value="/{!Demo_Request__c.Id}"><apex:outputField value="{!Demo_Request__c.Name}"></apex:outputField></apex:outputLink>
+                                        </div>
+                                        <table class="table">
+                                            <tr>
+                                                <td>Current Date &amp; Time planned:&nbsp;<apex:outputField value="{!Demo_Request__c.Demo_Date_Time__c}"></apex:outputField></td>
+                                            </tr>
+                                            <tr>
+                                                <td>New Date &amp; Time:&nbsp;<apex:input id="newdate" value="{!rDate}" html-autofocus="false"/><apex:input id="newtime" value="{!rTime}"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Timezone:&nbsp;<apex:selectList size="1" value="{!timezone}" title="Select a Decline Reason" required="true">
+                                                    <apex:selectOptions value="{!timezones}"></apex:selectOptions>
+                                                    </apex:selectList></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Reschedule Reason:&nbsp;<apex:selectList size="1" value="{!rescheduleReason}" title="Select a Reschedule Reason" required="true">
+                                                    <apex:selectOptions value="{!rescheduleReasons}"></apex:selectOptions>
+                                                    </apex:selectList></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Location:&nbsp;
+                                                    <apex:selectList size="1" value="{!demoLocation}">
+                                                        <apex:selectOptions value="{!locationOptions}"></apex:selectOptions>
+                                                        <apex:actionSupport event="onchange" action="{!getLocationDetails}" />
+                                                    </apex:selectList>
+                                                </td>
+                                            </tr>
+                                            <tr><td>
+                                                <apex:pageBlock rendered="{!showOnsite}">
+                                                    On-Site Location:&nbsp;(Please include the address of the meeting location if possible)
+                                                    &nbsp;<div><apex:inputTextarea cols="60" rows="4" value="{!onsiteDemoLocation}" /></div><br/>
+                                                    On-Site Justification:&nbsp;(Please include any details that can help justify the travel expenditure for Technical Sales.  This includes number of seats and potential revenue for the company.  The more information you provide, the faster your on-site request can be approved.)
+                                                    &nbsp;<div><apex:inputTextarea cols="60" rows="4" value="{!onsiteJustify}" /></div>
+                                                </apex:pageBlock>
+                                                <apex:pageBlock rendered="{!showHQ}">
+                                                    Campus Meeting Room:&nbsp;<apex:inputText value="{!onsiteMeetingRoom}" />
+                                                </apex:pageBlock>
+                                            </td></tr>
+                                            <tr>
+                                                <td>
+                                                    <apex:commandButton styleClass="btn btn-default" action="{!checkAvail}" value="Check Availability" reRender="pageBody">
+                                                    </apex:commandButton>&nbsp;&nbsp;&nbsp;
+                                                    <a class="btn btn-default" href="{!URLFOR('/'+Id)}">Cancel</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </apex:pageBlock>
+                        <apex:pageBlock rendered="{!showAvailability}">
+                            <div class="row">
+                                <div class="col-md-8 col-sm-10 col-xs-12">
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <apex:outputLink value="/{!Demo_Request__c.Id}"><apex:outputField value="{!Demo_Request__c.Name}"></apex:outputField></apex:outputLink>
+                                        </div>
+                                        <table class="table">
+                                            <tr>
+                                                <td>Current Date &amp; Time planned:&nbsp;<apex:outputField value="{!Demo_Request__c.Demo_Date_Time__c}"></apex:outputField></td>
+                                            </tr>
+                                            <tr>
+                                                <td>New Date &amp; Time:&nbsp;<apex:outputText value="{!rDate}" html-autofocus="false"/>&nbsp;&nbsp;<apex:outputText value="{!rTime}"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Timezone:&nbsp;<apex:outputText value="{!timezone}"></apex:outputText></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Reschedule Reason:&nbsp;<apex:outputText value="{!rescheduleReason}"></apex:outputText></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Location:&nbsp;<apex:outputText value="{!demoLocation}"></apex:outputText></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <c:DemoRequestAvailability tscCount="{!tscCount}" tscProgress="{!tscProgress}"></c:DemoRequestAvailability>
+                            <div style="{!if(not isTSMember, '', 'display:none')}">
+                                Suppress Notifications:<apex:inputCheckbox value="{!suppressNotifications}"/>
+                            </div>
+                            &nbsp;&nbsp;&nbsp;<apex:commandButton action="{!resetTime}" value="Reset Time" />
+                            &nbsp;&nbsp;&nbsp;<apex:commandButton action="{!submit}" value="Submit" rendered="{!not isTSMember}"/>
+                            &nbsp;&nbsp;&nbsp;<apex:commandButton action="{!submit}" value="Submit back to queue" rendered="{!isTSMember}"/>
+                            &nbsp;&nbsp;&nbsp;<apex:commandButton action="{!submitAccept}" value="Submit and Accept" rendered="{!showRescheduleAndAccept}"/>
+                            &nbsp;&nbsp;&nbsp;<apex:commandButton action="{!submitDecline}" value="Submit and Decline" rendered="{!isTSMember}"/>
+                        </apex:pageBlock>
+                        
+                        <script>
+                        $j = jQuery.noConflict();
+                        $j(document).ready(function() {
+                            $j('[id$=newdate]').datepicker({
+                                autoclose:true, 
+                                format: "yyyy-mm-dd"
+                                <apex:outputText rendered="{!not isTSMember}">
+                                ,startDate: new Date()
+                                </apex:outputText>
+                            }).datepicker("setDate","
+                                          <apex:outputText value="{0}">
+                                          <apex:param value="{!origDate}"/>
+                                          </apex:outputText>");
+                            $j('[id$=newtime]').timepicker({ 
+                                'scrollDefault': 'now',
+                                'step': 15,
+                                'timeFormat': 'H:i'
+                            }).timepicker("setTime","
+                                          <apex:outputText value="{0}">
+                                          <apex:param value="{!origTime}"/>
+                                          </apex:outputText>");
+                        });
+                        </script>
+                        <apex:pageBlock rendered="{!showDecline}">
+                            <c:DemoRequestDeclineInfo demo="{!req}"
+                                                      rescheduleDate="{!declineDate}"
+                                                      rescheduleTime="{!declineTime}"
+                                                      selectedPerson="{!userName}"
+                                                      comments="{!declineComments}"
+                                                      declineReason="{!declineReason}"
+                                                      declineReasons="{!declineReasons}"
+                                                      origDate="{!rDate}"
+                                                      origTime="{!rTime}">
+                            </c:DemoRequestDeclineInfo>
+                            <div class="row">
+                                &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitDeclineFinal}" value="Submit"></apex:commandButton>
+                            </div>
+                        </apex:pageBlock>
+                    </apex:form>
+                </apex:pageBlock>
+            </apex:outputPanel>
+        </apex:define>
+    </apex:composition>
+</apex:page>

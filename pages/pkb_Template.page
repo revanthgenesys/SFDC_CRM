@@ -1,0 +1,695 @@
+<apex:page cache="false"
+
+  standardStylesheets="false"
+
+  showHeader="false"
+
+  sidebar="false"
+
+  standardController="KnowledgeArticle"
+
+  extensions="pkb_Controller"
+
+  language="{!$CurrentPage.parameters.l}"
+
+  action="{!searchViewUsage}">
+
+<html>
+
+
+
+<head>
+
+  <c:pkb_css />
+
+
+
+  <title>{!pageTitle}</title>
+
+  <apex:includeScript value="{!$Resource.pkb_jquery_1_6_2}"/>
+
+  <apex:includeScript value="{!$Resource.pkb_jquery_simplemodal_1_4_1}"/>
+
+  <apex:includeScript value="{!$Resource.jquery_highlight}"/>
+
+  <apex:includeScript value="{!$Resource.pkb_jquery_cookie}"/>
+
+    <c:pkb_js pkbCon="{!pkbCon}" />
+
+  <apex:outputText rendered="{!!isSite && isPortalUser}">
+
+  <script type="text/javascript">
+
+    jQuery.noConflict(true);
+
+    var $ = jQuery.noConflict();
+
+ </script>
+
+ </apex:outputText>
+
+ 
+
+ 
+
+  <script type="text/javascript">
+
+    var $$ = jQuery.noConflict();
+
+    var $ = jQuery.noConflict();
+
+ </script>
+
+ 
+
+  <apex:outputText rendered="{!viewingArticle}">
+
+    <apex:variable var="typeName" value="{!SUBSTITUTE(pkbCon.theKad.articleTypeName, pkbCon.kavExtension, '')}" />
+
+    <apex:variable var="articleURL" value="{!pkbCon.currentSiteUrl}articles{!pkbCon.selectedLanguageURL}{!typeName}/{!pkbCon.theKad.urlName}" />
+
+    <meta property="og:title" content="{!pkbCon.theKad.title}"/> 
+
+    <meta property="og:type" content="article"/>
+
+    <meta property="og:url" content="{!articleURL}"/> 
+
+    <meta property="og:site_name" content="{!SUBSTITUTE(pkbCon.siteName,'_',' ')}" /> 
+
+  </apex:outputText>
+
+  
+
+   <link rel="shortcut icon" href="http://www.genesyslab.com.com/images/icons/favicon.ico" type="image/x-icon" /> 
+
+ 
+
+    <!--  link rel="stylesheet" type="text/css" href="http://www.genesyslab.com/css/support-style.css" media="all" /> -->
+
+    <apex:stylesheet value="{!$Resource.support_style}"/>
+
+    
+
+    <style>
+
+        body {
+
+            background-color   : #FFFFFF;
+
+            border             : none;
+
+            box-shadow         : none;
+
+            -moz-box-shadow    : none;
+
+            -webkit-box-shadow : none;
+
+            font-family: "Roboto", sans-serif;
+
+        }
+
+        header.section {
+
+            font-size: 18px;
+
+        }
+
+        footer.section {
+
+            font-size: 18px;
+
+        }
+
+        .highlight {
+
+            background-color : yellow;
+
+            padding          : 1px;
+
+            
+
+            border-radius    : 2px;
+
+            -moz-border-radius    : 2px;
+
+            -webkit-border-radius    : 2px;
+
+        }
+
+        .pkb-login-selector {
+
+            width: 325px;
+
+            height: 20px;
+
+            position: absolute;
+
+            right: 0px;
+
+            z-index: 100;
+
+            text-align: right;
+
+        }
+
+        .pkb-login-selector a {
+
+            color: #929497;
+
+            font-size: 12px;
+
+        }
+
+        .pkb-login-selector .red_but {
+
+            background: url(http://www.genesyslab.com/images/CloudConnect/V1/sitewide/red-button-grad-1x38.png) repeat-x 0 0;
+
+            height: 15px;
+
+            padding: 0 8px;
+
+            text-align: center;
+
+            color: #ffffff;
+
+            font-size: 12px;
+
+            line-height: normal;
+
+            border: 1px solid #B20A20;
+
+            -webkit-border-radius: 3px;
+
+            -moz-border-radius: 3px;
+
+            border-radius: 3px;
+
+            color: #FFFFFF !important;
+
+            margin-top: 10px;
+
+        }
+
+    </style>
+
+</head>
+
+
+
+<body style="width:100%;padding-bottom: 0px;">
+
+
+
+<!--
+
+HELPFUL DEBUG DATA
+
+
+
+SITE ADMIN: {!pkbCon.siteAdmin.Email}, {!pkbCon.siteAdmin.Name}<br/>
+
+ALL PARAMS: {!allSearchParams}<br/>
+
+SITE/PAGE URL: {!pkbCon.currentSiteUrl}<br/>
+
+  FEEDBACK? : {!displayFeedback}<br/>  
+
+SESSION: {!$Api.Session_ID}<br/>
+
+RSS URL: {!$Page.pkb_RSS}<br/>
+
+CATEGORIES: {!selectedCategory}<br/>
+
+KNOWLEDGE ARTICLE ID: {!theKad.Id}<br/>
+
+KNOWLEDGE ARTICLE ID (FROM CONTROLLER): {!KnowledgeArticle.Id}<br/>
+
+-->
+
+
+
+<!--  HOME PAGE LAYOUT -->
+
+<apex:outputText rendered="{!isSite}">
+
+
+
+<link rel="stylesheet" type="text/css" href="/resource/styleassets/css/support-style.css" media="all"></link>
+
+<!--[if IE]>
+
+    &nbsp;
+
+<![endif]-->
+
+
+
+<link rel="stylesheet" type="text/css" href="/resource/styleassets/css/megamenu.css"></link>
+
+<!--[if IE]>
+
+    &nbsp;
+
+<![endif]-->
+
+<apex:variable var="isCommunity" value="{!$Site.CurrentSiteUrl != null}" />
+
+<link href="{!IF(contains($Site.CurrentSiteUrl,'/customercare/'), '/customercare','')}/resource/styleassets/style.css" rel="stylesheet"></link>
+
+<!--[if IE]>
+
+    &nbsp;
+
+<![endif]-->
+
+<script type="text/javascript" src="/resource/styleassets/js/modernizr-2.5.3.min.js"></script>
+
+<script type="text/javascript" src="/resource/styleassets/js/megamenu_plugins.js"></script> 
+
+<script type="text/javascript" src="/resource/styleassets/js/megamenu.js"></script>
+
+<script>
+
+              jQuery(document).ready(function ($) {
+
+                  jQuery('.megamenu').megaMenuCompleteSet({
+
+                      menu_speed_show: 0, // Time (in milliseconds) to show a drop down
+
+                      menu_speed_hide: 200, // Time (in milliseconds) to hide a drop down
+
+                      menu_speed_delay: 100, // Time (in milliseconds) before showing a drop down
+
+                      menu_effect: 'hover_fade', // Drop down effect, choose between 'hover_fade', 'hover_slide', etc.
+
+                      menu_click_outside: 0, // Clicks outside the drop down close it (1 = true, 0 = false)
+
+                      menu_show_onload: 0 // Drop down to show on page load (type the number of the drop down, 0 for none)
+
+                  });
+
+              });
+
+</script>
+
+
+
+<style>
+
+    .IEfix12 { background-color/*\**/: #d61b2d !important; }
+
+    html { background-color:white; -moz-box-shadow:none; -webkit-body-shadow:none; box-shadow:none; }
+
+    .magleft { margin-left:205px; *margin-left:100px; *width:479px; }
+
+    .roundedstyle {border: solid 1px #ee003b;
+
+-webkit-border-radius: 2px; -moz-border-radius: 2px; border-radius: 2px;
+
+    background: #ee003b; /* Old browsers */
+
+/* IE9 SVG, needs conditional override of 'filter' to 'none' */
+
+background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2YxMDAzNyIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNkMTBjM2EiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
+
+background: -moz-linear-gradient(top,  rgba(241,0,55,1) 0%, rgba(209,12,58,1) 100%); /* FF3.6+ */
+
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(241,0,55,1)), color-stop(100%,rgba(209,12,58,1))); /* Chrome,Safari4+ */
+
+background: -webkit-linear-gradient(top,  rgba(241,0,55,1) 0%,rgba(209,12,58,1) 100%); /* Chrome10+,Safari5.1+ */
+
+background: -o-linear-gradient(top,  rgba(241,0,55,1) 0%,rgba(209,12,58,1) 100%); /* Opera 11.10+ */
+
+background: -ms-linear-gradient(top,  rgba(241,0,55,1) 0%,rgba(209,12,58,1) 100%); /* IE10+ */
+
+background: linear-gradient(to bottom,  rgba(241,0,55,1) 0%,rgba(209,12,58,1) 100%); /* W3C */
+
+padding:0 8px; color:#fff;
+
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f10037', endColorstr='#d10c3a',GradientType=0 ); /* IE6-8 */}
+
+.whitelink:hover { color:#fff; }
+
+</style>
+
+   <header class="clearfix" >
+
+       <div class="pkb-login-selector">
+
+           <apex:outputText rendered="{! $Profile.Name='Public Knowledge Base Profile' || $Profile.Name='Genesys Support Profile' }">
+
+               <a onclick="_gaq.push(['_trackEvent', 'Inquiry', 'SupportLogin', 'Login1']);" href="https://genesys.secure.force.com/GenesysRegistration">Request Account</a>
+
+               <span class="secondary-nav-spacer">|</span>
+
+               <a id="ssoLogin" class="red_but" onclick="_gaq.push(['_trackEvent', 'Inquiry', 'SupportLogin', 'Login1']);" href="https://genesys.secure.force.com">Login</a>
+
+           </apex:outputText>
+
+       </div>
+
+       <div class="nav-wrapper clearfix" style="width:955px;">
+
+           <a href="http://www.genesyslab.com/index.aspx" target="_blank" ><span class="main-logo sprite" style="width:300px;"></span></a>
+
+         <!--   <div style="text-align:right;">
+
+              <!--  <a style="color:##929497;" href="https://genesyslab.com/support/~account/login/default.asp?AutoContext=GET:http://www.genesyslab.com/support/home.aspx">Request Account</a>
+
+               <iframe src="/apex/WelcomePortalUserMessage" frameborder="0" height="37px" scrolling="no" width="154"></iframe> 
+
+               <span style="color:#929497;">|</span> 
+
+               <a class="roundedstyle whitelink IEfix12" href="/secur/logout.jsp">Logout</a>
+
+           </div> -->
+
+           <div> 
+
+               <div class="magleft" style="float;right; margin-left:100px;">
+
+                   <div id="secondary-nav" class="clearfix" style="padding:0; padding-top:5px; ">
+
+                       <a target="_blank" href="http://www.genesys.com">Genesys.com</a>
+
+                       <a target="_blank" href="http://www.genesys.com/customer-care">Customer Care</a>
+
+                       <a target="_blank" href="http://www.genesys.com/customer-care/news-events">News &amp; Events</a>
+
+                       <a target="_blank" href="http://www.genesys.com/customer-care/contact-us">Contact Us</a>
+
+                       <a target="_blank" href="http://www.genesys.com/customer-care/support-help">Help</a>
+
+           
+
+                   </div>
+
+               </div>
+
+           </div>
+
+       </div>
+
+       
+
+       <!-- Begin Menu Container -->
+
+       <div class="megamenu_container megamenu_dark_bar megamenu_light">
+
+         <!-- Begin Mega Menu -->
+
+         <ul class="megamenu">
+
+            <li><a href="/home/home.jsp" onclick="_gaq.push(['_trackEvent', 'Inquiry', 'SupportNavigationClick', 'My Support']);" target="_parent">My Support</a></li>
+
+           <li class="just_link"><a href="http://docs.genesyslab.com" onclick="_gaq.push(['_trackEvent', 'Inquiry', 'SupportNavigationClick', 'Documentation']);" target="_new">Documentationss</a> </li>
+
+         </ul>
+
+         <!-- End Mega Menu --> 
+
+       </div>
+
+       <!-- End Menu Container --> 
+
+       
+
+</header>
+
+
+
+</apex:outputText>
+
+
+
+<!--- MS 3/18/2018 --
+  <div id="body"  style="{!IF(!isSite,'width: 964px; background: #FFFFFF;','')}">
+-->
+  <div id="body" >
+  
+    <apex:outputText rendered="{!isSite || !viewingArticle}">
+
+        <div id="left_column" style="{!IF(!isSite,'width: 210px;','')}">
+
+    
+
+          <div id="leftHeader" style="height: 110px;">&nbsp;</div>
+
+    
+
+          
+
+    
+
+          <apex:outputText rendered="{!NOT(displayContactUs)}">
+
+            <div id="left_content"> 
+
+    
+
+              <apex:outputText rendered="{!NOT(viewingArticle) }">
+
+                <c:pkb_narrow pkbCon="{!pkbCon}" /> 
+
+                <apex:outputText rendered="{!!isSite}">  
+
+                    <div id="contactUs">
+
+                      {!$Label.PKB2_Contact_Us_Link_Prompt}<br/>
+
+                      <apex:outputLink value="{!pkbCon.currentSiteUrl}">
+
+                        {!$Label.PKB2_Contact_Us}
+
+                        <apex:param name="{!pkbCon.contactUsParam}" value="{!pkbCon.contactUsValue}" />
+
+                        <apex:param name="{!pkbCon.feedbackSourceParam}" value="{!pkbCon.feedbackContactUs}" />
+
+                        <apex:param name="{!pkbCon.languageParam}" value="{!pkbCon.selectedLanguage}" />
+
+                      </apex:outputLink>
+
+                    </div>    
+
+                </apex:outputText>
+
+              </apex:outputText>
+
+        
+
+              <apex:outputText rendered="{!viewingArticle}">
+
+                <c:pkb_related pkbCon="{!pkbCon}" />
+
+                <c:pkb_articlecategories pkbCon="{!pkbCon}" />
+
+              </apex:outputText>
+
+            </div>
+
+          </apex:outputText>
+
+    
+
+        </div>
+
+    </apex:outputText>
+
+
+    <div id="right_column" style="{!IF(!isSite && viewingArticle,'width: 100%; padding-bottom: 30px;',IF(!isSite && !viewingArticle,'width: 555px',''))}">
+
+    <apex:outputText rendered="{!isSite}">
+
+        <div style="clear:both;margin-top:10px;margin-bottom:10px;"><font size="5"> Public Knowledgebase</font></div>
+
+    </apex:outputText>
+
+    
+
+      <div id="right_content">
+
+        <apex:outputText rendered="{!displayContactUs}">
+
+            <apex:outputText rendered="{!searchExecuted}">
+
+              <div id="immediateHelp" style="text-align: left; font-weight: bold; font-size: 110%; padding-top: 12px;">{!$Label.PKB2_Answers_Might_Help}</div>
+
+            </apex:outputText>
+
+          </apex:outputText>
+
+        <apex:outputText rendered="{!NOT(displayContactUs)}">
+
+          <apex:outputText rendered="{!NOT(viewingArticle)}">
+
+                    
+
+            <apex:outputText rendered="{!NOT(searchExecuted)}">
+
+                <c:pkb_featured />
+
+                <c:pkb_favorites />
+
+            </apex:outputText>
+
+            
+
+            <c:pkb_popular pkbCon="{!pkbCon}" rendered="{!NOT(searchExecuted)}" />
+
+            <c:pkb_results pkbCon="{!pkbCon}" rendered="{!searchExecuted}" showHeaderInfo="true" />
+
+          </apex:outputText>
+
+    
+
+          <apex:outputText rendered="{!viewingArticle}">
+
+            <div id="articleView" >
+
+              <c:pkb_articleview pkbCon="{!pkbCon}" showFeedbackYesNo="true" showBackLinks="true" />
+
+            </div>
+
+          </apex:outputText>
+
+        </apex:outputText>
+
+
+
+        <apex:outputText rendered="{!displayContactUs}">
+
+          <c:pkb_results pkbCon="{!pkbCon}" rendered="{!searchExecuted}" showHeaderInfo="false" />
+
+          <c:pkb_contactus_buttons_article pkbCon="{!pkbCon}" />          
+
+        </apex:outputText>
+
+
+
+      </div>
+
+
+
+
+
+    <apex:outputText rendered="{!!isSite && viewingArticle}">
+
+        <div id="left_column_to_bottom" style="">
+
+    
+
+          <div id="leftHeader" style="height: 10px;">&nbsp;</div>
+
+    
+
+          
+
+    
+
+          <apex:outputText rendered="{!NOT(displayContactUs)}">
+
+            <div id="left_content"> 
+
+    
+
+              <apex:outputText rendered="{!NOT(viewingArticle)}">
+
+                <c:pkb_narrow pkbCon="{!pkbCon}" />   
+
+                <div id="contactUs">
+
+                  {!$Label.PKB2_Contact_Us_Link_Prompt}<br/>
+
+                  <apex:outputLink value="{!pkbCon.currentSiteUrl}">
+
+                    {!$Label.PKB2_Contact_Us}
+
+                    <apex:param name="{!pkbCon.contactUsParam}" value="{!pkbCon.contactUsValue}" />
+
+                    <apex:param name="{!pkbCon.feedbackSourceParam}" value="{!pkbCon.feedbackContactUs}" />
+
+                    <apex:param name="{!pkbCon.languageParam}" value="{!pkbCon.selectedLanguage}" />
+
+                  </apex:outputLink>
+
+                </div>    
+
+              </apex:outputText>
+
+        
+
+              <apex:outputText rendered="{!viewingArticle}">
+
+                <c:pkb_related pkbCon="{!pkbCon}" />
+
+                <c:pkb_articlecategories pkbCon="{!pkbCon}" />
+
+              </apex:outputText>
+
+            </div>
+
+          </apex:outputText>
+
+    
+
+        </div>
+
+    </apex:outputText>
+
+
+
+    
+
+   
+
+    </div>
+
+
+
+    <div style="clear:both; ">
+
+    
+
+    
+
+
+
+  </div>
+
+  
+
+</div>
+
+  
+
+<apex:include rendered="{!isSite}" pageName="GenesysTemplateFooter">
+
+</apex:include>
+
+
+
+    <!-- Highlight text onload -->
+
+     <apex:outputText rendered="{!searchExecuted}">
+
+        <script type="text/javascript">
+
+            jQuery(document).ready(function(){
+
+                jQuery(".article").highlight( jQuery("#searchAskInput").text() );
+
+            });
+
+        </script>
+
+    </apex:outputText>
+
+</body>
+
+
+
+</html>
+
+<site:previewAsAdmin />
+
+</apex:page>

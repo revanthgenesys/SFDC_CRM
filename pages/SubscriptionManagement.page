@@ -1,0 +1,74 @@
+<apex:page controller="subscriptionManagementController" sidebar="false"  docType="html-5.0">
+    <c:loadingDialog />
+    <style>
+        .activeTab {background-color: #236FBD; color:white; background-image:none; white-space:nowrap;}
+        .inactiveTab {background-color: lightgrey; color:black; background-image:none; white-space:nowrap;}
+    </style>
+    <script type="text/javascript">
+      
+        function disableEnterKey(e){
+            var key;     
+            if(window.event)
+                key = window.event.keyCode; //IE
+            else
+                key = e.which; //firefox     
+            return (key != 13);
+        }
+    </script>
+    <apex:form >
+    <apex:outputPanel id="authorizedUserPanel">
+
+            <apex:actionStatus id="status">
+                <apex:facet name="start">
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                        &nbsp;
+                    </div>
+                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                        <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                            <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                            <span class="waitingDescription">Please Wait...</span>
+                        </div>
+                    </div>
+                </apex:facet>
+            </apex:actionStatus>
+            <TABLE WIDTH="100%">
+                <TR>
+                    <TD WIDTH="50%">
+                        <apex:sectionHeader title="Manage" subtitle="Subscription Files"/>
+                    </TD>
+                    
+                </TR>    
+            </TABLE>
+            
+            
+            <apex:actionFunction name="changeValue" reRender="none">
+                <apex:param name="selectedTab" value="{!selectedTab}" assignTo="{!selectedTab}" />
+            </apex:actionFunction>
+           
+    
+        <apex:outputPanel id="lmsTabsPanel">
+           
+            <apex:tabPanel switchType="client" tabClass="activeTab" inactiveTabClass="inactiveTab"  value="{!selectedTab}" selectedTab="{!selectedTab}" id="lmsTabs" >
+                <apex:tab label="Subscription File Activity" id="LicenseActivityTab">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="LicenseActivityInnerTab,LMSLicenseActivityComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="LicenseActivityTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                   
+                    <apex:outputPanel id="LicenseActivityInnerTab">
+                       <c:SubscriptionActivityComponent rendered="{!selectedTab == 'LicenseActivityTab'}" id="LMSLicenseActivityComponent" /> 
+                    </apex:outputPanel>
+                </apex:tab>
+                <apex:tab label="New Subscription File" id="NewLicenseTab">
+                    <apex:actionSupport event="ontabenter"  action="{!tabClicked}" reRender="NewLicenseInnerTab,LMSNewLicenseComponent" status="status">    
+                        <apex:param assignTo="{!selectedTab}" value="NewLicenseTab" name="selectedTab"/>               
+                    </apex:actionSupport>
+                    <apex:outputPanel id="NewLicenseInnerTab">
+                        <c:NewSubscriptionComponent rendered="{!selectedTab == 'NewLicenseTab'}" id="LMSNewLicenseComponent"/>       
+                    </apex:outputPanel>
+                </apex:tab>
+              
+            </apex:tabPanel>    
+        </apex:outputPanel>        
+    </apex:outputPanel>
+ </apex:form> 
+</apex:page>

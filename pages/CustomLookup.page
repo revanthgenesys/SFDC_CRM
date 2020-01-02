@@ -1,0 +1,196 @@
+<apex:page controller="CustomLookupController" sidebar="false" showheader="false" title="Lookup">
+      <apex:form id="form" >  
+    <script language="javascript">
+   window.onload = new function() 
+   { 
+        var winMain=window.opener;
+      // bring popup window to front
+      window.focus(); 
+      var ele=document.getElementById('{!$Component.form.block.section.searchText}');
+      if (ele)
+      {
+         ele.focus();
+      }
+   }
+   function constructNewQuery( queryId) {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      var query = winMain.constructNewQuery('{!$CurrentPage.parameters.namefield}');
+      document.getElementById( queryId ).value= query;
+   }
+   
+   function fillIn(name, id)
+   {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      var ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield}');      
+      ele.value=name;
+      ele=winMain.document.getElementById('{!$CurrentPage.parameters.idfield}');
+      ele.value=id;
+      CloseContactWindow();
+   }
+   
+   function fillIn1(name, id, name1, id1, id2, name2)
+   {
+  
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      var ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield}');      
+      ele.value = name;
+      ele = winMain.document.getElementById('{!$CurrentPage.parameters.idfield}');
+      ele.value = id;
+      ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield1}');      
+      ele.value = name1;
+      ele = winMain.document.getElementById('{!$CurrentPage.parameters.idfield1}');
+      ele.value = id1;   
+      ele = winMain.document.getElementById('{!$CurrentPage.parameters.idfield2}');
+      if (ele) { 
+        ele.value = id2;
+      }
+      ele = winMain.document.getElementById('{!$CurrentPage.parameters.namefield2}');  
+      if (ele) {    
+        ele.value = name2;
+      }
+      
+      CloseWindow();
+   }
+   
+   function fillCD(name, id, plfrm)
+   {
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }
+      var ele=winMain.document.getElementById('{!$CurrentPage.parameters.namefield}');      
+      ele.value=name;
+      ele=winMain.document.getElementById('{!$CurrentPage.parameters.idfield}');
+      ele.value=id;
+      ele=winMain.document.getElementById('{!$CurrentPage.parameters.plfrmfield}');
+      ele.value=plfrm;
+      CloseWindow();
+   }
+    
+   function CloseWindow()
+   { 
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }   
+      winMain.setContactAF();
+      //window.opener.test();
+      //winMain.closeLookupPopup();   
+      window.close();
+   }
+   
+   function CloseContactWindow()
+   { 
+      var winMain=window.opener;
+      if (null==winMain)
+      {
+         winMain=window.parent.opener;
+      }   
+      winMain.setDisableFlg();
+      window.close();
+   }
+   
+</script>
+    <apex:messages /> 
+    <div style="width 100%">
+        <apex:outputPanel style="height:15px;">
+            &nbsp;
+            <apex:actionstatus id="status">             
+                <apex:facet name="start">
+                    <apex:outputLabel value="Working, Please wait..."/>
+                </apex:facet>
+            </apex:actionstatus>
+        </apex:outputPanel>
+        <apex:pageBlock title="Lookup" id="block">
+            <apex:pageBlockSection id="section0" rendered="{!AND(obj == 'Contact', NOT(isPortal), NOT(contactsOnly))}" >
+                <apex:outputLabel value="Search Only Employees" />
+                <apex:inputCheckBox value="{!searchOnlyEmployeeContacts}" id="chkSearchOnlyEmployeeContacts" />                              
+           </apex:pageBlockSection>
+          <apex:pageBlockSection id="section">
+              Enter search text and click Go<br/>
+              <apex:inputText value="{!searchStr}" id="searchText"/>
+              <apex:commandButton value="Go" action="{!go}" reRender="results" status="status"/>
+          </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock id="results">
+        <!-- CLOUD --->
+           <apex:pageBlockSection columns="1" rendered="{!AND(obj == 'Contact', cloudContacts)}" >
+            <apex:pageBlockTable value="{!contactRecords}" var="res">
+                <apex:column headerValue="Name">
+                    <apex:outputLink value="#" onclick="fillIn('{!JSENCODE(res.Name)}', '{!res.id}')">{!res.Name}</apex:outputLink>       
+                </apex:column> 
+                <apex:column headerValue="Email" value="{!res.Email}"/>
+                <apex:column headerValue="Pin" value="{!res.Contact_Pin__c}"/>
+            </apex:pageBlockTable>
+          </apex:pageBlockSection>   
+        <!-- END CLOUD --->  
+              
+          <apex:pageBlockSection columns="1" rendered="{!AND(obj == 'Contact', NOT(searchOnlyEmployeeContacts), NOT(contactsOnly), NOT(cloudContacts))}" >
+            <apex:pageBlockTable value="{!supportAccessRecords}" var="res">
+                <apex:column headerValue="Name">
+                    <apex:outputLink value="#" onclick="fillIn('{!JSENCODE(res.Contact__r.Name)}', '{!res.Contact__c}')">{!res.Contact__r.Name}</apex:outputLink>       
+                </apex:column> 
+                <apex:column headerValue="Email" value="{!res.Contact__r.Email}"/>
+                <apex:column headerValue="Pin" value="{!res.Contact__r.Contact_Pin__c}"/>
+            </apex:pageBlockTable>
+          </apex:pageBlockSection>
+          
+          <apex:pageBlockSection columns="1" rendered="{!AND(obj == 'Contact', OR(searchOnlyEmployeeContacts, contactsOnly), NOT(cloudContacts))}" >
+            <apex:pageBlockTable value="{!contactRecords}" var="res">
+                <apex:column headerValue="Name">
+                    <apex:outputLink value="#" onclick="fillIn('{!JSENCODE(res.Name)}', '{!res.id}')">{!res.Name}</apex:outputLink>       
+                </apex:column> 
+                <apex:column headerValue="Email" value="{!res.Email}"/>
+                <apex:column headerValue="Pin" value="{!res.Contact_Pin__c}"/>
+            </apex:pageBlockTable>
+          </apex:pageBlockSection>          
+          
+          <apex:pageBlockSection columns="1" rendered="{!obj == 'Account'}">
+            <apex:pageBlockTable value="{!supportAccessRecords}" var="res">
+                <apex:column headerValue="Action">
+                    <apex:outputLink value="#" onclick="fillIn1('{!JSENCODE(res.End_User_Account__r.Name)}', '{!res.End_User_Account__c}','{!JSENCODE(res.Sold_To_Account__r.Name)}','{!res.Sold_To_Account__c}','{!res.Back_Office_Account__c}','{!res.BOA_Platform__c}')">Select</apex:outputLink>       
+                </apex:column>   
+                 <apex:column value="{!res.BOA_Platform__c}" headerValue="Platform"  rendered="{!NOT(isPortal)}"/>          
+                 <apex:column value="{!res.End_User_Account__r.Name}" headerValue="End User Account"/>
+                 <apex:column value="{!res.End_User_Account__r.City__c}, {!res.End_User_Account__r.Country__r.Name}" headerValue="End User Location" />  
+                <apex:column headerValue="Sold To Account" value="{!res.Sold_To_Account__r.Name}"/>
+                <apex:column value="{!res.Sold_To_Account__r.City__c}, {!res.Sold_To_Account__r.Country__r.Name}" headerValue="Sold To Location" /> 
+               
+            </apex:pageBlockTable>         
+        </apex:pageBlockSection>  
+        
+           <apex:pageBlockSection columns="1" rendered="{!obj == 'CloudDepl'}">
+            <apex:pageBlockTable value="{!cloudDeployments}" var="res">
+                <apex:column headerValue="Action">
+                    <apex:outputLink value="#" onclick="fillCD('{!JSENCODE(res.Name)}', '{!res.id}', '{!res.Cloud_Platform__c}')">Select</apex:outputLink>       
+                </apex:column>   
+                 <apex:column value="{!res.Name}" headerValue="CD Name" />          
+                 <apex:column value="{!res.Cloud_Platform__c}" headerValue="Cloud Platform"/>
+                 <apex:column value="{!res.Status__c}" headerValue="Implementation Stage" />  
+                <apex:column value="{!res.Account__r.Name}" headerValue="Account" />
+                <apex:column value="{!res.Access_Approval__c}" headerValue="Access Approval" /> 
+               
+            </apex:pageBlockTable>          
+          </apex:pageBlockSection>
+        
+        </apex:pageBlock>
+        
+        <button type="button" onclick="CloseWindow();">Close Window</button>
+     </div> 
+    </apex:form> 
+</apex:page>

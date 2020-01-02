@@ -1,0 +1,1232 @@
+<apex:page id="pg" controller="PESSRevenueForecastPureCloudController" sidebar="false" title="Cloud Revenue">      
+    <head>
+        <style>
+            .colClass{
+                font-weight:bold;
+                font-size:12px;
+                color:#FFFFFF;      
+                background-color:#FAEBD7;  
+                width:50px;                       
+            }
+            .rowClass{
+                font-weight:bold;
+                color:#FAEBD7;           
+                background-color:#FAEBD7;     
+            }
+            .lockClass{
+                font-weight:bold;                
+                color:#FFFFFF;   
+                background-color:#CECECE;    
+                width:100px;           
+                valign:middle; 
+            }
+        </style>
+        <script>
+        /*****************************************************************
+        The script uses classes for defining what parts to use for scrolling.
+        
+        Source at: https://github.com/kjellericson/TableLock.git
+        
+        You shall mark the things:
+        
+        1) One id for the table.
+        2) One class name for to row cells to lock
+        3) One class name for the column cells to lock
+        4) The upper left cell that moves both ways (I call it "locked").
+        
+        Set a field to null in order to skip that part.
+        
+        You init the function by calling:
+        
+          TableLock("table_class_name", "row_class_name", "column_class_name", "locked_class_name");
+        
+        The table is made up like this:
+        
+         <table class='table_class_name'>
+          <tr>
+            <td class='locked_class_name'>Upper left is moving both wayslocked</td>
+            <td class='column_class_name'>column 1</td>
+            <td class='column_class_name'>column 2</td>
+            <td class='column_class_name'>column 3</td>
+          </tr>
+          <tr>
+            <td class='row_class_name'>row 1</td>
+            <td>data 1</td>
+            <td>data 2</td>
+            <td>data 3</td>
+          </tr>
+          <tr>
+            <td class='row_class_name'>row 2</td>
+            <td>data 1</td>
+            <td>data 2</td>
+            <td>data 3</td>
+          </tr>
+        </table>
+        
+        ******************************/
+        
+        TL_tables = new Array();
+        
+        function TL_settings(table_id, left_class_name, headline_class_name, 
+                             lock_class_name) 
+        
+        {
+            this.row_elements = new Array();
+            this.col_elements = new Array();
+            this.lock_elements = new Array();
+            this.table_id = table_id;
+            this.left_class_name = left_class_name;
+            this.headline_class_name = headline_class_name;
+            this.lock_class_name = lock_class_name;
+        }
+        
+        function TL_struct(node, oldnode, xpos, ypos)
+        {
+            this.node = node;
+            this.oldnode = oldnode;
+            this.x = xpos;
+            this.y = ypos;
+        }
+        
+        function TableLock(table_id, 
+                           left_class_name,
+                           headline_class_name, 
+                           lock_class_name) 
+        {
+            var tlt = new TL_settings(table_id, left_class_name, headline_class_name, 
+                           lock_class_name);
+            
+            TableLock_resize(tlt);
+            
+            TL_tables.push(tlt);
+            this.onscroll = TableLock_update;
+            TableLock_update();
+            // Detect resize every second
+            window.setInterval(function(){
+                var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+                var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+                if(tlt.innerwidth != width &&
+                   tlt.innerheight != height){
+                    TableLock_resize(tlt);
+                    TableLock_update();
+                }
+            }, 1000);
+        }
+        
+        function TableLock_resize(tlt) 
+        {
+            tlt.table_element = document.getElementById(tlt.table_id);
+            if (tlt.table_element == undefined) {
+                alert("TableLock can't find table " + tlt.table_id);
+                return;
+            }
+        
+            // Remove any old objects
+            for(var i = 0; i < tlt.row_elements.length; i++){
+                var obj = tlt.row_elements[i];
+                document.body.removeChild(obj.node);
+            }
+            for(var i = 0; i < tlt.col_elements.length; i++){
+                var obj = tlt.col_elements[i];
+                document.body.removeChild(obj.node);
+            }
+            for(var i = 0; i < tlt.lock_elements.length; i++){
+                var obj = tlt.lock_elements[i];
+                document.body.removeChild(obj.node);
+            }
+        
+            // Reset settings
+            tlt.innerwidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            tlt.innerheight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+        
+            tlt.last_x = -1;
+            tlt.row_elements = new Array();
+            tlt.col_elements = new Array();
+            tlt.lock_elements = new Array();
+        
+            tlt.min_x = 10000;
+            tlt.min_y = 10000;
+        
+            tlt.max_x = 0;
+            tlt.max_y = 0;
+        
+            var tags = new Array("td", "th");
+            var max = 2000;
+            for(var t = 0; t < tags.length; t++){
+                var tag = tags[t];
+                var elements = tlt.table_element.getElementsByTagName(tag);
+                for(var i = 0; i < elements.length; i++){
+                    var node = elements.item(i);
+                    var pos = TL_getPos(node);
+                    // Store bounderies for table.
+                    if (pos.x < tlt.min_x)
+                        tlt.min_x = pos.x;
+                    if (pos.y < tlt.min_y)
+                        tlt.min_y = pos.y;
+                        
+                    if (pos.x > tlt.max_x)
+                        tlt.max_x = pos.x;
+                    if (pos.y > tlt.max_y)
+                        tlt.max_y = pos.y;
+        
+                    for(var j = 0; j < node.attributes.length; j++) {
+                        var n = node.attributes.item(j); 
+        
+                        if(n.nodeName == 'class') {
+                                   
+                            if ((tlt.left_class_name && n.nodeValue.indexOf(tlt.left_class_name) >= 0) ||
+                                (tlt.lock_class_name && n.nodeValue.indexOf(tlt.lock_class_name) >= 0) ||
+                                (tlt.headline_class_name && n.nodeValue.indexOf(tlt.headline_class_name) >= 0)) {
+                                var newNode = document.createElement("div"); 
+                                for (var p in node.style) {
+                                    try {
+                                        newNode.style[p] = node.style[p]
+                                            }
+                                    catch (e) {
+                                    }
+                                }
+                                newNode.innerHTML = node.innerHTML;
+                                newNode.style.height = node.offsetHeight + "px";
+                                newNode.style.width = node.offsetWidth + "px";
+                                newNode.style.position = "absolute";
+                                // newNode.class = node.class;
+                                newNode.style.left = pos.x + "px";
+                                newNode.style.top = pos.y + "px";
+                                newNode.style.marginTop = "8px";
+                                if (max-- == 0) return;
+                                if (tlt.headline_class_name &&
+                                    node.attributes.item(j).nodeValue.indexOf(tlt.headline_class_name) >= 0)
+                                    tlt.col_elements.push(new TL_struct(newNode, node, pos.x, pos.y));
+                                else if (tlt.lock_class_name &&
+                                         node.attributes.item(j).nodeValue.indexOf(tlt.lock_class_name) >= 0)
+                                    tlt.lock_elements.push(new TL_struct(newNode, node, pos.x, pos.y));
+                                else
+                                    tlt.row_elements.push(new TL_struct(newNode, node, pos.x, pos.y));
+                            }
+                        }
+                    }
+                }
+            }
+        
+            for(var i = 0; i < tlt.row_elements.length; i++){
+                var obj = tlt.row_elements[i];
+                //obj.oldnode.parentNode.insertBefore(obj.node, obj.oldnode);
+                document.body.appendChild(obj.node);
+            }
+            for(var i = 0; i < tlt.col_elements.length; i++){
+                var obj = tlt.col_elements[i];
+                document.body.appendChild(obj.node);
+            }
+            for(var i = 0; i < tlt.lock_elements.length; i++){
+                var obj = tlt.lock_elements[i];
+                document.body.appendChild(obj.node);
+            }
+         }
+        
+        function TableLock_update() 
+        {
+            var iebody=(document.compatMode && document.compatMode != "BackCompat")? document.documentElement : document.body;
+            
+            var scroll_left=document.all? iebody.scrollLeft : pageXOffset;
+            var scroll_top=document.all? iebody.scrollTop : pageYOffset;
+        
+            for(var t = 0; t < TL_tables.length; t++){
+                var tlt = TL_tables[t];
+                for(var i = 0; i < tlt.row_elements.length; i++){
+                var obj = tlt.row_elements[i];
+                    var x = obj.x;
+                    if (scroll_left > tlt.min_x)
+                        x = scroll_left - tlt.min_x + x;
+                    if (x > tlt.max_x)
+                        x = tlt.max_x;
+                obj.node.style.left = x + "px";
+            }
+            for(var i = 0; i < tlt.col_elements.length; i++){
+                var obj = tlt.col_elements[i];
+                    var y = obj.y;
+                    if (scroll_top > tlt.min_y)
+                        y = scroll_top - tlt.min_y + y;
+                    if (y > tlt.max_y)
+                        y = tlt.max_y;
+                    obj.node.style.top = y + "px";
+            }
+            for(var i = 0; i < tlt.lock_elements.length; i++){
+                var obj = tlt.lock_elements[i];
+                    var x = obj.x;
+                    if (scroll_left > tlt.min_x)
+                        x = scroll_left - tlt.min_x + x;
+                    if (x > tlt.max_x)
+                        x = tlt.max_x;
+                obj.node.style.left = x + "px";
+                    var y = obj.y;
+                    if (scroll_top > tlt.min_y)
+                        y = scroll_top - tlt.min_y + y;
+                    if (y > tlt.max_y)
+                        y = tlt.max_y;
+                    obj.node.style.top = y + "px";
+            }
+            }
+        }
+        
+        function TL_getPos( oElement )
+        {
+            var y = 0;
+            var x = 0;
+            while( oElement != null ) {
+                y += oElement.offsetTop;
+                x += oElement.offsetLeft;
+                oElement = oElement.offsetParent;
+            }
+            return {x:x, y:y};
+        }
+                
+    function openPopupFocus(a, b, c, d, e, f, g, k) {
+    closePopup();
+
+    if (f) {
+        if (lastMouseX - c < 0) 
+            lastMouseX = c;
+        if (lastMouseY + d > screen.height) 
+            lastMouseY -= lastMouseY + d + 50 - screen.height;
+        lastMouseX -= c;
+        lastMouseY += 10;
+        e += ",screenX=" + lastMouseX + ",left=" + lastMouseX + ",screenY=" + lastMouseY + ",top=" + lastMouseY
+    }
+
+    curPopupWindow = window.open(a, b, e, false);
+    curPopupWindow.focus()
+
+    if (k) 
+        closeOnParentUnloadWindow = win
+}
+
+function closePopup() {
+    if (closetimer) {
+        clearTimeout(closetimer);
+        closetimer = null
+    }
+    if (curPopupWindow != null) {
+        try {
+            if (curPopupWindow.confirmOnClose) if (curPopupWindow.confirm(curPopupWindow.confirmOnCloseLabel)) {
+                curPopupWindow.confirmOnClose = false;
+                curPopupWindow.focus();
+                return false
+            }
+            curPopupWindow.close()
+        } catch (a) {}
+        curPopupWindow = null
+    }
+}
+    
+    function checkboxClicked(counter, accountCounter, check){       
+        var flag = false;    
+        if(check.checked)
+            flag = true;
+        if('{!selectedLOB}' == 'All'){
+            if('{!offering}' == 'Outbound'){
+            	var noOfRows = 4;
+            
+                check = document.getElementById('chkSelect' + accountCounter + 'A - Subscription');     
+                check.checked = flag;
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;
+                counter = (accountCounter * noOfRows);            
+                handleTextBoxes(counter, check);  
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'B - Care');
+                check.checked = flag;       
+                counter ++;
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;            
+                handleTextBoxes(counter, check);   
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'C - Professional Services');
+                check.checked = flag;       
+                counter ++;
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;            
+                handleTextBoxes(counter, check);   
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'D - Other Fees');
+                check.checked = flag;       
+                counter ++;
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;            
+                handleTextBoxes(counter, check);
+         	}
+            else{
+                var noOfRows = 2;
+            
+                check = document.getElementById('chkSelect' + accountCounter + 'A - Subscription');     
+                check.checked = flag;
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;
+                counter = (accountCounter * noOfRows);            
+                handleTextBoxes(counter, check);  
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'E - PureVoice');
+                check.checked = flag;       
+                counter ++;
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;            
+                handleTextBoxes(counter, check);            
+            }
+        }
+        else{
+            check = document.getElementById('chkSelect' + counter + '{!selectedLOB}');      
+            check.checked = flag;
+            handleTextBoxes(counter, check);
+        }
+    }
+    
+    function handleTextBoxes(counter, check){
+        var row = document.getElementById('rowTR' + counter);
+        if(check.checked){          
+            row.style.backgroundColor = '#eeba77';
+        }       
+        else{
+            row.style.backgroundColor = '#FAEBD7';
+        } 
+        enableDisableInputBoxes(counter, check);
+    }
+    
+    function getArrayOfInputBoxes(counter){
+        try{
+        var temp = document.getElementById('txtTemp');
+        var jan2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtJan2017');
+        var feb2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtFeb2017');
+        var mar2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtMarch2017');
+        var apr2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtApr2017');
+        var may2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtMay2017');
+        var june2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtJune2017');
+        var july2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtJuly2017');
+        var aug2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtAug2017');
+        var sep2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtSep2017');
+        var oct2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtOct2017');
+        var nov2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtNov2017');
+        var dec2017 = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtDec2017');
+        var q12017Low = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ12017Low');
+        var q22017Low = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ22017Low');
+        var q32017Low = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ32017Low');
+        var q42017Low = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ42017Low');
+        var q12017Land = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ12017Land');
+        var q22017Land = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ22017Land');
+        var q32017Land = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ32017Land');
+        var q42017Land = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ42017Land');
+        var q12017Best = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ12017Best');
+        var q22017Best = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ22017Best');
+        var q32017Best = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ32017Best');
+        var q42017Best = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ42017Best');
+        /*
+        var q12017Target = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ12017Target');
+        var q22017Target = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ22017Target');
+        var q32017Target = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ32017Target');
+        var q42017Target = document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':txtQ42017Target');
+        */
+        
+        
+        if('{!lockJan}' == 'true'){
+            jan2017.disabled = true;
+            jan2017 = temp;
+        }                   
+        if('{!lockFeb}' == 'true'){
+            feb2017.disabled = true;
+            feb2017 = temp;
+        }
+        if('{!lockMar}' == 'true'){
+            mar2017.disabled = true;
+            mar2017 = temp;
+        }
+        if('{!lockQ12017Low}' == 'true'){
+            q12017Low.disabled = true;
+            q12017Low = temp;
+        }
+        if('{!lockQ12017Best}' == 'true'){
+            q12017Best.disabled = true;
+            q12017Best = temp;
+        }
+        if('{!lockApr}' == 'true'){
+            apr2017.disabled = true;
+            apr2017 = temp;
+        }
+        if('{!lockMay}' == 'true'){
+            may2017.disabled = true;
+            may2017 = temp;
+        }
+        if('{!lockJun}' == 'true'){
+            june2017.disabled = true;
+            june2017 = temp;
+        }
+        if('{!lockQ22017Low}' == 'true'){
+            q22017Low.disabled = true;
+            q22017Low = temp;
+        }
+        if('{!lockQ22017Best}' == 'true'){
+            q22017Best.disabled = true;
+            q22017Best = temp;
+        }
+        if('{!lockJul}' == 'true'){
+            july2017.disabled = true;
+            july2017 = temp;
+        }
+        if('{!lockAug}' == 'true'){
+            aug2017.disabled = true;
+            aug2017 = temp;
+        }
+        if('{!lockSep}' == 'true'){
+            sep2017.disabled = true;
+            sep2017 = temp;
+        }
+        if('{!lockQ32017Low}' == 'true'){
+            q32017Low.disabled = true;
+            q32017Low = temp;
+        }
+        if('{!lockQ32017Best}' == 'true'){
+            q32017Best.disabled = true;
+            q32017Best = temp;
+        }
+        if('{!lockOct}' == 'true'){
+            oct2017.disabled = true;
+            oct2017 = temp;
+        }
+        if('{!lockNov}' == 'true'){
+            nov2017.disabled = true;
+            nov2017 = temp;
+        }
+        if('{!lockDec}' == 'true'){
+            dec2017.disabled = true;
+            dec2017 = temp;
+        }
+        if('{!lockQ42017Low}' == 'true'){
+            q42017Low.disabled = true;
+            q42017Low = temp;
+        }
+        if('{!lockQ42017Best}' == 'true'){
+            q42017Best.disabled = true;
+            q42017Best = temp;
+        }
+        }
+        catch(e){}
+        
+        var allTextBoxes = [jan2017, feb2017, mar2017, apr2017, may2017, june2017, july2017, aug2017, sep2017, oct2017, nov2017, dec2017, q12017Low, q22017Low, q32017Low, q42017Low, q12017Land, q22017Land, q32017Land, q42017Land, q12017Best, q22017Best, q32017Best, q42017Best];//, q12017Target, q22017Target, q32017Target, q42017Target];
+        return allTextBoxes;
+    }
+    
+    function enableDisableInputBoxes(counter, check){
+        try{ 
+            allTextBoxes = getArrayOfInputBoxes(counter);
+            for(var i = 0; i < allTextBoxes.length; i++){
+                if(allTextBoxes[i] == null)
+                    continue;
+                if(check.checked){
+                    temp = allTextBoxes[i].value;
+                    allTextBoxes[i].value = temp.replace(/,/g ,"");
+                    temp = allTextBoxes[i].value;
+                    allTextBoxes[i].value = temp.replace(/\\$/g,"");                
+                    allTextBoxes[i].disabled = false;                
+                }
+                else{
+                    var temp = allTextBoxes[i].value;
+                    allTextBoxes[i].value =  "$" + temp.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+                    allTextBoxes[i].disabled = true;                
+                }
+            }           
+         } catch (e) { alert(e);}
+      }
+      
+    function disableAll(){
+        for(var i = 0; i < 150; i ++){
+            allTextBoxes = getArrayOfInputBoxes(i);
+            for(var j = 0; j < allTextBoxes.length; j++){
+                if(allTextBoxes[j] == null)
+                    continue;
+                var temp = allTextBoxes[j].value;
+                allTextBoxes[j].value =  "$" + temp.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+                allTextBoxes[j].disabled = true;
+            }            
+        }          
+    }
+    
+    function formFix(){
+        for(var i = 0; i < 150; i ++){
+            allTextBoxes = getArrayOfInputBoxes(i);
+            for(var j = 0; j < allTextBoxes.length; j++){
+                if(allTextBoxes[j] == null)
+                    continue;
+                temp = allTextBoxes[j].value;
+                allTextBoxes[j].value = temp.replace(/,/g ,"");
+                temp = allTextBoxes[j].value;
+                allTextBoxes[j].value = temp.replace(/\\$/g,"");
+            }            
+        }
+    }  
+    
+    function populateLinesJS(){
+        formFix();
+        populateLinesAF();
+    }
+    
+    function saveJS(){
+        formFix();
+        saveAF();
+    }
+    
+    function populateLinesRefreshJS(){
+        formFix();
+        populateLinesRefreshAF();
+    }
+    
+    function selectAllCheckBoxes(check){
+        for(var i = 0; i < 150 ; i++){
+            checkboxClickedAuto(i, check);
+        }           
+    }
+    
+    function checkboxClickedAuto(accountCounter, check){
+        try{
+        var flag = false;    
+        if(check.checked)
+            flag = true;    
+        if('{!selectedLOB}' == 'All'){
+            if('{!offering}' == 'Outbound'){
+                check = document.getElementById('chkSelect' + accountCounter + 'A - Subscription');     
+                check.checked = flag;
+                counter = (accountCounter * 4);
+                handleTextBoxes(counter, check);  
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'B - Care');
+                check.checked = flag;       
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;
+                counter ++;
+                handleTextBoxes(counter, check);
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'C - Professional Services');
+                check.checked = flag;       
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;
+                counter ++;
+                handleTextBoxes(counter, check);
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'D - Other Fees');
+                check.checked = flag;       
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;
+                counter ++;
+                handleTextBoxes(counter, check);
+                
+                
+            }
+            else{
+                check = document.getElementById('chkSelect' + accountCounter + 'A - Subscription');     
+                check.checked = flag;
+                counter = (accountCounter * 2);
+                handleTextBoxes(counter, check);  
+                
+                check = document.getElementById('chkSelect' + accountCounter + 'E - PureVoice');
+                check.checked = flag;       
+                document.getElementById('pg:frm:pgblk1:rptMain:'+counter+':chkSelect1').checked = true;
+                counter ++;
+                handleTextBoxes(counter, check);
+            }
+        }
+        else{
+            check = document.getElementById('chkSelect' + accountCounter + '{!selectedLOB}');      
+            check.checked = flag;
+            handleTextBoxes(accountCounter, check);
+        }   
+        }
+        catch(e){}     
+    }
+    
+    function sortSelect() {
+        var tmpAry = new Array();
+        var selElem = document.getElementById('pg:frm:pgblk:pgblkSection:pgblkSecItemWeeksone:lstCSM');
+        var selValue = selElem.value;
+        for (var i = 0; i < selElem.options.length; i++) {
+            tmpAry[i] = new Array();
+            tmpAry[i][0] = selElem.options[i].text;
+            tmpAry[i][1] = selElem.options[i].value;
+        }
+        tmpAry.sort();
+        while (selElem.options.length > 0) {
+            selElem.options[0] = null;
+        }
+        //var op = new Option('All CSM', 'All CSM');
+        //selElem.options[0] = op;
+        for (var i=0;i<tmpAry.length;i++) {
+            var op = new Option(tmpAry[i][0], tmpAry[i][1]);
+            selElem.options[i] = op;
+        }
+        selElem.value = selValue;
+        return;
+    }
+    function enableButtons(){
+        document.getElementById('pg:frm:pgblk1:btnPrevTop').disabled = false;
+        document.getElementById('pg:frm:pgblk1:btnNextTop').disabled = false;
+        document.getElementById('pg:frm:pgblk1:btnPrevBottom').disabled = false;
+        document.getElementById('pg:frm:pgblk1:btnNextBottom').disabled = false;        
+        
+    }
+    function previousJS(){
+        if(isPageLoaded == true)
+            previousAF();
+    }
+    function nextJS(){
+        if(isPageLoaded == true)
+            nextAF();
+    }
+    var isPageLoaded = false;
+    function setPageLoaded(){
+        isPageLoaded = true;
+    }
+    window.onload = setPageLoaded;
+        </script>
+    </head> 
+
+    <div style="height:20px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+            </apex:facet>
+        </apex:actionStatus>
+    </div>  
+    <apex:outputPanel id="pnlFefresh">        
+    </apex:outputPanel>
+    <apex:pageMessages />
+    <apex:form id="frm" >  
+        <apex:actionFunction action="{!populateData}" name="populateLinesAF"/>      
+        <apex:actionFunction action="{!populateWeeks}" name="populateWeeksAF"/>
+        <apex:actionFunction action="{!populateData}" name="populateLinesRefreshAF" reRender="pnlRepeat, pnlMsg" status="status" onComplete="disableAll();"/>
+        <apex:actionFunction action="{!save}" name="saveAF" /> <!-- reRender="pnlRepeat, pnlMsg" status="status" onComplete="disableAll();" />  -->      
+        <div style="width:1500px">        
+        <apex:tabPanel switchType="client" selectedTab="tabRevenueForecast2017" id="theTabPanel">
+            <apex:tab label="Revenue Forecast 2017" name="tabRevenueForecast2017" id="tabRevenueForecast2017" ontabenter="location.href='/apex/PESSRevenueForecast?q={!selectedQuarter}&week={!selectedWeek}&csm={!selectedCs}&lob={!selectedLOB}&sortBy={!sortBy}&hideQ1={!hideQ1}&hideQ2={!hideQ2}&hideQ3={!hideQ3}&hideQ4={!hideQ4}';"></apex:tab>            
+            <apex:tab label="Revenue Forecast 2018" name="tabRevenueForecast2018" id="tabRevenueForecast2018" ontabenter="location.href='/apex/PESSRevenueForecast2018?q={!selectedQuarter}&week={!selectedWeek}&csm={!selectedCs}&lob={!selectedLOB}&sortBy={!sortBy}&hideQ1={!hideQ1}&hideQ2={!hideQ2}&hideQ3={!hideQ3}&hideQ4={!hideQ4}';"></apex:tab>
+            <apex:tab label="Revenue Forecast 2019" name="tabRevenueForecast2019" id="tabRevenueForecast2019" ontabenter="location.href='/apex/PESSRevenueForecast2019?q={!selectedQuarter}&week={!selectedWeek}&csm={!selectedCs}&lob={!selectedLOB}&sortBy={!sortBy}&hideQ1={!hideQ1}&hideQ2={!hideQ2}&hideQ3={!hideQ3}&hideQ4={!hideQ4}';"></apex:tab>            
+            <apex:tab label="Risk/Upside Comments" name="tabComment" id="tabComment"  ontabenter="location.href='/apex/PESSRevenueForecastComments?q={!selectedQuarter}&week={!selectedWeek}&csm={!selectedCs}&lob={!selectedLOB}&sortBy={!sortBy}&hideQ1={!hideQ1}&hideQ2={!hideQ2}&hideQ3={!hideQ3}&hideQ4={!hideQ4}';"></apex:tab>           
+            <apex:tab label="Change Comments" name="tabComment1" id="tabComment1"  ontabenter="location.href='/apex/PESSRevenueForecastChangeComments?q={!selectedQuarter}&page=Change&week={!selectedWeek}&csm={!selectedCs}&lob={!selectedLOB}&sortBy={!sortBy}&hideQ1={!hideQ1}&hideQ2={!hideQ2}&hideQ3={!hideQ3}&hideQ4={!hideQ4}';"></apex:tab>
+        </apex:tabPanel>
+        <apex:pageBlock title="Cloud Revenue Report" id="pgblk">
+             <apex:pageBlockSection columns="3" id="pgblkSection">                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Select Period" />
+                    <apex:selectList id="Quarter" value="{!selectedQuarter}" size="1" onchange="populateWeeksAF(); return false;"> <!-- onchange="location.href='/apex/PESSRevenueForecast?q='+document.getElementById('{!$Component.Quarter}').value;"> --> 
+                        <apex:selectOption itemValue="1-2015" itemLabel="Q1-2015"/>
+                        <apex:selectOption itemValue="2-2015" itemLabel="Q2-2015"/>
+                        <apex:selectOption itemValue="3-2015" itemLabel="Q3-2015"/>
+                        <apex:selectOption itemValue="4-2015" itemLabel="Q4-2015"/>
+                        <apex:selectOption itemValue="1-2016" itemLabel="Q1-2016"/>
+                        <apex:selectOption itemValue="2-2016" itemLabel="Q2-2016"/>
+                        <apex:selectOption itemValue="3-2016" itemLabel="Q3-2016"/>
+                        <apex:selectOption itemValue="4-2016" itemLabel="Q4-2016"/>
+                        <apex:selectOption itemValue="1-2017" itemLabel="Q1-2017"/>
+                        <apex:selectOption itemValue="2-2017" itemLabel="Q2-2017"/>
+                        
+                        <apex:selectOption itemValue="3-2017" itemLabel="Q3-2017"/>
+                        <apex:selectOption itemValue="4-2017" itemLabel="Q4-2017"/>
+                        <apex:selectOption itemValue="1-2018" itemLabel="Q1-2018"/>
+                        <apex:selectOption itemValue="1-2019" itemLabel="Q1-2019"/>
+                        <apex:selectOption itemValue="1-2020" itemLabel="Q1-2020"/>
+                  
+                        
+                        
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="pgblkSecItemWeeks">                    
+                    <apex:outputLabel value="Week" />
+                    <apex:selectList value="{!selectedWeek}" size="1" >
+                        <apex:selectOptions value="{!weeks}" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>                            
+                <apex:pageBlockSectionItem id="pgblkSecItemWeeksone">
+                    <apex:outputLabel value="CSM" />                     
+                     <apex:selectList value="{!selectedCs}" size="1" id="lstCSM">
+                        <apex:selectOptions value="{!csmList}" />                             
+                    </apex:selectList>
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Revenue Type" />
+                    <apex:selectList id="lstLOB" value="{!selectedLOB}" size="1">
+                        <apex:selectOptions value="{!listOfLOBOptions}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Sort By" />
+                    <apex:selectList id="lstSortBy" value="{!sortBy}" size="1">
+                        <apex:selectOption itemValue="Company Name" itemLabel="Company Name"/>
+                        <apex:selectOption itemValue="CSM" itemLabel="CSM"/>
+                        <apex:selectOption itemValue="2017 Low - high to low" itemLabel="2017 Low - high to low"/>
+                        <apex:selectOption itemValue="2017 Land - high to low" itemLabel="2017 Land - high to low"/>
+                        <apex:selectOption itemValue="2017 Best - high to low" itemLabel="2017 Best - high to low"/>                                                
+                        <apex:selectOption itemValue="2017 Target - high to low" itemLabel="2017 Target - high to low"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Hide" />
+                    <apex:outputPanel >
+                        <apex:inputCheckBox value="{!hideQ1}" /> Q1
+                        <apex:inputCheckBox value="{!hideQ2}" /> Q2
+                        <apex:inputCheckBox value="{!hideQ3}" /> Q3
+                        <apex:inputCheckBox value="{!hideQ4}" /> Q4                     
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Account Name" />
+                    <apex:inputText value="{!accountName}" />                         
+                </apex:pageBlockSectionItem>				
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="" />
+                    <apex:outputPanel >
+                        <a href="/00OU0000003RSqO?pv0={!selectedWeek}" target="_blank"> Export </a>
+                        <!--
+                        <apex:outputLink value="https://genesys--sbgenfull2--c.cs11.visual.force.com/apex/AccountRevenueFileUploader?WeekId={!selectedWeek}">Upload File</apex:outputLink>
+                        <br/>
+                        <apex:outputLink value="https://genesys--sbgenfull2--c.cs11.visual.force.com/apex/AccountRevenueFileUploader">Download File</apex:outputLink>
+                        -->
+                    </apex:outputPanel>         
+                </apex:pageBlockSectionItem>
+           </apex:pageBlockSection>
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Search" onclick="populateLinesJS(); return false;" />
+                <apex:commandButton value="Save" onclick="saveJS(); return false;" />                
+                <apex:commandButton value="Download" oncomplete="window.open('./apex/RevenueForecastDownload')"/> 
+                <apex:commandButton value="Upload" oncomplete="window.open('./apex/RevenueForecastUpload')"/>               
+            </apex:pageBlockButtons>            
+        </apex:pageBlock>
+        </div>
+        <apex:actionFunction name="previousAF" action="{!previous}"/>
+        <apex:actionFunction name="nextAF" action="{!next}"/>
+        <apex:pageBlock id="pgblk1">
+            <table style="width:100%;">
+                <tr>
+                    <td style="width:50%;text-align:left;">
+                        <span>Page {!pageNo} of {!pages} </span>
+                        &nbsp;&nbsp;
+                        <apex:commandButton id="btnPrevTop" value="<" onclick="previousJS(); return false;" style="color:gray;width:35px;"/>
+                        &nbsp;&nbsp;
+                        <apex:commandButton id="btnNextTop" value=">" onclick="nextJS();return false;" style="color:gray;width:35px;"/>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <!--
+                        Go To Page 
+                        <apex:inputText value="{!pageNo}" size="2"/> <apex:commandButton value="Go" action="{!goToPage}"/>   
+                        &nbsp;&nbsp;              
+                        -->
+                        <apex:outputPanel id="pnlMsg">                                  
+                            <apex:outputLabel value="Please enter comment for each red line below." rendered="{!showCommentValidation}" style="color:red;font-weight:bold;" />
+                        </apex:outputPanel>                      
+                    </td>      
+                </tr>
+            </table>
+            <hr/>
+            <apex:outputPanel id="pnlRepeat"> 
+                <table id="cTable" style="background-color:#FAEBD7; border-collapse: collapse;" cellpadding="5" cellspacing="5" border="0">
+                    <tr id="headerTR">                        
+                        <td class="lockClass" style="background-color:#F0F8FF;font-weight:bold;width:200px;border-left:solid 2px gray;">
+                            &nbsp;Account Name
+                        </td>
+                        <td class="lockClass" style="background-color:#F0F8FF;font-weight:bold;">
+                            CSM Account <br/> Owner
+                        </td>
+                        <td class="lockClass" style="background-color:#F0F8FF;font-weight:bold;">
+                            Renewal Date
+                        </td>                   
+                        <td class="lockClass" style="background-color:#F0F8FF;border-right:solid 2px gray;font-weight:bold;">
+                            Revenue Type
+                        </td>         
+                        <td class="colClass" style="background-color:#FFFFFF;valign:middle;width:200px;">
+                            &nbsp;Select <br/>
+                            &nbsp;&nbsp;<input type="checkbox" id="chkBoxMain" onclick="selectAllCheckBoxes(this);"/>
+                        </td>            
+                        <apex:outputPanel rendered="{!NOT(hideQ1)}" >
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Jan 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Feb 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Mar 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q1 2017 Risk
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q1 2017 Forecast
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q1 2017 Upside
+                            </td>                        
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q1 2017 Target
+                            </td>
+                        </apex:outputPanel>                    
+                        <apex:outputPanel rendered="{!NOT(hideQ2)}" >
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Apr 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;May 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;June 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q2 2017 Risk
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q2 2017 Forecast
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q2 2017 Upside
+                            </td>                        
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q2 2017 Target
+                            </td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!NOT(hideQ3)}" >
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;July 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Aug 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Sep 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q3 2017 Risk
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q3 2017 Forecast
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q3 2017 Upside
+                            </td>                        
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q3 2017 Target
+                            </td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!NOT(hideQ4)}" >
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Oct 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Nov 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Dec 2017
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q4 2017 Risk
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q4 2017 Forecast
+                            </td>    
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q4 2017 Upside
+                            </td>                        
+                            <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                                &nbsp;&nbsp;Q4 2017 Target
+                            </td>
+                        </apex:outputPanel>    
+                        <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                            &nbsp;&nbsp;2017 Risk
+                        </td>    
+                        <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                            &nbsp;&nbsp;2017 Forecast
+                        </td>    
+                        <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                            &nbsp;&nbsp;2017 Upside
+                        </td>    
+                        <td class="colClass" style="background-color:#FFFFFF;valign:middle;">
+                            &nbsp;&nbsp;2017 Target
+                        </td>    
+                        
+                    </tr>                
+                    <apex:repeat value="{!records}" var="eachRecord" id="rptMain">              
+                        <tr id="rowTR{!eachRecord.counter}">                            
+                            <td class="rowClass" style="valign:center;background-color:{!eachRecord.backColorLeft};font-weight:bold;nowrap;border-left:solid 2px gray;">                                     
+                                <div style="width:150px;">        
+                                    <a href="/{!eachRecord.account.id}" target="_blank" >               
+                                        {!eachRecord.account.Name}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="rowClass" style="valign:center;background-color:{!eachRecord.backColorLeft};font-weight:normal;nowrap;">
+                                <div style="width:100px;">                       
+                                    <a href="/{!eachRecord.account.CSM_Account_Owner__c}" target="_blank">
+                                        {!eachRecord.account.CSM_Account_Owner__r.Name}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="rowClass" style="valign:center;background-color:{!eachRecord.backColorLeft};font-weight:normal;nowrap;">
+                                <div style="width:80px;">                       
+                                    <apex:outputField value="{!eachRecord.account.Renewal_Date__c}" />
+                                </div>
+                            </td>
+                                                                           
+                            <td class="rowClass" style="valign:center;background-color:{!eachRecord.backColorLeft};font-weight:normal;nowrap;border-right:solid 2px gray;">
+                                <div style="width:150px;">                       
+                                    {!eachRecord.accountRevForecast.LOB__c}
+                                    <!--
+                                    {!eachRecord.accountRevForecast.id}
+                                    -->
+                                </div>
+                            </td>
+                            <td id="tdCheck" style="background-color:{!eachRecord.backColorRight};">
+                                <input type="checkbox" id="chkSelect{!eachRecord.accountCounter}{!eachRecord.accountRevForecast.LOB__c}" value="{!eachRecord.isSelected}" rendered="{!NOT(eachRecord.isTotal)}" onclick="checkboxClicked('{!eachRecord.counter}', '{!eachRecord.accountCounter}', this);"/>
+                                <apex:inputCheckBox id="chkSelect1" value="{!eachRecord.isSelected}" style="display:none;" />
+                                <!-- 
+                                <img alt="Comments" class="msgIcon" src="/img/chatterservice/ask_btn_icon.png" title="Comments" style="width:16px;height:16px;cursor:pointer;" onClick="window.open('/apex/AccountRevenueForecastComments?id={!eachRecord.accountRevForecast.id}','Comment','left=375,top=200,width=800,height=500,0,status=0');"/>
+                                 -->                                 
+                                 <apex:outputPanel rendered="{!eachRecord.isError}">
+                                    <span title="{!eachRecord.errorDescription}" style="color:red;font-size:13pt;font-weight:bold;cursor:pointer;">
+                                    !
+                                    </span>
+                                </apex:outputPanel>
+                                <div style="background-color:#c00;padding-left:5px;" />                                                                
+                                <input type="hidden" value="{!eachRecord.accountRevForecast.id}" />
+                            </td>
+                            <apex:outputPanel rendered="{!NOT(hideQ1)}">
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtJan2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Jan_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Jan_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>                            
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtFeb2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Feb_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Feb_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>                            
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtMarch2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Mar_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Mar_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>       
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtQ12017Low" style="width:80px;" value="{!eachRecord.accountRevForecast.Q1_2017_Low__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q1_2017_Low__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>                                 
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <div style="width:80px;">
+                                        <apex:outputText id="lblQ12017Land" value="{!eachRecord.accountRevForecast.Q1_2017_Land__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                        <b>                            
+                                        <apex:outputText id="lblTotalQ12017Land" value="{!eachRecord.totalQ12017Land}" rendered="{!eachRecord.isTotal}"/>
+                                        </b>
+                                    </div>
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtQ12017Best" style="width:80px;" value="{!eachRecord.accountRevForecast.Q1_2017_Best__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q1_2017_Best__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>    
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorTarget};">                                    
+                                    <apex:outputText id="txtQ12017Target" value="{!eachRecord.accountRevForecast.Q1_2017_Target1__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q1_2017_Target1__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>
+                                </td>
+                            </apex:outputPanel>       
+                            <apex:outputPanel rendered="{!NOT(hideQ2)}" >                                         
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtApr2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Apr_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Apr_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>       
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtMay2017" style="width:80px;" value="{!eachRecord.accountRevForecast.May_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.May_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>        
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtJune2017" style="width:80px;" value="{!eachRecord.accountRevForecast.June_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.June_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>       
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtQ22017Low" style="width:80px;" value="{!eachRecord.accountRevForecast.Q2_2017_Low__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q2_2017_Low__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>     
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <div style="width:80px;">
+                                        <apex:outputText value="{!eachRecord.accountRevForecast.Q2_2017_Land__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                        <b>                            
+                                        <apex:outputText id="lblTotalQ22017Land" value="{!eachRecord.totalQ22017Land}" rendered="{!eachRecord.isTotal}"/>
+                                        </b>
+                                    </div>
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtQ22017Best" style="width:80px;" value="{!eachRecord.accountRevForecast.Q2_2017_Best__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q2_2017_Best__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>    
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorTarget};">
+                                    <apex:outputText id="txtQ22017Target" value="{!eachRecord.accountRevForecast.Q2_2017_Target1__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q2_2017_Target1__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>
+                                </td>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(hideQ3)}" >                                                
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtJuly2017" style="width:80px;" value="{!eachRecord.accountRevForecast.July_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.July_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>       
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtAug2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Aug_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Aug_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>        
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtSep2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Sept_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Sept_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>       
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtQ32017Low" style="width:80px;" value="{!eachRecord.accountRevForecast.Q3_2017_Low__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q3_2017_Low__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <div style="width:80px;">
+                                        <apex:outputText value="{!eachRecord.accountRevForecast.Q3_2017_Land__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                        <b>                                                                
+                                        <apex:outputText id="lblTotalQ13016Land" value="{!eachRecord.totalQ32017Land}" rendered="{!eachRecord.isTotal}"/>
+                                        </b>                            
+                                    </div>
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtQ32017Best" style="width:80px;" value="{!eachRecord.accountRevForecast.Q3_2017_Best__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q3_2017_Best__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>    
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorTarget};">
+                                    <apex:outputText id="txtQ32017Target" value="{!eachRecord.accountRevForecast.Q3_2017_Target1__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q3_2017_Target1__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>
+                                </td>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!NOT(hideQ4)}" >                                                
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtOct2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Oct_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Oct_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>        
+                                </td>
+                                <td style="background-color:{!eachRecord.backColorRight};">
+                                    <apex:inputField id="txtNov2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Nov_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Nov_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>
+                            </td>
+                            <td style="background-color:{!eachRecord.backColorRight};">
+                                <apex:inputField id="txtDec2017" style="width:80px;" value="{!eachRecord.accountRevForecast.Dec_2017__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>
+                                <apex:outputText value="{!eachRecord.accountRevForecast.Dec_2017__c}" rendered="{!eachRecord.isTotal}"/>
+                                </b>
+                            </td>
+                            <td style="background-color:{!eachRecord.backColorRight};">
+                                <apex:inputField id="txtQ42017Low" style="width:80px;" value="{!eachRecord.accountRevForecast.Q4_2017_Low__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>
+                                <apex:outputText value="{!eachRecord.accountRevForecast.Q4_2017_Low__c}" rendered="{!eachRecord.isTotal}"/>
+                                </b>                            
+                            </td>
+                            <td style="background-color:{!eachRecord.backColorRight};">
+                                <div style="width:80px;">
+                                    <apex:outputText value="{!eachRecord.accountRevForecast.Q4_2017_Land__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                    <b>                            
+                                    <apex:outputText id="lblTotalQ42017Land" value="{!eachRecord.totalQ42017Land}" rendered="{!eachRecord.isTotal}"/>
+                                    </b>                            
+                                </div>
+                            </td>
+                            <td style="background-color:{!eachRecord.backColorRight};">
+                                <apex:inputField id="txtQ42017Best" style="width:80px;" value="{!eachRecord.accountRevForecast.Q4_2017_Best__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>
+                                <apex:outputText value="{!eachRecord.accountRevForecast.Q4_2017_Best__c}" rendered="{!eachRecord.isTotal}"/>
+                                </b>    
+                            </td>
+                            <td style="background-color:{!eachRecord.backColorTarget};">
+                                <apex:outputText id="txtQ42017Target" value="{!eachRecord.accountRevForecast.Q4_2017_Target1__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>
+                                <apex:outputText value="{!eachRecord.accountRevForecast.Q4_2017_Target1__c}" rendered="{!eachRecord.isTotal}"/>
+                                </b>
+                            </td>
+                        </apex:outputPanel>
+                        <td style="background-color:{!eachRecord.backColorRight};">
+                            <div style="width:80px;">
+                                <apex:outputText value="{!eachRecord.accountRevForecast.X2017_Low__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>                            
+                                <apex:outputText id="lbl2017Low" value="{!eachRecord.total2017Low}" rendered="{!eachRecord.isTotal}"/>
+                                </b>                          
+                            </div>
+                        </td>
+                        <td style="background-color:{!eachRecord.backColorRight};">
+                            <div style="width:80px;">
+                                <apex:outputText value="{!eachRecord.accountRevForecast.X2017_Land__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>                            
+                                <apex:outputText id="lbl2017Land" value="{!eachRecord.total2017Land}" rendered="{!eachRecord.isTotal}"/>
+                                </b>
+                            </div>
+                        </td>
+                        <td style="background-color:{!eachRecord.backColorRight};">
+                            <div style="width:80px;">
+                                <apex:outputText value="{!eachRecord.accountRevForecast.X2017_Best__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>                            
+                                <apex:outputText id="lbl2017Best" value="{!eachRecord.total2017Best}" rendered="{!eachRecord.isTotal}"/>
+                                </b>                            
+                            </div>
+                        </td>
+                        <td style="background-color:{!eachRecord.backColorRight};">
+                            <div style="width:80px;">
+                                <apex:outputText value="{!eachRecord.accountRevForecast.X2017_Target__c}" rendered="{!NOT(eachRecord.isTotal)}"/>
+                                <b>                            
+                                <apex:outputText id="lbl2017Target" value="{!eachRecord.total2017Target}" rendered="{!eachRecord.isTotal}"/>
+                                </b>          
+                            </div>
+                        </td>                                                
+                    </tr>    
+                </apex:repeat>                
+            </table>            
+            </apex:outputPanel>
+            <hr/>
+            <table style="width:100%;">
+                <tr>
+                    <td style="width:50%;text-align:left;">
+                        <span>Page {!pageNo} of {!pages} </span>
+                        &nbsp;&nbsp;
+                        <apex:commandButton id="btnPrevBottom" value="<" onclick="previousJS(); return false;" style="color:gray;width:35px;"/>
+                        &nbsp;&nbsp;
+                        <apex:commandButton id="btnNextBottom" value=">" onclick="nextJS();return false;" style="color:gray;width:35px;"/>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <!--
+                        Go To Page 
+                        <apex:inputText value="{!pageNo}" size="2"/> <apex:commandButton value="Go" action="{!goToPage}"/>   
+                        &nbsp;&nbsp;              
+                        -->                    
+                    </td>      
+                </tr>
+             </table>
+        </apex:pageBlock>
+        <input type="text" id="txtTemp" style="display:none" />                
+    </apex:form>    
+    <script>
+        TableLock("cTable", "rowClass", "colClass", "lockClass");        
+        disableAll();
+        //if('{!isPageLoad}' == 'true'){        
+            sortSelect();
+        //}
+        
+    </script>
+
+</apex:page>

@@ -1,0 +1,51 @@
+<apex:page controller="PortalCaseNewSelectTypes" title="Select Case Record Type"  action="{!redirectToCasePage}">
+
+<style>
+input[type=radio] { 
+   margin-left: 20px;
+}
+.radio_panel {
+  margin-left: 110px;
+}
+</style>
+    <apex:form id="frm">
+        <apex:pagemessages />
+        
+        <apex:outputText value="If you need to open a case please click on the 'My Support Access' link on the sidebar and request a Designated Contact type access." 
+           style="font-weight:bold"   rendered="{!(!isCloudUser && !isPremUser)}">   
+        </apex:outputText>
+        
+        <apex:pageBlock id="blk" title="Select Case Type" rendered="{!(isCloudUser || isPremUser)}">
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Next" action="{!goNext}"/>
+                <apex:commandButton value="Cancel" action="/" immediate="true"/>
+            </apex:pageBlockButtons>
+             
+            <apex:outputPanel rendered="{!(isCloudUser && isPremUser)}">              
+               <apex:selectRadio value="{!selectedCloudPrem}" id="chooseType" styleClass="radio_panel" >  
+                   <apex:selectOption itemLabel="On-Premises Licenses" itemValue="Premise"/>                    
+                   <apex:selectOption itemLabel="Cloud Subscriptions" itemValue="Cloud"/>
+                   <apex:actionSupport event="onchange" reRender="frm" action="{!getRecTypes}" status="status" />
+              </apex:selectRadio>            
+            </apex:outputPanel>  
+            
+            <apex:pageBlockSection columns="2" rendered="{!displayCldDepl && selectedCloudPrem == 'Cloud'}">
+                <apex:selectList value="{!selectedDepl}" size="1" label="Cloud Account/ Deployment" style="width:350px;" >
+                    <apex:selectOptions value="{!deployments}" />
+                <apex:actionSupport event="onchange" reRender="info" />
+                </apex:selectList>
+            </apex:pageBlockSection>  
+   
+             <apex:pageBlockSection id="info" columns="1" rendered="{!displayCldDepl && selectedCloudPrem == 'Cloud'}"> 
+               <apex:outputText id="acct" value="Account: {!getacnt}" style="margin-left: 130px" /> 
+            </apex:pageBlockSection> 
+     
+            <apex:pageBlockSection columns="1" id="lstSelectRecordType" rendered="{!!isAdminCase}">
+                <apex:selectList value="{!selectedRecType}" size="1" label="Case Type" style="width:150px;">
+                    <apex:selectOptions value="{!recTypes}" />
+                </apex:selectList>
+            </apex:pageBlockSection>
+                 
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

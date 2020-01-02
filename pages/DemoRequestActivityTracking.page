@@ -1,0 +1,246 @@
+<apex:page sidebar="false" standardStylesheets="false" docType="html-5.0" standardController="Demo_Request_Tracking__c" recordSetVar="activities" extensions="DemoRequestActivityController">
+    <apex:composition template="DemoRequestNavigation">
+        <apex:define name="content">
+            <html lang="en">
+                <head>
+                    <title>My Activities</title>
+                    
+                    <apex:includeScript value="{!URLFOR($Resource.BootstrapDatePicker)}"/>
+                    <apex:stylesheet value="{!URLFOR($Resource.BootstrapDatePickerCSS)}"/>
+                    <apex:includeScript value="{!URLFOR($Resource.jQueryTimePicker)}"/>
+                    <apex:stylesheet value="{!URLFOR($Resource.jQueryTimePickerCSS)}"/>
+                    <apex:includeScript value="{!URLFOR($Resource.bootstrapMultiselect)}"/>
+                    <apex:stylesheet value="{!URLFOR($Resource.bootstrapMultiselectCSS)}"/>
+                </head>
+                <body>
+                    <apex:pageMessages />
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="page-header">
+                                    <h2>Activity Management</h2>
+                                </div>                  
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-10 col-sm-12 col-xs-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h4>
+                                            Demo Request Details
+                                        </h4>
+                                    </div>
+                                    <table class="table">
+                                        <tr>
+                                            <td><apex:outputLink value="/{!req.Id}"><apex:outputField value="{!req.Name}"></apex:outputField></apex:outputLink></td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                Demo Date &amp; Time:&nbsp;<apex:outputField value="{!req.Demo_Date_Time__c}"></apex:outputField>
+                                            	&nbsp;<apex:outputField value="{!req.Demo_Time_Length__c}"></apex:outputField>&nbsp;hours
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                Account:&nbsp;<apex:outputField value="{!req.Account__r.Name}"></apex:outputField>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                Requestor:&nbsp;<apex:outputField value="{!req.Requester_Name__c}"></apex:outputField>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <apex:form id="activityDetails" styleClass="row"> 
+                            <div class="col-md-3 col-sm-4 col-xs-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <h2>My Activities</h2><br/><br/>                                        
+                                        <apex:repeat value="{!Activities}" var="a">
+                                            <div>
+                                                <apex:commandLink action="{!showRecord}" value="{!a.Activity_Type__c}   ({!a.Activity_Date_Time__c})" reRender="activityDetails">
+                                                    <apex:param name="recordId" value="{!a.Id}" assignTo="{!selectedId}" />
+                                                </apex:commandLink>
+                                                
+                                            </div>                                          
+                                        </apex:repeat><br/>
+                                        <apex:commandButton action="{!newRecord}" reRender="activityDetails" value="New Activity" />&nbsp;
+                                        <apex:commandButton action="{!StartGtmOauth}" rendered="{!not g2mActions.oauthComplete}" value="GTM Login" styleClass="btn btn-default" />&nbsp;<br/>
+                                        <apex:commandButton action="{!SaveToken}" rendered="{!if(g2mActions.oauthComplete && not g2mActions.hasValidToken, true, false)}" value="Save GTM Token" styleClass="btn btn-default" />&nbsp;<br/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-7 col-sm-8 col-xs-12">                                                        
+                                <apex:pageBlock rendered="{!showActivity}" >                                       
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h4>
+                                                Activity Details
+                                            </h4>
+                                        </div>
+                                        <table class="table">
+                                            <tr>
+                                                <td>Activity Type:</td>
+                                                <td colspan="2">
+                                                    <apex:selectList disabled="{!not editActivity}" size="1" value="{!selectedActivity}" title="Activity Type" styleClass="btn btn-default">
+                                                        <apex:selectOptions value="{!activitySelection}"></apex:selectOptions>
+                                                        <apex:actionSupport event="onchange" action="{!newRecord}" reRender="activityDetails" />
+                                                    </apex:selectList>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Activity Date/Time:</td>
+                                                <td colspan="2">
+                                                    <apex:input id="newdate" value="{!activityDate}" />&nbsp;&nbsp;<apex:input id="newtime" value="{!activityTime}" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Activity Duration:</td>
+                                                <td colspan="2">
+                                                    Hours: <apex:input type="number" html-min="0" html-max="{!if(selectedActivity == 'Tradeshow', 150, 12)}" value="{!activityDurationHours}" required="true" />&nbsp;&nbsp;
+                                					Minutes: <apex:input type="number" html-min="0" html-max="59" html-step="15" value="{!activityDurationMinutes}" required="true" />
+                                                </td>
+                                            </tr>                                            
+                                            <tr>
+                                                <td>Notes:</td>
+                                                <td colspan="2">
+                                                    <apex:inputTextArea value="{!selectedNotes}" styleClass="form-control" />
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(selectedActivity == 'Demo', '', 'display:none')}">
+                                                <td>Custom Demo:</td>
+                                                <td colspan="2">
+                                                    <apex:inputCheckbox value="{!activityCustomDemo}"
+                                                                        onclick="if(this.checked){document.getElementById('customDemoDescription').style.display='';}
+                                                                                 else{document.getElementById('customDemoDescription').style.display='none';}"/>
+                                                </td>
+                                            </tr>
+                                            <tr id="customDemoDescription" style="{!if(activityCustomDemo, '', 'display:none')}">
+                                                <td>Custom Demo Description:</td>
+                                                <td colspan="2">
+                                                    <apex:inputTextArea value="{!activityCustomDemoDescription}" styleClass="form-control" />
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(selectedActivity == 'Tradeshow', '', 'display:none')}">
+                                                <td>Estimated Demo Count:</td>
+                                                <td colspan="2">
+                                                    <apex:input type="number" html-min="0" value="{!demoCount}" />
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(showContactCount, '', 'display:none')}">
+                                                <td>Estimated Contact Count:</td>
+                                                <td colspan="2">
+                                                    <apex:input type="number" html-min="0" value="{!demoPersonCount}" />
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(selectedActivity == 'Demo' || selectedActivity == 'Tradeshow', '', 'display:none')}">
+                                            	<td>General Concepts:</td>
+                                                <td colspan="2">
+                                                	<c:BootstrapMuliselectPicklist leftOptions="{!drl.genOptSel}"
+                                                    	                   rightOptions="{!drl.genSel}"
+                                                        	               size="14"
+                                                            	           width="250px"/>
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(selectedActivity == 'Demo' || selectedActivity == 'Tradeshow', '', 'display:none')}">
+                                            	<td>Products:</td>
+                                                <td colspan="2">
+                                                	<c:BootstrapMuliselectPicklist leftOptions="{!drl.prodOptSel}"
+                                                    	                   rightOptions="{!drl.prodSel}"
+                                                        	               size="14"
+                                                            	           width="250px"/>
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(selectedActivity == 'Demo' || selectedActivity == 'Tradeshow', '', 'display:none')}">
+                                            	<td>Other Applications:</td>
+                                                <td colspan="2">
+                                                	<apex:input type="text" value="{!otherProducts}" styleClass="form-control" />
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(selectedActivity == 'Demo' || selectedActivity == 'Tradeshow', '', 'display:none')}">
+                                            	<td>Integrations:</td>
+                                                <td colspan="2">
+                                                	<c:BootstrapMuliselectPicklist leftOptions="{!drl.intOptSel}"
+                                                    	                   rightOptions="{!drl.intSel}"
+                                                        	               size="14"
+                                                            	           width="250px"/>
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(g2mActions.meetingId != null, '', 'display:none')}">
+                                            	<td>GoToMeeting Details:</td>
+                                                <td colspan="2">
+                                                    <apex:outputText value="{!g2mActions.joinUrl}"/><br/>
+                                                    <apex:outputText value="{!g2mActions.conferenceCallInfo}"></apex:outputText>
+                                                </td>
+                                            </tr>
+                                            <tr style="{!if(selectedActivity == 'Demo Training', '', 'display:none')}">
+                                                <th>Training Date</th>
+                                                <th>Attendee Name</th>
+                                                <th>Attended?</th>
+                                            </tr>
+                                            <apex:repeat value="{!drl.origContact}" var="c" rendered="{!if(selectedActivity == 'Demo Training', true, false)}">
+                                                <tr>
+                                                    <td>
+                                                        <apex:outputField value="{!c.Training_Date__c}"/>
+                                                    </td>
+                                                    <td>
+                                                        <apex:outputText value="{!c.Contact__r.Name}"/>
+                                                    </td>
+                                                    <td>
+                                                        <apex:inputCheckbox value="{!c.Training_Attended__c}" disabled="{!not showComplete}"/>
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>                                          
+                                            <tr>
+                                                <td colspan="2"></td>
+                                                <td class="pull-right">                                                    
+                                                    <apex:commandButton action="{!CreateGtm}" rendered="{!if(g2mActions.oauthComplete && isUpdatedActivity && g2mActions.meetingId == null, true, false)}" value="Create GTM" styleClass="btn btn-default" />&nbsp;
+                                                    <apex:commandButton action="{!DeleteGtmOnly}" rendered="{!if(g2mActions.oauthComplete && isUpdatedActivity && g2mActions.meetingId != null, true, false)}" value="Delete GTM" styleClass="btn btn-default" />&nbsp;
+                                                    <apex:commandButton action="{!submitRecord}" rendered="{!isNewActivity}" value="Create" styleClass="btn btn-default" />&nbsp;
+                                                    <apex:commandButton action="{!updateRecord}" rendered="{!isUpdatedActivity}" value="Save" styleClass="btn btn-default" />&nbsp;
+                                                    <apex:commandButton action="{!deleteRecord}" rendered="{!if(isUpdatedActivity && selectedActivity != 'Demo', true, false)}" value="Delete" styleClass="btn btn-default" />&nbsp;
+                                                    <apex:commandButton action="{!CompleteTracking}" rendered="{!showComplete}" value="Complete Tracking" styleClass="btn btn-default" />&nbsp;
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <script>
+                                        $j = jQuery.noConflict();
+                                        $j(document).ready(function() {
+                                            $j('[id$=newdate]').datepicker({
+                                                autoclose:true, 
+                                                format: "yyyy-mm-dd"
+                                            }).datepicker("setDate","
+                                                          <apex:outputText value="{0}">
+                                                          <apex:param value="{!origDate}"/>
+                                                          </apex:outputText>");
+                                            $j('[id$=newtime]').timepicker({ 
+                                                'scrollDefault': 'now',
+                                                'step': 15,
+                                                'timeFormat': 'H:i'
+                                            }).timepicker("setTime","
+                                                          <apex:outputText value="{0}">
+                                                          <apex:param value="{!origTime}"/>
+                                                          </apex:outputText>");;
+                                        });
+                                    </script>
+                                </apex:pageBlock>
+                                <apex:pageBlock rendered="{!showPreviousEventWarning}">
+                                    <div class="row">
+                                        <c:DemoRequestConflict events="{!conflicts}" personName="{!selectedPerson}"></c:DemoRequestConflict>
+                                    </div>
+                                    <div class="row">
+                                        <apex:commandButton action="{!submitAnyway}" value="Submit Anyway"></apex:commandButton>
+                                    </div>
+                                </apex:pageBlock>
+                            </div>
+                        </apex:form>
+                    </div>
+                </body>                
+            </html>
+        </apex:define>
+    </apex:composition>
+</apex:page>

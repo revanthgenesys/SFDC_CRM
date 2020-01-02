@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <defaultLandingTab>Cloud_Billing_Contracts</defaultLandingTab>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <label>Billing</label>
+    <tabs>standard-Account</tabs>
+    <tabs>Cloud_Billing_Contracts</tabs>
+    <tabs>Calling_Rate__c</tabs>
+    <tabs>Cloud_Deployment__c</tabs>
+    <tabs>standard-Order</tabs>
+    <tabs>Invoice__c</tabs>
+    <tabs>standard-report</tabs>
+    <tabs>Cloud_Billing_Exception__c</tabs>
+    <tabs>Cloud_Billing_Log__c</tabs>
+    <tabs>Rolled_Up_Usage_Data__c</tabs>
+    <tabs>Partner_Portal_Services_Tab</tabs>
+    <tabs>Service__c</tabs>
+    <tabs>Product_Tier_Set__c</tabs>
+    <tabs>Billing_Conversion_Rate__c</tabs>
+    <tabs>Contract_Tier_Set_Period__c</tabs>
+    <tabs>Contract_Tier_Set_Month__c</tabs>
+    <tabs>standard-Contract</tabs>
+    <tabs>LDAP_Log__c</tabs>
+    <tabs>standard-Workspace</tabs>
+    <tabs>Call_Center_Settings</tabs>
+    <tabs>Partner_Directory_Staging__c</tabs>
+    <tabs>Genie_2_0</tabs>
+    <tabs>New_Solution_Design__c</tabs>
+    <tabs>Engagio</tabs>
+</CustomApplication>

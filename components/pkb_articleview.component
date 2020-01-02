@@ -1,0 +1,171 @@
+<apex:component allowDML="true" >
+
+<apex:attribute name="pkbCon" type="pkb_Controller" required="true" description="handle to the pkb controller" />
+
+<apex:attribute name="showFeedbackYesNo" type="Boolean" required="true" description="flag to indicate if Yes/No buttons should be shown" />
+
+<apex:attribute name="showBackLinks" type="Boolean" required="true" description="flag to indicate if 'back to...' buttons should be shown" />
+
+
+
+<apex:variable var="pageNum" value="{!pkbCon.pageNumParam}={!pkbCon.currPage}?popup=true" />
+
+<apex:variable var="siteArticleURL" value="/articles/{!pkbCon.theKad.articleType}/{!pkbCon.theKad.urlName}?popup=true" />
+
+
+
+<apex:variable var="nonSiteArticleURL" value="/articles/{!pkbCon.theKad.articleTypePlural}/{!pkbCon.theKad.urlName}" />
+
+<apex:variable var="articleURL" value="{!IF( !pkbCon.isSite, siteArticleURL, nonSiteArticleURL )}" />
+
+
+
+ <apex:variable var="isCommunity" value="{!$Site.CurrentSiteUrl != null}" />
+
+
+
+  <div style="margin-bottom: 5px;">
+
+    <h2 class="section">&nbsp;</h2>
+
+    </div>
+
+    
+
+
+
+    <div class="articleViewIcons">
+
+      <c:pkb_articleicons pkbCon="{!pkbCon}" />
+
+    </div>
+
+    
+
+      <apex:outputText rendered="{!NOT(pkbCon.isSite) && !contains($Site.CurrentSiteUrl,'/customercare/')}">
+
+      <apex:outputPanel layout="block" rendered="{!AND(showBackLinks, NOT(pkbCon.facebook))}" id="backbutton" style="margin-bottom: 5px;">
+
+          <apex:outputText rendered="{!pkbCon.displaySearchResultsLink}">
+
+            <a class="relatedLink" href="{!$Site.CurrentSiteUrl}?{!pkbCon.allSearchParams}&{!pageNum}">&lt; {!$Label.PKB2_Back_To_Results}</a>
+
+          </apex:outputText>
+
+          <apex:outputText rendered="{!NOT(pkbCon.displaySearchResultsLink)}">
+
+            <a class="relatedLink" href="{!$Site.CurrentSiteUrl}">&lt; {!$Label.PKB2_Back_To_Search_Page}</a>
+
+          </apex:outputText>
+
+      </apex:outputPanel>
+
+    </apex:outputText>
+
+    <apex:outputText rendered="{!pkbCon.isSite  || contains($Site.CurrentSiteUrl,'/customercare/')}">
+
+      <apex:outputPanel layout="block" rendered="{!AND(showBackLinks, NOT(pkbCon.facebook))}" id="backbutton2" style="margin-bottom: 5px;">
+
+
+
+          <apex:outputText rendered="{!NOT(pkbCon.displaySearchResultsLink)}">
+
+            <a class="relatedLink" href="{!$Site.CurrentSiteUrl}">&lt; {!$Label.PKB2_Back_To_Search_Page}</a>
+
+          </apex:outputText>
+
+      </apex:outputPanel>
+
+    </apex:outputText>
+
+
+
+    <div style="width: 100%;" id="articleContainer">
+
+      <apex:insert name="body" />
+
+      
+
+       <apex:outputText rendered="{!NOT(pkbCon.isSite)}">
+
+           <iframe id="articleIframe" src="{!articleURL}" height="100%" width="100%" style="height: 480px;" /> 
+
+      </apex:outputText>
+
+
+
+      <apex:outputPanel layout="block" style="margin-top: 20px; margin-bottom: 20px;" rendered="{!NOT(pkbCon.isSite)}">
+
+      </apex:outputPanel>
+
+    </div>
+
+   <apex:outputText rendered="{!pkbCon.facebook}">
+
+      <c:pkb_related pkbCon="{!pkbCon}" />
+
+   </apex:outputText>
+
+  <apex:outputPanel layout="block" styleClass="feedbackContainer" rendered="{!showFeedbackYesNo}">
+
+    <c:pkb_feedbackyesno pkbCon="{!pkbCon}" />
+
+  </apex:outputPanel>
+
+
+
+
+
+<script type="text/javascript">
+
+    jQuery(document).ready(function(){
+
+        if( {!IF( !pkbCon.isSite, 1, 0)} ) {
+
+            jQuery("#articleIframe").attr("src","{!IF(isCommunity, '/customercare','')}{!siteArticleURL}");
+
+        }
+
+        
+
+        jQuery("#articleIframe").load(function(){
+
+            jQuery(this).height( this.contentWindow.document.body.offsetHeight );
+
+        if({!isCommunity}){ 
+
+                jQuery('#articleIframe').height(jQuery('#articleIframe').contents().height());
+
+                jQuery('#articleIframe').contents().find( ".voteFormPanel tr:first > td:nth-child(2)" ).hide();
+
+                jQuery('#articleIframe').contents().find( ".voteFormPanel tr:first > td:first" ).hide();
+
+                jQuery('body.knowledgeTab.popup').css({'background':'#fff'});
+
+                jQuery('#articleIframe span#showProperties a').click(function(){
+
+                    jQuery('#articleIframe').height(jQuery('#articleIframe').contents().height());
+
+                });
+
+                jQuery('#articleIframe span#hideProperties a').click(function(){
+
+                    jQuery('#articleIframe').height(jQuery('#articleIframe').contents().height());
+
+                });
+
+         }  
+
+        });
+
+
+
+    });
+
+    
+
+</script>
+
+
+
+</apex:component>

@@ -1,0 +1,86 @@
+<apex:page id="pg" standardController="Account"  extensions="SMLAccountAttachmentController" showheader="false" sidebar="false">
+    <apex:form id="frm">
+        <div style="height:15px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    <apex:image value="/img/loading.gif"/>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>
+        <apex:actionFunction name="deleteAF" action="{!deleteAtt}" reRender="">
+            <apex:param name="selectedAttId" assignTo="{!selectedAttId}" value=""/>
+        </apex:actionFunction>
+        <apex:pageBlock title="Game Attachments" id="pgblk">
+            <apex:pageBLockButtons location="bottom" rendered="{!customPage}">
+                <apex:commandButton value="Save" action="{!save}" onclick="return validateAccountName();"/>
+            </apex:pageBLockButtons>
+            <apex:pageBlockSection columns="2" id="pgblkDetails" rendered="{!customPage}">
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="Account" />
+                    <apex:inputField value="{!attRecord.Account__c}" required="true" />
+                </apex:pageBlocksectionItem>
+                  <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="Opportunity" rendered="{!attRecord.Opportunity__c!=''}" />
+                    <apex:inputField value="{!attRecord.Opportunity__c}" required="true" rendered="{!attRecord.Opportunity__c!=''}" />
+                </apex:pageBlocksectionItem>
+                <!--
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="Product Category" />
+                    <apex:inputField value="{!attRecord.Product_Category__c}" />
+                </apex:pageBlocksectionItem>
+                -->
+                <apex:pageBlocksectionItem id="pgblksectionItemType">
+                    <apex:outputLabel value="Type" />
+                    <apex:inputField id="txtType" value="{!attRecord.Type__c}" required="true" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem id="pgblksectionItemName">
+                    <apex:outputLabel value="Name" />
+                    <apex:inputField id="txtAccountName" value="{!attRecord.Name}" required="true"  />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="Attachment" />
+                    <apex:inputFile value="{!att.body}" filename="{!att.name}"/>
+                </apex:pageBlocksectionItem>            
+            </apex:pageBlockSection>
+            <apex:pageMessages />
+            <apex:outputPanel rendered="{!customPage}">
+            <br/><br/>
+            </apex:outputPanel>
+            <apex:pageBlockSection columns="1" id="pgblkAttDetails">
+                <apex:outputLabel value="No record(s) found." rendered="{!NOT(showGrid)}" />
+                <apex:pageBlocktable value="{!attachments}" var="eachAtt" rendered="{!showGrid}">
+                    <!--
+                    <apex:column headerValue="Select">
+                        <apex:outputLink value="#" onclick="alert('{!eachAtt.record.id}');deleteAF('{!eachAtt.record.id}'); return false;"> Delete </apex:outputLink>
+                    </apex:column>
+                    -->
+                    <apex:column headerValue="Attachment">
+                        <apex:outputLink value="/{!eachAtt.att.id}"> {!eachAtt.att.Name} </apex:outputLink>
+                    </apex:column>
+                    <!--
+                    <apex:column headerValue="Product/Category">
+                        {!eachAtt.record.Product_Category__r.Name}/{!eachAtt.record.Product_Category__r.Solution_Name__c}
+                    </apex:column>
+                    -->
+                    <apex:column headerValue="Type">
+                        {!eachAtt.record.Type__c}
+                    </apex:column>       
+                </apex:pageBlocktable>         
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <script>
+            function validateAccountName(){
+                if(document.getElementById('pg:frm:pgblk:pgblkDetails:pgblksectionItemType:txtType').value == ''){
+                    alert('Please select the Type first.');
+                    return false;
+                }
+                if(document.getElementById('pg:frm:pgblk:pgblkDetails:pgblksectionItemName:txtAccountName').value == ''){
+                    alert('Please enter attachment Name first.');
+                    return false;
+                }
+                return true;
+            }
+             
+        </script>        
+    </apex:form>
+</apex:page>

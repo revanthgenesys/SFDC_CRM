@@ -1,0 +1,111 @@
+<apex:page tabStyle="GCR_Content_Document_Detail__c" controller="LegalAccountFilteredViewController">
+    <apex:sectionHeader title="Contracts"/>
+    <apex:form id="form">
+    	<apex:actionFunction action="{!showContracts}" name="showContractsAF" rerender="form">
+        	<apex:param name="accountId" assignTo="{!strAccountOptionSelected}" value="" />
+    	</apex:actionFunction>
+        <table width="100%">
+            <tr>
+                <td width="80%">
+                    <apex:pageMessages />
+                    <apex:pageBlock title="Account Filter">
+                        <apex:pageBlockSection showHeader="false" columns="1">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Account Name"/>
+                                <apex:outputPanel >
+                                    <apex:inputText value="{!strSearch}"/>
+                                    &nbsp;
+                                    <apex:commandButton value="Search" action="{!searchBtnHandler}" reRender="form" status="status"/>
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockTable value="{!accounts}" var="eachAccount" rendered="{!showAccountGrid}">
+                        		<apex:column >
+                        			<apex:facet name="header">
+                        				Account Name
+                        			</apex:facet>
+                        			<a href="#" onclick="showContractsAF('{!eachAccount.id}'); return false;">
+                        				{!eachAccount.Name}
+                        			</a>
+                        		</apex:column>
+                        		<apex:column >
+                        			<apex:facet name="header">
+                        				Account Owner
+                        			</apex:facet>
+                        			{!eachAccount.Owner.Name}                        		
+                        		</apex:column>
+                        		<apex:column >
+                        			<apex:facet name="header">
+                        				Account Region
+                        			</apex:facet>
+                        			{!eachAccount.Country__r.Region__c}                        		
+                        		</apex:column>                        		
+                        </apex:pageBlockTable>                        
+                    </apex:pageBlock>
+					<apex:pageBlock title="Contracts">
+						<apex:outputLabel rendered="{!list_GCRCDDRecords.size == 0}">
+							No record(s) to display.
+						</apex:outputLabel>
+						<apex:pageBlockTable value="{!list_GCRCDDRecords}" rendered="{!list_GCRCDDRecords.size > 0}" var="objGCRCDD">
+							<apex:column headerValue="Name">
+								<apex:outputLink value="/{!objGCRCDD.Id}" target="_blank">{!objGCRCDD.Name}</apex:outputLink>
+							</apex:column>
+							<apex:repeat value="{!$ObjectType.GCR_Content_Document_Detail__c.FieldSets.Account_Filter_View}" var="field">
+								<apex:column headerValue="{!field.Label}">
+									<apex:facet name="header">
+                                        {!field.Label}
+                                    </apex:facet>
+									<apex:outputField value="{!objGCRCDD[field]}"/>
+								</apex:column>
+							</apex:repeat>
+						</apex:pageBlockTable>
+					</apex:pageBlock>
+                </td>
+                <td width="20%">&nbsp;</td>
+            </tr>
+        </table>
+    </apex:form>
+	<style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            /* These are the 3 css properties you will need to change so the popup 
+            displays in the center of the screen. First set the width. Then set 
+            margin-left to negative half of what the width is. You can add 
+            the height property for a fixed size pop up if you want.*/
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+	</style>
+	<div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">    
+            <apex:outputPanel id="popPanel">
+                <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:center;">
+                        Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            </apex:facet>                           
+        </apex:actionStatus>
+    </div>
+</apex:page>

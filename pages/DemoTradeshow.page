@@ -1,0 +1,230 @@
+<apex:page sidebar="false" standardStylesheets="false" docType="html-5.0" controller="DemoRequestTradeshow">
+    
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        
+        <title>Submit an Event</title>
+        
+        <!-- Bootstrap -->
+        <apex:stylesheet value="{!URLFOR($Resource.bootstrap_3_3_1, 'dist/css/bootstrap.min.css')}" />
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"/>
+        <apex:includeScript value="{!URLFOR($Resource.bootstrap_3_3_1, 'dist/js/bootstrap.min.js')}" /> 
+        <style>
+            .bPageBlock {border-top:none !important;}
+            body .bPageBlock, body .secondaryPalette.bPageBlock, body .individualPalette .secondaryPalette.bPageBlock {background-color:#fff !important;}
+            .secondaryPalette {background-color:#fff !important;}
+            .bodyDiv {border-top:none !important;}
+            .pbBody a { color: none; !important}
+        </style>
+        <apex:includeScript value="{!URLFOR($Resource.BootstrapDatePicker)}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.BootstrapDatePickerCSS)}"/>
+        <apex:includeScript value="{!URLFOR($Resource.jQueryTimePicker)}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.jQueryTimePickerCSS)}"/>
+        <apex:includeScript value="{!URLFOR($Resource.bootstrapMultiselect)}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.bootstrapMultiselectCSS)}"/>
+    </head>
+    <apex:pageMessages />
+    <div class="container">
+        <div class="row">
+            <apex:form rendered="{!showNavigation}" styleClass="col-md-3 col-sm-4 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h2>Navigation</h2><br/><br/>
+                        <apex:commandLink action="{!backToInfo}" value="Event Info"/><br/>
+                        <apex:commandLink rendered="{!showTSCNav}" action="{!backToTSCs}" value="TSC Info"/><br/>
+                        <apex:commandLink rendered="{!showTimesNav}" action="{!backToTimes}" value="Floor Times"/><br/>
+                        <apex:commandLink rendered="{!showVerifyNav}" action="{!backToVerify}" value="Verify and Submit"/><br/>
+                    </div>
+                </div>
+            </apex:form>
+            <apex:form rendered="{!showInfo}" styleclass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>Event Information</h2>
+                    </div>
+                    <table class="table">
+                        <tr>
+                            <td>Event Name:</td>
+                            <td>
+                                <apex:input value="{!drb.companyName}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Event Location:</td>
+                            <td>
+                                <apex:input value="{!drb.onsiteDemoLocation}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Event Website:</td>
+                            <td>
+                                <apex:input value="{!drb.Website}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Event Venue information:</td>
+                            <td>
+                                <apex:inputTextarea value="{!drb.BusinessNeeds}" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Event Type:</td>
+                            <td>
+                                <apex:selectList size="1" value="{!eventType}">
+                                    <apex:selectOptions value="{!eventTypes}"></apex:selectOptions>
+                                    <apex:actionSupport event="onchange" action="{!checkShowAudienceType}" />
+                                </apex:selectList>
+                            </td>
+                        </tr>
+                        <tr style="{!if(showDates,"","display:none")};">
+                            <td>Event Dates:</td>
+                            <td>
+                                <div id="dates" class="input-daterange">
+                                    <apex:input styleClass="input-small" id="datestart" value="{!dateRangeStart}"/>
+                                    &nbsp;&nbsp;<span>to</span>&nbsp;&nbsp;
+                                    <apex:input styleClass="input-small" id="datesend" value="{!dateRangeEnd}"/>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr style="{!if(showDayCount,"","display:none")};">
+                            <td>How many Webinars:</td>
+                            <td>
+                            	<apex:input type="number" id="webinarCount" value="{!webinarCount}"/>
+                            </td>
+                        </tr>
+                        <tr style="{!if(showMaxAttendees,"","display:none")};">
+                            <td>Max Attendees:</td>
+                            <td>
+                            	<apex:input type="number" id="maxAttendees" value="{!drb.maxAttendees}"/>
+                            </td>
+                        </tr>
+                        <tr style="{!if(showAudienceType,"","display:none")};">
+                            <td>Audience Type:</td>
+                            <td>
+                                <apex:selectList size="1" value="{!drb.audienceType}">
+                                    <apex:selectOptions value="{!audienceTypes}"></apex:selectOptions>
+                                </apex:selectList>
+                            </td>
+                        </tr>
+                        <script>
+                        $j = jQuery.noConflict();
+                        $j(document).ready(function() {
+                            $j('[id$=dates]').datepicker({
+                                autoclose:true, 
+                                format: "yyyy-mm-dd"
+                            });
+                        });
+                        </script>  
+                    </table><br/><br/>
+                    &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitInfo}" value="Continue to Attendees"/>
+                </div>        
+            </apex:form>
+            <apex:form rendered="{!showTSCs}" styleclass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>Attendees Information</h2>
+                    </div>
+                    <table class="table">
+                        <tr>
+                            <td>Event Leader:</td>
+                            <td>
+                                <apex:selectList size="1" value="{!tscLeader}">
+                                    <apex:selectOptions value="{!presenters}"></apex:selectOptions>
+                                    <apex:actionSupport event="onchange" action="{!updateOtherPresenters}" />
+                                </apex:selectList>
+                            </td>
+                        </tr>  
+                        <tr style="{!if(tscLeader!='',"","display:none")};">
+                            <td>Other Team Members:</td>
+                            <td>
+                                <c:BootstrapMuliselectPicklist leftOptions="{!otherpresenters}"
+                                                               rightOptions="{!selectedOtherPresenters}"
+                                                               size="14"
+                                                               width="250px"/>
+                            </td>
+                        </tr>              
+                    </table><br/><br/>
+                    &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitTSCs}" value="Continue to Event Times"/>
+                </div>        
+            </apex:form>
+            <apex:form rendered="{!showTimes}" styleclass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>Event Times</h2>
+                    </div>
+                    <table class="table">
+						<apex:repeat var="count" value="{!dayInputs}">   
+                            <tr>
+                                <td>Day {!count+1}</td>
+                                <td style="{!if(isWebinarSeries,"","display:none")};">
+                                    <label for="newdate">Date:</label>
+                                    <apex:input value="{!webinarDays[count]}" id="newdate" styleClass="form-control" />
+                                </td>
+                                <td><label for="newtime">Starts:</label><apex:input id="newtime" value="{!dayTimeRanges[count]}"/></td>
+                                <td><label for="newtime2">Ends:</label><apex:input id="newtime2" value="{!dayTimeEnds[count]}"/></td>
+                            </tr>
+                            </apex:repeat>
+                    </table><br/><br/>
+                    <script>
+                    $j = jQuery.noConflict();
+                    $j(document).ready(function() {
+                        $j('[id$=newtime]').timepicker({ 
+                            'scrollDefault': 'now',
+                            'step': 30,
+                            'timeFormat': 'H:i'
+                        });
+                        $j('[id$=newtime2]').timepicker({ 
+                            'scrollDefault': 'now',
+                            'step': 30,
+                            'timeFormat': 'H:i'
+                        });
+                        $j('[id$=newdate]').datepicker({
+                            autoclose:true, 
+                            format: "yyyy-mm-dd"
+                        });
+                    });
+                    </script>  
+                    &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitTimes}" value="Continue to Verify"/>
+                </div>        
+            </apex:form>
+            <apex:form rendered="{!showVerify}" styleclass="col-md-7 col-sm-8 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2>Floor Times</h2>
+                    </div>
+                    <table class="table">
+                        <tr>
+                        	<td>Name: </td>
+                            <td><apex:outputText value="{!drb.companyName}"/></td>
+                        </tr>
+                        <tr>
+                            <td>Location: </td>
+                            <td><apex:outputText value="{!drb.onsiteDemoLocation}"/></td>
+                        </tr>
+                        <tr>
+                            <td>Attendees: </td>
+                            <td><apex:outputText value="{!displayAttendees}"/></td>
+                        </tr>
+                        <tr style="{!if(!isWebinarSeries,"","display:none")};" >
+                            <td>Dates/Times: </td>
+                            <td><apex:outputText value="{!dateRangeStart}"/>&nbsp;&nbsp;&nbsp;to&nbsp;&nbsp;&nbsp;<apex:outputText value="{!dateRangeEnd}"/></td>
+                        </tr>
+                    </table>
+                    <table class="table">
+                        <tr><td colspan="2"><h2>Times</h2></td></tr>
+                        <apex:repeat value="{!dayInputs}" var="d">
+                        	<tr>
+                                <td style="{!if(!isWebinarSeries,"","display:none")};">Day&nbsp;<apex:outputText value="{!d+1}" />:</td>
+                                <td style="{!if(isWebinarSeries,"","display:none")};"><apex:outputText value="{!webinarDays[d]}" /></td>
+                                <td><apex:outputText value="{!dayTimeRanges[d]}"/>&nbsp;&nbsp;to&nbsp;&nbsp;<apex:outputText value="{!dayTimeEnds[d]}"/></td>
+                            </tr>
+                        </apex:repeat>
+                    </table>
+                    &nbsp;&nbsp;&nbsp;<apex:commandButton styleClass="btn btn-default" action="{!submitVerify}" value="Submit Event"/>
+                </div>
+            </apex:form>
+        </div>
+    </div>
+</apex:page>

@@ -1,0 +1,53 @@
+<apex:page controller="RebateRequestController" tabStyle="Performance__tab">
+   	<apex:form enctype="multipart/form-data">
+    	<apex:sectionHeader title="Create" subtitle="Rebate Request"/>
+        <apex:pageMessages />
+    	<apex:pageBlock rendered="{!IF(rebateRequestSubmitted == false, true, false)}">
+			<apex:pageBlockSection >
+                <apex:outputField id="rebateYear" value="{!rebateRequest.Rebate_Year__c}" />
+                <apex:inputField value="{!rebateRequest.Date__c}" />
+                <apex:outputField value="{!pAccount.Name}" label="Partner Account Name"/>
+                <apex:outputField value="{!pUser.Contact.Name}" label="Contact Name" />
+                <apex:outputField value="{!rebateRequest.CurrencyIsoCode}"/>
+                <!--
+                <apex:inputField value="{!rebateRequest.CurrencyIsoCode}" />
+				-->
+	            <apex:inputField value="{!rebateRequest.Requested_Rebate_Amount__c}"/> 
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Expense Type"/>
+                    <apex:actionRegion >
+                        <apex:inputField value="{!rebateRequest.Expense_Type__c}" >
+                            <apex:actionSupport event="onchange" rerender="MarketingExpenseComments" />
+                        </apex:inputField>
+                    </apex:actionRegion>
+                </apex:pageBlockSectionItem>
+                <apex:outputPanel ></apex:outputPanel>
+				<apex:outputField value="{!pAccount.Owner.Name}" label="Channel Manager" />
+                <apex:outputField value="{!pAccount.Owner.Email}" label="Channel Manager Email" />
+            </apex:pageBlockSection>
+        	<apex:pageBlockSection columns="1">
+				<apex:outputPanel id="MarketingExpenseComments" >
+                    <apex:pageBlockSection columns="1" rendered="{!rebateRequest.Expense_Type__c == 'Marketing Expense'}">
+                          <apex:inputField value="{!rebateRequest.Marketing_Expense_Comments__c}" style="width:70%" />
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+             	<apex:pageBlockSectionItem >
+		          <apex:outputLabel value="Purchase Order" for="file"/>
+        		  <apex:inputFile value="{!attachment.body}" filename="{!attachment.name}" id="file"/>
+        		</apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons >
+            	<apex:commandButton value="Submit" action="{!saveRebateRequest}"/>
+            	<apex:commandButton value="Cancel" action="{!redirectToPerformance}" immediate="true"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!rebateRequestSubmitted}">
+			<apex:pageBlockSection columns="1">
+                You request has been submitted successfully. You will be notified when the decision is made.  
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons location="bottom">
+            	<apex:commandButton value=" Ok " action="{!redirectToPerformance}" immediate="true"/>
+            </apex:pageBlockButtons>
+        </apex:pageBlock>   
+    </apex:form>
+</apex:page>

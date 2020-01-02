@@ -1,0 +1,201 @@
+<apex:page id="pageId" sidebar="false" standardController="partner_portal_prospect__c" extensions="PartnerPortalRegistration_Class" showheader="false">
+
+<style>
+.descField{
+width: 450px;
+height: 90px;
+}
+.snglValueField {
+width: 180px; !important;
+}
+
+label{
+    font-weight: 600;
+}
+
+</style>
+<apex:includeScript value="{!$Resource.jquery19}" />
+<Script>
+var j$ = jQuery.noConflict();
+function extendExpiry(acc){
+if(acc !=''){ 
+window.open('/partner/apex/DealExpiryExtensionPopup?id={!opp.Id}','mypopup','top=150,left=200,location=1,status=1,scrollbars=1, width=550,height=400'); 
+} 
+else 
+alert('Please select end user account, before requesting for extension');
+}
+</script>
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="dealreg"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+
+            <!--<apex:sectionHeader title="NEW OPPORTUNITY REGISTRATION" subtitle="" rendered="{!NOT(isReadOnly)}"/>
+            <apex:sectionHeader title="Opportunity Registration" subtitle="{!partner_portal_prospect__c.Name}" rendered="{!isReadOnly}"/>-->
+            <h4 style="{!IF(NOT(isReadOnly),'display:block','display:none')}">New Opportunity Registration</h4><p/>
+            <h4 style="{!IF(isReadOnly,'display:block','display:none')}">Opportunity Registration</h4><p/>
+            <apex:form id="formId">  
+            <apex:pageBlock rendered="{!showError}">
+                <apex:pageMessage summary="Sorry, You don't have rights to read this record." severity="ERROR" strength="3" />        
+            </apex:pageBlock>
+            <apex:pageBlock id="pbid" rendered="{!NOT(showError)}">
+            <apex:pageMessages ></apex:pageMessages>
+            <apex:pageBlockButtons >
+            <apex:commandButton value="Save" action="{!saveOpp}" rendered="{!NOT(isReadOnly)}" /> 
+            <apex:commandButton value="Cancel" action="{!cancelOpp}" immediate="true" rendered="{!NOT(isReadOnly)}"/>
+            <apex:commandButton value="Request Expiration Extension" onClick="extendExpiry('{!opp.End_User_Account__c}');return false;" rendered="{!isApproved}"/>
+            </apex:pageBlockButtons>
+
+            <apex:actionStatus id="counterStatus">                   
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv waitingSearchDivOpacity" style="width: 100%; height: 100%; display: block;opacity: 0.60;"/>
+                    <div id="loading_image" class="waitingSearchDiv" style="width: 100%; height: 100%; display: block;">
+                        <div class="waitingHolder" style="top: 20%; width: 20px;background:#fff;">
+                            <img class="waitingImage" src="/img/loading.gif" style="background:#fff;"/>
+                            <span class="waitingDescription">Refreshing...</span>
+                        </div>
+                    </div>
+                </apex:facet>
+                <apex:facet name="stop"/>
+            </apex:actionStatus>
+                        <!--  Opportunity Information Starts from Here   -->
+                      
+                        <apex:pageblocksection columns="2" id="pbsIs_opp" title="Opportunity Information" collapsible="false">  
+                            <apex:inputField label="Customer Company Name " value="{!partner_portal_prospect__c.Name}" required="true"  rendered="{!NOT(isReadOnly)}" styleClass="snglValueField"/>
+                            <apex:outputField label="Customer Company Name " value="{!partner_portal_prospect__c.Name}" rendered="{!isReadOnly}" styleClass="snglValueField"/>              
+                            <apex:repeat value="{!$ObjectType.partner_portal_prospect__c.FieldSets.Partner_Portal_Opp_Inforamtion}" var="f"> 
+                                <apex:inputField value="{!partner_portal_prospect__c[f]}" required="{!IF(f.Label == 'Customer Division/Group', false,true)}"  
+                                rendered="{!NOT(isReadOnly || f.Label='Expiration Date' || f.Label='Rejection Reason' || f.Label='Other Rejection Reason' || f.Label='Status')}" styleClass="snglValueField"/>
+                                <apex:outputField value="{!partner_portal_prospect__c[f]}" rendered="{!isReadOnly}" styleClass="snglValueField" />
+                            </apex:repeat>  
+                            
+                        </apex:pageblocksection>  
+                    
+                        <!--  Partner Information Starts from Here   -->
+                        
+                       <apex:pageblocksection columns="2" id="pbsIs_cnt" title="Partner Information" collapsible="false">  
+                           <apex:repeat value="{!$ObjectType.partner_portal_prospect__c.FieldSets.Partner_Portal_Partner_Information}" var="f">                     
+                                <apex:inputField value="{!partner_portal_prospect__c[f]}" required="{!IF(f.label == 'Account Executive at Genesys', false, true)}"  rendered="{!NOT(isReadOnly)}" />
+                                <apex:outputField value="{!partner_portal_prospect__c[f]}" rendered="{!isReadOnly}" />                  
+                           </apex:repeat>                     
+                       </apex:pageblocksection>  
+                      
+                       <!--  Opportunity Description Starts from Here   -->
+
+                
+             <apex:pageBlockSection columns="2" title="Opportunity Details" collapsible="false" id="optyInfo"> 
+
+                <apex:pageBlockSection >     
+                    <apex:inputField value="{!partner_portal_prospect__c.Description__c}" style="width: 450px; height: 50px;" rendered="{!NOT(isReadOnly)}"/> 
+                     <apex:outputField value="{!partner_portal_prospect__c.Description__c}" rendered="{!isReadOnly}"/> 
+                  </apex:pageBlockSection>   
+               <apex:pageBlockSection >
+                    <apex:inputField value="{!partner_portal_prospect__c.Campaign_ID__c}" rendered="{!NOT(isReadOnly)}"/>
+                    <apex:outputField value="{!partner_portal_prospect__c.Campaign_ID__c}" rendered="{!isReadOnly}"/>
+                </apex:pageBlockSection>     
+                <apex:pageBlockSection >         
+                    <apex:inputField value="{!partner_portal_prospect__c.Campaign_Source__c}" rendered="{!NOT(isReadOnly)}"/>
+                    <apex:outputField value="{!partner_portal_prospect__c.Campaign_Source__c}" rendered="{!isReadOnly}"/>
+                </apex:pageBlockSection>
+                <apex:actionRegion >
+                <apex:pageBlockSection >    
+                    <apex:inputField value="{!partner_portal_prospect__c.Lead_Offer__c}" rendered="{!NOT(isReadOnly)}" required="true" styleClass="snglValueField">
+                        <apex:actionSupport event="onchange" reRender="amountSec" status="counterStatus"/>
+                    </apex:inputField>
+                    <apex:outputField value="{!partner_portal_prospect__c.Lead_Offer__c}" rendered="{!isReadOnly}" styleClass="snglValueField"/>
+                </apex:pageBlockSection>   
+                </apex:actionRegion>
+
+                <apex:pageBlockSection Id="amountSec">    
+                    <apex:inputField value="{!partner_portal_prospect__c.License_Amount__c}" rendered="{!NOT(isReadOnly) && FIND('Premise',partner_portal_prospect__c.Lead_Offer__c)!=0}" styleClass="snglValueField" required="{!FIND('Premise',partner_portal_prospect__c.Lead_Offer__c)!=0}"/>        
+                    <apex:outputField value="{!partner_portal_prospect__c.License_Amount__c}" rendered="{!isReadOnly && FIND('Premise',partner_portal_prospect__c.Lead_Offer__c)!=0}" styleClass="snglValueField"/>
+                    <apex:inputField value="{!partner_portal_prospect__c.Annual_Contract_Value_Amount__c}" rendered="{!NOT(isReadOnly) && FIND('Cloud',partner_portal_prospect__c.Lead_Offer__c)!=0}" styleClass="snglValueField" required="{!FIND('Cloud',partner_portal_prospect__c.Lead_Offer__c)!=0}"/>        
+                    <apex:outputField value="{!partner_portal_prospect__c.Annual_Contract_Value_Amount__c}" rendered="{!isReadOnly && FIND('Cloud',partner_portal_prospect__c.Lead_Offer__c)!=0}" styleClass="snglValueField"/>
+                </apex:pageBlockSection> 
+
+
+           <!-- <apex:pageBlockSection >    
+                    <apex:inputField value="{!partner_portal_prospect__c.Annual_Contract_Value_Amount__c}" label="Annual Contract Value Amount" styleClass="snglValueField" rendered="{!AND(NOT(isReadOnly), partner_portal_prospect__c.Platform_Type__c=='Cloud')}" required="{!partner_portal_prospect__c.Platform_Type__c=='Cloud'}"/>  
+                    <apex:outputField value="{!partner_portal_prospect__c.Annual_Contract_Value_Amount__c}" label="Annual Contract Value Amount" styleClass="snglValueField" rendered="{!AND((isReadOnly), partner_portal_prospect__c.Platform_Type__c=='Cloud')}"/>  
+                </apex:pageBlockSection>
+               <apex:pageBlockSection >    
+                       <apex:inputField value="{!partner_portal_prospect__c.License_Amount__c}" label="License Amount" styleClass="snglValueField" rendered="{!AND(NOT(isReadOnly), partner_portal_prospect__c.Platform_Type__c=='On Premise')}" required="{!partner_portal_prospect__c.Platform_Type__c=='On Premise'}"/>        
+                      <apex:outputField value="{!partner_portal_prospect__c.License_Amount__c}" label="License Amount" styleClass="snglValueField" rendered="{!AND((isReadOnly), partner_portal_prospect__c.Platform_Type__c=='On Premise')}" />
+                </apex:pageBlockSection>  -->
+                <apex:pageBlockSection >    
+                    <apex:inputField value="{!partner_portal_prospect__c.Vendor_in_Place__c}"  label="Vendor in Place" required="true" rendered="{!NOT(isReadOnly)}"/>        
+                    <apex:outputField value="{!partner_portal_prospect__c.Vendor_in_Place__c}" label="Vendor in Place" rendered="{!isReadOnly}" />
+                 </apex:pageBlockSection>
+                 <apex:pageBlockSection >
+                 </apex:pageBlockSection>
+                 <apex:pageBlockSection >
+                    <apex:inputField value="{!partner_portal_prospect__c.Promotional_Offer__c}" label="Promotional Offer" rendered="{!NOT(isReadOnly)}"/>
+                    <apex:outputField value="{!partner_portal_prospect__c.Promotional_Offer__c}" label="Promotional Offer" rendered="{!isReadOnly}" />
+                 </apex:pageBlockSection>                
+              </apex:pageBlockSection>
+                        
+
+                 
+
+
+               <apex:pageBlockSection columns="1" >
+                    
+                        <!--<apex:inputField value="{!partner_portal_prospect__c.Promotional_Offer__c}" label = "Promotional Offer" required="true" rendered="{!NOT(isReadOnly)}"/>
+                        <apex:outputField value="{!partner_portal_prospect__c.Promotional_Offer__c}" label="Promotional Offer" rendered="{!isReadOnly}" />-->
+                    
+                     <apex:pageBlockSectionItem >  
+                       <apex:outputLabel value="Opportunity Currency" style="{!IF(isReadOnly,'font-weight: 600; color: #4a4a56;font-size: 0.70rem;','font-weight: bold; color: #212121')}"/>        
+                       <apex:outputPanel >         
+                            <apex:actionRegion rendered="{!NOT(isReadOnly)}">  
+                            <apex:inputField value="{!opp.Opportunity_Currency__c}" required="true" styleClass="snglValueField">  
+                                     <apex:actionSupport action="{!resetCurriency}" event="onchange" reRender="prdlist1,prdlist2" status="actStatusId">
+                                     <apex:param name="selectedcurr" assignTo="{!selectedCurrency}" value="{!opp.Opportunity_Currency__c}"/>
+                            <apex:actionStatus id="actStatusId" >
+                            <apex:facet name="start" >
+                                          <img src="/img/loading.gif" />                    
+                                        </apex:facet>
+                                    </apex:actionStatus>
+                            </apex:actionsupport>
+                            </apex:inputField> 
+                            </apex:actionRegion>
+                           <apex:outputField value="{!partner_portal_prospect__c.Opportunity_Currency__c}" rendered="{!isReadOnly}" style="font-weight: 600; color: #4a4a56;font-size: 0.70rem;"/>
+                        </apex:outputPanel> 
+                     </apex:pageBlockSectionItem>
+                     <apex:inputField value="{!partner_portal_prospect__c.Type__c}" rendered="{!NOT(isReadOnly)}" required="true" />        
+                      <apex:outputField value="{!partner_portal_prospect__c.Type__c}" rendered="{!isReadOnly}" /> 
+                     <apex:inputField value="{!partner_portal_prospect__c.Number_of_Agents__c}" label="Number of Agents" styleClass="snglValueField" rendered="{!NOT(isReadOnly)}" required="true" />        
+                      <apex:outputField value="{!partner_portal_prospect__c.Number_of_Agents__c}" label="Number of Agents" styleClass="snglValueField" rendered="{!isReadOnly}" />
+                         
+                      <apex:inputField value="{!partner_portal_prospect__c.Primary_Solution_Category__c}" label="Primary Solution" styleClass="snglValueField" rendered="{!NOT(isReadOnly)}" required="true" />        
+                     <!-- <apex:outputLink value="{!URLFOR($Resource.PartnerSolutionCaregoryGuidelines)}" target="_blank" rendered="{!NOT(isReadOnly)}" style="margin-left:100px;" >Click here to see Solution Category Guidelines</apex:outputLink> -->                                                           
+                           
+                      <apex:outputField value="{!partner_portal_prospect__c.Primary_Solution_Category__c}" label="Primary Solution" styleClass="snglValueField" rendered="{!isReadOnly}" />
+
+                      
+                      <apex:inputField value="{!partner_portal_prospect__c.Products__c}" label="Product" rendered="{!NOT(isReadOnly)}"/>        
+                      <apex:outputField value="{!partner_portal_prospect__c.Products__c}" label="Product" rendered="{!isReadOnly}"/>  
+
+                       <apex:inputField value="{!partner_portal_prospect__c.What_is_the_Expected_Close_Date__c}" required="true"  rendered="{!NOT(isReadOnly)}"/>
+                       <apex:outputField value="{!partner_portal_prospect__c.What_is_the_Expected_Close_Date__c}" rendered="{!isReadOnly}"/> 
+                      
+                    <apex:inputField value="{!partner_portal_prospect__c.Will_this_deal_involve_SMART_Use_Cases__c}" rendered="{!NOT(isReadOnly)}"/>
+                       <apex:outputField value="{!partner_portal_prospect__c.Will_this_deal_involve_SMART_Use_Cases__c}" rendered="{!isReadOnly}"/>  
+                    
+                   
+                </apex:pageBlockSection>  
+                       
+                                               
+              </apex:pageBlock>
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+
+</apex:page>

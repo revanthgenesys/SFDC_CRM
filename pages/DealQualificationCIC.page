@@ -1,0 +1,1017 @@
+<apex:page id="pg" standardController="Deal_Qualification__c" extensions="DealQualificationCICController" title="{!opp.Name}" tabStyle="Opportunity" action="{!reviseOnLoad}">
+    <script>
+        function onSaveComplete(){          
+            var iframe = document.getElementById('ifUpfront');
+            iframe.src = iframe.src;
+        }
+        function doRevise(){
+            if(confirm('Are you sure you want to revise ? Press OK to revise or Cancel.')){
+                reviseAF();
+            }
+        }
+        function onDeclineCheck(){
+            if(document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecGenesysCare:pgblkSecGenesysCare:pgblkSectItemDecline:chkDecline').checked){
+                document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecGenesysCare:pgblkSecGenesysCare:pgblkSectItemGCOverride:lstGCOverride').value = 'No override';
+                document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecGenesysCare:pgblkSecGenesysCare:pgblkSectItemTI:chkTermIncrease').checked  = false;
+                document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecGenesysCare:pgblkSecGenesysCare:pgblkSectItemTD:chkTermDecrease').checked  = false;
+                document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecGenesysCare:pgblkSecGenesysCare:pgblkSecItemPremiumCare:chkPremiumCare').checked  = false;
+                document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecGenesysCare:pgblkSecGenesysCare:pgblkSecItemPremiumCare:chkPremiumCare').checked  = false;              
+            }
+        }
+    </script>
+    <apex:form id="form">       
+        <apex:sectionHeader title="Deal Qualification" subtitle="{!opp.Name}"/>   
+        <div style="height:15px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    <apex:image value="/img/loading.gif"/>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>        
+        <apex:actionFunction immediate="true" name="genesysCareOnChangeAF" action="{!genesysCareOnChange}" reRender="pgblk, pnlMsg" status="status" >
+            <apex:param value="" name="genesysCare" assignTo="{!genesysCare}" />            
+        </apex:actionFunction>
+        <apex:actionFunction immediate="true" name="sellingGAFRoadMapChangeAF" action="{!sellingGAFRoadMapChange}" reRender="pgblk, pnlMsg" status="status" >           
+            <apex:param value="" name="sellingNONGAFutureMap" assignTo="{!sellingNONGAFutureMap}" />
+        </apex:actionFunction> 
+        <apex:actionFunction immediate="true" name="professionalServicesAF" action="{!professionalServicesChange}" reRender="pgblk, pnlMsg" status="status" >           
+            <apex:param value="" name="professionalServices" assignTo="{!professionalServices}" />
+        </apex:actionFunction>               
+        <apex:actionFunction name="deleteDQProductAF" action="{!deleteDQProduct}" reRender="pgblkDQProducts, pnlMsg" status="status">
+            <apex:param value="" name="dqProductIdToBeDeleted" assignTo="{!dqProductIdToBeDeleted}" />            
+        </apex:actionFunction>
+        <apex:actionFunction name="refreshAF" action="{!initDiscount}" reRender="pgblkSecPricing, pnlMsg" status="status" />
+        <apex:actionFunction name="reviseAF" action="{!revise}" />
+        <apex:outputPanel id="pnlMsg">
+            <apex:pageMessages />
+        </apex:outputPanel>
+        <div style="width:100%; text-align:right;">
+           <!-- <a href="https://genesys.my.salesforce.com/sfc/p/#U0000000KM1G/a/U00000008dPk/pSOz9sb.9kdnje8TWfTKeiu14waX5GnwdtVcc7CAFB8" target="_blank">-->
+                        <a style="color:red;font-size:160%;"  href="https://genesys.my.salesforce.com/sfc/p/U0000000KM1G/a/U00000004Oj3/UwoiJAXtrtDeO2v2_3SmYOKYk_kC5UVjbFGFuzGRIFg" target="_blank">
+                <b>Help FAQs</b>
+            </a>
+        </div>
+        <apex:pageBlock title="PureConnect On-Premise: {!dq.Name}" id="pgblk">
+            
+             <!--Mukunth added below line for INC0416843 - DQ Special Offers Sub-aprpovers-->
+            <apex:actionStatus id="status1">                   
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv waitingSearchDivOpacity" style="width: 100%; height: 100%; display: block;opacity: 0.60;"/>
+                    <div id="loading_image" class="waitingSearchDiv" style="width: 100%; height: 100%; display: block;">
+                        <div class="waitingHolder" style="top: 20%; width: 20px;background:#fff;">
+                            <img class="waitingImage" src="/img/loading.gif" style="background:#fff;"/>
+                            <span class="waitingDescription">Refreshing...</span>
+                        </div>
+                    </div>
+                </apex:facet>
+                <apex:facet name="stop"/>
+            </apex:actionStatus>
+           <!--Mukunth  - DQ Code End-->
+           
+        <apex:pageBlockbuttons location="top">
+            <apex:commandButton value="Save Draft" action="{!save}" rendered="{!OR(NOT(showReviseButton), isDealFactoryUser)}"  status="status" reRender="pnlMsg" oncomplete="onSaveComplete(); return false;"/>
+            <apex:commandButton value="Revise" onclick="doRevise(); return false;" rendered="{!showReviseButton}" status="status" />
+            <apex:commandButton value="Back To Opportunity" onclick="location.href='{!strBaseURL}/{!opp.id}'; return false;"/>
+            <apex:commandButton value="Submit for Approval" action="{!submitForApproval}" rendered="{!AND(dq.Status__c != 'Approval Pending', dq.Status__c != 'Approved')}"/>
+            <!--Mukunth added below button for INC0416843 - DQ Special Offers Sub-aprpovers-->
+            <apex:commandButton value="Save" action="{!saveFinanceApproval}" status="status1" rendered="{!isRevSubApprover || isOMBSubApprover || isCCSubApprover || isLegalSubApprover}"  reRender="specOfferApprSec"/>
+            <!--Mukunth  - DQ Code End-->
+        </apex:pageBlockbuttons>
+        <apex:tabPanel switchType="client" selectedTab="dqTab" id="theTabPanel">
+            <apex:tab label="Deal Qualification" name="dqTab" id="dqTab">
+                <apex:pageBlockSection >
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Status__c.inlineHelpText}">
+                        <apex:outputLabel value="Approval Status" />
+                        <apex:outputField value="{!dq.Status__c}" style="font-weight:bold;"/>
+                    </apex:pageBlockSectionItem>                
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Opportunity Details">
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Name.inlineHelpText}">
+                        <apex:outputLabel value="Opportunity Name" />
+                        <apex:outputField value="{!opp.Name}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="End User Name" />
+                        <apex:outputField value="{!opp.Account.Name}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Sold To Name" />
+                        <apex:outputField value="{!opp.BusinessPartner__r.Name}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Owner Name" />
+                        <apex:outputField value="{!opp.Owner.Name}"/>
+                    </apex:pageBlockSectionItem>
+                    <!--
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Region" />
+                        <apex:outputField value="{!opp.Country_Region__c}"/>
+                    </apex:pageBlockSectionItem>
+                    -->
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="End User Country" />
+                        <apex:outputField value="{!opp.Country__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Sold To Country" />
+                        <apex:outputField value="{!opp.Sold_To_Country__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Sub Region" />
+                        <apex:outputField value="{!opp.Country_Sub_Region__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <!--
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Primary Solution Category" />
+                        <apex:outputField value="{!opp.Primary_Solution_Category__c}"/>
+                    </apex:pageBlockSectionItem>
+                    -->
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Stage Name" />
+                        <apex:outputField value="{!opp.StageName}"/>
+                    </apex:pageBlockSectionItem>
+                      <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Number of Agents" />
+                        <apex:outputField value="{!opp.NumberofAgents__c}"/>
+                    </apex:pageBlockSectionItem>
+                      <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="License Amount" />
+                        <apex:outputText value="{!opp.License_Amount__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Quote" />
+                        <apex:outputField value="{!dq.Quote__c}"/>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection> 
+                 <apex:pageBlockSection title="Quote Details">
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Name.inlineHelpText}">
+                        <apex:outputLabel value="Discount" />
+                        <apex:outputField value="{!quote.Total_Discount_Genesys_Products_Only__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Deal Size" />
+                        <apex:outputField value="{!quote.Total_List_Price__c}"/>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:outputPanel rendered="{!psOpp !=null}"> 
+                <apex:pageBlockSection columns="1" >
+                <apex:pageBlockSection title="Professional Service Opportunity Details" >
+                <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Opportunity Name" />
+                        <apex:outputLink value="../{!psOpp.id}" id="theLink" target="_blank">{!psOpp.Name}</apex:outputLink>                        
+                        </apex:pageBlockSectionItem>
+                          <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Project Type" />
+                            <apex:outputField value="{!psOpp.ProjectType__c}"/>
+                        </apex:pageBlockSectionItem>
+                          <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Owner Name" />
+                            <apex:outputText value="{!psOpp.Owner.Name}"/>
+                        </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="PS Amount" />
+                            <apex:outputText value="{!psOpp.PS_Amount_On_Premise__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Opportunity Stage" />
+                            <apex:outputText value="{!psOpp.StageName}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Forecast Status" />
+                            <apex:outputText value="{!psOpp.ForecastStatus__c}"/>
+                        </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Sold Margin" />
+                            <apex:outputText value="{!psOpp.Sold_Margin_PPW__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="PS Opportunity Currency" />
+                            <apex:outputText value="{!psOpp.CurrencyIsoCode}"/>
+                        </apex:pageBlockSectionItem>                                                
+                    </apex:pageBlockSection>
+                    </apex:pageBlockSection>
+                </apex:outputpanel> 
+                <apex:outputPanel rendered="{!NOT(isReadOnly)}">            
+                    <apex:pageBlockSection columns="1" id="pgblkSec" >          
+                            <apex:pageBlockSection title="Partner Discounts" rendered="{!OR(opp.Partner_Opportunity_Source__c == 'Partner Source Opportunity', opp.Partner_Opportunity_Source__c == 'Partner Registered Opportunity')}">
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Deal Registration Discount"  />
+                                    <apex:outputText value="{!$Label.Partner_Margin}%" />
+                                </apex:pageBlockSectionItem>   
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Baseline Discount"  />
+                                    <apex:outputField value="{!opp.BusinessPartner__r.Partner_Product_Margin__c}" />
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Partner GU Margin"  />
+                                    <apex:outputField value="{!opp.BusinessPartner__r.Partner_GU_Margin__c}" />
+                                </apex:pageBlockSectionItem>                                        
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection title="Pricing" id="pgblkSecPricing">   
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Net_Deal_Value__c.inlineHelpText}">                       
+                                    <apex:outputLabel value="What is the Net Deal Size?" />
+                                    <apex:outputPanel >
+                                        <apex:inputField value="{!dq.Net_Deal_Value__c}" required="true" style="width:250px;" rendered="{!NOT(blnLockDownPricing)}"/>
+                                        <apex:outputField value="{!dq.Net_Deal_Value__c}" rendered="{!blnLockDownPricing}"/>                               
+                                    </apex:outputPanel>                                
+                                </apex:pageBlockSectionItem> 
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.What_is_total_list_price__c.inlineHelpText}">                       
+                                    <apex:outputLabel value="What is Total List Price?" />
+                                    <apex:outputPanel >
+                                        <apex:inputField value="{!dq.What_is_total_list_price__c}" required="true" style="width:250px;" rendered="{!NOT(blnLockDownPricing)}"/>
+                                        <apex:outputField value="{!dq.What_is_total_list_price__c}" rendered="{!blnLockDownPricing}"/>                               
+                                    </apex:outputPanel> 
+                                </apex:pageBlockSectionItem> 
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.New_Pricing_Discount__c.inlineHelpText}">
+                                    <apex:outputLabel value="What is the average Discount?" />
+                                    <apex:outputPanel >
+                                        <apex:inputField value="{!dq.Pricing_Type__c}" id="txtPricingType" style="display:none;"/>
+                                        <apex:inputField value="{!dq.New_Pricing_Discount__c}" required="true" style="width:250px;" rendered="{!NOT(blnLockDownPricing)}"/>
+                                        <apex:outputField value="{!dq.New_Pricing_Discount__c}" rendered="{!blnLockDownPricing}"/>                               
+                                    </apex:outputPanel>                                    
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Justification_for_Discount__c.inlineHelpText}">
+                                    <apex:outputLabel value="Justification for discount?" />
+                                    <apex:inputField value="{!dq.Justification_for_Discount__c}" required="false" style="width:250px;"/>                               
+                                </apex:pageBlockSectionItem> 
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Expiration_Date__c.inlineHelpText}">
+                                    <apex:outputLabel value="Expiration Date"  />
+                                    <apex:outputPanel >
+                                        <apex:inputField value="{!dq.Expiration_Date__c}" rendered="{!NOT(blnLockDownPricing)}"/>
+                                        <apex:outputField value="{!dq.Expiration_Date__c}" rendered="{!blnLockDownPricing}"/>                               
+                                    </apex:outputPanel>
+                                </apex:pageBlockSectionItem>                                 
+                            </apex:pageBlockSection>                                                        
+                            <apex:pageBlockSection title="Genesys Care" columns="1" id="pgblkSecGenesysCare">
+                                <apex:pageBlockSectionItem id="pgblkSecItemGenCare"  helpText="{!$ObjectType.Deal_Qualification__c.fields.Genesys_Care__c.inlineHelpText}">
+                                    <apex:outputLabel value="Genesys Care" />
+                                     <apex:outputPanel id="pnl">
+                                        <apex:inputField id="lstGenCare" value="{!dq.Genesys_Care__c}" required="true" onchange="genesysCareOnChangeAF(document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecGenesysCare:pgblkSecItemGenCare:lstGenCare').value); return false;" style="width:250px;" rendered="{!NOT(blnLockDownPricing)}"/>
+                                        <apex:outputField value="{!dq.Genesys_Care__c}" rendered="{!blnLockDownPricing}"/>                               
+                                    </apex:outputPanel>                                    
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!(genesysCare == 'Contractual Rate')}"  helpText="{!$ObjectType.Deal_Qualification__c.fields.Contractual_Rate__c.inlineHelpText}">
+                                    <apex:outputLabel value="Contractual Rate" />
+                                    <apex:outputField value="{!dq.Contractual_Rate__c}" />                                    
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSection columns="2" id="pgblkSecGenesysCare" rendered="{!showGenesysCareFields}">
+                                    <apex:pageBlockSectionItem id="pgblkSectItemGCOverride" rendered="{!(genesysCare == 'Non Standard')}" helpText="{!$ObjectType.Deal_Qualification__c.fields.GC_Override__c.inlineHelpText}">
+                                        <apex:outputLabel value="GC Override" />     
+                                        <apex:outputPanel id="pnl">                                                                            
+                                            <apex:inputField value="{!dq.GC_Override__c}" style="disabled:true;" id="lstGCOverride" rendered="{!NOT(blnLockDownPricing)}"/>
+                                            <apex:outputField value="{!dq.GC_Override__c}" rendered="{!blnLockDownPricing}"/>                               
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem id="pgblkSectItemTI" helpText="{!$ObjectType.Deal_Qualification__c.fields.Term_Increase__c.inlineHelpText}">
+                                        <apex:outputLabel value="Term Increase?" />
+                                        <apex:outputPanel id="pnl">                                                                            
+                                            <apex:inputField value="{!dq.Term_Increase__c}" id="chkTermIncrease" rendered="{!NOT(blnLockDownPricing)}"/>
+                                            <apex:outputField value="{!dq.Term_Increase__c}" rendered="{!blnLockDownPricing}"/>                               
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem id="pgblkSectItemTD" helpText="{!$ObjectType.Deal_Qualification__c.fields.Term_Decrease__c.inlineHelpText}">
+                                        <apex:outputLabel value="Term Decrease?" />
+                                        <apex:outputPanel id="pnl">                                                                            
+                                            <apex:inputField value="{!dq.Term_Decrease__c}" id="chkTermDecrease" rendered="{!NOT(blnLockDownPricing)}"/>
+                                            <apex:outputField value="{!dq.Term_Decrease__c}" rendered="{!blnLockDownPricing}"/>                               
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem id="pgblkSectItemDecline" rendered="{!(genesysCare == 'Non Standard')}" helpText="{!$ObjectType.Deal_Qualification__c.fields.Decline__c.inlineHelpText}">
+                                        <apex:outputLabel value="Decline?" />
+                                        <apex:outputPanel id="pnl">                                                                            
+                                            <apex:inputField value="{!dq.Decline__c}" id="chkDecline" onclick="onDeclineCheck();" rendered="{!NOT(blnLockDownPricing)}"/>
+                                            <apex:outputField value="{!dq.Decline__c}" rendered="{!blnLockDownPricing}"/>                               
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem id="pgblkSecItemPremiumCare" helpText="{!$ObjectType.Deal_Qualification__c.fields.Premium_Care__c.inlineHelpText}">
+                                        <apex:outputLabel value="Premium Care" />
+                                        <apex:outputPanel id="pnl">                                                                            
+                                            <apex:inputField value="{!dq.Decline__c}" id="chkPremiumCare" rendered="{!NOT(blnLockDownPricing)}"/>
+                                            <apex:outputField value="{!dq.Decline__c}" rendered="{!blnLockDownPricing}"/>                               
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>                    
+                                    <apex:pageBlockSectionItem rendered="{!(genesysCare == 'Non Standard')}" helpText="{!$ObjectType.Deal_Qualification__c.fields.Require_Separate_Quote_for_Genesys_Care__c.inlineHelpText}">
+                                        <apex:outputLabel value="Require Separate Quote for Genesys Care?" />
+                                        <apex:outputPanel id="pnl">                                                                            
+                                            <apex:inputField value="{!dq.Require_Separate_Quote_for_Genesys_Care__c}" rendered="{!NOT(blnLockDownPricing)}"/>
+                                            <apex:outputField value="{!dq.Require_Separate_Quote_for_Genesys_Care__c}" rendered="{!blnLockDownPricing}"/>                               
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:pageBlockSection>
+                            <apex:outputPanel rendered="{!NOT(blnIsPartner)}" id="pnldealscore">
+                                <apex:pageBlockSection title="Deal Score" columns="2"  id="pgblkSecDS">
+                                    <apex:outputField value="{!dq.Deal_Score__c}" />
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="DDS Tool" />                                       
+                                        <apex:outputLink target="_blank" value="/apex/DDSToolTestPage?qid={!dq.Quote__c}">DDS Tool</apex:outputLink>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:outputPanel>
+                            <apex:pageBlockSection title="Professional Services" columns="1"  id="pgblkSecPS">
+                                <apex:pageBlockSection >
+                                    <apex:inputField value="{!dq.Professional_Services__c}" required="true"/>
+                                </apex:pageBlockSection>
+                                <!--
+                                <apex:pageBlockSection id="pgblkSecProfessionalServices">
+                                    <apex:pageBlockSectionItem id="pgblkSecItemProfessionalServices"  helpText="{!$ObjectType.Deal_Qualification__c.fields.Do_you_require_Professional_Services__c.inlineHelpText}">
+                                        <apex:outputLabel value="Does the Customer require PS?" />
+                                        <apex:inputField id="lstProfessionalServices" value="{!dq.Do_you_require_Professional_Services__c}" onchange="professionalServicesAF(document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecPS:pgblkSecProfessionalServices:pgblkSecItemProfessionalServices:lstProfessionalServices').value); return false;" style="width:250px;" required="true" />
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                <apex:pageBlockSection columns="2" id="pgblkSecProfessionalServicesItems" rendered="{!showProfessionalServices}">
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Is_Genesys_Providing_PS__c.inlineHelpText}">
+                                        <apex:outputLabel value="Is Genesys Providing PS?" />
+                                        <apex:inputField value="{!dq.Is_Genesys_Providing_PS__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Is_third_Party_company_providing_PS__c.inlineHelpText}">
+                                        <apex:outputLabel value="Is third Party company providing PS?" />
+                                        <apex:inputField value="{!dq.Is_third_Party_company_providing_PS__c}" />
+                                    </apex:pageBlockSectionItem>                                           
+                                </apex:pageBlockSection>    
+                                -->
+                            </apex:pageBlockSection>    
+                         <!--   <apex:pageblockSection id="pgblkSectionELAAndOther" title="Product Management" columns="1">                         
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.X3rd_Party_Products__c.inlineHelpText}">
+                                    <apex:outputLabel value="Are you selling 3rd party products?" />
+                                    <apex:inputField value="{!dq.X3rd_Party_Products__c}" style="width:250px;"  required="true"/>
+                                </apex:pageBlockSectionItem>                           
+                                <apex:pageBlockSectionItem id="pgblkSectionItemSellingNonGA" helpText="{!$ObjectType.Deal_Qualification__c.fields.Are_you_selling_Non_GA_Future_Roadmap__c.inlineHelpText}">
+                                    <apex:outputLabel value="Are you selling products or features that are not yet available?" />
+                                    <apex:inputField id="lstSellingNonGAFutureRoadMap" value="{!dq.Are_you_selling_Non_GA_Future_Roadmap__c}" onchange="sellingGAFRoadMapChangeAF(document.getElementById('pg:form:pgblk:pgblkSec:pgblkSectionELAAndOther:pgblkSectionItemSellingNonGA:lstSellingNonGAFutureRoadMap').value); return false;" style="width:250px;" required="true"/>
+                                </apex:pageBlockSectionItem>                        
+                                <apex:pageBlockSection columns="2" id="pgblkSellingNonGAFutureRoadmap" rendered="{!showSellingNONGAFutureMap}">
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Product_or_Solution_Name__c.inlineHelpText}">
+                                        <apex:outputLabel value="Product or Solution Name" />
+                                        <apex:inputField value="{!dq.Product_or_Solution_Name__c}" style="width:250px;" required="true" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Describe_your_roadmap_related_request__c.inlineHelpText}" >
+                                        <apex:outputLabel value="Describe your roadmap related request" />
+                                        <apex:inputField value="{!dq.Describe_your_roadmap_related_request__c}" style="width:250px;" required="true" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Justification_and_time_constraints__c.inlineHelpText}" >
+                                        <apex:outputLabel value="Justification and time constraints" />
+                                        <apex:inputField value="{!dq.Justification_and_time_constraints__c}" style="width:250px;" required="true" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Expiration_Date__c.inlineHelpText}">
+                                        <apex:outputLabel value="Expiration Date"  />
+                                        <apex:outputField value="{!dq.Expiration_Date__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Product_Managers_already_approached__c.inlineHelpText}">
+                                        <apex:outputLabel value="Names of Product Managers you have approached already" />
+                                        <apex:inputField value="{!dq.Product_Managers_already_approached__c}" style="width:250px;" required="true" />
+                                    </apex:pageBlockSectionItem>                        
+                                </apex:pageBlockSection>
+                            </apex:pageBlockSection>  -->
+                            <apex:pageblockSection title="Other Information" columns="2" rendered="{!dq.Quote__c != null}">
+                                <!--    
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.ELA__c.inlineHelpText}">
+                                    <apex:outputLabel value="Is this a ELA deal?" />
+                                    <apex:outputField value="{!dq.ELA__c}" />
+                                </apex:pageBlockSectionItem>                                               
+                                -->
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Special_Offer_Terms__c.inlineHelpText}" >
+                                    <apex:outputLabel value="Special Offer Terms" />
+                                    <apex:outputField value="{!dq.Special_Offer_Terms__c}" />
+                                </apex:pageBlockSectionItem>     
+                                 <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Carveout__c.inlineHelpText}">
+                                    <apex:outputLabel value="Carve Out?" />
+                                    <apex:outputField value="{!dq.Carveout__c}" />
+                                </apex:pageBlockSectionItem>     
+                                
+                                <!--
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.CAD_Override__c.inlineHelpText}">
+                                    <apex:outputLabel value="Canadian Dollars Override" />
+                                    <apex:outputField value="{!dq.CAD_Override__c}" />
+                                </apex:pageBlockSectionItem>                            
+                                -->
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Expiration_Date__c.inlineHelpText}">
+                                    <apex:outputLabel value="Expiration Date"  />
+                                    <apex:outputField value="{!dq.Expiration_Date__c}" />
+                                </apex:pageBlockSectionItem>         
+                                <!--                    
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Additional Legal Terms" />
+                                    <apex:outputField value="{!dq.Additional_Legal_Terms__c}" />
+                                </apex:pageBlockSectionItem>
+                                 -->          
+                        </apex:pageblockSection>     
+                        <apex:pageblockSection title="Business Benefits" columns="2">
+                            <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.ELA__c.inlineHelpText}">
+                                <apex:outputLabel value="Bid Summary (What value do our products bring to customer business?) " />
+                                <apex:inputField value="{!dq.Product_Values__c}" required="true" style="width:100%;" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Potential_Growth__c.inlineHelpText}">
+                                <apex:outputLabel value="Future Benefits ( What are potential growth(s) add-n project(s) with this customer?)" />
+                                <apex:inputField value="{!dq.Potential_Growth__c}"  required="true" style="width:100%;"/>
+                            </apex:pageBlockSectionItem>
+                            <!--                            
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Partner Information (What is partner’s contractual discount? What is partner justification for extra discount (new logo, partner investment, partner exclusivity, etc)? Did you negotiate margin (percentage of end user price the partner keeps) with the partner?)" />
+                                <apex:inputField value="{!dq.Partner__c}" style="width:100%;"/>                               
+                            </apex:pageBlockSectionItem>                            
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Competitor Information (Who are the competitors? Who is the incumbent? What does the customer prefer and why? How are we positioning our solution against the competitive offerings?)" />
+                                <apex:inputField value="{!dq.Competition__c}" style="width:100%;" required="true"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Competitor"/>
+                                <apex:inputField value="{!dq.Competitor__c}"/>
+                            </apex:pageBlockSectionItem>
+                            -->
+                        </apex:pageblockSection>                        
+                        <apex:pageBlockSection title="Finance">
+                            <apex:inputField value="{!dq.Finance_Exception__c}"/> 
+                            <!-- Mukunth added below line for INC0419391-->
+                            <apex:OutputField value="{!dq.Payment_Terms__c}" rendered="{!showFinanceBln}"/>                                      
+                        </apex:pageBlockSection> 
+
+                        <!--
+                        <apex:pageBlockSection title="Legal">
+                            <apex:inputField value="{!dq.Legal_Exceptions__c}"/>                                        
+                        </apex:pageBlockSection> 
+                        -->
+                        <!--
+                        <apex:pageBlockSection title="Deal Factory Recommendation" rendered="{!isDealFactoryUser}">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Compliance of the Request with Value Pricing" />
+                                <apex:inputField value="{!dq.Compliance_of_the_Request_with_Value_Pri__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Discount on the Account" />
+                                <apex:inputField value="{!dq.Historical_Discount_on_the_Account__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Current and Historical Discount and Genesys Care Rate within same subregion" />
+                                <apex:inputField value="{!dq.Current_and_Historical_discount_within_t__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Genesys Care rate on the account" />
+                                <apex:inputField value="{!dq.Historical_Genesys_Care_rate_on_the_acco__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Deal Factory Recommendation" />
+                                <apex:inputField value="{!dq.Current_and_Historical_Genesys_Care_Rate__c}" />
+                            </apex:pageBlockSectionItem>                                                        
+                        </apex:pageBlockSection>    
+                        <apex:pageBlockSection title="Deal Factory Recommendation" rendered="{!NOT(isDealFactoryUser)}">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Compliance of the Request with Value Pricing" />
+                                <apex:outputField value="{!dq.Compliance_of_the_Request_with_Value_Pri__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Discount on the Account" />
+                                <apex:outputField value="{!dq.Historical_Discount_on_the_Account__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Current and Historical Discount and Genesys Care Rate within same subregion" />
+                                <apex:outputField value="{!dq.Current_and_Historical_discount_within_t__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Genesys Care rate on the account" />
+                                <apex:outputField value="{!dq.Historical_Genesys_Care_rate_on_the_acco__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Deal Factory Recommendation" />
+                                <apex:outputField value="{!dq.Current_and_Historical_Genesys_Care_Rate__c}" />
+                            </apex:pageBlockSectionItem>                                                        
+                        </apex:pageBlockSection> 
+                        -->
+                    </apex:pageBlockSection>                                                                    
+                </apex:outputPanel>                
+                <apex:outputPanel rendered="{!isReadOnly}">
+                    <apex:pageBlockSection columns="1" id="pgblkSecRO" >
+                            <apex:pageBlockSection title="Partner Discounts" rendered="{!OR(opp.Partner_Opportunity_Source__c == 'Partner Source Opportunity', opp.Partner_Opportunity_Source__c == 'Partner Registered Opportunity')}">
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Deal Registeration Discount"  />
+                                    <apex:outputText value="{!$Label.Partner_Margin}%" />
+                                </apex:pageBlockSectionItem>   
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Baseline Discount"  />
+                                    <apex:outputField value="{!opp.BusinessPartner__r.Partner_Product_Margin__c}" />
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Partner GU Margin"  />
+                                    <apex:outputField value="{!opp.BusinessPartner__r.Partner_GU_Margin__c}" />
+                                </apex:pageBlockSectionItem>                                        
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection title="Pricing">
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Pricing_Type__c.inlineHelpText}">                        
+                                    <apex:outputLabel value="Pricing Type?" />
+                                    <apex:outputField value="{!dq.Pricing_Type__c}" />
+                                </apex:pageBlockSectionItem>                                                            
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Net_Deal_Value__c.inlineHelpText}">                        
+                                    <apex:outputLabel value="What is the Net Deal Size?" />
+                                    <apex:outputField value="{!dq.Net_Deal_Value__c}" />
+                                </apex:pageBlockSectionItem> 
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.What_is_total_list_price__c.inlineHelpText}">                       
+                                    <apex:outputLabel value="What is Total List Price?" />
+                                    <apex:outputField value="{!dq.What_is_total_list_price__c}" style="width:250px;" />
+                                </apex:pageBlockSectionItem> 
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.New_Pricing_Discount__c.inlineHelpText}">
+                                    <apex:outputLabel value="What is the average Discount?" />
+                                    <apex:outputField value="{!dq.New_Pricing_Discount__c}" />
+                                </apex:pageBlockSectionItem>                              
+                                <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Justification_for_Discount__c.inlineHelpText}">
+                                    <apex:outputLabel value="Justification for discount?" />
+                                    <apex:outputField value="{!dq.Justification_for_Discount__c}" />
+                                </apex:pageBlockSectionItem>
+                                 <apex:pageBlockSectionItem helpText="{!$ObjectType.Deal_Qualification__c.fields.Expiration_Date__c.inlineHelpText}">
+                                    <apex:outputLabel value="Expiration Date"  />
+                                    <apex:outputField value="{!dq.Expiration_Date__c}" />
+                                </apex:pageBlockSectionItem>         
+                            </apex:pageBlockSection>                                
+                            <apex:pageBlockSection title="Genesys Care" columns="1" id="pgblkSecGenesysCare">
+                                <apex:pageBlockSectionItem id="pgblkSecItemGenCare" helpText="{!$ObjectType.Deal_Qualification__c.fields.Genesys_Care__c.inlineHelpText}">
+                                    <apex:outputLabel value="Genesys Care" />
+                                    <apex:outputField id="lstGenCare" value="{!dq.Genesys_Care__c}" />
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!(genesysCare == 'Contractual Rate')}">
+                                    <apex:outputLabel value="Contractual Rate" />
+                                    <apex:outputField value="{!dq.Contractual_Rate__c}" />
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSection columns="2" id="pgblkSecGenesysCare" rendered="{!showGenesysCareFields}">
+                                    <apex:pageBlockSectionItem rendered="{!(genesysCare == 'Non Standard')}">
+                                        <apex:outputLabel value="GC Override" />
+                                        <apex:outputField value="{!dq.GC_Override__c}" style="disabled:true;"/>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Term Increase?" />
+                                        <apex:outputField value="{!dq.Term_Increase__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Term Decrease?" />
+                                        <apex:outputField value="{!dq.Term_Decrease__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem rendered="{!(genesysCare == 'Non Standard')}">
+                                        <apex:outputLabel value="Decline Care?" />
+                                        <apex:outputField value="{!dq.Decline__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Support Option" />
+                                        <apex:outputField value="{!dq.Support_Option__c}" />
+                                    </apex:pageBlockSectionItem>                    
+                                    <apex:pageBlockSectionItem rendered="{!(genesysCare == 'Non Standard')}">
+                                        <apex:outputLabel value="Require Separate Quote for Care?" />
+                                        <apex:outputField value="{!dq.Require_Separate_Quote_for_Genesys_Care__c}" />
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:pageBlockSection>
+                            <apex:outputPanel rendered="{!NOT(blnIsPartner)}" id="pnldealscore1">
+                                <apex:pageBlockSection title="Deal Score" columns="2"  id="pgblkSecDS">
+                                    <apex:outputField value="{!dq.Deal_Score__c}" />
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="DDS Tool" />                                       
+                                        <apex:outputLink target="_blank" value="/apex/DDSToolTestPage?sfdc.tabName=01r0t000000CrzL ">DDS Tool</apex:outputLink>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                            </apex:outputPanel>
+                            <apex:pageBlockSection title="Professional Services" columns="1"  id="pgblkSecPS">
+                                <apex:pageBlockSection >
+                                    <apex:outputField value="{!dq.Professional_Services__c}"/>
+                                </apex:pageBlockSection>
+                                <!--
+                                <apex:pageBlockSection id="pgblkSecProfessionalServices">
+                                    <apex:pageBlockSectionItem id="pgblkSecItemProfessionalServices">
+                                        <apex:outputLabel value="Does the Customer require PS?" />
+                                        <apex:outputField id="lstProfessionalServices" value="{!dq.Do_you_require_Professional_Services__c}" />
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                <apex:pageBlockSection columns="2" id="pgblkSecProfessionalServicesItems" rendered="{!showProfessionalServices}">
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Is Genesys Providing PS?" />
+                                        <apex:outputField value="{!dq.Is_Genesys_Providing_PS__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Is third Party company providing PS?" />
+                                        <apex:outputField value="{!dq.Is_third_Party_company_providing_PS__c}" />
+                                    </apex:pageBlockSectionItem>                                           
+                                </apex:pageBlockSection>    
+                                -->
+                            </apex:pageBlockSection>    
+                        <!--    <apex:pageblockSection id="pgblkSectionELAAndOther" title="Product Management" columns="1">                         
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Are you selling 3rd party products?" />
+                                    <apex:outputField value="{!dq.X3rd_Party_Products__c}" />
+                                </apex:pageBlockSectionItem>                           
+                                <apex:pageBlockSectionItem id="pgblkSectionItemSellingNonGA">
+                                    <apex:outputLabel value="Are you selling products or features that are not yet available?" />
+                                    <apex:outputField id="lstSellingNonGAFutureRoadMap" value="{!dq.Are_you_selling_Non_GA_Future_Roadmap__c}" />
+                                </apex:pageBlockSectionItem>                        
+                                <apex:pageBlockSection columns="2" id="pgblkSellingNonGAFutureRoadmap" rendered="{!showSellingNONGAFutureMap}">
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Product or Solution Name" />
+                                        <apex:outputField value="{!dq.Product_or_Solution_Name__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Describe your roadmap related request" />
+                                        <apex:outputField value="{!dq.Describe_your_roadmap_related_request__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Justification and time constraints" />
+                                        <apex:outputField value="{!dq.Justification_and_time_constraints__c}" />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem >
+                                        <apex:outputLabel value="Names of Product Managers you have approached already" />
+                                        <apex:outputField value="{!dq.Product_Managers_already_approached__c}" />
+                                    </apex:pageBlockSectionItem>                        
+                                </apex:pageBlockSection>                                
+                            </apex:pageBlockSection> -->
+                            <apex:pageblockSection title="Other Information" columns="2" rendered="{!dq.Quote__c != null}">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Is this a ELA deal?" />
+                                <apex:outputField value="{!dq.ELA__c}" />
+                            </apex:pageBlockSectionItem>                            
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Special Offer Terms" />
+                                <apex:outputField value="{!dq.Special_Offer_Terms__c}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="CAD Override" />
+                                <apex:outputField value="{!dq.CAD_Override__c}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Expiration Date"  />
+                                <apex:outputField value="{!dq.Expiration_Date__c}"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Additional Legal Terms" />
+                                <apex:outputField value="{!dq.Additional_Legal_Terms__c}" />
+                            </apex:pageBlockSectionItem>                                               
+                        </apex:pageblockSection>  
+                        <apex:pageblockSection title="Business Benefits" columns="2">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Bid Summary (What value do our products bring to customer business?)" />
+                                <apex:outputField value="{!dq.Product_Values__c}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Future Benefits ( What are potential growth(s) add-n project(s) with this customer?)" />
+                                <apex:outputField value="{!dq.Potential_Growth__c}" />
+                            </apex:pageBlockSectionItem> 
+                            <!--
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Partner Information (What is partner’s contractual discount? What is partner justification for extra discount (new logo, partner investment, partner exclusivity, etc)? Did you negotiate margin (percentage of end user price the partner keeps) with the partner?)" />
+                                <apex:outputField value="{!dq.Partner__c}" />
+                            </apex:pageBlockSectionItem> 
+                            
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Competitor Information (Who are the competitors? Who is the incumbent? What does the customer prefer and why? How are we positioning our solution against the competitive offerings?)" />
+                                <apex:outputField value="{!dq.Competition__c}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Competitor" />
+                                <apex:outputField value="{!dq.Competitor__c}" />
+                            </apex:pageBlockSectionItem>                                                        
+                            -->
+                        </apex:pageblockSection>
+                        <apex:pageBlockSection title="Finance">
+                            <apex:inputField value="{!dq.Finance_Exception__c}"/> 
+                            <!-- Mukunth added below line for INC0419391-->
+                            <apex:OutputField value="{!dq.Payment_Terms__c}" rendered="{!showFinanceBln}"/>                                      
+                        </apex:pageBlockSection>                        
+                        <apex:pageBlockSection title="Legal">
+                            <apex:inputField value="{!dq.Legal_Exceptions__c}"/>                                        
+                        </apex:pageBlockSection>     
+                        
+                    <!--Mukunth added below section for INC0416843 - DQ Special Offers Sub-aprpovers-->
+                    <apex:outputPanel id="specOfferApprSec" rendered="{!isSpecApprOfferPending}">
+                        <!--Revenue section Start-->
+                        <apex:pageblockSection title="Revenue Approval for Special Offers" columns="2" id="revApproval">
+                            
+                                    <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                        <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                            rendered="{!dq.Req_Revenue_Approval__c && NOT(isSubApprover) && (dq.Revenue_approval__c=='Approved' || dq.Revenue_approval__c=='Rejected')}">
+                                            <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="revenue" />
+                                        </apex:commandButton>
+                                    </apex:pageBlockSectionItem>    
+                                    <apex:pageBlockSectionItem />
+    
+                                    <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(dq.Req_Revenue_Approval__c) && NOT(isSubApprover)}">
+                                    <apex:outputLabel value="Request approval from Revenue" />
+                                    <apex:inputField value="{!dq.Req_Revenue_Approval__c}">
+                                        <apex:actionSupport event="onchange" rerender="revApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                            
+                                        </apex:actionSupport>
+                                    </apex:inputField>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || dq.Req_Revenue_Approval__c || isSubApprover}">
+                                        <apex:outputLabel value="Request approval from Revenue" />
+                                        <apex:outputField value="{!dq.Req_Revenue_Approval__c}" />
+                                    </apex:pageBlockSectionItem>
+
+                                <apex:pageBlockSection rendered="{!dq.Req_Revenue_Approval__c && isRevSubApprover && NOT(showDQSpecApprReadOnly) && (dq.Revenue_approval__c==NULL || dq.Revenue_approval__c=='Pending')}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:inputField value="{!dq.Revenue_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments"/>
+                                    <apex:inputField value="{!dq.Revenue_Comments__c}" />
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                                <apex:pageBlockSection rendered="{!(dq.Req_Revenue_Approval__c && NOT(isRevSubApprover)) || showDQSpecApprReadOnly || dq.Revenue_approval__c=='Approved' || dq.Revenue_approval__c=='Rejected'}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!dq.Revenue_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:outputField value="{!dq.Revenue_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+
+                        </apex:pageBlockSection>
+                                <!--Revenue section End-->
+                                
+                                <!--Order Mgmt/Billing section Start-->
+                        <apex:pageblockSection title="Order Managment/Billing Approval for Special Offers" columns="2" id="ordMgmtApproval">
+                            
+                                <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                    <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                        rendered="{!dq.Req_Order_Mgmt_Billing_approval__c && NOT(isSubApprover) && (dq.Order_Mgmt_Billing_approval__c=='Approved' || dq.Order_Mgmt_Billing_approval__c=='Rejected')}">
+                                        <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="orderMgmt" />
+                                    </apex:commandButton>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem />
+                            
+                                <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(dq.Req_Order_Mgmt_Billing_approval__c) && NOT(isSubApprover)}">
+                                <apex:outputLabel value="Request approval from Order Management/Billing" />
+                                <apex:inputField value="{!dq.Req_Order_Mgmt_Billing_approval__c}">
+                                    <apex:actionSupport event="onchange" rerender="ordMgmtApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                        
+                                    </apex:actionSupport>
+                                </apex:inputField>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || dq.Req_Order_Mgmt_Billing_approval__c || isSubApprover}">
+                                    <apex:outputLabel value="Request approval from Order Management/Billing" />
+                                    <apex:outputField value="{!dq.Req_Order_Mgmt_Billing_approval__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSection rendered="{!dq.Req_Order_Mgmt_Billing_approval__c && isOMBSubApprover && NOT(showDQSpecApprReadOnly) && (dq.Order_Mgmt_Billing_approval__c==NULL || dq.Order_Mgmt_Billing_approval__c=='Pending')}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:inputField value="{!dq.Order_Mgmt_Billing_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:inputField value="{!dq.Order_Management_Billing_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                                <apex:pageBlockSection rendered="{!(dq.Req_Order_Mgmt_Billing_approval__c && NOT(isOMBSubApprover)) || showDQSpecApprReadOnly || dq.Order_Mgmt_Billing_approval__c=='Approved' || dq.Order_Mgmt_Billing_approval__c=='Rejected'}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!dq.Order_Mgmt_Billing_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments"/>
+                                    <apex:outputField value="{!dq.Order_Management_Billing_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                        </apex:pageBlockSection>
+                                <!--Order Mgmt/Billing section End-->
+                                
+                                <!--Credit and Collection - start -->
+                        <apex:pageblockSection title="Credit and Collection Approval for Special Offers" columns="2" Id="creditApproval">
+                            
+                                <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                    <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                        rendered="{!dq.Req_Credit_Collections_approval__c && NOT(isSubApprover) && (dq.Credit_and_Collections_approval__c=='Approved' || dq.Credit_and_Collections_approval__c=='Rejected')}">
+                                        <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="creditCol" />
+                                    </apex:commandButton>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem />
+                                    
+                                <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(dq.Req_Credit_Collections_approval__c) && NOT(isSubApprover)}">
+                                <apex:outputLabel value="Request approval from Credit & Collections" />
+                                <apex:inputField value="{!dq.Req_Credit_Collections_approval__c}">
+                                    <apex:actionSupport event="onchange" rerender="creditApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                        
+                                    </apex:actionSupport>
+                                </apex:inputField>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || dq.Req_Credit_Collections_approval__c || isSubApprover}">
+                                    <apex:outputLabel value="Request approval from Credit & Collections" />
+                                    <apex:outputField value="{!dq.Req_Credit_Collections_approval__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSection rendered="{!dq.Req_Credit_Collections_approval__c && isCCSubApprover && NOT(showDQSpecApprReadOnly) && (dq.Credit_and_Collections_approval__c==NULL || dq.Credit_and_Collections_approval__c=='Pending')}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:inputField value="{!dq.Credit_and_Collections_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:inputField value="{!dq.Credit_Collections_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                                <apex:pageBlockSection rendered="{!(dq.Req_Credit_Collections_approval__c && NOT(isCCSubApprover)) || showDQSpecApprReadOnly || dq.Credit_and_Collections_approval__c=='Approved' || dq.Credit_and_Collections_approval__c=='Rejected'}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!dq.Credit_and_Collections_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:outputField value="{!dq.Credit_Collections_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                        </apex:pageBlockSection>
+                                <!--Credit and Collection - end -->
+                                
+                                <!-- Legal Section - start-->
+                        <apex:pageblockSection title="Legal Approval for Special Offers" columns="2" id="legalApproval">
+                            
+                                <apex:pageBlockSectionItem dataStyle="text-align:right; width: 50%; max-width: 55%;">
+                                    <apex:commandButton value="Unlock Sub-Approval" rerender="specOfferApprSec" status="status1" action="{!unlockSubApprSection}"
+                                        rendered="{!dq.Req_Legal_approval__c && NOT(isSubApprover) && (dq.Legal_approval__c=='Approved' || dq.Legal_approval__c=='Rejected')}">
+                                        <apex:param name="passUnlockFin" assignTo="{!unlockFinFn}" value="legal" />
+                                    </apex:commandButton>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem />
+                                    
+                                <apex:pageBlockSectionItem rendered="{!NOT(showDQSpecApprReadOnly) && NOT(dq.Req_Legal_approval__c) && NOT(isSubApprover)}">
+                                <apex:outputLabel value="Request approval from Legal" />
+                                <apex:inputField value="{!dq.Req_Legal_approval__c}">
+                                    <apex:actionSupport event="onchange" rerender="legalApproval" action="{!requestSpecOfferSubApproval}" status="status1">
+                                        
+                                    </apex:actionSupport>
+                                </apex:inputField>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!showDQSpecApprReadOnly || dq.Req_Legal_approval__c || isSubApprover}">
+                                    <apex:outputLabel value="Request approval from Legal" />
+                                    <apex:outputField value="{!dq.Req_Legal_approval__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <apex:pageBlockSection rendered="{!dq.Req_Legal_approval__c && isLegalSubApprover && NOT(showDQSpecApprReadOnly) && (dq.Legal_approval__c==NULL || dq.Legal_approval__c=='Pending')}">  
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status"/>
+                                    <apex:inputField value="{!dq.Legal_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:inputField value="{!dq.Legal_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                                <apex:pageBlockSection rendered="{!(dq.Req_Legal_approval__c && NOT(isLegalSubApprover)) || showDQSpecApprReadOnly || dq.Legal_approval__c=='Approved' || dq.Legal_approval__c=='Rejected'}">
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Approval Status" />
+                                    <apex:outputField value="{!dq.Legal_approval__c}"  />
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem />
+                                    <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Comments" />
+                                    <apex:outputField value="{!dq.Legal_Comments__c}"/>
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlockSection>
+                                
+                        </apex:pageblockSection>
+                                <!-- Legal Section - end-->
+                                
+                    </apex:outputPanel>
+                    
+                    <!--Mukunth code end - DQ Special Offers-->
+                        
+                        <apex:pageBlockSection title="Deal Desk Recommendation" rendered="{!isDealFactoryUser}">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Compliance of the Request with Value Pricing" />
+                                <apex:inputField value="{!dq.Compliance_of_the_Request_with_Value_Pri__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Discount on the Account" />
+                                <apex:inputField value="{!dq.Historical_Discount_on_the_Account__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Current and Historical Discount and Genesys Care Rate within same subregion" />
+                                <apex:inputField value="{!dq.Current_and_Historical_discount_within_t__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Genesys Care rate on the account" />
+                                <apex:inputField value="{!dq.Historical_Genesys_Care_rate_on_the_acco__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Deal Desk Recommendation" />
+                                <apex:inputField value="{!dq.Current_and_Historical_Genesys_Care_Rate__c}" />
+                            </apex:pageBlockSectionItem>                                                        
+                        </apex:pageBlockSection>    
+                       <!-- <apex:pageBlockSection title="Deal Factory Recommendation" rendered="{!NOT(isDealFactoryUser)}">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Compliance of the Request with Value Pricing" />
+                                <apex:outputField value="{!dq.Compliance_of_the_Request_with_Value_Pri__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Discount on the Account" />
+                                <apex:outputField value="{!dq.Historical_Discount_on_the_Account__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Current and Historical Discount and Genesys Care Rate within same subregion" />
+                                <apex:outputField value="{!dq.Current_and_Historical_discount_within_t__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Historical Genesys Care rate on the account" />
+                                <apex:outputField value="{!dq.Historical_Genesys_Care_rate_on_the_acco__c}" />
+                            </apex:pageBlockSectionItem>    
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Deal Factory Recommendation" />
+                                <apex:outputField value="{!dq.Current_and_Historical_Genesys_Care_Rate__c}" />
+                            </apex:pageBlockSectionItem>                                                        
+                        </apex:pageBlockSection>  -->                        
+                    </apex:pageBlockSection>    
+                </apex:outputPanel>                                 
+                <apex:pageBlock title="Deal Qualification Products" id="pgblkDQProducts">
+                    <apex:pageblockButtons location="top">
+                        <!-- 
+                        <apex:commandButton value="New" rendered="{!NOT(dq.id=='')}" onclick="location.href='/a7o/e?CF00Nq0000000QZ0s=DQ-000002&CF00Nq0000000QZ0s_lkid={!dq.id}&retURL=/apex/DealQualification?oppId={!opp.id}'; return false;"/>
+                         -->
+                    </apex:pageblockButtons>
+                    <apex:outputLabel value="No records to display" rendered="{!NOT(showProducts)}" />
+                    <apex:pageBlockTable value="{!dealQualProducts}" var="eachProduct" rendered="{!showProducts}">
+                        <!-- 
+                        <apex:column headerValue="Action">                             
+                            <a href="#" onclick="deleteDQProductAF('{!eachProduct.id}'); return false;"> Del </a> 
+                        </apex:column>
+                         -->
+                        <apex:column headerValue="Product">
+                            {!eachProduct.Product__r.Description__c}   
+                        </apex:column>
+                        <apex:column headerValue="Product Number">
+                            {!eachProduct.Product__r.Name}   
+                        </apex:column>
+                        <apex:column headerValue="Product Type">
+                            {!eachProduct.Product__r.Type__c}   
+                        </apex:column>                                            
+                        <apex:column headerValue="Quantity">
+                            {!eachProduct.Quantity__c}   
+                        </apex:column>                    
+                        <apex:column headerValue="Discount Given">
+                            {!eachProduct.Discount__c}   
+                        </apex:column>
+                        <apex:column headerValue="Approval Required Reason">
+                            {!eachProduct.Approval_Reason__c}   
+                        </apex:column>                          
+                    </apex:pageBlockTable>
+                </apex:pageBlock>                          
+            </apex:tab>            
+            <apex:tab label="Approvers" name="upfrontApprovalTab" id="upfrontApprovalTab" rendered="{!NOT(blnIsPartner)}"> 
+                <apex:outputPanel layout="block" id="pnlUpfrontApprovals">
+                    <iframe src="/apex/DealQualificationUpfrontApprovals?id={!dq.id}" scrolling="auto" height="300px" width="100%" id="ifUpfront"></iframe>
+                </apex:outputPanel>                            
+            </apex:tab>             
+        </apex:tabPanel>                                           
+        </apex:pageBlock>        
+        <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+            <c:DealQualificationHistory idDQ="{!dqId}" retURL="/apex/DealQualification%3FoppId={!oppId}%26p={!pricingType}%26id={!dq.id}"/>        
+        </apex:outputPanel>
+        <c:GenericHistoryComponent object="{!dq}" recordsLimit="30"/> 
+        <apex:pageBlock title="Quotes">
+            <apex:pageBlockTable value="{!quotes}" var="eachQuote">
+                <apex:column headerValue="Quote">
+                    <apex:outputLink value="/{!eachQuote.id}/e" target="_blank">
+                        {!eachQuote.Name}
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Revision No">
+                    {!eachQuote.Revision_No__c}
+                </apex:column>              
+                <apex:column headerValue="Status">
+                    {!eachQuote.BigMachines__Status__c}
+                </apex:column>
+                <apex:column headerValue="Total" style="text-align:right;">
+                    <apex:outputField value="{!eachQuote.BigMachines__Total__c}" />
+                </apex:column>
+                <apex:column headerValue="Is Primary?">
+                    <apex:outputField value="{!eachQuote.BigMachines__Is_Primary__c}" />
+                </apex:column>
+                <apex:column headerValue="CreatedDate">
+                    <apex:outputField value="{!eachQuote.CreatedDate}" />
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>      
+    </apex:form>
+    <apex:relatedList list="activityhistories" />
+    <apex:relatedList list="CombinedAttachments" />
+    <!--
+    <c:DealQualificationApprovedHistory idOpp="{!oppId}" strPricingType="{!pricingType}" />
+    -->
+    <!--    
+    <script>
+        function setFocus(){
+            var lstPricingModel = document.getElementById('pg:form:pgblk:pgblkSec:pgblkSecPricingModel:lstPricingModel');
+            lstPricingModel.focus();    
+        }
+        window.document.onload = setFocus;
+    </script>
+    --> 
+    <div style="color:#FFFFFF;">
+        {!platformType}-{!offeringType}-{!dqId}-{!oppId}    
+    </div>    
+</apex:page>

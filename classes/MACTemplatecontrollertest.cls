@@ -1,0 +1,166 @@
+@isTest
+public class MACTemplatecontrollertest {    
+        static Account testAccount;
+        static case testcases;
+        static Contact testContact;
+        static Support_Product__c prod;
+         
+        public static testMethod void testMACTemplatecontroller(){             
+            string recordTypeId;
+            string contId;
+            String stId;
+            String euId;            
+            
+            List<RecordType> lstRecordType  = [SELECT Id, Name, DeveloperName FROM RecordType WHERE SobjectType = 'Case' AND DeveloperName = 'Genesys_Admin_Case'];  
+             Case testCase = new Case();           
+            PageReference pageRef = Page.CustCareMACTemplate;
+            String caseType = lstRecordType[0].developername; 
+            pageRef.getParameters().put('RecordType' ,lstRecordType[0].id);  
+          //  pageRef.getParameters().put(String.valueOf(testCase.RecordTypeId) ,recordTypeId); 
+            //String caseType = lstRecordType[0].developername;  
+            testAccount = TestUtil.createAccounts(1, true)[0];
+            testContact = TestUtil.createContacts(1, testAccount, true)[0];
+            pageRef.getParameters().put('contId',testContact.id);
+            pageRef.getParameters().put('stId',testAccount.id);
+            pageRef.getParameters().put('euId',testAccount.id);
+            ApexPages.StandardController sc = new ApexPages.StandardController(testCase);            
+            MACTemplatecontroller testMACTemplatecontroller = new MACTemplatecontroller(sc);    
+           
+            testMACTemplatecontroller.MACType = 'test';
+            testMACTemplatecontroller.FirstName ='test';
+            testMACTemplatecontroller.UserId ='test';
+            testMACTemplatecontroller.Password ='test';
+            testMACTemplatecontroller.LastName ='test';
+            testMACTemplatecontroller.Extension ='test'; 
+            testMACTemplatecontroller.SelfActivation ='test';
+            testMACTemplatecontroller.MaximumCalls ='test';
+            testMACTemplatecontroller.MaximumChats ='test';
+            testMACTemplatecontroller.UserToMimicAdditionalSettings ='test';
+            testMACTemplatecontroller.WorkgroupMembership ='test';
+            testMACTemplatecontroller.AdditionalInstructions ='test';
+  //          testMACTemplatecontroller.userExtension ='test';
+            testMACTemplatecontroller.CurrentUserID ='test';
+            testMACTemplatecontroller.CurrentUserFirstName ='test';
+            testMACTemplatecontroller.CurrentUserLastName ='test';
+            testMACTemplatecontroller.CurrentUserExtension ='test';
+            testMACTemplatecontroller.UserNewFirstName ='test';
+            testMACTemplatecontroller.UserNewLastName ='test';
+            testMACTemplatecontroller.UserNewExtension ='test';
+            testMACTemplatecontroller.UserNewPassword ='test';
+            testMACTemplatecontroller.WorkgroupAction ='test';
+            testMACTemplatecontroller.WorkgroupChanges ='test';
+            testMACTemplatecontroller.NewUserMaximumCalls ='test';
+            testMACTemplatecontroller.NewUserMaximumChats ='test';
+            testMACTemplatecontroller.ModifyUserAdditionalInstructions ='test';
+            testMACTemplatecontroller.UserSelfActivation ='test';
+            testMACTemplatecontroller.userFirstNameMod ='test';
+            testMACTemplatecontroller.userLastNameMod ='test';
+            testMACTemplatecontroller.userIDUniqueMod ='test';
+            testMACTemplatecontroller.userExtensionMod ='test';
+            testMACTemplatecontroller.WorkgroupName ='test';
+            testMACTemplatecontroller.WorkgroupHasQueue ='test';
+            testMACTemplatecontroller.WorkgroupExtension ='test';
+            testMACTemplatecontroller.WorkgroupMaxCalls ='test';
+            testMACTemplatecontroller.WorkgroupMaxChats ='test';
+            testMACTemplatecontroller.WorkgroupToMimicAdditionalSettings ='test';
+            testMACTemplatecontroller.WorkgroupMembers ='test';
+            testMACTemplatecontroller.WorkgroupAdditionalInstructions ='test';
+            testMACTemplatecontroller.ModifyWGName ='test';
+            testMACTemplatecontroller.NewWorkgroupExtension ='test';
+            testMACTemplatecontroller.NewWorkgroupHasQueue ='test';
+            testMACTemplatecontroller.WorkgroupUserAction ='test';
+            testMACTemplatecontroller.WorkgroupUsers ='test';
+            testMACTemplatecontroller.NewWorkgroupAdditionalInstructions ='test';
+            testMACTemplatecontroller.MACAddressOfPhone ='test';
+            testMACTemplatecontroller.Manufacturerofphone ='test';
+            testMACTemplatecontroller.PhoneModel ='test';
+            testMACTemplatecontroller.ComputerName ='test';
+            testMACTemplatecontroller.LocationOfPhone ='test';
+            testMACTemplatecontroller.PhoneName ='test';
+            testMACTemplatecontroller.Language ='test';
+            testMACTemplatecontroller.ExtensionForPhone ='test';
+            testMACTemplatecontroller.NumOfLineKeys ='test';
+            testMACTemplatecontroller.EnableMWI ='test';
+            testMACTemplatecontroller.DID ='test';
+            testMACTemplatecontroller.UserWorkgroupPhoneAssignedTo ='test';
+            testMACTemplatecontroller.LanguageFolderForFilesToBePlacedIn ='test';
+            testMACTemplatecontroller.OverwriteDuplicateFiles ='test';
+            testMACTemplatecontroller.UserName ='test';
+            testMACTemplatecontroller.UserEmail ='test';
+            testMACTemplatecontroller.UserToMirrorAccessAfter ='test';
+            testMACTemplatecontroller.ProfileName ='test';
+            testMACTemplatecontroller.ScheduleName ='test';
+            testMACTemplatecontroller.ModificationRequest ='test';
+            testMACTemplatecontroller.DNIS ='test';
+            testMACTemplatecontroller.TimeZone ='test';
+            testMACTemplatecontroller.IsUnplannedSchedule ='test';
+            testMACTemplatecontroller.ScheduleRunTimeDays ='test';
+            testMACTemplatecontroller.ScheduleGreetingWavFile ='test';
+            testMACTemplatecontroller.MenuOptions ='test';
+            testMACTemplatecontroller.DesiredCallFlow ='test';
+            testMACTemplatecontroller.ReportName ='test';
+            testMACTemplatecontroller.AddDelete ='test';
+            testMACTemplatecontroller.NameOfReport ='test';
+            testMACTemplatecontroller.FilterType ='test';
+            testMACTemplatecontroller.ReportType ='test';
+            testMACTemplatecontroller.ReportDelivery ='test';
+            testMACTemplatecontroller.TimeRange ='test';
+            testMACTemplatecontroller.RecipientEmail ='test';
+            testMACTemplatecontroller.ReportParametersToAdd ='test';
+            testMACTemplatecontroller.AmountOfNumbersRequested ='test';
+            testMACTemplatecontroller.NumberRangePreferred ='test';
+            testMACTemplatecontroller.NumberToBeRemoved ='test';
+            testMACTemplatecontroller.AttendantProfileNames ='test';
+            testMACTemplatecontroller.NumberNeedingModification ='test';
+            testMACTemplatecontroller.PhoneNumber ='test';
+            testMACTemplatecontroller.MACRequest ='test';
+            testMACTemplatecontroller.Title ='test';
+            testMACTemplatecontroller.getvalueaddUser();
+            testMACTemplatecontroller.getvaluedeleteUser();
+            testMACTemplatecontroller.getvalueModifyUser();
+            testMACTemplatecontroller.getvalueAddWorkgroup();
+            testMACTemplatecontroller.getvalueModifyWorkgroup();
+            testMACTemplatecontroller.getManagedPhoneStation();
+            testMACTemplatecontroller.getDIDDNISModification();
+            testMACTemplatecontroller.getWaveFileUpload();
+            testMACTemplatecontroller.getTSRAAddUser();
+            testMACTemplatecontroller.getTSRAPwdReset();
+            testMACTemplatecontroller.getTSRAUsrDel();
+            testMACTemplatecontroller.getAttendantModification();
+            testMACTemplatecontroller.getAttendantAddProfile();
+            testMACTemplatecontroller.getSchldRptModification();
+            testMACTemplatecontroller.getSchldRptAddDeleteUser();
+            testMACTemplatecontroller.getAddSchldReportr();
+            testMACTemplatecontroller.getTollFreeNumberAdd();
+            testMACTemplatecontroller.getTollFreeNumberRemove();
+            testMACTemplatecontroller.getTollFreeNumberModify();
+            testMACTemplatecontroller.getOtherMACRequest();
+            testMACTemplatecontroller.getItems();
+            testMACTemplatecontroller.getItems1();
+            testMACTemplatecontroller.getItems2();
+            testMACTemplatecontroller.getItems3();
+            testMACTemplatecontroller.submitPage();
+ 			testMACTemplatecontroller.initCloudCase();
+  			testMACTemplatecontroller.initPremCase();
+  			testMACTemplatecontroller.saveCase();
+  		
+           
+         /*   String deplId; // Lookupfield for case object(Cloud_Deployment__c)
+            String boaId; // Lookupfield for case object(Back_Office_Account__c)
+            MACTemplatecontroller controller = new MACTemplatecontroller();  
+            PageReference pageRef1 = Page.CustCareMACTemplate;
+            Cloud_Deployment__c cloudDep= new Cloud_Deployment__c (); 
+            cloudDep.Name = 'An Post';            
+            insert cloudDep;
+           // controller.initCloudCase();     
+            pageRef1.getParameters().put(String.valueOf(cloudDep.id) ,deplId);  
+            Back_Office_Account__c bacOff = new Back_Office_Account__c();
+            bacOff.Approval_Status__c = 'Active';
+            bacOff.End_User_Account__c = testAccount.id;
+            bacOff.Sold_To_Account__c = testAccount.id;
+            insert bacOff;
+            pageRef1.getParameters().put(String.valueOf(bacOff.id) ,boaId);  */
+            
+    }
+    
+}

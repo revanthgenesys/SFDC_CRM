@@ -1,0 +1,85 @@
+<apex:component controller="PartnerKPIController">
+    <apex:attribute name="AccountId" description="Account Id of Partner." type="Id" required="true" assignTo="{!idAccount}"/>
+    <apex:outputText value="{!objPartnerKPI.Closure_Assessment__c}" style="position:fixed;top:-300px;"/>
+        <style>
+            tr.dataRow {
+            background-color:white;
+            }
+            tr.dataRow:hover {
+            background-color: #e3f3ff;
+            }
+        </style>
+        <apex:actionFunction name="reLoadKP1" action="{!populateAccKPIs}" rerender="pgblktblKP1" status="statusKP1"/>
+        <apex:pageBlock rendered="{!blnIsKPIAvailable == true}" id="pgblktblKP1">
+             <table class="list " border="0" cellpadding="0" cellspacing="0">
+                 <tr class="headerRow">
+                 <th class="headerRow" style="height:25px;font-size: 12px;">Genesys Care KPI 1</th>
+                 <th class="headerRow" style="height:25px;font-size: 12px;">Period : &nbsp; 
+                 	<apex:selectList value="{!selectedKPI1Quarter}" size="1" onchange="reLoadKP1();">
+                    	<apex:selectOptions value="{!partnerKPI1Quarters}" />
+                  	</apex:selectList> 
+                  </th>
+               
+                 <th class="headerRow" style="height:25px;font-size: 12px;">
+                    <apex:actionstatus id="statusKP1">
+                        <apex:facet name="start">
+                            <apex:image value="/img/loading.gif"/>
+                        </apex:facet>
+                    </apex:actionstatus>
+                 </th>
+                </tr>
+              </table>
+            <table class="list " border="0" cellpadding="0" cellspacing="0">
+                <tr class="headerRow">
+                  <th class="headerRow">
+                    <apex:selectList value="{!selectedAccountName}" rendered="{!showPicklist}" size="1" onchange="reLoadKP1();">
+                        <apex:selectOptions value="{!childAccs}" />
+                    </apex:selectList>
+                  </th>
+                  <th class="headerRow">Weight</th>
+                  <th class="headerRow">Score</th>
+                  <th class="headerRow">YTD Score</th>                  
+                </tr>
+                <tr class="dataRow">
+                  <th class="dataCell">KPI #1</th>
+                  <th class="dataCell"></th>
+                  <th class="dataCell"></th>
+                </tr>
+                <tr class="dataRow">
+                  <td class="dataCell">Quality Assessment</td>
+                  <td class="dataCell">40%</td>
+                  <td class="dataCell">{!qualityAssessment}</td>
+                  <td class="dataCell">{!qualityAssessmentYTD}</td>
+                </tr>
+                <tr class="dataRow">
+                  <td class="dataCell">Closure Assessment</td>
+                  <td class="dataCell">40%</td>
+                  <td class="dataCell">{!closureAssessment}</td>
+                  <td class="dataCell">{!closureAssessmentYTD}</td>
+                </tr>
+                <tr class="dataRow">
+                  <td class="dataCell">Genesys University Certified <br/>Designated Contacts</td>
+                  <td class="dataCell">20%</td>
+                  <td class="dataCell">{!trainingAssessment}</td>
+                  <td class="dataCell">{!trainingAssessmentYTD}</td>                  
+                </tr>
+                <tr class="dataRow">
+                  <th class="dataCell">Total KPI 1 Score (%)</th>
+                  <th class="dataCell">100%</th>
+                  <th class="dataCell"><a href="/partner/ShowCaseDetails?kpiid={!objPartnerKPI.Id}&quarter={!selectedKPI1Quarter}">{!totalKPIScore}%</a></th>
+                  <th class="dataCell">{!totalKPIScoreYTD}%</th>
+                </tr>
+           </table>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!blnIsKPIAvailable == false}">
+             <table class="list " border="0" cellpadding="0" cellspacing="0">
+                 <thead class="rich-table-thead">
+                 <tr class="headerRow">
+                 <th class="headerRow" style="height:25px;font-size: 12px;">Genesys Care KPI1</th>
+                </tr>
+                <tr class="dataRow"><td  class="dataCell">No records to display.</td> </tr>                
+                </thead>
+              </table>
+        </apex:pageBlock>
+        
+</apex:component>

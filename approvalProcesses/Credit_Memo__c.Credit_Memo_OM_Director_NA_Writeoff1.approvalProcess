@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApprovalProcess xmlns="http://soap.sforce.com/2006/04/metadata">
+    <active>true</active>
+    <allowRecall>false</allowRecall>
+    <allowedSubmitters>
+        <type>owner</type>
+    </allowedSubmitters>
+    <allowedSubmitters>
+        <submitter>WW_Finance</submitter>
+        <type>role</type>
+    </allowedSubmitters>
+    <allowedSubmitters>
+        <submitter>WW_Finance</submitter>
+        <type>roleSubordinates</type>
+    </allowedSubmitters>
+    <approvalPageFields>
+        <field>Name</field>
+        <field>Owner</field>
+        <field>NS_Sales_Order__c</field>
+        <field>SFDC_Sales_Order1__c</field>
+        <field>Sold_To_NS_Customer__c</field>
+        <field>Requestor__c</field>
+        <field>Invoice_Date__c</field>
+        <field>Credit_Amount_NU__c</field>
+        <field>Credit_Type__c</field>
+        <field>Credit_Memo_Type__c</field>
+        <field>Reason_for_Credit__c</field>
+        <field>Credit_Memo_Details__c</field>
+        <field>Direct_Credit_Amount__c</field>
+        <field>Final_Credit_Amount__c</field>
+        <field>Root_Cause__c</field>
+    </approvalPageFields>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Below 100 for  Write Off</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.End_Customer_Region__c</field>
+                <operation>equals</operation>
+                <value>North America</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessThan</operation>
+                <value>USD 100</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>OTC Manager  - Under 100</label>
+        <name>OTC_Manager_Under_100</name>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>$100 - $4,999 - First Approver</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterThan</operation>
+                <value>USD 100</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 4,999.99&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Director  Writeoff</label>
+        <name>Region_Credit_Director_Writeoff</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Second approver $100 - $4,999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterThan</operation>
+                <value>USD 100</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 4,999.99&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Director writeoff</label>
+        <name>Region_Credit_Director_second_writeoff</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>First approver 5,000 - $99,999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 5,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 99,999.99&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Analyst 5k-99999</label>
+        <name>Region_Credit_Analyst_5k_99999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Second approverRegion Credit Director $5,000 - $99,999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 5,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 99,999.99&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Director 5k-99999</label>
+        <name>Region_Credit_Director_5k_99999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>vikram.khosla@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Third approver Regional Finops $5,000 - $99,999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 5,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 99,999.99&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Regional FINOPS VP 5k-99999</label>
+        <name>Regional_FINOPS_VP_5k_99999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>First Approver Region Credit Analyst 100K-249999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 100,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 249,999.99&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Analyst 100K-249999</label>
+        <name>Region_Credit_Analyst_100K_249999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Second Approver Region Credit Director  Writeoff 100k - 249999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 100,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 249,999&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Director  Writeoff 100k - 249999</label>
+        <name>Region_Credit_Director_Writeoff_100k_249999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>vikram.khosla@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Third Approver Regional FINOPS VP 100k - 249999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 100,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 249,999&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Regional FINOPS VP 100k - 249999</label>
+        <name>Regional_FINOPS_VP_100k_249999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>vikram.khosla@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Corporate Controller - 4 Approver for Write Off 100k - 249999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 100,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 249,999&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Corporate Controller - 4 Approver for Write Off 100k - 249999</label>
+        <name>Corporate_Controller_4_Approver_for_Write_Off</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Approver 1 Region Credit Analyst 25k - above</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Analyst 250k - above</label>
+        <name>Region_Credit_Analyst_250k_above</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>tim.fiess@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Second Approver Region Credit Director 250k - above writeoff</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region Credit Director 250k - above</label>
+        <name>Region_Credit_Director_250k_above</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>vikram.khosla@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Third ApproverRegional FINOPS VP 250k -above</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Regional FINOPS VP 250k -above</label>
+        <name>Regional_FINOPS_VP_250k_above</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>vikram.khosla@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Fourth Approver Corporate Controller - 4 Approver for Write Off 250k -above</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Corporate Controller - 4 Approver for Write Off 250k -above</label>
+        <name>Corporate_Controller_4_Approver_for_Write_Off_250k_above</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>vikram.khosla@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Fifth approver Chief Accounting Officer -5 Approver Write Off 250k -above</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>equals</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Chief Accounting Officer -5 Approver Write Off 250k -above</label>
+        <name>Chief_Accounting_Officer_5_Approver_Write_Off_250k_above</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>true</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>keith.collier@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <approver>
+                <name>krysta.hoover@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <approver>
+                <name>mallory.foster@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Region OM Revenue Analyst non Writeoff - 100-24999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>notEqual</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>USD 100</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 24,999&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region OM Revenue Analyst non Writeoff - 100-24999</label>
+        <name>Region_OM_Revenue_Analyst_non_Writeoff_100_24999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>true</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>keith.collier@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <approver>
+                <name>krysta.hoover@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <approver>
+                <name>mallory.foster@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>First Approver Region OM Revenue Analyst non Writeoff - 25000-249999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>notEqual</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 25,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 249,999.99&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region OM Revenue Analyst non Writeoff - 25000-249999</label>
+        <name>Region_OM_Revenue_Analyst_non_Writeoff_25000_249999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>krysta.hoover@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <approver>
+                <name>mike.lauziere@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Second Approver Revenue Accountant or delegate non Writeoff 25k-249999</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>notEqual</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 25,000&quot;</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>lessOrEqual</operation>
+                <value>&quot;USD 249,999&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Revenue Accountant or delegate non Writeoff 25k-249999</label>
+        <name>Revenue_Accountant_or_delegate_non_Writeoff_25k_249999</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>true</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>keith.collier@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <approver>
+                <name>mallory.foster@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>First approver Region OM Revenue Analyst &gt; 250k</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>notEqual</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterThan</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Region OM Revenue Analyst &gt; 250k non writeoff</label>
+        <name>Region_OM_Revenue_Analyst_250k</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>krysta.hoover@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <approver>
+                <name>mike.lauziere@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Second approverRevenue Accountant  non Writeoff &gt; 250k</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>notEqual</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Revenue Accountant  non Writeoff &gt; 250k</label>
+        <name>Revenue_Accountant_non_Writeoff_250k</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>true</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>vikram.khosla@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <description>Third Approver Regional FINOPS VP 250k -above non writeoff</description>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>notEqual</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <ifCriteriaNotMet>GotoNextStep</ifCriteriaNotMet>
+        <label>Regional FINOPS VP 250k -above non writeoff</label>
+        <name>Regional_FINOPS_VP_250k_above_non_writeoff</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <approvalStep>
+        <allowDelegate>false</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>dan.best@genesys.com</name>
+                <type>user</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <entryCriteria>
+            <criteriaItems>
+                <field>Credit_Memo__c.Credit_Memo_Type__c</field>
+                <operation>notEqual</operation>
+                <value>Business - Write Off/Bad Debt</value>
+            </criteriaItems>
+            <criteriaItems>
+                <field>Credit_Memo__c.Final_Credit_Amount_converted__c</field>
+                <operation>greaterOrEqual</operation>
+                <value>&quot;USD 250,000&quot;</value>
+            </criteriaItems>
+        </entryCriteria>
+        <label>Revenue Director 250k -above non writeoff</label>
+        <name>Revenue_Director_250k_above_non_writeoff</name>
+        <rejectBehavior>
+            <type>RejectRequest</type>
+        </rejectBehavior>
+    </approvalStep>
+    <description>Approval Process for North America Writeoff &amp; Non Writeoff</description>
+    <emailTemplate>all/Credit_Memo_Submitted_for_Approval</emailTemplate>
+    <enableMobileDeviceAccess>false</enableMobileDeviceAccess>
+    <entryCriteria>
+        <criteriaItems>
+            <field>Credit_Memo__c.Ready_for_Approval__c</field>
+            <operation>equals</operation>
+            <value>True</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Credit_Memo__c.End_Customer_Region__c</field>
+            <operation>equals</operation>
+            <value>North America</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Credit_Memo__c.Status__c</field>
+            <operation>notEqual</operation>
+            <value>Approved - Pending CreditMemo,Approved</value>
+        </criteriaItems>
+    </entryCriteria>
+    <finalApprovalActions>
+        <action>
+            <name>Credit_Memo_Approved</name>
+            <type>Alert</type>
+        </action>
+        <action>
+            <name>Credit_Memo_Approved_test</name>
+            <type>Alert</type>
+        </action>
+        <action>
+            <name>Status_Approved</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalApprovalActions>
+    <finalApprovalRecordLock>false</finalApprovalRecordLock>
+    <finalRejectionActions>
+        <action>
+            <name>Credit_Memo_Rejected</name>
+            <type>Alert</type>
+        </action>
+        <action>
+            <name>Status_Rejected</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalRejectionActions>
+    <finalRejectionRecordLock>false</finalRejectionRecordLock>
+    <initialSubmissionActions>
+        <action>
+            <name>Credit_Memo_Request_Received_Alert</name>
+            <type>Alert</type>
+        </action>
+        <action>
+            <name>StatusUnderApproval</name>
+            <type>FieldUpdate</type>
+        </action>
+    </initialSubmissionActions>
+    <label>Credit Memo - OM Director NA Writeoff1</label>
+    <recordEditability>AdminOnly</recordEditability>
+    <showApprovalHistory>true</showApprovalHistory>
+</ApprovalProcess>

@@ -1,0 +1,1675 @@
+<apex:page id="pg" title="Engagement Map" controller="SMLController1" sidebar="false" showheader="false" action="{!onLoad}">
+    <head>
+        <apex:includeScript value="{!URLFOR($Resource.SML, '/SML/js/modernizr.js')}"/>        
+        <apex:stylesheet value="{!URLFOR($Resource.SML, '/SML/css/foundation.css')}"/>        
+        <apex:stylesheet value="{!URLFOR($Resource.SML, '/SML/css/app.css?v0.9.2')}"/>  
+    <style>
+        .activeTab {background-color: #236FBD; color:red; background-image:none}
+        .inactiveTab { background-color: lightgrey; color:black; background-image:none}
+        .standardTd{
+            text-align:left;
+         }         
+         .standardTr{
+            line-height: 50%;
+         }
+         .standardTable{             
+            width:100%;
+            border:solid 1px grey;
+            border-collapse: collapse;
+            padding: 0px;
+            text-align: left;
+            vertical-align: left;
+            white-space: initial;        
+         }
+         .whitespaceTable{
+             width:100px;
+             height:26px;
+             border-spacing:0;
+             padding:0px;
+             border-collapse:collapse;
+             display:table;
+         }
+         .whitespaceTR{
+             height:26px;
+             display:table-row;
+         }
+         .whitespaceTDLeft{
+             height:26px;
+             width:20px;
+             align:left;
+             text-align:left;
+             font-size:8pt;
+             color:#B8B8B8;
+             display:table-cell;
+             vertical-align:bottom;
+         }
+         .whitespaceTDMid{
+             height:26px;
+             width:60px;
+             align:center;
+             text-align:center;
+             display:table-cell;
+             vertical-align:middle;
+         }
+         .whitespaceTDRight{
+             height:26px;
+             width:20px;
+             align:right;
+             text-align:center;
+             font-size:12pt;
+             font-weight:bold;
+             color:#FF0000;
+             display:table-cell;
+             vertical-align:bottom;
+         }
+         .colClassTD{
+                width:80px;
+                height:15px;
+                border-bottom:solid 1px #C9C9C9;
+                font-size:9pt;
+          }
+         .custPopup{
+                background-color: white;
+                border-width: 1px;
+                border-style: solid;
+                z-index: 9999;
+                left: 50%;
+                padding:10px;
+                position: fixed;
+                width: 980px;
+                margin-left: -420px;
+                top:20px;
+            }
+            .popupBackground{
+                background-color:black;
+                opacity: 0.20;
+                filter: alpha(opacity = 10);
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                z-index: 9998;
+            }
+            .active2{
+                background-color:#47D147;
+                font-weight:bold;                
+            }
+            .blocked2{
+                background-color:#FF9900;
+                font-weight:bold;                
+            }
+            .grey2{
+                background-color:#E0E0E0;
+                font-weight:bold;                
+            }
+            .na2{
+                background-color:#FFFFFF;
+                font-weight:bold;                
+            }
+            .sold2{
+                background-color:#3385FF;
+                font-weight:bold;                
+            }
+            .soldactive2{
+                background-color:#3385FF;
+                font-weight:bold;
+            }
+            .soldnomaintenance2{
+                background-color:#e60000;
+                font-weight:bold;
+                color:#ffffff;
+            }
+            
+            
+    </style>
+   <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Genesys : Customer Engagement System : Prototype</title>
+    <!--
+    <link rel="stylesheet" href="../css/foundation.css">
+    <link rel="stylesheet" href="css/app.css?v0.9.2 /">    
+    <script src="../js/vendor/modernizr.js"></script>
+    -->
+    <meta class="foundation-data-attribute-namespace" />
+    <meta class="foundation-mq-xxlarge"/>
+    <meta class="foundation-mq-xlarge-only"/>
+    <meta class="foundation-mq-xlarge"/>
+    <meta class="foundation-mq-large-only"/>
+    <meta class="foundation-mq-large"/>
+    <meta class="foundation-mq-medium-only"/>
+    <meta class="foundation-mq-medium"/>
+    <meta class="foundation-mq-small-only"/>
+    <meta class="foundation-mq-small"/>
+    <style></style>
+    <meta class="foundation-mq-topbar"/>
+    </head>
+    <body class="page index" >
+    <apex:outputPanel id="pnlRefresh">
+    <div id="container" class="row outer">
+        <div class="small-12 column">
+
+            <div class="off-canvas-wrap" data-offcanvas="" id="divOffCanvas">
+                <div class="inner-wrap">
+                    <nav class="tab-bar">
+                        <section class="left-small">
+                            <a class="left-off-canvas-toggle menu-icon" href="#" onclick="openHideLeftCanvas();"><span class="genered"></span></a>
+                        </section>
+
+                        <section class="middle tab-bar-section" style="text-align:left;">
+                            <h1 class="title">Engagement Map&nbsp;-&nbsp;{!$User.FirstName} {!$User.LastName}</h1>
+                        </section>                
+                    </nav>
+                    <aside class="left-off-canvas-menu">
+                        <ul class="off-canvas-list">
+                            <li><label>Salesforce Modules</label></li>
+                            <li><a href="/home/home.jsp">Home</a></li>
+                            <li><a href="/001/o">Accounts</a></li>
+                            <li><a href="/006/o">Opportunities</a></li>
+                            <li><a href="/00O/o">Reports</a></li>
+                            <li><a href="{!$Label.EngagementMapFAQ}" target="_blank">Engagement Map FAQs</a></li>
+
+                        </ul>
+                    </aside>
+                    <section class="main-section">
+                        <section id="main" class="row outer show-for-medium-up">
+                                                <div class="small-12 medium-12 columns">
+                                        
+                                                    <div class="row inner">
+                                                        <div class="medium-12 columns text-left">
+                                                            
+                                                            <div class="box show-for-medium-up">                                                            
+                                                             <apex:form id="frmMain">  
+                                                                 
+                                                                <table cellpadding="0" cellspacing="0" stle="width:100%;">
+                                                    <tr>
+                                                        <td style="vertical-align:top; width:40%;">
+                                                            <table cellpadding="0" cellspacing="0" class="standardTable" border="0">
+                                                                <tr class="standardTr">
+                                                                    <td class="standardTd" style="border-bottom:solid 2px; #CCCCCC;">
+                                                                        Filters
+                                                                    </td>
+                                                                    <td class="standardTd" style="border-bottom:solid 2px; #CCCCCC;">
+                                                                        <apex:selectList id="lstView" value="{!selectedFilter}" multiselect="false" size="1" style="width:150px;" >
+                                                                            <apex:selectOptions value="{!accountFilters}"/>
+                                                                        </apex:selectList>
+                                                                    </td>
+                                                                    <td class="standardTd"  style="border-bottom:solid 2px; #CCCCCC;">
+                                                                        Account Type
+                                                                    </td>
+                                                                    <td class="standardTd"  style="border-bottom:solid 2px; #CCCCCC;">
+                                                                        <apex:selectList id="lstAccountType" value="{!accountType}" multiselect="false" size="1" style="width:100px" >
+                                                                            <apex:selectOption itemValue="" itemLabel="--Select--"/>
+                                                                            <apex:selectOption itemValue="Customer" itemLabel="Customer"/>
+                                                                            <apex:selectOption itemValue="Prospect" itemLabel="Prospect"/>
+                                                                        </apex:selectList>
+                                                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                                        <a href="#" onClick="window.open('/apex/SMLAccountSearch','SMLAccSearch','left=250,top=200,width=1050,height=500,0,status=0,');" data-tooltip="" aria-haspopup="true" title="Allows configuration of Account view filters that can be selected in the Engagement Map"> <u> Advanced Filters </u> </a>             
+                                                                            
+                                                                    </td>                                                            
+                                                                </tr>
+                                                                <tr class="standardTr">
+                                                                    <td style="width:15%;" class="standardTd">
+                                                                        Vertical    
+                                                                    </td>
+                                                                    <td style="width:35%;" class="standardTd">
+                                                                        <apex:selectList id="lstVertical" value="{!vertical}" multiselect="false" size="1" style="width:150px;" >
+                                                                            <apex:selectOptions value="{!verticalOptions}"/>
+                                                                        </apex:selectList>
+                                                                    </td>
+                                                                    <td style="width:15%;" class="standardTd">
+                                                                        Account Name
+                                                                    </td>
+                                                                    <td style="width:35%;" class="standardTd">
+                                                                        <apex:inputText id="txtAccountName" value="{!accountName}" />              
+                                                                    </td>                                
+                                                                </tr>   
+                                                                <tr class="standardTr">
+                                                                    <td  class="standardTd">
+                                                                        Country
+                                                                    </td>
+                                                                    <td class="standardTd">
+                                                                        <apex:selectList id="lstTerritory" value="{!territory}" multiselect="false" size="1" >
+                                                                            <apex:selectOptions value="{!countries}"/>
+                                                                        </apex:selectList>                                                                        
+                                                                    </td>
+                                                                    <td class="standardTd">                                                                        
+                                                                        Region
+                                                                    </td>
+                                                                    <td class="standardTd">
+                                                                        <apex:selectList id="lstRegion" value="{!region}" multiselect="false" size="1" onchange="populateSubRegionAF(); return false;" >
+                                                                            <apex:selectOptions value="{!regionList}"/>
+                                                                        </apex:selectList> 
+                                                                        <apex:actionFunction action="{!populateSubRegion}" name="populateSubRegionAF" rerender="pnlSubRegion" status="status"/>                                                                                                                                               
+                                                                    </td>                                
+                                                                </tr>
+                                                                <tr class="standardTr">
+                                                                    <apex:outputPanel rendered="{!NOT(isNonManager)}">
+                                                                        <td class="standardTd">                                                                        
+                                                                            AE Name    
+                                                                        </td>
+                                                                        <td class="standardTd">
+                                                                            <apex:selectList id="lstAE" value="{!selectedAE}" multiselect="false" size="1" >
+                                                                                <apex:selectOptions value="{!aeList}"/>
+                                                                            </apex:selectList>                                                                           
+                                                                        </td>                                        
+                                                                    </apex:outputPanel>                           
+                                                                    <td class="standardTd">
+                                                                        Sub Region
+                                                                    </td>                                                                    
+                                                                    <td class="standardTd">
+                                                                        <apex:outputPanel id="pnlSubRegion">
+                                                                            <apex:selectList id="lstSubRegion" value="{!subRegion}" multiselect="false" size="1" >
+                                                                                <apex:selectOptions value="{!subRegionList}"/>
+                                                                            </apex:selectList> 
+                                                                        </apex:outputPanel>
+                                                                    </td>                                
+                                                                    <apex:outputPanel rendered="{!isNonManager}">
+                                                                        <td>
+                                                                        </td>
+                                                                        <td>
+                                                                        </td>
+                                                                    </apex:outputPanel>
+                                                                </tr>                            
+                                                                <tr class="standardTr">
+                                                                    <td class="standardTd">
+                                                                        Focus Accounts
+                                                                    </td>
+                                                                    <td class="standardTd">                                                                        
+                                                                         <apex:inputCheckbox id="chkKey" value="{!key}" title="These are Customer Accounts that have been identified by the region to focus on cross selling activities"/> Cross Sell
+                                                                         &nbsp;&nbsp;&nbsp;&nbsp;
+                                                                         <apex:inputCheckbox id="chkMust" value="{!must}" title="These are Customer Accounts that have been identified by the region to focus on new logo acquisitions"/> New Logo
+                                                                    </td>
+                                                                    <td class="standardTd">
+                                                                        
+                                                                    </td>
+                                                                    <td class="standardTd">
+                                                                        <apex:commandButton value="Filter" action="{!filterBtn}" style="background-color:#DA484;"/>
+                                                                        &nbsp;&nbsp;
+                                                                        <apex:commandButton value="Reset" onclick="location.href='/apex/SML1'; return false;" style="background-color:#DA484;"/>
+                                                                        &nbsp;&nbsp;
+                                                                        <apex:commandButton value="Back" onclick="location.href='/{!accId}';return false;" rendered="{!accId != ''}" style="background-color:#DA484;"/>
+                                                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                                        <apex:commandButton value="Export to Excel" onclick="exportToExcel();return false;" style="background-color:#DA484;"/>
+                                                                    </td>                                
+                                                                </tr>                                                                                   
+                                                            </table>
+                                                        </td>
+                                                        <td style="width:3%;">
+                                                        </td>
+                                                        <td style="vertical-align:top; width:33%;">   
+                                                            <!--                                                         
+                                                            <table cellpadding="5" cellspacing="0" style="width:100%;border:solid 1px grey;border-collapse: collapse;">
+                                                                <tr>
+                                                                    <td colspan="4" class="standardTd" style="border-bottom:solid 2px; #CCCCCC;">
+                                                                        Additional Filters
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td style="width:50%;text-align:left;" class="standardTd">
+                                                                        <apex:inputCheckbox value="{!positiveChange}"/> Positive Changes 
+                                                                    </td>
+                                                                    <td style="width:50%;" class="standardTd">
+                                                                        <apex:inputCheckbox value="{!negativeChange}"/> Negative Changes
+                                                                    </td>
+                                                                </tr>                                                        
+                                                            </table>                    
+                                                            -->
+                                                            <table class="standardTable" style="width:100%;border:solid 1px grey;border-collapse:collapse;table-layout:fixed;">
+                                                                <tr>
+                                                                    <td style="width:25%;text-align:left;font-size:8pt;white-space:normal;height:12px;border:solid 1px grey;">
+                                                                        <b>Cell Colour Key:</b>
+                                                                    </td>
+                                                                    <td style="width:25%;text-align:middle;font-size:8pt;white-space:normal;height:12px;background-color:#ffffff;border:solid 1px grey;">
+                                                                        Premise
+                                                                    </td>
+                                                                    <td style="width:25%;text-align:middle;font-size:8pt;white-space:normal;height:12px;background-color:#9ddbff;border:solid 1px grey;">
+                                                                        Cloud
+                                                                    </td>
+                                                                    <td style="width:25%;text-align:middle;font-size:8pt;white-space:normal;height:12px;background-color:#e6f7ff;border:solid 1px grey;">
+                                                                        Hybrid
+                                                                    </td>
+                                                                </tr>                                                           
+                                                                <tr>
+                                                                    <td class="colClassTD" colspan="4" style="text-align:left;font-size:9pt; word-break: break-word;white-space: normal;height:120px;overflow:ellipsis;" >
+                                                                        <b>Engagement Score:</b><br/>
+                                                                        This is a calculation of a percentage to reflect the engagement for that Account (horizontal) or Product (vertical).<br/><br/>
+                                                                        Score = Total of (Active + Sold + Active/Sold Statuses + (0.5 * Planning Underway)) divided by Total (All Statuses MINUS Blocked Status and NA Status)
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                        <td style="vertical-align:top; text-align:right; width:4%;">
+                                                            <a href="{!$Label.EngagementMapFAQ}" target="_blank"><span style="text-decoration:underline;">FAQs</span></a>
+                                                        </td>                                                                             
+                                                    </tr>
+                                                </table>
+                                               
+                                             </apex:form>
+                                             
+                                            <div class="row info">
+                                                <div class="medium-12 columns text-left">
+                                                    
+                                                    <div class="row">
+
+                                                        <div class="small-12 medium-5 columns text-left" style="width:80%">
+                                                            <div class="icons">
+                                                                <table cellpadding="0" cellspacing="0" border="0" style="width:100%">
+                                                                    <tr>
+                                                                        <td style="width:100%;align:left;text-align:left">
+                                                                            <a href="#" class="genesold has-tip" data-tooltip="" aria-haspopup="true" data-selector="tooltip-ifxdigaz0" aria-describedby="tooltip-ifxdigaz0" title="Indicates either sold orders under maintenance or sold with no maintenance on the Account for products in the specific product column. This status is automated based on sold orders and any associated maintenance contract. The Hover over on a cell indicates whether the item is under maintenance or not"><span class="icon sold"><span>Sold</span></span> Sold</a>
+                                                                            <a href="#" class="geneblocked has-tip" data-tooltip="" aria-haspopup="true" data-selector="tooltip-ifxdigaz1" aria-describedby="tooltip-ifxdigaz1" title="Indicates that the specific product column is blocked due to competition. This status can be modified by AE or automated by competitors identified in the technical profile"><span class="icon blocked"><span>Blocked</span></span> Blocked</a>
+                                                                            <a href="#" class="geneactive has-tip" data-tooltip="" aria-haspopup="true" data-selector="tooltip-ifxdigaz2" aria-describedby="tooltip-ifxdigaz2" title="Indicates open, active opportunities on the Account for products in the specific product column. This status is automated based on active opportunities"><span class="icon active"><span>Active</span></span> Active</a>                                                                                                                                                        
+                                                                            <a href="#" class="genena has-tip" data-tooltip="" aria-haspopup="true" title="Indicates that the specific product column is Not applicable for that Account. This status can be modified by Solution Leads"><span class="icon na"></span> Not Applicable</a>
+                                                                            <a href="#" class="geneaqua has-tip" data-tooltip="" aria-haspopup="true" title="Indicates that there are sold orders and open, active opportunities on that specific product column. This status is automated based on combined sold orders and active opportunities"><span class="icon soldactive"></span> Sold/Active</a> 
+                                                                            <a href="#" class="geneblack" data-tooltip="" aria-haspopup="true" title="Indicates that the AE has taken action on a whitespace either with an account plan or whitespace plan. It is not yet a qualified opportunity. This status can be modified by AE when planning has been initiated or updated"><span class="icon Planned-Underway"></span> Planning Underway</a> 
+                                                                            <apex:image id="imgNextBestAction" url="{!URLFOR($Resource.SML,'/SML/css/img/NBA_High.png')}" style="width:30px;height:26px;"  title="Indicates what the Next Best Action and Confidence Level is based on a model dependent on Win Loss Intelligence and criteria like Vertical, Region and Solution"/> Next Best Action
+                                                                        </td>
+                                                                    </tr>
+                                                                </table> 
+                                                            </div>
+                                                        </div><!-- columns -->
+
+                                                        <div class="small-12 medium-7 columns text-left" style="width:20%;">
+                                                            <div class="icons">
+                                                                <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                                                                    <tr>
+                                                                        <td style="width:10%; text-align:left;">
+                                                          <!--                  <a href="3" class="geneblack"><apex:image id="imgUnderPlanning" url="{!URLFOR($Resource.SML,'/SML/css/img/planned.png')}" style="width:40px;height:30px;" /> Planning Underway </a>    -->
+                                                                        </td>
+                                                                        <td style="width:90%;text-align:right;">
+                                                                            <apex:actionStatus id="status">
+                                                                                <apex:facet name="start">    
+                                                                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                                                                </apex:facet>                           
+                                                                            </apex:actionStatus> 
+                                                                            <a href="#" onclick="openHidePopupAF(); return false;" data-tooltip="" aria-haspopup="true" title="Use to show or hide Product Categories in the main view"> [Show/Hide Categories] </a>
+                                                                        </td>
+                                                                    </tr>
+                                                                </table> 
+                                                            </div>
+                                                            
+
+                                                        </div><!-- columns -->
+
+                                                    </div><!-- row form -->
+                                                    
+                                                </div><!-- columns -->
+                                            </div><!-- row forms -->
+                                            
+                                            <div class="row table">
+                                                
+                                                <div class="medium-12 column">
+                                                
+                                                    <div id="tables-container">
+                                                    
+                                                        <div class="scrollbar y" style="height: 440px;"><div class="track y" style="height: 440px;"><div class="thumb y" style="top: 0px; height: 171.327px;"><div class="end y"></div></div></div></div><!-- scrollbar -->
+                                                        
+                                                        <div class="viewport y">
+                                                            
+                                                            <div class="overview y" style="top: 0px;">
+                                            
+                                                                <div id="table-1-container">
+                                                
+                                                                    <table id="table-1-head" class="table-1" style="top: 0px;">
+                                                
+                                                                        <thead>
+                                                                            <tr class="table-1-head-1">
+                                                                                <th colspan="5"><div>&nbsp;</div></th>
+                                                                            </tr>
+                                                                            <tr class="table-1-head-2">
+                                                                                <th><div style="font-size:90%;">Focus<br/>Acct</div></th>
+                                                                                <th><div style="font-size:90%;">Account Name</div></th>
+                                                                                <th style="min-width:120px;max-width:120px;"><div style="font-size:90%;">Region/<br/>Country</div></th>
+                                                                                <th style="min-width:120px;max-width:120px;"><div style="font-size:90%;">Assigned AE</div></th>
+                                                                                <th><div style="font-size:90%;"><span data-tooltip ="one" aria-haspopup="true" class="has-tip" title="Engagement Score: This is a calculation of a percentage to reflect the engagement for that Account (horizontal) or Product (vertical). Score = Total of (Active + Sold + Active/Sold Statuses + (0.5 * Planning Underway)) divided by Total (All Statuses MINUS Blocked Status and NA Status)">Engage<br/>Score</span></div></th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        
+                                                                    </table>    
+                                                
+                                                                    <table id="table-1-body" class="table-1" style="table-layout: fixed;">
+                                                
+                                                                        <tbody>
+                                                                        <apex:repeat value="{!smlRecords}" var="eachRecord" id="rptSML">                                                                            
+                                                                            <tr style="height:45px;">
+                                                                                <td>
+                                                                                    <div style="font-size:85%;">
+                                                                                        <apex:outputtext value="{!eachRecord.orgClass}" escape="false" />
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td style="word-break: break-word;white-space: normal;">
+                                                                                    <apex:image id="imgCustomer" url="{!URLFOR($Resource.SML,'/SML/css/img/customer.jpg')}" width="25" height="25" rendered="{!eachRecord.accountType == 'Customer'}" title="Customer" />
+                                                                                    <apex:image id="imgProspect" url="{!URLFOR($Resource.SML,'/SML/css/img/prospect.jpg')}" width="25" height="25" rendered="{!eachRecord.accountType == 'Prospect'}" title="Prospect" />
+                                                                                    <apex:image id="imgPartner" url="{!URLFOR($Resource.SML,'/SML/css/img/prospect.jpg')}" width="25" height="25" rendered="{!eachRecord.accountType == 'Partner'}" title="Partner" />                                                                                    
+                                                                                    <apex:outputLink id="lnkAccountName" value="/{!eachRecord.accountId}" target="_blank" title="{!eachRecord.accountNameFull}">
+                                                                                        {!eachRecord.accountName}
+                                                                                    </apex:outputLink>                                                                                    
+                                                                                    <apex:image id="imgAttachement" style="cursor:pointer;" url="{!URLFOR($Resource.SML,'/SML/css/img/attachement.png')}" width="15" height="10" onClick="window.open('/apex/SMLAccountAttachment?id={!eachRecord.accountId}&customPage=true','SMLAttachment','left=250,top=200,width=1050,height=500,0,status=0');" />
+                                                                                    
+                                                                                </td>
+                                                                                <td style="min-width:120px;max-width:120px;"><div>{!eachRecord.territory}<br/>{!eachRecord.country}</div></td>
+                                                                                <td style="word-break: break-word;white-space: normal;min-width:120px;max-width:120px;" title="{!eachRecord.assignedAEFull}">
+                                                                                    {!eachRecord.assignedAE}
+                                                                                </td>
+                                                                                <td style="text-align:right;">
+                                                                                    <div style="text-align:right;">
+                                                                                        <a href="#" style="font-size:8pt;cursor:pointer;" onClick="window.open('/apex/SMLEngagementScoreDetail?id={!eachRecord.accountId}','SMLEngagementScoreDetail','left=250,top=200,width=1050,height=500,0,status=0');">
+                                                                                            {!eachRecord.engagementScore}%
+                                                                                        </a>
+                                                                                        <apex:image id="imgPositive" url="{!URLFOR($Resource.SML,'/SML/css/img/arrow_up.gif')}" rendered="{!eachRecord.scoreType == 'Positive'}" title="Account ES increased with last change"/>
+                                                                                        <apex:image id="imgNegative" url="{!URLFOR($Resource.SML,'/SML/css/img/arrow_down.png')}" rendered="{!eachRecord.scoreType == 'Negative'}" title="Account ES decreased with last change"/>
+                                                                                        <apex:image id="imgMinus" url="{!URLFOR($Resource.SML,'/SML/css/img/minus.png')}" rendered="{!eachRecord.scoreType == ''}" title="Account ES no change"/>
+                                                                                        
+                                                                                        <!--<br/>{!eachRecord.whiteSpaceScore}%-->
+                                                                                    </div>
+                                                                                 </td>
+                                                                            </tr>
+                                                                        </apex:repeat>                                                                        
+                                                                        </tbody>
+                                                
+                                                                    </table>    
+                                                
+                                                                </div><!-- table-1-container -->
+                                                                
+                                                                <div id="table-2-container" style="width: 866px;">
+                                                                    
+                                                                    <div class="viewport x" style="width: 866px;">
+                                                                        
+                                                                        <div class="overview x" style="left: 0px;">
+                                                                
+                                                                            <div id="table-2-container-2">                                                                                
+                                                                                <table id="table-2-head" class="table-2" style="top: 0px;">
+                                            
+                                                                                <thead>
+                                                                                    <tr class="table-2-head-1">
+                                                                                        <apex:outputPanel rendered="{!NOT(hideBussOpt)}">
+                                                                                            <th style="background-color:#eebbff;"><div style="font-size:70%;font-weight:bold;">Business<br/>Optimization</div></th>
+                                                                                        </apex:outputPanel>
+                                                                                        <apex:outputPanel rendered="{!NOT(hideCustomerEngagement )}">
+                                                                                            <th colspan="16"  style="background-color:#bbccff;"><div style="width:100%;font-size:70%;font-weight:bold;">Customer Engagement</div></th>
+                                                                                        </apex:outputPanel>
+                                                                                        <apex:outputPanel rendered="{!NOT(hideEmpEngagement)}">
+                                                                                            <th style="background-color:#ffbbcc;" colspan="4"><div style="font-size:70%;font-weight:bold;">Employee Engagement</div></th>
+                                                                                        </apex:outputPanel>
+                                                                                        <apex:outputPanel rendered="{!NOT(hideMultimediaCommunication)}" >
+                                                                                            <th style="background-color:#ffccbb;" colspan="3"><div style="font-size:70%;font-weight:bold;">Multimedia Communication</div></th>
+                                                                                        </apex:outputPanel>                                                                                        
+                                                                                        <apex:outputPanel rendered="{!NOT(hideAnalytics)}">
+                                                                                            <th colspan="2" style="background-color:#bbeeff;">
+                                                                                                <div style="font-size:70%;font-weight:bold;">Omnichannel Analytics</div>
+                                                                                            </th>
+                                                                                        </apex:outputPanel>
+                                                                                        <apex:outputPanel rendered="{!NOT(hideOmni)}">
+                                                                                            <th style="background-color:#ccffbb;" colspan="2"><div style="font-size:70%;font-weight:bold;">Omnichannel Journey Management</div></th>
+                                                                                        </apex:outputPanel>
+                                                                                    </tr>
+                                                                                    <tr class="table-2-head-2" style="height:40px;">
+                                                                                        <!-- geneorange,genegreen,geneblue -->                                                                                       
+                                                                                        <apex:repeat value="{!solutionCategories1}" var="eachCategory">
+                                                                                            <th style="word-wrap: break-word;min-width:120px;max-width:120px;">
+                                                                                                <apex:outputText escape="false" value="{!eachCategory}" />                                                                                                
+                                                                                                <br/>
+                                                                                                <span style="color:{!mapCategoryVsScoreColor[eachCategory]};">
+                                                                                                    {!mapCategoryVsScores[eachCategory]}%
+                                                                                                </span>                                                                                                
+                                                                                            </th>
+                                                                                        </apex:repeat>
+                                                                                    </tr>
+                                                                                </thead>
+                                            
+                                                                                </table>    
+                                                                                
+                                                                                <apex:outputPanel id="pnlDataTable">                                                                                
+                                                                                <table id="table-2-body" class="table-2">
+                                                                                    <tbody>
+                                                                                        <apex:repeat value="{!smlRecords}" var="eachRecord">
+                                                                                            <tr style="height:45px;">                                                                                        
+                                                                                                <apex:repeat value="{!solutionCategories1}" var="eachCategory" rendered="{!showResult}">                
+                                                                                                    <div>                                                                                                        
+                                                                                                        <td class="{!eachRecord.smlCategoryData[eachCategory].Status1__c}" onclick="showPopupJS('{!eachRecord.smlCategoryData[eachCategory].id}', '{!mapCategoryVsScores[eachCategory]}','{!eachRecord.smlCategoryData[eachCategory].Solution_Category__r.Name}/<br/>{!eachRecord.smlCategoryData[eachCategory].Solution_Category__r.Solution_Name__c}','{!eachRecord.smlCategoryData[eachCategory].Account__r.Name}','{!eachRecord.smlCategoryData[eachCategory].Whitespace_Days__c}','{!mapCategoryVsScoreColor[eachCategory]}','{!eachRecord.smlCategoryData[eachCategory].Status__c}','{!eachRecord.smlCategoryData[eachCategory].Status1__c}','{!eachRecord.smlCategoryData[eachCategory].Technical_Profile_Competitor__r.Technical_Profile__c}','{!eachRecord.smlCategoryData[eachCategory].Competitors__c}','{!eachRecord.smlCategoryData[eachCategory].Under_Maintenance__c}','{!eachRecord.smlCategoryData[eachCategory].Account__c}','{!eachRecord.smlCategoryData[eachCategory].Confidence_Level__c}');return false;" style="word-break: break-word;white-space: normal;min-width:120px;max-width:120px;background-color:{!eachRecord.smlCategoryData[eachCategory].Cell_Color__c}">
+                                                                                                            <div style="height:28px;">
+                                                                                                                <apex:image id="imgUnderPlanning" url="{!URLFOR($Resource.SML,'/SML/css/img/planned.png')}" style="width:30px;height:30px;" rendered="{!eachRecord.smlCategoryData[eachCategory].Status__c == 'Planning Underway'}"/>
+                                                                                                                <apex:image id="imgSoldNoMaintenance" url="{!URLFOR($Resource.SML,'/SML/css/img/Sold_No_Maintenance.png')}" style="width:35px;height:25px;" rendered="{!eachRecord.smlCategoryData[eachCategory].Status__c == 'Sold no Maintenance'}" title="{!eachRecord.smlCategoryData[eachCategory].Order_Info__c}" />
+                                                                                                                
+                                                                                                                <apex:image id="imgNextBestActionLow" url="{!URLFOR($Resource.SML,'/SML/css/img/NBA_Low.png')}" style="width:30px;height:26px;" rendered="{!eachRecord.smlCategoryData[eachCategory].Confidence_Level_Formula__c == 'Low'}"  title="{!eachRecord.smlCategoryData[eachCategory].Order_Info__c}" />
+                                                                                                                <apex:image id="imgNextBestActionMed" url="{!URLFOR($Resource.SML,'/SML/css/img/NBA_Med.png')}" style="width:30px;height:26px;" rendered="{!eachRecord.smlCategoryData[eachCategory].Confidence_Level_Formula__c == 'Medium'}"  title="{!eachRecord.smlCategoryData[eachCategory].Order_Info__c}" />
+                                                                                                                <apex:image id="imgNextBestActionHigh" url="{!URLFOR($Resource.SML,'/SML/css/img/NBA_High.png')}" style="width:30px;height:26px;" rendered="{!eachRecord.smlCategoryData[eachCategory].Confidence_Level_Formula__c == 'High'}"  title="{!eachRecord.smlCategoryData[eachCategory].Order_Info__c}" />
+                                                                                                                <apex:image id="imgNextBestActionNone" url="{!URLFOR($Resource.SML,'/SML/css/img/NBA_None.png')}" style="width:30px;height:26px;" rendered="{!eachRecord.smlCategoryData[eachCategory].Confidence_Level_Formula__c == 'Poor'}"  title="{!eachRecord.smlCategoryData[eachCategory].Order_Info__c}" />
+                                                                                                                <apex:outputPanel rendered="{!AND(eachRecord.smlCategoryData[eachCategory].Status__c != 'Planning Underway', eachRecord.smlCategoryData[eachCategory].Status__c != 'Whitespace', eachRecord.smlCategoryData[eachCategory].Status__c != '', eachRecord.smlCategoryData[eachCategory].Status__c != 'Next Best Action', eachRecord.smlCategoryData[eachCategory].Status__c != 'Sold no Maintenance')}">                                                                                                                                     
+                                                                                                                    <span data-tooltip ="two{!eachRecord.smlCategoryData[eachCategory].id}" aria-haspopup="true" class="has-tip" title="{!eachRecord.smlCategoryData[eachCategory].Order_Info__c}"> 
+                                                                                                                        <a href="#" data-reveal-id="{!eachRecord.smlCategoryData[eachCategory].Status1__c}-1" class="icon {!eachRecord.smlCategoryData[eachCategory].Status1__c} has-tip open"  data-selector="tooltip-ifxdigaz5" aria-describedby="tooltip-ifxdigaz5">    
+                                                                                                                            <span> 
+                                                                                                                             {!eachRecord.smlCategoryData[eachCategory].Status1__c}
+                                                                                                                           </span>                                                                                                                                                                                                    
+                                                                                                                        </a>                     
+                                                                                                                     </span>
+                                                                                                                 </apex:outputPanel>                                                                                                            
+                                                                                                                 <apex:outputPanel rendered="{!eachRecord.smlCategoryData[eachCategory].Status__c == 'Whitespace'}" style="color:#FBD4D4;cursor:pointer;">
+                                                                                                                     <span data-tooltip ="two{!eachRecord.smlCategoryData[eachCategory].id}" aria-haspopup="true" class="has-tip" title="{!eachRecord.smlCategoryData[eachCategory].Order_Info__c}">
+                                                                                                                         <div class="whitespaceTable">
+                                                                                                                            <div class="whitespaceTR">
+                                                                                                                                <div class="whitespaceTDLeft">
+                                                                                                                                    {!eachRecord.smlCategoryData[eachCategory].Whitespace_Days__c}                                                                                                                     
+                                                                                                                                </div>
+                                                                                                                                <div class="whitespaceTDMid">
+                                                                                                                                </div>
+                                                                                                                                <div class="whitespaceTDRight">
+                                                                                                                                    {!eachRecord.smlCategoryData[eachCategory].Whitespace_over_Threshold__c}
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                         </div> 
+                                                                                                                         </span>
+                                                                                                                 </apex:outputPanel>
+                                                                                                            </div>
+                                                                                                        </td>    
+                                                                                                    </div>
+                                                                                                </apex:repeat>    
+                                                                                            </tr>
+                                                                                        </apex:repeat> 
+                                                                                        <!--                                           
+                                                                                        <tr>
+                                                                                            <td><div><a href="#" data-reveal-id="blocked-1" class="icon blocked has-tip" data-tooltip="" aria-haspopup="true" data-selector="tooltip-ifxdigaz5" aria-describedby="tooltip-ifxdigaz5" title=""><span>Blocked</span></a></div></td>
+                                                                                            <td><div><a href="#" data-reveal-id="active-1" class="icon active has-tip" data-tooltip="" aria-haspopup="true" data-selector="tooltip-ifxdigaz6" aria-describedby="tooltip-ifxdigaz6" title=""><span>Active</span></a></div></td>
+                                                                                            <td><div><a href="#" data-reveal-id="sold-1" class="icon sold has-tip" data-tooltip="" aria-haspopup="true" data-selector="tooltip-ifxdigaz7" aria-describedby="tooltip-ifxdigaz7" title=""><span>Sold</span></a></div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td class="bg-na"><div>NA</div></td>
+                                                                                            <td><div>2 months</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                            <td><div>&nbsp;</div></td>
+                                                                                        </tr>
+                                                                                        -->
+                                                                                    </tbody>                                                
+                                                                                    </table>    
+                                                                                </apex:outputPanel>
+                                                                            </div><!-- table-2-container-2 -->
+                                                                    
+                                                                        </div><!-- overview -->
+                                                                    
+                                                                    </div><!-- viewport -->
+                                                                    
+                                                                </div><!-- table-2-container -->
+                                                                
+                                                            </div><!-- overview -->
+                                                            
+                                                        </div><!-- viewport -->
+                                                        
+                                                    </div>
+                                                                
+                                                    <div style="overflow: hidden;">
+                                                        <div class="scrollbar x" style="width: 866px;"><div class="track x" style="width: 866px;"><div class="thumb x" style="left: 0px; width: 361.25px;"><div class="end x"></div></div></div></div><!-- scrollbar -->
+                                                    </div>
+                                                    
+                                                    <div class="clearfix"></div>
+                                                                                                                                            
+                                                </div><!-- columns -->
+                                    
+                                            </div><!-- row table -->
+                                            
+                                            <div class="clearfix"></div>
+                                            
+                                            <div class="row pagination">
+                                            
+                                                <div class="medium-12 column">
+                                                    
+                                                    <apex:form >
+                                                        <table style="width:100%;">
+                                                            <tr>
+                                                                <td style="width:50%;text-align:left;">
+                                                                    <span>Page {!pageNo} of {!pages} </span>
+                                                                    &nbsp;&nbsp;
+                                                                    <apex:commandButton value="<" action="{!previous}"  style="color:gray;width:35px;" />
+                                                                    &nbsp;&nbsp;
+                                                                    <apex:commandButton value=">" action="{!next}" style="color:gray;width:35px;" />
+                                                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                                                    Go To Page 
+                                                                    <apex:inputText value="{!pageNo}"/> <apex:commandButton value="Go" action="{!goToPage}" />
+                                                                </td>
+                                                                <td style="width:50%;text-align:right;font-size:8pt;">
+                                                                    <apex:outputPanel rendered="{!resultSizeExceeded}">
+                                                                        <b>
+                                                                        The Search returned more than 500 rows (10 pages). Please use additional filters to refine the results set.    
+                                                                        </b>
+                                                                    </apex:outputPanel>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                        
+                                                        
+                                                        
+                                                    </apex:form>
+                                                    
+                                                </div><!-- columns -->
+                                    
+                                            </div><!-- row pagination -->
+                    
+                                        </div><!-- box -->
+                    
+                                    </div><!-- columns -->
+                                </div><!-- row -->
+            
+                            </div><!-- columns -->
+                        </section><!-- #main row -->
+
+                    </section>
+
+                    <a class="exit-off-canvas" onclick="openHideLeftCanvas();"></a>
+
+                </div>
+            </div>
+            
+        </div><!-- columns -->
+    </div><!-- #container row -->
+    </apex:outputPanel>
+    
+    <!--
+    <footer class="row outer">
+        <div class="small-12 medium-12 columns">
+            <div id="footer" class="row inner">    
+                <div class="small-12 medium-12 columns text-center">        
+                    FOOTER        
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    -->
+    <apex:includeScript value="{!URLFOR($Resource.SML, '/SML/js/foundation.min.js')}"/>        
+    <apex:includeScript value="{!URLFOR($Resource.SML, '/SML/js/jquery-2.1.4.js')}"/>       
+    <apex:includeScript value="{!URLFOR($Resource.SML, '/SML/js/jquery.tinyscrollbar.js')}"/>
+        
+        
+    <script>
+        //$(document).foundation();
+        
+        $(document).ready(function(){
+            
+            var tablesContainer = $('#tables-container');
+            var table1Container = $('#table-1-container');
+            var table2Container = $('#table-2-container');
+            var viewportX = $('.viewport.x');
+            
+            var table1Head = $('#table-1-head');
+            var table2Head = $('#table-2-head');
+            
+            if ( tablesContainer.length && table1Container.length && table2Container.length && viewportX.length ) {
+                
+                //console.log(tablesContainer);
+                //console.log(table1Container);
+                //console.log(table2Container);
+                //console.log(viewportX);
+                
+                var tablesContainerWidth = $(tablesContainer).outerWidth();
+                var table1ContainerWidth = $(table1Container).outerWidth();
+                var table2ContainerWidth = $(table2Container).outerWidth();
+                var viewportXWidth = $(viewportX).outerWidth();
+                
+                //console.log( 'tablesContainerWidth: '+tablesContainerWidth );
+                //console.log( 'table1ContainerWidth: '+table1ContainerWidth );
+                //console.log( 'table2ContainerWidth: '+table2ContainerWidth );
+                //console.log( 'viewportXWidth: '+viewportXWidth );
+                
+                $(table2Container).css('width', (tablesContainerWidth - table1ContainerWidth) + 'px')
+                $(viewportX).css('width', (tablesContainerWidth - table1ContainerWidth) + 'px')
+            
+                table2ContainerWidth = $(table2Container).outerWidth();
+                viewportXWidth = $(viewportX).outerWidth();
+                
+                //console.log( 'table2ContainerWidth: '+table2ContainerWidth );
+                //console.log( 'viewportXWidth: '+viewportXWidth );
+            }
+            
+            var tablesContainer = $('#tables-container');
+            
+            tablesContainer.tinyscrollbar({viewportClass: ".viewport.y", overviewClass: ".overview.y", scrollbarClass: ".scrollbar.y", trackClass: ".track.y", thumbClass: ".thumb.y"});
+            
+            var tablesContainerData = tablesContainer.data('plugin_tinyscrollbar');
+            
+            tablesContainer.bind('move', function(m)
+            {
+                //console.log('tablesContainer move');
+                //console.log(m);
+                //tablesContainerData.update();
+                //console.log(tablesContainerData);
+                
+                 $(table1Head).css('top', (tablesContainerData.contentPosition) + 'px');
+                 $(table2Head).css('top', (tablesContainerData.contentPosition) + 'px');
+            });
+            
+            $('#table-2-container').tinyscrollbar({ axis: 'x', viewportClass: ".viewport.x", overviewClass: ".overview.x", scrollbarClass: ".scrollbar.x", trackClass: ".track.x", thumbClass: ".thumb.x", wheelLock: "true"});
+            
+        });
+    </script><span data-selector="tooltip-ifxdigaz0" id="tooltip-ifxdigaz0" class="tooltip" role="tooltip">Sold: ...<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz1" id="tooltip-ifxdigaz1" class="tooltip" role="tooltip">Blocked: ...<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz2" id="tooltip-ifxdigaz2" class="tooltip" role="tooltip">Active: ...<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz3" id="tooltip-ifxdigaz3" class="tooltip" role="tooltip">Tooltips are awesome!<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz4" id="tooltip-ifxdigaz4" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 578px; bottom: auto; left: 920px; right: auto;">Tooltips are great! Checkout the modal.<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz5" id="tooltip-ifxdigaz5" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 627px; bottom: auto; left: 676px; right: auto;">Blocked<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz6" id="tooltip-ifxdigaz6" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 627px; bottom: auto; left: 798px; right: auto;">Active<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz7" id="tooltip-ifxdigaz7" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 627px; bottom: auto; left: 920px; right: auto;">Sold<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz8" id="tooltip-ifxdigaz8" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 677px; bottom: auto; left: 798px; right: auto;">Blocked<span class="nub"></span></span><span data-selector="tooltip-ifxdigaz9" id="tooltip-ifxdigaz9" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 677px; bottom: auto; left: 920px; right: auto;">Active<span class="nub"></span></span><span data-selector="tooltip-ifxdigaza" id="tooltip-ifxdigaza" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 677px; bottom: auto; left: 1042px; right: auto;">Sold<span class="nub"></span></span><span data-selector="tooltip-ifxdigazb" id="tooltip-ifxdigazb" class="tooltip" role="tooltip">Blocked<span class="nub"></span></span><span data-selector="tooltip-ifxdigazc" id="tooltip-ifxdigazc" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 777px; bottom: auto; left: 920px; right: auto;">Active<span class="nub"></span></span><span data-selector="tooltip-ifxdigazd" id="tooltip-ifxdigazd" class="tooltip" role="tooltip" style="visibility: visible; display: none; width: auto; top: 777px; bottom: auto; left: 1042px; right: auto;">Sold<span class="nub"></span></span><span data-selector="tooltip-ifxdigaze" id="tooltip-ifxdigaze" class="tooltip" role="tooltip">Blocked<span class="nub"></span></span><span data-selector="tooltip-ifxdigazf" id="tooltip-ifxdigazf" class="tooltip" role="tooltip">Active<span class="nub"></span></span><span data-selector="tooltip-ifxdigazg" id="tooltip-ifxdigazg" class="tooltip" role="tooltip">Sold<span class="nub"></span></span>
+
+    <script>
+        var createOppLink;
+        var createActivityLink;
+        function showPopupJS(recordId, engagementScore, solutionCategory, accountName, daysInStatus, colorStyle, status, status1, competitorId, competitor, underMaintenance, accountId, confidenceLevel){
+            if(recordId != ''){
+                showPopupAF(recordId);                                
+                document.getElementById('pg:frm:popPanel').style.display = 'block';
+                showTab1();                                
+                document.getElementById('divEngScore').innerHTML = engagementScore + '%';
+                document.getElementById('divEngScore').style.color = colorStyle;
+                document.getElementById('divSolutionCategory').innerHTML = solutionCategory;
+                document.getElementById('divAccount').innerHTML = accountName;
+                document.getElementById('divDaysInStatus').innerHTML = daysInStatus;
+                document.getElementById('divSolutionCategory').innerHTML = solutionCategory;
+                document.getElementById('tdStatus').className  = status1 + '2';
+                document.getElementById('tdConfidenceLevelValue').innerHTML = confidenceLevel + '%';
+
+                if(('{!showNaStatus}' == 'false' && status1 == 'na') || status1 == 'active' || status1 == 'sold' || status1 == 'soldactive' || status1 == 'soldnomaintenance'){            
+                    document.getElementById('divStatus').innerHTML  = status;
+                    document.getElementById('pg:frm:lstStatus').style.display = 'none';                    
+                }
+                else{
+                    document.getElementById('pg:frm:lstStatus').style.display = 'block';
+                    document.getElementById('pg:frm:lstStatus').value = status;
+                    document.getElementById('divStatus').innerHTML = '';
+                }
+                
+                if(competitorId != null && competitorId != 'unknown'){   
+                    document.getElementById('aCompetitor').href = '/' + competitorId;
+                    document.getElementById('aCompetitor').innerText = competitor;
+                }
+                document.getElementById('divUnderMaintenance').innerText = underMaintenance == 'false' ? 'No' : 'Yes';
+                onStatusChange();
+                document.getElementById('pg:frm:txtStatusComments').value = '';
+                createOppLink = '/006/e?smlId='+recordId+'&opp11=1.Recognize Needs&opp4='+accountName+'&opp4_lkid='+accountId; 
+                createActivityLink = '/00T/e?what_id='+accountId+'&tsk3='+accountName+'&tsk3_lkid='+accountId+'&tsk5='+solutionCategory.replace('<br/>','') + '&retURL=/' + accountId;               
+                if(status1 != 'Whitespace')
+                    document.getElementById('wsChecklist').style.display = 'none';
+                
+                if(status1 != 'Next Best Action'){
+                    document.getElementById('tdConfidenceLevel').style.display = 'none';
+                    document.getElementById('tdConfidenceLevelValue').style.display = 'none';
+                    document.getElementById('NBAReasonTextBody').style.display = 'none';
+                }        
+            }
+        }
+        function createOpportunity(){
+            window.open(createOppLink);
+        }
+        
+        function createActivity(){
+            window.open(createActivityLink);
+        }
+        
+        
+        
+        function onStatusChange(){  
+                           
+            var status = document.getElementById('divStatus').innerHTML;
+            if(status == '')
+                status = document.getElementById('pg:frm:lstStatus').value;
+            //alert(status);
+            if(status == 'NA'){
+                document.getElementById('tdNotes1').style.display = 'block';
+                document.getElementById('tdNotes2').style.display = 'block';
+                document.getElementById('wsChecklist').style.display = 'none';
+                document.getElementById('NBAReasonTextBody').style.display = 'none';
+            }
+            else if (status == 'Whitespace'){
+                    document.getElementById('wsChecklist').style.display = 'block';
+                    document.getElementById('tdNotes1').style.display = 'none';
+                    document.getElementById('tdNotes2').style.display = 'none';
+                    document.getElementById('NBAReasonTextBody').style.display = 'none';
+            }
+            else{
+                document.getElementById('tdNotes1').style.display = 'none';
+                document.getElementById('tdNotes2').style.display = 'none';
+                document.getElementById('wsChecklist').style.display = 'none';
+                document.getElementById('NBAReasonTextBody').style.display = 'none';
+            }
+            if(status == 'Next Best Action'){
+                document.getElementById('tdConfidenceLevel').style.display = 'block';
+                document.getElementById('tdConfidenceLevelValue').style.display = 'block';
+                document.getElementById('NBAReasonTextBody').style.display = 'block';
+            }
+            else{
+                document.getElementById('tdConfidenceLevel').style.display = 'none';
+                document.getElementById('tdConfidenceLevelValue').style.display = 'none';
+                document.getElementById('NBAReasonTextBody').style.display = 'none';
+            }
+        }
+        
+        function hidePopupJS(){
+            document.getElementById('pg:frm:popPanel').style.display = 'none';
+        }
+        
+        function openSMLLink(smlId, status){
+            if(status != ''){
+                var win = window.open('/' + smlId, '_blank');
+                win.focus();
+            }
+        }
+        function openHideLeftCanvas(){
+            var cName = document.getElementById('divOffCanvas').className;
+            //alert(cName);
+            if(cName == 'off-canvas-wrap move-right'){
+                cName = 'off-canvas-wrap';
+            }
+            else{
+                cName = 'off-canvas-wrap move-right';
+            }
+            document.getElementById('divOffCanvas').className = cName;
+            //alert(cName);
+        }       
+    </script> 
+    <apex:form id="frm">    
+    
+    
+    <apex:actionFunction action="{!savePopup}" name="savePopupAF" status="status" reRender="popPanel" oncomplete="alert('Your changes have been saved. Please refresh to view the updates.');" />
+    <apex:actionFunction action="{!hidePopup}" name="hidePopupAF" status="status" reRender="popPanel" oncomplete="alert('Your changes have been saved. Please refresh to view the updates.');" />
+    <apex:outputPanel id="pnlRefresh">
+    </apex:outputPanel> 
+    <apex:actionFunction action="{!refresh}" name="renderNotesAF" rerender="pnlTab1" status="status"/>                                         
+    <apex:actionFunction action="{!showPopup}" name="showPopupAF" rerender="rptStatusHistory,pnlTab2,pnlFeedback,pnlDocLinks,whitespaceChecklist,pnlNBAReasonText" status="status" onComplete="onStatusChange();">
+        <apex:param name="smlDataId" assignTo="{!smlDataId}" value="" />                
+    </apex:actionFunction>
+    <apex:actionFunction action="{!openHidePopup}" name="openHidePopupAF" rerender="popHidePanel" status="status">
+    </apex:actionFunction>
+            <apex:outputPanel id="popPanel" style="display:none;">
+                <!-- rendered="{!showPopupFlag}"-->
+                <apex:outputPanel id="pnl">             
+                    <apex:outputPanel styleClass="popupBackground" layout="block" />
+                    <apex:outputPanel styleClass="custPopup" layout="block" id="popup">
+                        <apex:outputPanel layout="block" style="text-align:center;" id="popupPanel">
+                            <apex:pageMessages />    
+                            <table cellpadding="0" cellspacing="0" border="1" style="width:100%;">
+                                <tr>
+                                    <td>
+                                        <table style="width:100%;" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td id="tab1Header" style="background-color:#BFBFBF;color:#FFFFFF;font-weight:bold;cursor:pointer;border-bottom:solid 2px gray;" onclick="showTab1();">                                                                                                 
+                                                    Engagement Data
+                                                </td>
+                                                <td id="tab2Header" style="width:100px;cursor:pointer;color:#000000;font-weight:bold;border-bottom:solid 2px gray;" onclick="showTab2();">
+                                                    Sold/Active Product Details
+                                                </td> 
+                                                <td id="tab3Header" style="width:100px;cursor:pointer;color:#000000;font-weight:bold;border-bottom:solid 2px gray;" onclick="showTab3();">
+                                                    Feedback
+                                                </td> 
+                                                <td id="tab4Header" style="width:100px;cursor:pointer;color:#000000;font-weight:bold;border-bottom:solid 2px gray;" onclick="showTab4();">
+                                                    Document Links
+                                                </td>
+                                                <td style="border-bottom:solid 2px gray;">
+                                                </td>
+                                             </tr>
+                                          </table>
+                                    </td>                                
+                                </tr>
+                                <tr> 
+                                    <td style="border:solid 1px gray;">                      
+                                        <table style="width:100%" cellpadding="0" cellspacing="0">                                
+                                            <tr>
+                                                <td style="width:100%;vertical-align:top;" class="standardTd">
+                                                    <table style="width:100%;" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td style="width:100%;">
+                                                                <div id="tab1" style="width:100%;">
+                                                                <apex:outputPanel id="pnlTab1" style="width:100%;">
+                                                                    <table style="width:100%;" cellpadding="2" cellspacing="2" border="0">
+                                                                        <tr>
+                                                                            <td style="width:40%;">
+                                                                                <table style="width:100%;" cellpadding="1" cellspacing="1" border="0" >                                            
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:35%;border:solid 0px gray;font-weight:bold;">
+                                                                                            Product<br/> Engagement Score
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:65%;">                                                    
+                                                                                            <div id="divEngScore" style="font-size:14pt;">                                                                                                
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:35%;border:solid 0px gray;font-weight:bold;">
+                                                                                            Product/Product <br/> Category
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:65%;"> 
+                                                                                            <div id="divSolutionCategory" style="text-align:left;">                                                                                             
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:35%;border:solid 0px gray;font-weight:bold;">
+                                                                                            Account Name
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:65%;">                                                    
+                                                                                            <div id="divAccount" style="text-align:left;">
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    </tr>                                                                       
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:40%;border:solid 0px gray;font-weight:bold;">
+                                                                                            Status 
+                                                                                        </td>
+                                                                                        <td id="tdStatus" style="text-align:left;font-size:9pt;width:60%;">                                                                                         
+                                                                                            <apex:selectList value="{!smlDataRow.Status__c}" size="1" id="lstStatus" onchange="onStatusChange();">
+                                                                                                <apex:selectOptions value="{!availableStatus}"/>
+                                                                                            </apex:selectList>
+                                                                                            <div id="divStatus"  style="text-align:left;">                                                                                          
+                                                                                            </div>                                                                                                                                                                             
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:40%;border:solid 0px gray;font-weight:bold;">
+                                                                                            <div id="tdConfidenceLevel" style="text-align:left;">
+                                                                                                Confidence Level
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:60%;">
+                                                                                            <div id="tdConfidenceLevelValue" style="text-align:left;">                                                                                                                                                                                   
+                                                                                                <apex:outputField id="lstConfidenceLevel" value="{!smlDataRow.Confidence_Level__c}" />                                                                                                
+                                                                                            </div>                                                                                                                                                                             
+                                                                                        </td>
+                                                                                    </tr>                                                                                                                                       
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:35%;border:solid 0px gray;font-weight:bold;">
+                                                                                            Days in Status 
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;width:65%;">
+                                                                                            <div id="divDaysInStatus"  style="text-align:left;">                                                                                            
+                                                                                            </div>                                                                                            
+                                                                                        </td>
+                                                                                    </tr> 
+                                                                                    
+                                                                                    <tr class="standardTr" >
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;font-weight:bold;">
+                                                                                            <div id="tdNotes1" style="text-align:left;">
+                                                                                                Not Applicable <br/>Notes   
+                                                                                            </div>                                                                                         
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;">
+                                                                                            <div id="tdNotes2" style="text-align:left;">                                              
+                                                                                                <apex:inputField value="{!smlDataRow.Notes__c}" style="width:100%;text-align:left;"/>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                    
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;font-weight:bold;">
+                                                                                            Comments
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;">                                                
+                                                                                            <apex:inputField id="txtStatusComments" value="{!smlDataRow.Comments__c}" style="width:100%;text-align:left;"/>
+                                                                                        </td>
+                                                                                    </tr>         
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;font-weight:bold;">
+                                                                                            Technical Profile <br/> Competitor
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;">  
+                                                                                            <u><a href="#" id="aCompetitor" target="_blank"> </a></u>
+                                                                                        </td>
+                                                                                    </tr>  
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;font-weight:bold;">
+                                                                                            Under <br/>Maintenance
+                                                                                        </td>
+                                                                                        <td class="standardTD" style="text-align:left;font-size:9pt;">
+                                                                                            <div id="divUnderMaintenance"  style="text-align:left;">                                                                                            
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    </tr>  
+                                                                                           
+                                                                                </table>
+                                                                            </td>
+                                                                            <td style="width:60%;vertical-align: text-top;">
+                                                                                <apex:outputPanel id="rptStatusHistory">
+                                                                                    <apex:pageMessages />
+                                                                                    <table style="width:100%;height:50%;" cellspacing="0" border="0" >
+                                                                                        <tr class="standardTr">
+                                                                                            <td colspan="2" class="colClassTD" style="border-bottom:solid 2px;text-align:left;font-size:9pt;">
+                                                                                                <b>Status History</b>
+                                                                                                &nbsp;&nbsp;
+                                                                                                <apex:actionStatus id="status">
+                                                                                                    <apex:facet name="start">    
+                                                                                                        Updating status history, Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                                                                                    </apex:facet>                           
+                                                                                                </apex:actionStatus>
+                                                                                            </td>
+                                                                                            <td colspan="2" class="colClassTD" style="border-bottom:solid 2px;text-align:right;font-size:9pt;">
+                                                                                                *Latest 5 changes.
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                        <tr>
+                                                                                            <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;background-color:#F0F0F0;">
+                                                                                                STATUS
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;background-color:#F0F0F0;">
+                                                                                                DATE
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="width:150px;text-align:left;font-size:9pt;width:40%;background-color:#F0F0F0;">
+                                                                                                COMMMENT
+                                                                                            </td>        
+                                                                                            <td class="colClassTD" style="width:60px;text-align:left;font-size:9pt;width:30%;background-color:#F0F0F0;">
+                                                                                                USER
+                                                                                            </td>                                       
+                                                                                        </tr>
+                                                                                        <apex:repeat value="{!smlDataRow.Account_Trends__r}" var="eachRecord">
+                                                                                            <tr>
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                    <div class="{!eachRecord.New_Status__c}1" style="text-align:left;">
+                                                                                                        {!eachRecord.New_Status__c}
+                                                                                                    </div>
+                                                                                                </td>
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                     <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                                                                                         <apex:param value="{!eachRecord.CreatedDate}" />
+                                                                                                      </apex:outputText>
+                                                                                                </td>
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">
+                                                                                                    {!eachRecord.Comments__c}
+                                                                                                </td>
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                    {!eachRecord.Created_By__c}
+                                                                                                </td>                                                    
+                                                                                            </tr>
+                                                                                        </apex:repeat>                                                                                     
+                                                                                    </table>
+                                                                                </apex:outputPanel>
+                                                                                &nbsp;
+                                                                                <apex:outputPanel id="WhitespaceChecklist">
+                                                                                    <div id="wsChecklist">
+                                                                                        <table style="width:100%;height:50%;" cellspacing="0" border="0" >
+                                                                                            <tr class="standardTr">
+                                                                                                <td class="colClassTD" style="border-bottom:solid 2px;text-align:left;font-size:9pt;">
+                                                                                                    <b>Whitespace Checklist</b>
+                                                                                                    &nbsp;&nbsp;
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr class="standardTr" style="text-align:left;">
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:8pt;word-break: break-word;white-space: normal;">
+                                                                                                    Review customer’s CX channels (email, phone, web, in-person, etc)
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr class="standardTr" style="text-align:left;">
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:8pt;word-break: break-word;white-space: normal;">
+                                                                                                    Use LinkedIn Navigator to save and research company in order to start building intelligence and org chart
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr class="standardTr" style="text-align:left;">
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:8pt;word-break: break-word;white-space: normal;">
+                                                                                                    Identify key personas to target for this whitespace
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr class="standardTr" style="text-align:left;">
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:8pt;word-break: break-word;white-space: normal;">
+                                                                                                    What are their top objectives and CX challenges for the year?
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr class="standardTr" style="text-align:left;">
+                                                                                                <td class="colClassTD" style="text-align:left;font-size:8pt;word-break: break-word;white-space: normal;">
+                                                                                                    Create technical profile on Account record
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                </apex:outputPanel>
+                                                                                <apex:outputPanel id="pnlNBAReasonText">
+                                                                                    <div id="NBAReasonTextBody">
+                                                                                        <table style="width:100%;height:50%;" cellspacing="0" border="0" >
+                                                                                            <tr class="standardTr">
+                                                                                                <td class="colClassTD" style="border-bottom:solid 2px;text-align:left;font-size:9pt;">
+                                                                                                    <b>Next Best Action Reason</b>
+                                                                                                    &nbsp;&nbsp;
+                                                                                                </td>
+                                                                                            </tr>
+
+                                                                                            <apex:repeat value="{!NBAReasonTextFull}" var="eachRecord">
+                                                                                                <tr>
+                                                                                                    <td class="colClassTD" style="text-align:left;font-size:9pt; word-break: break-word;white-space: normal;" >
+                                                                                                        {!eachRecord.NBA_Reason_Text__c}
+                                                                                                        <br/>
+                                                                                                        <br/>
+                                                                                                        <br/>
+                                                                                                        The Confidence level is derived from historical Win/Loss Intelligence in a given region, vertical for a given solution
+                                                                                                        <br/>
+                                                                                                        <br/>
+                                                                                                        For any question on how to position your Next Best Action or Confidence, please contact your regional solution lead
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                            </apex:repeat>                                                                        
+                                                                                        </table>
+                                                                                    </div>
+                                                                                </apex:outputPanel>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>   
+                                                                </apex:outputPanel> 
+                                                                </div>   
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="width:100%;">
+                                                                <div id="tab2" style="width:100%;display:none;">
+                                                                <apex:outputPanel id="pnlTab2" style="width:100%;">
+                                                                <apex:outputPanel rendered="{!showOLIs}" style="width:100%;">
+                                                                <table cellpadding="0" cellspacing="0" style="width:100%;" border="0">
+                                                                    <tr>                                   
+                                                                        <td style="text-align:left;width:100%;">                                        
+                                                                            <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                                                                                <tr class="standardTr">
+                                                                                    <td colspan="4" class="colClassTD" style="border-bottom:solid 2px;text-align:left;font-size:9pt;">
+                                                                                        <b> Sold Items </b>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </table>
+                                                                            <div style="overflow:auto; height:180px;width:100%;text-align:left;">
+                                                                            <table cellpadding="0" cellspacing="0" border="0">
+                                                                                <tr class="standardTr">
+                                                                                    <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;">
+                                                                                            <b>Product Name</b>
+                                                                                    </td>                                                                                    
+                                                                                    <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;">
+                                                                                            <b>Order</b>
+                                                                                    </td>
+                                                                                    <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;">
+                                                                                            <b>Type</b>
+                                                                                    </td>                                                                                                  
+                                                                                    <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;">
+                                                                                            <b>Invoice Date</b>
+                                                                                    </td>                                                                                                                                                          
+                                                                                    <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;">
+                                                                                            <b>Quantity</b>
+                                                                                    </td>
+                                                                                    <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;">
+                                                                                            <b>Ext Net Price</b>
+                                                                                    </td>
+                                              
+                                                                                </tr>
+                                                                                <apex:repeat value="{!smlDataRow.Order_Line_Items__r}" var="eachOLI" rendered="{!showOLIs}">
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">
+                                                                                            <u>
+                                                                                                <a href="/apex/SMLOrderInfo?id={!eachOLI.Order__c}" target="_blank"> 
+                                                                                                    <apex:outputText value="{!eachOLI.Product__r.Name}" rendered="{!eachOLI.Product__r.Type__c = 'Cloud'}" />
+                                                                                                    <apex:outputText value="{!eachOLI.Product__r.Description}" rendered="{!eachOLI.Product__r.Type__c != 'Cloud'}" />
+                                                                                                </a>
+                                                                                            </u>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                            <u>
+                                                                                                <a href="/apex/SMLOrderInfo?id={!eachOLI.Order__c}" target="_blank">
+                                                                                                    <apex:outputText value="{!eachOLI.Product__r.Name}" rendered="{!eachOLI.Product__r.Type__c = 'Cloud'}" />
+                                                                                                    <apex:outputText value="{!eachOLI.Product__r.Description}" rendered="{!eachOLI.Product__r.Type__c != 'Cloud'}" />
+                                                                                                </a>
+                                                                                            </u>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">                                                                                            
+                                                                                            <apex:outputText value="Cloud" rendered="{!eachOLI.Product__r.Type__c = 'Cloud'}" />
+                                                                                            <apex:outputText value="On Premise" rendered="{!eachOLI.Product__r.Type__c != 'Cloud'}" />                                                                                                                                                                                        
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                            <apex:outputText value="{0, date, MM/dd/yyyy}">
+                                                                                                <apex:param value="{!eachOLI.Order__r.Invoice_Date__c}" />
+                                                                                            </apex:outputText>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                            <apex:outputText value="{0, number, ###,##0.00}">
+                                                                                                <apex:param value="{!eachOLI.BigMachines_Quantity__c}" />
+                                                                                            </apex:outputText>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                            <apex:outputField value="{!eachOLI.currencyIsoCode}" />
+                                                                                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachOLI.Total_Price__c == 0}">
+                                                                                                <apex:param value="{!eachOLI.Extended_Net_Price__c}" />
+                                                                                            </apex:outputText>
+                                                                                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachOLI.Total_Price__c != 0}">
+                                                                                                <apex:param value="{!eachOLI.Total_Price__c}" />
+                                                                                            </apex:outputText>
+                                                                                             
+                                                                                        </td>                                            
+                                                                                    </tr>    
+                                                                                </apex:repeat> 
+                                                                            </table>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>                                
+                                                                </table>
+                                                            </apex:outputPanel>
+                                                            <br/>
+                                                            <apex:outputPanel rendered="{!OR(showQPs,showOpps)}" style="width:100%;">                                                    
+                                                                <table cellpadding="0" cellspacing="0" style="width:100%;" border="0">
+                                                                    <tr>                                   
+                                                                        <td style="text-align:left;width:100%;">                                        
+                                                                            <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+                                                                                <tr class="standardTr">
+                                                                                    <td colspan="4" class="colClassTD" style="border-bottom:solid 2px;text-align:left;font-size:9pt;">
+                                                                                        <b> Active Items </b>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </table>
+                                                                            <div style="overflow:auto; height:180px;width:100%;text-align:left;">
+                                                                            <table cellpadding="0" cellspacing="0" border="0">
+                                                                                <tr class="standardTr">
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Product Name</b>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Quote</b>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Opportunity</b>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Type</b>
+                                                                                        </td>                                                                                          
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Stage</b>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Forecast Status</b>
+                                                                                        </td>                                                                                             
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Close Date</b>
+                                                                                        </td>   
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Quantity</b>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Ext Net Price</b>
+                                                                                        </td>     
+
+                                                                                        <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <b>Next Step</b>
+                                                                                        </td>                                                                                                                                                                                                                                
+                                                                                                                                                                                                                            
+                                                                                           
+                                                                                    </tr>
+                                                                                    <apex:repeat value="{!smlDataRow.BigMachines_Quote_Products__r}" var="eachQP" rendered="{!showQPs}">
+                                                                                        <tr>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">
+                                                                                                <u>
+                                                                                                    <a href="/{!eachQP.id}" target="_blank">                                                                                                          
+                                                                                                        <apex:outputText value="{!eachQP.BigMachines__Product__r.Name}" rendered="{!eachQP.BigMachines__Product__r.Type__c = 'Cloud'}" />
+                                                                                                        <apex:outputText value="{!eachQP.BigMachines__Product__r.Description}" rendered="{!eachQP.BigMachines__Product__r.Type__c != 'Cloud'}" />
+                                                                                                     </a>
+                                                                                                </u>
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">
+                                                                                                <u>
+                                                                                                    <a href="/{!eachQP.BigMachines__Quote__c}" target="_blank"> {!eachQP.BigMachines__Quote__r.Name} </a>
+                                                                                                </u>
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">
+                                                                                                <u>
+                                                                                                    <a href="/{!eachQP.BigMachines__Quote__r.BigMachines__Opportunity__c}" target="_blank"> {!eachQP.BigMachines__Quote__r.BigMachines__Opportunity__r.Name} </a>
+                                                                                                </u>
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <apex:outputText value="Cloud" rendered="{!eachQP.BigMachines__Product__r.Type__c = 'Cloud'}" />
+                                                                                                <apex:outputText value="On Premise" rendered="{!eachQP.BigMachines__Product__r.Type__c != 'Cloud'}" />                                                                                                                                                                                                                                  
+                                                                                             </td>                                                                                            
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <div style="word-break: break-all;white-space: normal;width:80px;text-align:left;">
+                                                                                                {!eachQP.BigMachines__Quote__r.BigMachines__Opportunity__r.StageName}
+                                                                                                </div>         
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                {!eachQP.BigMachines__Quote__r.BigMachines__Opportunity__r.ForecastStatus__c}                
+                                                                                            </td>                                                                                                  
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                                                                                    <apex:param value="{!eachQP.BigMachines__Quote__r.BigMachines__Opportunity__r.CloseDate}" />
+                                                                                                </apex:outputText>                                                                                    
+                                                                                            </td>      
+                                                                                           
+                                                                                           <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <apex:outputText value="{0, number, ###,##0.00}">
+                                                                                                    <apex:param value="{!eachQP.BigMachines__Quantity__c}" />
+                                                                                                </apex:outputText>
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <apex:outputField value="{!eachQP.currencyIsoCode}" rendered="{!eachQP.BigMachines__Sales_Price__c != null}"/>                                                                                
+                                                                                                <apex:outputText value="{0, number, ###,##0.00}">
+                                                                                                    <apex:param value="{!eachQP.Ext_Net_Price__c}" />
+                                                                                                </apex:outputText>
+                                                                                            </td> 
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <div style="word-break: break-all;white-space: normal;width:100px;">
+                                                                                                {!eachQP.BigMachines__Quote__r.BigMachines__Opportunity__r.NextStep}
+                                                                                                </div>         
+                                                                                            </td>
+  
+                                                                                        </tr>    
+                                                                                    </apex:repeat> 
+                                                                                    <apex:repeat value="{!smlDataRowOppLines}" var="eachLine" rendered="{!showOpps}">
+                                                                                        <tr>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">                                                                                                
+                                                                                                <apex:outputText value="{!eachLine.PriceBookentry.Product2.Name}" rendered="{!eachLine.PriceBookentry.Product2.Type__c = 'Cloud'}" />
+                                                                                                <apex:outputText value="{!eachLine.PriceBookentry.Product2.Description}" rendered="{!eachLine.PriceBookentry.Product2.Type__c != 'Cloud'}" />
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">
+                                                                                                [n/a]
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;word-break: break-word;white-space: normal;">
+                                                                                                <u>
+                                                                                                    <a href="/{!eachLine.OpportunityId}" target="_blank"> {!eachLine.Opportunity.Name} </a>
+                                                                                                </u>
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <apex:outputText value="Cloud" rendered="{!eachLine.PriceBookentry.Product2.Type__c = 'Cloud'}" />
+                                                                                                <apex:outputText value="On Premise" rendered="{!eachLine.PriceBookentry.Product2.Type__c != 'Cloud'}" />                                                                                                                                                                                                                                  
+                                                                                             </td>                                                                                             
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <div style="word-break: break-all;white-space: normal;width:80px;text-align:left;">
+                                                                                                {!eachLine.Opportunity.StageName}
+                                                                                                </div>         
+                                                                                            </td> 
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                {!eachLine.Opportunity.ForecastStatus__c}                
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                                                                                    <apex:param value="{!eachLine.Opportunity.CloseDate}" />
+                                                                                                </apex:outputText>                                                                                    
+                                                                                            </td>                                                                                           
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                {!eachLine.Quantity}
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                {!eachLine.UnitPrice}
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;">
+                                                                                                <div style="word-break: break-all;white-space: normal;width:100px;">
+                                                                                                {!eachLine.Opportunity.NextStep}
+                                                                                                </div>         
+                                                                                            </td>                                                                                                                                           
+                                                                                        </tr>    
+                                                                                    </apex:repeat>
+                                                                            </table>
+                                                                            </div>                                                                           
+                                                                        </td>
+                                                                    </tr>                                
+                                                                </table>
+                                                             </apex:outputPanel>
+                                                             </apex:outputPanel>
+                                                             </div>
+                                                             
+                                                            </td>    
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="width:100%;">
+                                                                <div id="tab3" style="width:100%;">
+                                                                    <apex:outputPanel id="pnlFeedback" style="width:100%;">
+                                                                    <apex:outputText value="If you have questions/comments on the data or tool, please enter the details and click the <b><i>Send Feedback</i></b> button<br/><br/>" escape="false" />
+                                                                    <table style="width:100%;" cellpadding="0" cellspacing="0" border="0">
+                                                                        <tr style="width:100%;">
+                                                                            <td style="width:30%;text-align:left;vertical-align:top;">
+                                                                                Feedback <br/>
+                                                                                <apex:inputField value="{!feedback.Comments__c}" style="width:100%;text-align:left;"/> <br/>
+                                                                                <apex:commandButton value="Send Feedback" action="{!saveFeedback}" reRender="pnlFeedback" status="status" />
+                                                                            </td>
+                                                                            <td style="width:70%;vertical-align: text-top;">
+                                                                                <table style="width:100%;" cellspacing="0" border="0" >
+                                                                                    <tr class="standardTr">
+                                                                                        <td class="colClassTD" colspan="2" style="border-bottom:solid 2px;text-align:left;font-size:9pt;">
+                                                                                            <b>User Feedback</b>
+                                                                                        </td>
+                                                                                        <td class="colClassTD" style="border-bottom:solid 2px;text-align:right;font-size:9pt;">
+                                                                                            *Latest 5 feedback items.
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td class="colClassTD" style="width:200px;text-align:left;font-size:9pt;width:15%;background-color:#F0F0F0;" >
+                                                                                            Feedback
+                                                                                        </td>    
+                                                                                        <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;background-color:#F0F0F0;" >
+                                                                                            User
+                                                                                        </td>  
+                                                                                        <td class="colClassTD" style="width:40px;text-align:left;font-size:9pt;width:15%;background-color:#F0F0F0;" >
+                                                                                            Created Date
+                                                                                        </td>                                                                                                      
+                                                                                    </tr>
+                                                                                    <apex:repeat value="{!feedbacks}" var="eachRecord">
+                                                                                        <tr>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt; word-break: break-word;white-space: normal;" >
+                                                                                                {!eachRecord.Comments__c}                                                                                    
+                                                                                            </td>                             
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;" >
+                                                                                                {!eachRecord.CreatedBy.Name}
+                                                                                            </td>
+                                                                                            <td class="colClassTD" style="text-align:left;font-size:9pt;" >
+                                                                                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                                                                                    <apex:param value="{!eachRecord.CreatedDate}" />
+                                                                                                </apex:outputText>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    </apex:repeat>
+                                                                                </table>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                    </apex:outputPanel>>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="width:100%;">
+                                                                <div id="tab4" style="width:100%;">
+                                                                    <apex:outputPanel id="pnlDocLinks" style="width:100%;">
+                                                                    <apex:outputText value="The following are a list of document links related to this product" escape="false" />
+                                                                    <table style="width:100%;" cellpadding="0" cellspacing="0" border="0">
+                                                                        <tr class="standardTr">
+                                                                            <td class="colClassTD" style="border-bottom:solid 2px;text-align:left;font-size:9pt;">
+                                                                                <b>Genie Links</b>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <apex:repeat value="{!GenieDocLinks}" var="eachRecord">
+                                                                            <tr>
+                                                                                <td class="colClassTD" style="text-align:left;font-size:9pt; word-break: break-word;white-space: normal;" >
+                                                                                    <u>
+                                                                                        <a href="{!eachRecord.Document_Link_URL__c}" target="_blank"> 
+                                                                                            {!eachRecord.Name} 
+                                                                                        </a>
+                                                                                    </u>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </apex:repeat>                                                                        
+                                                                    </table>
+                                                                    </apex:outputPanel>>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>   
+                                                    <!--                                  
+                                                    <apex:tabPanel switchType="client" selectedTab="name2" id="AccountTabPanel">  
+                                                        <apex:tab label="One" name="name1" id="tabOne" >                        
+                                                        -->
+                                                            
+                                                        <!--                                                 
+                                                        </apex:tab>
+                                                        <apex:tab label="Two" name="name2" id="tabTwo">                        
+                                                        -->
+                                                           
+                                                            
+                                                     <!--       
+                                                        </apex:tab>
+                                                    </apex:tabPanel>    
+                                                    -->
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color:#F0F0F0;">
+                                        <apex:commandButton value="Save" onclick="validatePopupSave(); return false;" style="font-weight:normal;font-size:9pt;"  />
+                                        &nbsp;
+                                        <apex:commandButton value="Close" onclick="hidePopupJS(); return false;" style="font-weight:normal;font-size:9pt;"  />
+                                        &nbsp;
+                                        <apex:commandButton value="Save & Close" onclick="validatePopupHide(); return false;" style="font-weight:normal;font-size:9pt;"  />
+                                        &nbsp;
+                                        <apex:commandButton id="cmdCreateOpp" value="Create Opportunity" style="font-weight:normal;font-size:9pt;" onclick="createOpportunity(); return false;" />
+                                        &nbsp;
+                                        <apex:commandButton id="cmdCreateActivity" value="Create Activity" style="font-weight:normal;font-size:9pt;" onclick="createActivity(); return false;" />
+                                    </td>
+                                </tr>
+                            </table>                            
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>            
+            <apex:outputPanel id="popHidePanel" >
+                <apex:outputPanel rendered="{!showHidePopup}" id="pnlHide">             
+                    <apex:outputPanel styleClass="popupBackground" layout="block" />
+                    <apex:outputPanel styleClass="custPopup" layout="block" id="popupHide">
+                        <apex:outputPanel layout="block" style="text-align:center;" id="popupPanelHide">
+                            <table cellpadding="0" cellspacing="0" style="width:100%;">
+                                <tr>
+                                    <td style="text-align:left;">
+                                        <b>Please select categories to hide.</b>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align:left;">                                    
+                                        <apex:inputCheckbox id="chkAll" onclick="selectUnselectAll();"/> <b>Select All</b> <br/>
+                                        <apex:inputCheckbox id="chkBussOpt" value="{!hideBussOpt}"/> Business Optimization <br/>
+                                        <apex:inputCheckbox id="chkCustomerEng" value="{!hideCustomerEngagement}"/> Customer Engagement <br/>
+                                        <apex:inputCheckbox id="chkEmpEng" value="{!hideEmpEngagement}"/> Employee Engagement <br/>
+                                        <apex:inputCheckbox id="chkMultiComm" value="{!hideMultimediaCommunication}"/> Multimedia Communications <br/>                                        
+                                        <apex:inputCheckbox id="chkAnalytics" value="{!hideAnalytics}"/> Omnichannel Analytics <br/>
+                                        <apex:inputCheckbox id="chkOmni" value="{!hideOmni}"/> Omnichannel Journey Management <br/>
+                                        <script>
+                                            function selectUnselectAll(){
+                                                var selected = document.getElementById('{!$Component.chkAll}').checked;
+                                                document.getElementById('{!$Component.chkAnalytics}').checked = selected;
+                                                document.getElementById('{!$Component.chkBussOpt}').checked = selected;
+                                                document.getElementById('{!$Component.chkCustomerEng}').checked = selected;
+                                                document.getElementById('{!$Component.chkEmpEng}').checked = selected;
+                                                document.getElementById('{!$Component.chkMultiComm}').checked = selected;
+                                                document.getElementById('{!$Component.chkOmni}').checked = selected;
+                                            }
+                                        </script>                                                     
+                                    </td>
+                                </tr>
+                            </table>
+                            <apex:commandButton value="Save" action="{!closeHidePopup}"/>    
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>                
+            </apex:outputPanel>            
+        </apex:form> 
+        <script>                    
+            function showTab1(){
+                document.getElementById('tab1').style.display = 'block';                
+                document.getElementById('tab2').style.display = 'none'; 
+                document.getElementById('tab3').style.display = 'none'; 
+                document.getElementById('tab4').style.display = 'none';              
+                document.getElementById('tab1Header').style.backgroundColor = '#BFBFBF';                
+                document.getElementById('tab2Header').style.backgroundColor = '';
+                document.getElementById('tab3Header').style.backgroundColor = '';
+                document.getElementById('tab4Header').style.backgroundColor = '';
+                document.getElementById('tab1Header').style.color = '#FFFFFF';                
+                document.getElementById('tab2Header').style.color = '#000000';
+                document.getElementById('tab3Header').style.color = '#000000';
+                document.getElementById('tab4Header').style.color = '#000000';                
+            }    
+            function showTab2(){
+                document.getElementById('tab1').style.display = 'none';
+                document.getElementById('tab2').style.display = 'block';   
+                document.getElementById('tab3').style.display = 'none';             
+                document.getElementById('tab4').style.display = 'none';              
+                document.getElementById('tab1Header').style.backgroundColor = '';
+                document.getElementById('tab2Header').style.backgroundColor = '#BFBFBF';
+                document.getElementById('tab3Header').style.backgroundColor = '';
+                document.getElementById('tab4Header').style.backgroundColor = '';                                
+                document.getElementById('tab1Header').style.color = '#000000';                
+                document.getElementById('tab2Header').style.color = '#FFFFFF';
+                document.getElementById('tab3Header').style.color = '#000000';
+                document.getElementById('tab4Header').style.color = '#000000';                
+            }    
+            function showTab3(){
+                document.getElementById('tab1').style.display = 'none';
+                document.getElementById('tab2').style.display = 'none';   
+                document.getElementById('tab3').style.display = 'block';             
+                document.getElementById('tab4').style.display = 'none';              
+                document.getElementById('tab1Header').style.backgroundColor = '';
+                document.getElementById('tab2Header').style.backgroundColor = '';
+                document.getElementById('tab3Header').style.backgroundColor = '#BFBFBF';
+                document.getElementById('tab4Header').style.backgroundColor = '';                
+                document.getElementById('tab1Header').style.color = '#000000';                
+                document.getElementById('tab2Header').style.color = '#000000';
+                document.getElementById('tab3Header').style.color = '#FFFFFF';
+                document.getElementById('tab4Header').style.color = '#000000';                
+            }    
+            function showTab4(){
+                document.getElementById('tab1').style.display = 'none';
+                document.getElementById('tab2').style.display = 'none';   
+                document.getElementById('tab3').style.display = 'none';
+                document.getElementById('tab4').style.display = 'block';             
+                document.getElementById('tab1Header').style.backgroundColor = '';
+                document.getElementById('tab2Header').style.backgroundColor = '';
+                document.getElementById('tab3Header').style.backgroundColor = '';
+                document.getElementById('tab4Header').style.backgroundColor = '#BFBFBF';                
+                document.getElementById('tab1Header').style.color = '#000000';                
+                document.getElementById('tab2Header').style.color = '#000000';
+                document.getElementById('tab3Header').style.color = '#000000';
+                document.getElementById('tab4Header').style.color = '#FFFFFF';
+            }      
+            
+            function validatePopupSave(){
+                if(document.getElementById('pg:frm:txtStatusComments').value == ''){
+                    alert('Please enter comments.');
+                }
+                else{
+                    savePopupAF();
+                }
+            }
+            
+            function validatePopupHide(){
+                if(document.getElementById('pg:frm:txtStatusComments').value == ''){
+                    alert('Please enter comments.');
+                }
+                else{
+                    hidePopupAF();
+                }
+            }   
+            
+            function exportToExcel(){
+                var viewId = document.getElementById('pg:frmMain:lstView').value;
+                var accountType = document.getElementById('pg:frmMain:lstAccountType').value;
+                var vertical = document.getElementById('pg:frmMain:lstVertical').value;
+                var accName = document.getElementById('pg:frmMain:txtAccountName').value;
+                var territory = document.getElementById('pg:frmMain:lstTerritory').value;
+                var region = document.getElementById('pg:frmMain:lstRegion').value;
+                var subRegion = document.getElementById('pg:frmMain:lstSubRegion').value;
+                var AEName = '';
+                if(document.getElementById('pg:frmMain:lstAE') != null)
+                    AEName = document.getElementById('pg:frmMain:lstAE').value;
+                var key = document.getElementById('pg:frmMain:chkKey').checked;
+                var must = document.getElementById('pg:frmMain:chkMust').checked;
+                var urlStr = '/apex/SMLExcel?excelView=1&viewId=' + viewId;
+                if(accountType != '') 
+                    urlStr += '&accountType=' + accountType;
+                if(vertical != '')  
+                    urlStr += '&vertical=' + vertical.replace("&", "-");
+                if(accName != '')
+                    urlStr += '&accName=' + accName; 
+                if(territory != '')
+                    urlStr += '&territory=' + territory;
+                if(region)
+                    urlStr += '&region=' + region;
+                if(subRegion) 
+                    urlStr += '&subRegion=' + subRegion;
+                if (AEName != '')
+                    urlStr += '&selectedAE=' + AEName;
+                if(key)
+                    urlStr += '&key=' + key;
+                if(must)
+                    urlStr += '&must=' + must;
+                window.open(urlStr);                
+            }            
+        </script>       
+      </body>
+</apex:page>

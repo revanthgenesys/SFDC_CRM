@@ -1,0 +1,764 @@
+<apex:page docType="html-5.0" controller="WorkspaceConnectorBAController" showHeader="false" title="WorkspaceConnector Page">
+    <apex:includeScript value="/support/console/25.0/integration.js"/>
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" />
+    <apex:includeScript value="/support/api/26.0/interaction.js"/> 
+    
+   <noscript> &nbsp; JavaScript <b>is not enabled</b> in your web browser &nbsp; </noscript>
+    <script type="text/javascript">
+        var pollPort = getURLParam("pollport","0");
+        var requestPort = getURLParam("requestport","0");
+        var requestTimeout = 5000; 
+        var pollQueueTimeout = 100;    
+        var pollQueueTimeoutError = 500;
+        var pollURL = "http://localhost";             
+        var hideLog = true;
+        
+        var ixnWindows = [];
+        var activityWindows = [];
+                
+        // if the port value is valid store the port information into a cookie
+        // Otherwise get them from the cookie
+            if(pollPort!=0) {
+                createCookie("wsc_pollPort",pollPort,1);         
+                createCookie("wsc_requestPort",requestPort,1);         
+            } else {
+                pollPort=readCookie("wsc_pollPort");
+                requestPort=readCookie("wsc_requestPort");
+            }                  
+
+        j$ = jQuery.noConflict();
+        
+        j$(document).ready(function () {
+            changeDisplayStatus(false);
+            changeLogButton(true);
+            log('Start polling');
+            poll(100); 
+        });
+
+        // attach listener to determine ability to enable communication solution
+        if (window.attachEvent)
+            window.attachEvent('onload', CanCommunicate);
+        else { 
+            if (window.addEventListener) 
+                window.addEventListener('load', CanCommunicate, false);
+            else document.addEventListener('load', CanCommunicate, false);
+        }       
+                
+        var dialListener = function (response) {
+            if (response.result) {
+                log('onClickToDial - ' + response.result);  
+                Send('{"action":"Dial","actionData":{' + response.result.substring(1) + '}');
+            }
+        };
+        
+        
+        //Invokes API method              
+        
+        sforce.interaction.cti.getCallCenterSettings(function(response)
+        {
+           log('getCallCenterSettings - ' + response.result);
+           var callCenterDefinition = j$.parseJSON(response.result); 
+           
+           //read user config for ports
+           WorkspaceConnectorBAController.getWorkspaceConnectorInfo(function(result,event) {
+
+               log('getWorkspaceConnectorInfo: result - ' + result);               
+               var settings;
+                              
+               try{
+                   result = result.replace(/&(l|g|quo)t;/g, function(a,b){
+                            return {
+                               l   : '<',
+                               g   : '>',
+                               quo : '"'
+                              }[b];
+                          });
+                  settings = j$.parseJSON(result);;
+                  if(settings.WorkspacePollPort != "" && settings.WorkspacePollPort !=null)
+                      pollPort = settings.WorkspacePollPort;
+                  if(settings.WorkspaceRequestPort != "" && settings.WorkspaceRequestPort != null)
+                      requestPort = settings.WorkspaceRequestPort; 
+               }
+               catch(ex){              
+                   //if return value was not json string             
+                   log('getWorkspaceConnectorInfo: could not read user level port settings, result - ' + result + ', ex - ' + ex);
+                   
+                   if(callCenterDefinition['/WorkspaceOptions/PollPort'] != undefined && callCenterDefinition['/WorkspaceOptions/PollPort'] != null) 
+                       if(callCenterDefinition['/WorkspaceOptions/PollPort'] != "")
+                           pollPort = callCenterDefinition['/WorkspaceOptions/PollPort'];              
+               
+                   if(callCenterDefinition['/WorkspaceOptions/RequestPort'] != undefined && callCenterDefinition['/WorkspaceOptions/RequestPort'] != null) 
+                       if(callCenterDefinition['/WorkspaceOptions/RequestPort'] != "")
+                           requestPort = callCenterDefinition['/WorkspaceOptions/RequestPort'];              
+               }
+               
+               log('getCallCenterSettings: pollPort - ' + pollPort); 
+               log('getCallCenterSettings: requestPort - ' + requestPort);                       
+           
+               if(callCenterDefinition['/WorkspaceOptions/RequestTimeout'] != undefined && callCenterDefinition['/WorkspaceOptions/RequestTimeout'] != null) {
+                   requestTimeout = callCenterDefinition['/WorkspaceOptions/RequestTimeout'];              
+                   log('getCallCenterSettings: requestTimeout - ' + requestTimeout);
+               }
+           
+               if(callCenterDefinition['/WorkspaceOptions/PollQueueTimeout'] != undefined && callCenterDefinition['/WorkspaceOptions/PollQueueTimeout'] != null) {
+                   pollQueueTimeout= callCenterDefinition['/WorkspaceOptions/PollQueueTimeout'];              
+                   log('getCallCenterSettings: pollQueueTimeout - ' + pollQueueTimeout);
+               }
+           
+               if(callCenterDefinition['/WorkspaceOptions/PollQueueTimeoutError'] != undefined && callCenterDefinition['/WorkspaceOptions/PollQueueTimeoutError'] != null) {
+                   pollQueueTimeoutError= callCenterDefinition['/WorkspaceOptions/PollQueueTimeoutError'];              
+                   log('getCallCenterSettings: pollQueueTimeoutError - ' + pollQueueTimeoutError);
+               }    
+           });         
+        });
+        
+        
+        function CanCommunicate() {
+            sforce.interaction.cti.onClickToDial(dialListener);   
+            
+            var listener = function (result) {
+               var myObj = eval('(' + result.message+ ')');
+                log("CTIEvent = "+ myObj.action);
+               if(myObj.action == "subtabSelected")
+               {
+                    processSubtabSelected(myObj);
+                    return;
+               }
+               
+               processObjectSelected(result.message);
+
+              };
+             
+            //Add a listener for the 'CTIEvent' event type from SVOC page
+            sforce.console.addEventListener('CTIEvent', listener);                       
+            
+           
+            sforce.interaction.cti.enableClickToDial(function (response) {
+                if (response.result) {
+                    log("ClickToDial result was true");
+                } else {
+                    log("ClickToDial result was false");
+                }
+            });
+            
+                       
+            var primaryEventHandler = function (result) {
+                log("Focus changed to a different primary tab. ID is:" + result.id + "and the object Id is:" + result.objectId);                                
+                // determine if we are going to send to Workspace
+               // checkPrimarytab(result.objectId,"opened");
+            };
+            sforce.console.onFocusedPrimaryTab(primaryEventHandler);
+
+/*
+            var subEventHandler = function (result) {
+                log("Focus changed to a different subtab. ID is:"
+                + result.id + "and object Id is:" + result.objectId);
+                // determine if we are going to send to Workspace
+                checkSubTab(result.objectId,"opened");                
+            };
+            sforce.console.onFocusedSubtab(subEventHandler);    
+*/            
+                                       
+        };
+                           
+ ////////////////////////////////////////////////////////////////////////////////////////        
+ 
+        // *** Send to iWS *** //
+        
+ ////////////////////////////////////////////////////////////////////////////////////////        
+            
+                             
+        //inform workspace of navigation to Account primary tab
+        function checkPrimarytab(objID,actionPerformed)
+        {
+            log('checkPrimarytab: find associated inx Id for sfObject - ' + objID + 'action - ' + actionPerformed);
+            if(objID != null)
+            {
+                log("checkPrimarytab not null");               
+            }
+            
+            for(i in ixnWindows){
+                log('checkPrimarytab: ixn - ' + i + ', sfObjId - ' + ixnWindows[i]);               
+               
+                if(ixnWindows[i].indexOf(objID) > -1 ){
+                    log('checkPrimarytab: found match, sending to IWS');
+                    Send('{"action":"ShowInteraction","actionData":{"interactionId":"' + i + '"}');
+                    return;
+                }                            
+            }
+            
+            log.debug('checkPrimarytab: could not find match');  
+        }
+        
+        
+        //inform workspace of navigation to Contact sub tab
+        function checkSubTab(objID)
+        {
+            log("checkSubTab");
+            log('checkSubTab: find associated inx Id for sfObject - ' + objID );
+            
+            
+            for(i in ixnWindows){
+                log('checkSubTab: ixn - ' + i + ', sfObjId - ' + ixnWindows[i]);               
+               
+                if(ixnWindows[i].indexOf(objID) > -1 ){
+                    log('checkSubTab: found match, sending to IWS');
+                    Send('{"action":"ShowInteraction","actionData":{"interactionId":"' + i + '"}');
+                    return;
+                }                            
+            }
+            
+            log.debug('checkSubTab: could not find match');            
+
+        }          
+        
+////////////////////////////////////////////////////////////////////////////////////////        
+// event processing
+////////////////////////////////////////////////////////////////////////////////////////        
+        
+        function processMessage(obj)
+        {
+            
+            //calculate date time
+            var date = new Date();
+            var displayDate = (date.getMonth()+1) + '/' + (date.getDate()) + '/' + date.getFullYear() 
+                    + " " + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds(); 
+            
+            if(obj.action== "OpenObject"){
+                log("in OpenObject");  
+                // open based on type attribute                
+                if(obj.type=="Voice") {
+                    // if we have a userData attribute of MainMenu, then go to case processing
+                    if(obj.userData.MainMenu !== undefined) {
+                        log("processMessage: Voice Case handling for menu = " + obj.userData.MainMenu);                           
+                        performCaseAction(obj); 
+                    } else {
+                        // Inbound or internal voice
+                        if(obj.calltype=="Inbound"||obj.calltype=="Internal") {
+                            log("processMessage: Inbound Voice handling for caller ID = " + obj.source);                           
+                            performInboundVoiceAction(obj); 
+                        }                            
+                        // Outbound voice                        
+                        if(obj.calltype=="Outbound") {
+                            // attempt to open on outbound
+                            log("processMessage: Outbound Voice handling for party = " + obj.destination);                           
+                            performOutboundVoiceAction(obj); 
+                        }             
+                    }                    
+                }                    
+            }
+            else if(obj.action== "CreateActivity"){ 
+               log("CreateActivity for connID "+ obj.id + " delete Windows - " + ixnWindows[obj.id] + " - " + activityWindows[obj.id]);              
+               var objectIdForActivity = activityWindows[obj.id];
+               delete ixnWindows[obj.id];
+               delete activityWindows[obj.id];
+                
+               if(obj.type== "Voice") 
+                   createTask(obj,objectIdForActivity);
+               else log("CreateActivity for something other than voice");   
+               
+            }
+            else if(obj.action== "MarkedDone"){
+               log("MarkedDone delete Windows - " + ixnWindows[obj.id] + " - " + activityWindows[obj.id]);
+               delete ixnWindows[obj.id];
+               delete activityWindows[obj.id];
+            }
+            else if(obj.action == "FocusTab"){
+                 log("FocusTab for " + obj.id);
+                 processFocusTab(obj.id);
+            }
+        }
+
+        // bring a primary tab to front  
+        function processFocusTab(connId)
+        {
+            log("processFocusTab for "+ connId);
+            var objId = ixnWindows[connId];
+            if(objId != null)
+            {
+                force.console.openPrimaryTab(null,'/' + objId, true); 
+            }
+        }
+  
+        // refresh a primary tab  
+        var processTabID = function processTabID(result) {
+            if(result.id != null)
+            {
+                log("processTabID result.id = " +result.id);
+                sforce.console.refreshPrimaryTabById(result.id, false);
+            }
+        };              
+        
+////////////////////////////////////////////////////////////////////////////////////////        
+// Inbound and Outbound Voice handling
+////////////////////////////////////////////////////////////////////////////////////////
+
+        // screen pop for inbound voice. If role is RoleDestination, then this is inbound, if
+        // RoleOrigination, then it is an manual outbound dial        
+        function performInboundVoiceAction(obj)
+        {        
+            log("in performInboundVoiceAction()");
+            
+            // determine number to use based on role
+            log("Role is " + obj.role);
+            var lookupNumber=obj.source;
+            if(obj.role=='RoleOrigination')
+                lookupNumber=obj.destination;
+                            
+            // using the source attribute locate the account or contact
+            WorkspaceConnectorBAController.findObjectFromANI(lookupNumber,function(o) {
+                if(o!=null) {
+                    log("Screen popping record: " + o.Name);                
+                    sforce.console.openPrimaryTab(null,'/' + o.Id,true);                    
+                } else {
+                    log("No records found with phone field containing: " + lookupNumber);                
+                }         
+            });        
+        }
+        
+        // screen pop for outbound voice
+        function performOutboundVoiceAction(obj)
+        {        
+            log("in performOutboundVoiceAction()");
+            // using the destination attribute locate the account or contact
+            WorkspaceConnectorBAController.findObjectFromANI(obj.destination,function(o) {
+                if(o!=null) {
+                    log("Screen popping record: " + o.Name);                
+                    sforce.console.openPrimaryTab(null,'/' + o.Id,true);                    
+                } else {
+                    log("No records found with phone field containing: " + obj.destination);                
+                }         
+            });        
+        }
+
+////////////////////////////////////////////////////////////////////////////////////////        
+// Case handling
+////////////////////////////////////////////////////////////////////////////////////////
+
+        /* 
+        Opens an existing Case if MainMenu = 'Existing Ticket'
+        or creates a new Case if MainMenu = 'New Ticket'
+        */
+        function performCaseAction(openObj)
+        {        
+            log("in performCaseAction() with main menu=" + openObj.userData.MainMenu);
+
+            // Existing Ticket
+            if(openObj.userData.MainMenu == 'Existing Ticket') {
+                log("Opening an Existing CASE with number: " + openObj.userData.TicketNumber);
+                WorkspaceConnectorBAController.findCaseFromNumber(openObj.userData.TicketNumber, 
+                function(result,event)
+                {
+                    if(result != null) {
+                        log("found Case.Id=" + result.Id + " (CaseNumber " + result.CaseNumber + ")");
+                        sforce.console.openPrimaryTab(null,'/' + result.Id,true,result.CaseNumber);                                        
+                    }                        
+                    else {
+                        log('No case found, defaulting to navigator tab for user search');  
+                        try {
+                            // display the CaseNotFound page allowing the user to correct
+                            // correct the input case and re-pop.
+                            // sforce.console.openPrimaryTab(null,'/apex/WSC_CaseNotFound?CaseNumber=' + openObj.userData.TicketNumber,true,'Case Not Found');                      
+                        } catch(e) {
+                            alert("Error=" + e);                       
+                        }                         
+                    }                        
+                });
+            }
+
+            // New Ticket            
+            if(openObj.userData.MainMenu == 'New Ticket') {
+                log("New Ticket requested");    
+                 
+                // fetch the product line and product IDs
+                var canPop=false;            // indicates if all data attributes available to pop form                
+                WorkspaceConnectorBAController.getProductFromName(openObj.userData.FunctionalGroup, function(pl) {
+                    if(pl!=null) {
+
+                        WorkspaceConnectorBAController.getProductFromName(openObj.userData.ProductGroup, function(sp) {
+                            if(sp!=null) {
+                                log("Opening new Product Case for " + openObj.userData.Employer + " using product line: " + openObj.userData.FunctionalGroup + " and product: " + openObj.userData.ProductGroup);    
+                                log('Pop URL: https://cs10.salesforce.com/apex/Portal_Select_Case_Type?isSaas=true&RecordType=012J0000000CsVB&sto=' + openObj.userData.SoldToSFDCId + '&pl=' + pl.Id + '&sp=' + sp.Id + '&conid=' + openObj.userData.ContactSFDCId);    
+                                // open the New Case page forcing bypass of first two forms with prefilled contacts and products
+                                sforce.console.openPrimaryTab(null,'/apex/Portal_Select_Case_Type?isSaas=true&RecordType=012J0000000CsVB&sto=' + openObj.userData.SoldToSFDCId + '&pl=' + pl.Id + '&sp=' + sp.Id + '&conid=' + openObj.userData.ContactSFDCId,true,'New Case');
+                                canPop=true;        // we have popped                                    
+                            }                                   
+                        });
+                    }
+                });
+            }                
+             
+            // Something Else             
+            if(openObj.userData.MainMenu == 'Something Else') {
+                log("Something else requested");             
+                // do nothing
+            }                
+        }          
+
+////////////////////////////////////////////////////////////////////////////////////////        
+// Task handling
+////////////////////////////////////////////////////////////////////////////////////////
+
+       function createTask(createObj,objIdForAcitity) {
+            log("createTask for" + objIdForAcitity);
+            //calculate date time
+            var date = new Date();
+            var displayDate = (date.getMonth()+1) + '/' + (date.getDate()) + '/' + date.getFullYear() 
+                    + " " + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds(); 
+                            
+            var _GENESYS_CALL_TYPE = (createObj.calltype=== undefined)? "" : createObj.calltype;
+            log("createTask " + createObj.source + ", " + _GENESYS_CALL_TYPE +  createObj.type + ", " +  ", "+ createObj.notes  + ", "+  createObj.dispositionCode + ", "+  180  + ", "+ createObj.id);      
+            
+            var lookupSource = "";
+             if(_GENESYS_CALL_TYPE == "Outbound"){
+                    lookupSource = createObj.destination;
+             }
+             else{
+                    lookupSource = createObj.source;
+             }
+             log("lookupSource for createObj= "+lookupSource);
+             var _ACCOUNT_NUMBER = (createObj.RSV4NL_CUST_ACCOUNTNO === undefined)? "" : createObj.RSV4NL_CUST_ACCOUNTNO;
+             var _CALL_DURATION = (createObj.duration === undefined)? "" : createObj.duration;
+             var _CALLING_LINE_ID = (createObj.userData.TCCS_ANI === undefined)? "" : createObj.userData.TCCS_ANI;                
+             var _CALLTOPIC = (createObj.userData.CALLTOPIC === undefined)? "" : createObj.userData.CALLTOPIC;
+             var _CALLTYPE = (createObj.userData.CALLTYPE === undefined)? "" : createObj.userData.CALLTYPE;
+             var _COMMENTS = (createObj.notes === undefined)? "" : createObj.notes;
+             var _CUST_ID_VERIFIED = (createObj.userData.AUTHENTICATED === undefined)? "" : createObj.userData.AUTHENTICATED;           
+             var _DISP = (createObj.dispositionCode=== undefined)? "" : createObj.dispositionCode;
+             var _DNIS = (createObj.destination === undefined)? "" : createObj.destination ;
+             //var _GENESYS_CALL_TYPE = (createObj.calltype === undefined)? "" : createObj.calltype;
+             var _GENESYSID = (createObj.id === undefined)? "" : createObj.id;
+             var _SUBSCRIBER_PHONE_NO = (createObj.TCCS_UTN=== undefined)? "" : createObj.TCCS_UTN;
+             
+             var _ANI = (createObj.source === undefined)? "" : createObj.source ;
+
+             
+             log("create map");
+             var mapActivity = {"Account Number":_ACCOUNT_NUMBER,"Call Duration":_CALL_DURATION,"Calling Line Id":_CALLING_LINE_ID ,
+                               "Call Topic":_CALLTOPIC,"Call Type":_CALLTYPE,"Comments":_COMMENTS,
+                               "Comments":_COMMENTS,"Customer Identify Verified":_CUST_ID_VERIFIED,
+                               "Disposition":_DISP,"DNIS":_DNIS,"Genesys Call Type":_GENESYS_CALL_TYPE,
+                               "GenesysId":_GENESYSID,"Subscriber Phone Number":_SUBSCRIBER_PHONE_NO,"ANI":_ANI,
+                               "DATE":displayDate,"LOOKUP":lookupSource,"objId":objIdForAcitity};
+             WorkspaceConnectorBAController.createActivity(mapActivity,
+                function(result,event)
+                {
+                    log("createActivity RESULT = "+ result);
+                    
+                    if(result != null && result != "not found")
+                    {                       
+                        log("redirect to new activity - " + result);
+                        sforce.console.openPrimaryTab(null,'/' + result, true);
+                        
+                        log("getTabID for refresh");
+                        sforce.console.getFocusedPrimaryTabId(processTabID);                                                        
+                    }   
+                    else
+                         log("Could not create task for");
+                }
+             );     
+        }
+
+////////////////////////////////////////////////////////////////////////////////////////        
+        
+        // *** Request received from other VF pages **** //
+        
+////////////////////////////////////////////////////////////////////////////////////////
+
+        function processSubtabSelected(objSelected){
+             //Custom Console Component sends in an object id so notify iWS
+             log("processSubtabSelected for " + objSelected.id);
+             if(objectSelected.id != null || objSelected.id != "")
+                 checkSubTab(objSelected.id);            
+        }
+        
+       function processObjectSelected(objSelected){                    
+            //  SOVC page returns the following:
+            //  action = objectSelected
+            //  id = ConnectionID from initial communication
+            //The next fields are used by the SFDC connector for transfer case
+            //   recordType = Account or Contact
+            //   recordNumber = SF object id for the recordType
+            //The next fields are used for adding an Activity at end of call
+            //  activityRecordType = Account or Contact
+            //  activityRecordNumber = SF object id for the recordType
+                              
+                    var index = objSelected.indexOf("id");
+           var newText = objSelected.substring(index-1,objSelected.length);
+           newText = "{"+newText;
+           log("processObjectSelected newText  ="+newText);
+           
+          var objectSelected = eval('(' + objSelected+ ')');
+
+          log("objectSelected.SFDC_RecordType = " + objectSelected.SFDC_RecordType);
+          log("objectSelected.SFDC_RecordNumber = " + objectSelected.SFDC_RecordNumber);
+          log("objectSelected.activityRecordType = " + objectSelected.activityRecordType);
+          log("objectSelected.activityRecordNumber = " + objectSelected.activityRecordNumber);
+          var ixnId = objectSelected.id;
+          var objectId = objectSelected.SFDC_RecordNumber;
+          var activityObjectId = objectId ;
+          var activityObjectId = objectSelected.activityRecordNumber;          
+          ixnWindows[ixnId] =  objectId;
+          activityWindows[ixnId] =  activityObjectId ;
+          log("objectSelected: for " + ixnId + " add Windows - " + ixnWindows[ixnId] + " - " + activityWindows[ixnId]);
+          
+          //inform workspace so it can attach data    
+          //log('TO WORKSPACE' + '{"action":"AttachData","actionData":' + objSelected);      
+          //Send('{"action":"AttachData","actionData":' + objSelected+ '}');
+          Send('{"action":"AttachData","actionData":' + newText );
+          
+          //BKK TEMPORARY TO TEST
+          //log("BKK openPrimaryTab for" + objectId);
+          //sforce.console.openPrimaryTab(null,'/' + objectId , true);                    
+        }
+            
+
+        
+////////////////////////////////////////////////////////////////////////////////////////        
+       
+        // *** AJAX Functions **** //
+        
+////////////////////////////////////////////////////////////////////////////////////////           
+
+        function poll(timeout){ 
+        
+            //log('Poll in ' + timeout);
+            setTimeout(function(){          
+                j$.ajax({
+                    url: pollURL + ":" + pollPort + "/poll",       
+                    timeout: requestTimeout,    
+                    async:true,
+                    crossDomain:true,
+                    cache: false,
+                    dataType: 'jsonp',                  
+                    success: function(data){                    
+                          
+    
+                        if(data.action != 'NoWork') {
+                            log('JSON Received- ' + j$.param(data));
+                            processMessage(data);    
+                        }                                        
+    
+                        poll(pollQueueTimeout);
+                        changeDisplayStatus(true);
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {               
+                        log('work request error (' + pollPort + ') ' + xhr.status + ' ' + thrownError);    
+
+                        changeDisplayStatus(false);
+
+                        if(thrownError == 'timeout')
+                            poll(pollQueueTimeoutError);
+                        else
+                            poll(pollQueueTimeout);
+                    }           
+                });
+                
+            }, timeout);        
+        }   
+             
+        function Send(message) {
+            log("Sending:" + message);
+            j$.ajax({
+                url: pollURL + ":" + requestPort + "/request=" + message,       
+                timeout: requestTimeout,     
+                async:false,
+                crossDomain:true,
+                cache: false,
+                dataType: 'jsonp',      
+                success: function(data){                    
+                    log('Request sent ' + data.response);                                 
+                },
+                error: function (xhr, ajaxOptions, thrownError) {                               
+                    log('Request sent error (' + requestPort + ') ' + xhr.status + ' ' + thrownError);                                      
+                } 
+            });      
+        }
+        
+////////////////////////////////////////////////////////////////////////////////////////        
+       
+        // *** MISC Functions **** //
+        
+////////////////////////////////////////////////////////////////////////////////////////        
+        
+        
+        function timestamp() {
+            var dd = new Date();
+            var hh = dd.getHours();
+            var mm = dd.getMinutes();
+            var ss = dd.getSeconds();
+            return "<span style='color: blue;'>" + ((hh>9)?hh: "0" + hh) + ":" + ((mm>9)?mm: "0" + mm) + ":" + ((ss>9)?ss: "0" + ss) + "</span>";
+        };             
+                
+        //Valid values in Salesforce = between 30 minutes and 8 hours.
+        function testResetSessionTimeOut() {
+            sforce.console.resetSessionTimeOut();
+            log("reset timeout");
+        };      
+        
+        function changeDisplayStatus(connected){
+          if(connected){
+            var imgUrl = j$('#workspaceConnected').html();
+            j$('#statusTd').html('<img src="' + imgUrl  + '">');     
+          }
+          else if (!connected){
+            var imgUrl = j$('#workspaceDisconnected').html();
+            j$('#statusTd').html('<img src="' + imgUrl  + '">');              
+          }                          
+        }
+        
+                
+        /// logs a line to the console component visual log
+        function log(message) {
+            
+            if(hideLog)  //do not show anything if log is switched off
+                return;
+            
+            var id=document.getElementById("log");
+            if(id.innerHTML.length>0)
+                id.innerHTML=id.innerHTML+"<br>" + timestamp() + " " + message;
+            else
+                id.innerHTML=timestamp()+ " " + message;
+        }
+        
+        /// clears the log in the console
+        function clearLog() {
+            j$('#log').html('');
+        }
+
+        
+        function changeLogButton(log){
+          if(log){
+              //hiding log
+            var imgUrl = j$('#logShowButton').html();
+            j$('#logTd').html('<img id="logButton" src="' + imgUrl  + '">');                
+            
+            j$('#logButton').click(function() {
+                changeLogButton(false);
+            });
+            
+            sforce.interaction.cti.setSoftphoneHeight(28);
+            sforce.interaction.cti.setSoftphoneWidth(200);       
+            
+            j$('#debug').hide();
+          }
+          else{
+          //showing log
+            j$('#portStatus').html("<span style='fontSize=8pt;'><b>Poll Port:</b> " + pollPort + ", <b>Request Port:</b> " + requestPort + "</style>");
+            var imgUrl = j$('#logHideButton').html();
+            j$('#logTd').html('<img id="logButton" src="' + imgUrl  + '">');
+            
+            j$('#logButton').click(function() {
+                changeLogButton(true);
+            });
+            
+            sforce.interaction.cti.setSoftphoneHeight(330);
+            sforce.interaction.cti.setSoftphoneWidth(300);        
+            j$('#debug').show();
+          }  
+          
+          hideLog = log;
+          //clearLog();           
+        }
+        
+        function getURLParam(strParamName, strDefault){
+          var strReturn = strDefault;
+          var strHref = document.referrer;
+          if ( strHref.indexOf("?") > -1 ){
+            var strQueryString = strHref.substr(strHref.indexOf("?")).toLowerCase();
+            var aQueryString = strQueryString.split("&");
+            for ( var iParam = 0; iParam < aQueryString.length; iParam++ ){
+              if (aQueryString[iParam].indexOf(strParamName + "=") > -1 ){
+                var aParam = aQueryString[iParam].split("=");
+                strReturn = aParam[1];
+                break; 
+              }
+            }
+          }
+          return strReturn;
+        } 
+        
+    function testSVOC2(){
+       var urlString = "/apex/CustomerSearch?TCCS_UTN=555-5555;RSV4NL_CUST_ACCOUNTNO=;TCCS_ANI=;AUTHENTICATED=;RSV4NL_LAST_IVR_FUNC=;ConnectionID=010A02270717A056;DNIS=8207;SFDC_RecordType=;SFDC_RecordType=;CommPort=5051;";
+       log("testSVOC1ur2 " + urlString);
+       sforce.console.openPrimaryTab(null,urlString,true,'SVOC2');
+    
+    }      
+        
+////////////////////////////////////////////////////////////////////////////////////////        
+// Cookie Operations
+////////////////////////////////////////////////////////////////////////////////////////        
+
+        function createCookie(name,value,days) {
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime()+(days*24*60*60*1000));
+                var expires = "; expires="+date.toGMTString();
+            }
+            else var expires = "";
+            document.cookie = name+"="+value+expires+"; path=/";
+        }
+        
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
+        
+        function eraseCookie(name) {
+            createCookie(name,"",-1);
+        }
+                
+////////////////////////////////////////////////////////////////////////////////////////        
+////////////////////////////////////////////////////////////////////////////////////////        
+////////////////////////////////////////////////////////////////////////////////////////        
+        
+ 
+        
+    </script>
+        <div style="background-color: #DCF3FA; width:100%; height:100%;">
+
+            <!-- these divs will store paths to images that will be manipulated by jquery-->
+            <div id="logShowButton" style="display:none;">{!$Resource.wsc_LogShowButton}</div>
+            <div id="logHideButton" style="display:none;">{!$Resource.wsc_LogHideButton}</div>
+            <div id="workspaceConnected" style="display:none;">{!$Resource.wsc_WorkspaceConnected}</div>
+            <div id="workspaceDisconnected" style="display:none;">{!$Resource.wsc_WorkspaceDisconnected}</div>                
+            <!-- end of divs -->            
+            
+            <div>
+                <table>
+                    <tr>
+                        <td id="statusTd">
+                            <!-- these cells witll be filled by jquery -->                        
+                        </td>
+                        <td id="logTd">
+                            <!-- these cells witll be filled by jquery -->                        
+                        </td>
+                    </tr>
+                </table>
+            </div> 
+            <div id="debug" style="display:none; width:100%;">
+                <div id="portStatus" style="margin: 5px"></div>
+                <table width="97%" id="commStatus" cellspacing="0" cellpadding="0" style="margin: 5px" border="0">
+                    <tr align="left">
+                        <td>Diagnostic Log:</td>
+                        <td align="right"><div align="right"><button onClick="clearLog();">Clear</button></div></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <table width="100%" height="98%" style="border: 1px solid dimgray; background-color: white; ">
+                                <tr>
+                                    <td><div height="100%" id="log" style="overflow: auto;"></div></td>
+                                </tr>
+                            </table> 
+                        </td>
+                    </tr>
+                </table> 
+            </div>
+        </div>         
+</apex:page>

@@ -1,0 +1,337 @@
+<apex:page standardController="Opportunity" extensions="OpenOppurtunityTabController" showHeader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}"  sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" >
+
+    <apex:composition template="{!$Site.Template}"><!--showHeader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" -->
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="optyTab"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+            <!--<apex:sectionHeader subtitle="Home" title="{!$objectType.Opportunity.LabelPlural}"/>-->
+          <!--  <apex:form >
+                    
+                <apex:pageBlock title="Opportunities List" id="opty_list">
+                   <h6>View:</h6>&nbsp;&nbsp;
+                    <apex:selectList value="{! filterId }" size="1">
+                        <apex:selectOptions value="{! listViewOptions }"/>
+                        <apex:actionSupport event="onchange" reRender="opty_list">
+                            <apex:param name="listop" assignTo="{!optyListVisible}" value="true"/>
+                        </apex:actionSupport>
+                    </apex:selectList>&nbsp;&nbsp;
+                    <apex:commandButton value="Go" style="font-size: 1.5em; font-weight: 400" reRender="opty_list" rendered="{!NOT(optyListVisible)}">
+                        <apex:param name="gobtn" assignTo="{!optyListVisible}" value="true"/>
+                    </apex:commandButton>
+                    <apex:pageBlockTable value="{! opportunities }" var="op" rendered="{!opportunities!=null && optyListVisible}">
+                        <apex:column headerValue="Opportunity Name">
+                            <apex:outputLink target="_parent" value="/partner/PartnerPortalOptyDetail?Id={!op.Id}">
+                            {! op.Name }
+                            </apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Account Name">
+                            <apex:outputLink target="_parent" value="/partner/PartnerPortalAcctDetail?Id={!op.Account}">
+                                {! op.Account.Name }
+                            </apex:outputLink>
+                        </apex:column>
+                        <apex:column value="{! op.StageName }" headerValue="Stage"/>
+                        <apex:column value="{! op.License_Amount__c }" headerValue="License Amount"/>
+                        <apex:column value="{! op.ACV_Subscription_Only__c }" headerValue="Annual Contract Value (ACV)"/>
+                        <apex:column value="{! op.CloseDate }" headerValue="Close Date"/>
+                        <apex:column value="{! op.Lines_of_Businesses__c }" headerValue="Offerings Type"/>
+                    </apex:pageBlockTable>
+                    <apex:outputPanel id="pagenav" rendered="{!opportunities!=null && optyListVisible}">
+                        <table style="width: 100%">
+                            <tr>
+                                <td>
+                                    Page: <apex:outputText value=" {!PageNumber} of {! CEILING(ResultSize / PageSize) }"/>
+                                </td>            
+                                <td align="center">
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <apex:commandLink action="{! Previous }" value="« Previous" rendered="{! HasPrevious }"/>
+                                    <apex:outputText style="color: #ccc;" value="« Previous" rendered="{! NOT(HasPrevious) }"/>
+                                    &nbsp;&nbsp;  
+                                    <apex:commandLink action="{! Next }" value="Next »" rendered="{! HasNext }"/>
+                                    <apex:outputText style="color: #ccc;" value="Next »" rendered="{! NOT(HasNext) }"/>
+                                </td>
+                                
+                                <td align="right">
+                                    Records per page:
+                                    <apex:selectList value="{! PageSize }" size="1">
+                                        <apex:selectOption itemValue="5" itemLabel="5"/>
+                                        <apex:selectOption itemValue="20" itemLabel="20"/>
+                                        <apex:selectOption itemValue="50" itemLabel="50"/>
+                                        <apex:selectOption itemValue="100" itemLabel="100"/>
+                                        <apex:actionSupport event="onchange" reRender="opty_list"/>
+                                    </apex:selectList>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                      <br/><br/>
+                    <apex:outputText rendered="{!opportunities==null && optyListVisible}">No records to display.</apex:outputText> 
+                      
+                    <apex:pageBlockSection title="Recent Opportunities" collapsible="false" columns="1" rendered="{!NOT(optyListVisible)}">
+                        <apex:pageblockTable value="{!recentOpty}" var="recentOp" rendered="{!recentOpty.size>0}">
+                            <apex:column headerValue="Opportunity Name">
+                                <apex:outputLink target="_parent" value="/partner/PartnerPortalOptyDetail?Id={!recentOp.Id}">
+                                    {!recentOp.Name}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column value="{!recentOp.recordtype.Name}" headerValue="Opportunity Record Type"/>
+                            <apex:column headerValue="Account Name">
+                                <apex:outputLink target="_parent" value="/partner/PartnerPortalAcctDetail?Id={!recentOp.Account}">
+                                    {!recentOp.Account.Name}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column value="{!recentOp.StageName}" headerValue="Stage"/>
+                            <apex:column value="{!recentOp.CloseDate}" headerValue="Type"/>
+                            <apex:column value="{!recentOp.Type}" headerValue="Close Date"/>
+                            <apex:column value="{!recentOp.Owner.LastName}" headerValue="Owner Last Name"/>
+                        </apex:pageblockTable>
+                        <apex:outputText rendered="{!recentOpty.size==0}">No recent records. Click Go or select a view from the dropdown to display records.</apex:outputText>
+                    </apex:pageBlockSection>
+
+                      
+                      <apex:pageBlockButtons location="top">
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          
+                        <apex:commandButton value="New" action="{!create}"/>
+                      </apex:pageBlockButtons>
+                </apex:pageBlock> 
+            </apex:form> -->
+            <apex:form id="TheForm">
+       
+    
+                <apex:pageBlock title="Opportunities List" id="TablePanel">
+                    <apex:pageMessages ></apex:pageMessages>
+                   <div align="center">
+                    <apex:commandButton style="align:center" value="New" action="{!create}"/>
+                    </div>
+                   <div style="margin:10px 0px;">
+                   <h6>View:</h6>&nbsp;&nbsp;
+                          <apex:selectList value="{!OppFilterId}" size="1" id="filterMenu">
+                      <apex:selectOptions value="{!OppurtunityExistingViews}"></apex:selectOptions>
+                      <apex:actionSupport event="onchange"  action="{!resetFilter}" rerender="OppTable,TablePanel,pagenav," status="TableUpdateStatus"/>
+                 </apex:selectList> 
+                   
+                   </div>
+          
+                   <div style="clear: both;"></div>
+          			 <apex:actionStatus id="TableUpdateStatus">                   
+                    <apex:facet name="start">
+                        <div class="waitingSearchDiv waitingSearchDivOpacity" style="width: 100%; height: 100vh; display: block;opacity: 0.60;"/>
+                        <div id="loading_image" class="waitingSearchDiv" style="width: 100%; height: 100%; display: block;">
+                            <div class="waitingHolder" style="top: 48%; width: 20px;background:#fff;">
+                                <img class="waitingImage" src="/img/loading.gif" style="background:#fff;"/>
+                                <span class="waitingDescription">Refreshing...</span>
+                            </div>
+                        </div>
+                    </apex:facet>
+                    <apex:facet name="stop"/>
+                </apex:actionStatus>
+               <!--    <apex:actionStatus id="TableUpdateStatus">
+                      <apex:inputHidden value="{!AlphaFilter}" id="hiddenField" />
+                      
+                      <apex:facet name="start">
+                         <apex:outputPanel layout="block" styleClass="message infoM4">
+                            <apex:panelGrid columns="2" styleClass="messageTable" columnClasses="messageCell" style="padding:0px;margin:0px;">
+                               <apex:panelGroup >
+                                  <img class="loading-icon" src="/s.gif" />
+                               </apex:panelGroup>
+                            </apex:panelGrid>
+                         </apex:outputPanel>
+                </apex:facet>
+                 <apex:facet name="stop">
+                    </apex:facet>
+                   </apex:actionStatus> -->
+                      <!-- Opportunity table -->
+                      <b>
+                       <apex:outputText rendered="{! IF(OppFilterId == '',true,false)}">Recent Opportunities</apex:outputText> 
+                    </b>  
+                    	 <apex:pageBlockTable id="OppTable" value="{!CurrentOpportunityList}" var="a">
+                            <apex:column rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Name" assignTo="{!SortField}" />
+                                     <apex:outputText value="{!$ObjectType.Opportunity.Fields.Name.Label}{!IF(SortField=='Name',IF(SortDirection='asc','▲','▼'),'')}" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                               <apex:outputLink value="/{!a.Id}" target="_blank">{!a.Name}</apex:outputlink>
+                            </apex:column>
+                             <apex:column headerValue="{!$ObjectType.Opportunity.Fields.Name.Label}" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',false,true)}">
+                               <apex:outputLink value="/{!a.Id}" target="_blank">{!a.Name}</apex:outputlink>
+                            </apex:column> 
+                             <!-- Account Name -->
+                            <apex:column rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Account.Name" assignTo="{!SortField}" />
+                                     <apex:outputText value="Account Name {!IF(SortField=='Account.Name',IF(SortDirection='asc','▲','▼'),'')}" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                               <apex:outputLink value="/partner/PartnerPortalAcctDetail?Id={!a.Account}" target="_parent">{!a.Account.Name}</apex:outputlink>
+                            </apex:column>
+                             <apex:column headerValue="Account Name" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',false,true)}">
+                               <apex:outputLink value="/partner/PartnerPortalAcctDetail?Id={!a.Account}" target="_parent">{!a.Account.Name}</apex:outputlink>
+                            </apex:column>
+                             <!-- Stage Name -->
+                             
+                            <apex:column rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}">
+                                <apex:facet name="header">
+                                    <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                    <apex:param name="SortField" value="StageName" assignTo="{!SortField}" />
+                                    <apex:outputText value="Stage {!IF(SortField=='StageName',IF(SortDirection='asc','▲','▼'),'')}" />
+                                    </apex:commandLink>
+                                </apex:facet>
+                                <apex:outputText value="{!a.StageName}" />
+                           </apex:column>
+                           <apex:column headerValue="Stage" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',false,true)}">
+                                <apex:outputText value="{!a.StageName}" />
+                           </apex:column>  
+                           <!-- lICENSE ammount --> 
+                           <apex:column rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}">
+                                <apex:facet name="header">
+                                    <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                    <apex:param name="SortField" value="License_Amount__c" assignTo="{!SortField}" />
+                                    <apex:outputText value="License Amount {!IF(SortField=='License_Amount__c',IF(SortDirection='asc','▲','▼'),'')}" />
+                                    </apex:commandLink>
+                                </apex:facet>
+                               	<apex:outputText rendered="{! a.License_Amount__c <> null }" value="{!a.CurrencyIsoCode} {0, number,###,###,##0.00}">
+                                        <apex:param value="{!a.License_Amount__c}" />
+                                    </apex:outputText> 
+                               
+                             <!--   <apex:outputText value="{!a.License_Amount__c}" /> -->
+                           </apex:column>
+                           <apex:column headerValue="License Amount" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',false,true)}">
+                               	<apex:outputText rendered="{! a.License_Amount__c <> null }" value="{!a.CurrencyIsoCode} {0, number,###,###,##0.00}">
+                                        <apex:param value="{!a.License_Amount__c}" />
+                                    </apex:outputText> 
+                           </apex:column>
+                           <!-- ACV -->
+                           <apex:column rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}">
+                                <apex:facet name="header">
+                                    <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                    <apex:param name="SortField" value="ACV_Subscription_Only__c" assignTo="{!SortField}" />
+                                    <apex:outputText value="Annual Contract Value (ACV) {!IF(SortField=='ACV_Subscription_Only__c',IF(SortDirection='asc','▲','▼'),'')}" />
+                                    </apex:commandLink>
+                                </apex:facet>
+                               	<apex:outputText rendered="{! a.ACV_Subscription_Only__c <> null }" value="{!a.CurrencyIsoCode} {0, number,###,###,##0.00}">
+                                        <apex:param value="{!a.ACV_Subscription_Only__c}" />
+                                    </apex:outputText> 
+                           </apex:column>
+                           <apex:column headerValue="Annual Contract Value (ACV)" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',false,true)}">
+                                	<apex:outputText rendered="{! a.ACV_Subscription_Only__c <> null }" value="{!a.CurrencyIsoCode} {0, number,###,###,##0.00}">
+                                        <apex:param value="{!a.ACV_Subscription_Only__c}" />
+                                    </apex:outputText> 
+                           </apex:column>  
+                           <!-- Close Date --> 
+                           <apex:column rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}">
+                                <apex:facet name="header">
+                                    <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                    <apex:param name="SortField" value="CloseDate" assignTo="{!SortField}" />
+                                    <apex:outputText value="Close Date {!IF(SortField=='CloseDate',IF(SortDirection='asc','▲','▼'),'')}" />
+                                    </apex:commandLink>
+                                </apex:facet>
+                                <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                                    <apex:param value="{!a.CloseDate}" /> 
+                                </apex:outputText> 
+                           </apex:column>
+                           <apex:column headerValue="Close Date" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',false,true)}">
+                               	<apex:outputText value="{0,date,MM/dd/yyyy}" >
+                                    <apex:param value="{!a.CloseDate}" /> 
+                                </apex:outputText> 
+                           </apex:column>
+                           <!-- type -->
+                           <apex:column rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}">
+                                <apex:facet name="header">
+                                    <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                    <apex:param name="SortField" value="Lines_of_Businesses__c" assignTo="{!SortField}" />
+                                    <apex:outputText value="Offerings Type {!IF(SortField=='Lines_of_Businesses__c',IF(SortDirection='asc','▲','▼'),'')}" />
+                                    </apex:commandLink>
+                                </apex:facet>
+                                <apex:outputText value="{!a.Lines_of_Businesses__c}" />
+                           </apex:column>
+                           <apex:column headerValue="Offerings Type" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',false,true)}">
+                                <apex:outputText value="{!a.Lines_of_Businesses__c}" />
+                           </apex:column>
+                           <!-- <apex:column value="{! op.StageName }" headerValue="Stage"/>
+                          <apex:column value="{! op.License_Amount__c }" headerValue="License Amount"/>
+                          <apex:column value="{! op.ACV_Subscription_Only__c }" headerValue="Annual Contract Value (ACV)"/>
+                          <apex:column value="{! op.CloseDate }" headerValue="Close Date"/>
+                          <apex:column value="{! op.Lines_of_Businesses__c }" headerValue="Offerings Type"/> -->
+                         </apex:pageBlockTable>
+                      
+                   
+               <apex:outputText style="margin-top:5px;" rendered="{!noOfRecords==0}">No records to display.</apex:outputText> 
+                   <apex:outputPanel id="pagenav" rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}"> <!-- rendered="{! IF(noOfRecords!=0 && OppFilterId != '',true,false)}" -->
+                      <table style="width: 100%">
+                          <tr>
+                              <td>
+                                  Page: <apex:outputText value="{!StdSetControllerOppurtunity.pageNumber} of {! CEILING(noOfRecords/ RecPerPage) }" /> 
+                                  <!-- <apex:outputText >{!(StdSetControllerOppurtunity.pageNumber * RecPerPage)+1-RecPerPage}-{!IF((StdSetControllerOppurtunity.pageNumber * RecPerPage)>noOfRecords, noOfRecords,
+                               (StdSetControllerOppurtunity.pageNumber * RecPerPage))} of {!noOfRecords}
+                      </apex:outputText> -->
+                      
+                              </td>            
+                              <td align="center">
+                                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                  <apex:commandButton disabled="{!!StdSetControllerOppurtunity.hasPrevious}" value="First" action="{!StdSetControllerOppurtunity.first}" reRender="TablePanel,OppTable" /> 
+                                  <apex:commandButton disabled="{!!StdSetControllerOppurtunity.hasprevious}" value="Previous" action="{!StdSetControllerOppurtunity.previous}" rerender="TablePanel,OppTable" /> 
+                                  &nbsp;&nbsp;
+                                  <apex:commandButton disabled="{!!StdSetControllerOppurtunity.hasnext}" value="Next" action="{!StdSetControllerOppurtunity.next}" rerender="TablePanel,OppTable" />
+                                  <apex:commandButton disabled="{!!StdSetControllerOppurtunity.hasnext}" value="Last" action="{!StdSetControllerOppurtunity.last}" reRender="TablePanel,OppTable" />
+                              </td>
+                              <td align="right">
+                                  <apex:outputText value="Records per Page: " /> 
+                                  <apex:selectList value="{!RecPerPage}" size="1">
+                                  <apex:selectOptions value="{!RecPerPageOption}" />
+                                  <apex:actionSupport event="onchange" action="{!BuildQuery}" reRender="TablePanel,pagenav,OppTable" status="TableUpdateStatus" />
+                                  </apex:selectList>
+                              </td>
+                          </tr>
+                      </table>
+                  </apex:outputPanel>
+                <!--    <apex:pageBlockSection title="Recent Opportunities" collapsible="false" columns="1" rendered="{!NOT(optyListVisible)}">
+                        <apex:pageblockTable value="{!recentOpty}" var="recentOp" rendered="{!recentOpty.size>0}">
+                            <apex:column headerValue="Opportunity Name">
+                                <apex:outputLink target="_parent" value="/partner/PartnerPortalOptyDetail?Id={!recentOp.Id}">
+                                    {!recentOp.Name}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column value="{!recentOp.recordtype.Name}" headerValue="Opportunity Record Type"/>
+                            <apex:column headerValue="Account Name">
+                                <apex:outputLink target="_parent" value="/partner/PartnerPortalAcctDetail?Id={!recentOp.Account}">
+                                    {!recentOp.Account.Name}
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column value="{!recentOp.StageName}" headerValue="Stage"/>
+                            <apex:column value="{!recentOp.CloseDate}" headerValue="Type"/>
+                            <apex:column value="{!recentOp.Type}" headerValue="Close Date"/>
+                            <apex:column value="{!recentOp.Owner.LastName}" headerValue="Owner Last Name"/>
+                        </apex:pageblockTable>
+                        <apex:outputText rendered="{!recentOpty.size==0}">No recent records. Click Go or select a view from the dropdown to display records.</apex:outputText>
+                    </apex:pageBlockSection> -->
+                   
+                </apex:pageBlock>
+             </apex:form>
+        </apex:define>
+    </apex:composition>
+    <style type="text/css">
+     /*   bPageBlock {
+            border-top-width: 0px;
+        } */
+        .loading-icon {
+   background-image: url(/img/loading.gif);
+   width: 16px;
+   height: 16px;
+}
+    </style>
+</apex:page>

@@ -1,0 +1,213 @@
+<apex:component controller="LMSSnapshotComponentController" allowDML="true" id="cmp">
+    <apex:attribute name="paramAccountId" description="End User Account Id" type="String" required="true" assignTo="{!endUserAccountId}"/>
+    <apex:attribute name="paramSoldToAccountIds" description="List of Sold To Account Ids" type="String[]" required="true"  assignTo="{!soldToAccountIds}"/>
+    <apex:attribute name="paramUserType" description="Logged in User Type" type="String" required="true" assignTo="{!userType}"/>
+    <style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            padding:10px;
+            position:fixed;
+            left: 50%;
+            top: 50%;
+            width: 1100px;
+            margin-left: -500px;
+            margin-top: -100px; // 1/2 height
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+    </style>
+     <apex:form id="frm">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <apex:outputPanel id="popupLineItems">
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayPopUp}"/>
+            <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displayPopUp}">
+                <apex:pageBlock >
+                    <apex:pageBlockSection title="Service Contract Line Items" collapsible="false" columns="1">
+                        <apex:pageBlockTable value="{!lineItems}" var="lItem">
+                            <!-- apex:column value="{!lItem.ServiceContractId}"  / -->
+                            <apex:column headerValue="Service Contract">
+                                <a href="/{!lItem.ServiceContractId}" target="_blank">{!lItem.ServiceContract.Name}</a>
+                            </apex:column>
+                            <apex:column value="{!lItem.ServiceContract.Service_Contract_Type__c}" />   
+                            <!-- apex:column value="{!lItem.LineItemNumber}" / -->  
+                            <apex:column headerValue="Line Item Number">
+                                <a href="/{!lItem.id}"  target="_blank">{!lItem.LineItemNumber}</a>
+                            </apex:column>
+                            <apex:column value="{!lItem.Product2.APN_Number__c}" /> 
+                            <apex:column value="{!lItem.License_Metric__c}" />  
+                            <apex:column value="{!lItem.Current_Quantity__c}" />    
+                            <apex:column value="{!lItem.Maintenance_Start_Date__c}" />  
+                            <apex:column value="{!lItem.Maintenance_End_Date__c}" />    
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Upgrade Requests" collapsible="false" columns="1" rendered="{!(upgradeRequests != NULL && upgradeRequests.size > 0)}">
+                        <apex:pageBlockTable value="{!upgradeRequests}" var="uItem">
+                            <apex:column headerValue="Old Product Number" value="{!uItem.oldProductAPNNumber}" />
+                            <apex:column headerValue="Old Product Name" value="{!uItem.oldPartName}" />
+                            <apex:column headerValue="New Product Number" value="{!uItem.newProductAPNNumber}" />
+                            <apex:column headerValue="New Product Name" value="{!uItem.newPartName}" />
+                            <apex:column headerValue="Quantity" value="{!uItem.requestedQuantity}" />
+                            <apex:column headerValue="Requested Date">
+                                <apex:outputText value="{0,date,MM/dd/yy}"> 
+                                    <apex:param value="{!uItem.requestedDate}" /> 
+                                </apex:outputText>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+                <p ALIGN="CENTER">
+                    <apex:commandButton value="Close" action="{!closeLineItems}" rerender="popupLineItems"/>
+                </p>
+            </apex:outputPanel>
+        </apex:outputPanel>        
+        <apex:outputPanel id="snapshotDataPanel">
+            <apex:pageBlock title="Software Details">
+                <apex:outputPanel id="RefreshPanel">
+                    <apex:outputPanel rendered="{!PendingRefresh}">
+                        <p ALIGN="CENTER">
+                            <span style="color:red;font-size:125%;">
+                                Refresh is scheduled/ pending for this Account; please click 'Refresh Now' for updated information.
+                            </span>
+                            <apex:commandButton value="Refresh Now" action="{!refreshSnapshot}" reRender="snapshotDataPanel" status="status"/>
+                        </p>
+                        <hr />
+                    </apex:outputPanel>                     
+                </apex:outputPanel>
+               
+                <TABLE WIDTH="100%">
+                    <TR>
+                        <TD WIDTH="25%" style="white-space: nowrap">
+                        <!--  rendered="{!userType == 'Internal'}" -->
+                            <apex:outputPanel rendered="false">
+                                <B>Show History</B>
+                                <apex:inputCheckbox value="{!displayHistory}" title="Show History"> 
+                                    <apex:actionSupport event="onchange" action="{!showHistory}" reRender="snapshotDataPanel" status="status"/>
+                                </apex:inputCheckbox>
+                            </apex:outputPanel>
+                        </TD>
+                        <TD ALIGN="RIGHT">
+                            <apex:outputPanel id="DataTableCount">
+                                * Any licenses mirrored prior to Aug 2017 will not show as Mirrored but are considered Mirrored.
+                            </apex:outputPanel>
+                        </TD>
+                        <TD WIDTH="25px;" ALIGN="RIGHT">
+                            &nbsp;
+                        </TD>
+                    </TR>
+                </TABLE>
+
+         <!-- <apex:pageBlockTable value="{!snapshotData}" var="sRecord">
+                    <apex:column headerValue="View" style="vertical-align:top;" rendered="{!userType == 'Internal'}">
+                        <apex:commandLink value="Details" action="{!showLineItems}" rerender="popupLineItems">
+                            <apex:param assignTo="{!selectedPartNumber}" name="{selectedPartNumberVar}" value="{!sRecord.partNumber}"/>
+                        </apex:commandLink>
+                    </apex:column>
+                    <apex:column value="{!sRecord.partNumber}" headerValue="Part Number" style="vertical-align:top;"/>
+                    <apex:column value="{!sRecord.productCategory}" headerValue="Product Category" style="vertical-align:top;"/>
+                    <apex:column value="{!sRecord.description}" headerValue="Description" style="vertical-align:top;"/>
+                    <apex:column value="{!sRecord.mirrored}" headerValue="Mirror" style="vertical-align:top;"  width="50px"/>
+                    <apex:column value="{!sRecord.soldToName}" headerValue="Sold To" style="vertical-align:top;" rendered="{!userType != 'Partner'}" />
+                    <apex:column value="{!sRecord.perpetual}" headerValue="Perpetual" style="vertical-align:top;" width="50px" />
+                    <apex:column value="{!sRecord.nonPerpetual}" headerValue="Non Perpetual" style="vertical-align:top;" width="50px"/>
+                    <apex:column value="{!sRecord.total}" headerValue="Total" style="vertical-align:top;" width="50px"/>
+                    <apex:column headerValue="Change History" style="vertical-align:top;" rendered="{!displayHistory}">
+                        <apex:pageBlockTable value="{!sRecord.changeRecords}" var="scRecord">
+                            <apex:column value="{!scRecord.changeType}" headerValue="Change Type" />
+                            <apex:column value="{!scRecord.changeDate}" headerValue="Change Date" width="70px" />
+                            <apex:column value="{!scRecord.perpetual}" headerValue="Perpetual" width="70px"/>
+                            <apex:column value="{!scRecord.nonPerpetual}" headerValue="Non Perpetual" width="70px"/>
+                        </apex:pageBlockTable>
+                    </apex:column>
+                </apex:pageBlockTable>
+            -->
+             <table width="100%" class="list" border="0" cellpadding="0" cellspacing="0">
+                    <tr class="headerRow">
+                        <apex:outputText rendered="{!userType == 'Internal'}">
+                            <th  class="headerRow" style="vertical-align:top;" scope="col">View</th>
+                        </apex:outputText>    
+                        <th class="headerRow" scope="col" style="vertical-align:top;">Part Number</th>
+                        <th  class="headerRow" scope="col" style="vertical-align:top;">Product Category</th>
+                        <th  class="headerRow" scope="col" style="vertical-align:top;">Description</th>
+                        <th class="headerRow" scope="col" style="vertical-align:top;">Mirror</th>
+                        <th  class="headerRow" scope="col" style="vertical-align:top;">Sold To</th>
+                        <th  class="headerRow" scope="col" style="vertical-align:top;">Perpetual</th>
+                        <th  class="headerRow" scope="col" style="vertical-align:top;">Non Perpetual</th>
+                        <th  class="headerRow" scope="col" style="vertical-align:top;">Total</th>
+                        <apex:outputText rendered="{!displayHistory}"> 
+                           <th  class="headerRow" scope="col">Change History</th>
+                        </apex:outputText>
+                    </tr>
+                    <apex:repeat value="{!snapshotData}" var="sRecord">
+                        <tr class="dataRow" style="vertical-align:top;">
+                            <apex:outputText rendered="{!userType == 'Internal'}" >
+                                <td class="dataCell" style="vertical-align:top;">
+                                    <apex:commandLink value="Details" action="{!showLineItems}" rerender="popupLineItems">
+                                        <apex:param assignTo="{!selectedPartNumber}" name="{selectedPartNumberVar}" value="{!sRecord.partNumber}"/>
+                                    </apex:commandLink>
+                                
+                                </td>
+                            </apex:outputText>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.partNumber}</td>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.productCategory}</td>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.description}</td>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.mirrored}</td>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.soldToName}</td>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.perpetual}</td>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.nonPerpetual}</td>
+                            <td class="dataCell" style="vertical-align:top;">{!sRecord.total}</td>
+                            <apex:outputText rendered="{!displayHistory}">
+                                <td class="dataCell" style="vertical-align:top;">
+                                    <table width="100%" class="list" border="0" cellpadding="0" cellspacing="0">
+                                            <tr class="headerRow">
+                                            <th width="40px" class="headerRow" scope="col">Change Type</th>
+                                            <th class="headerRow" scope="col">Change Date</th>
+                                            <th width="200px" class="headerRow" scope="col">Perpetual</th>
+                                            <th width="200px" class="headerRow" scope="col">Non Perpetual</th>
+                                            </tr>
+                                            <apex:repeat value="{!sRecord.changeRecords}" var="scRecord">
+                                                    <tr class="dataRow">
+                                                        <td class="dataCell" >{!scRecord.changeType}</td>
+                                                        <td class="dataCell" width="70px">{!scRecord.changeDate}</td>
+                                                        <td class="dataCell" width="70px">{!scRecord.perpetual}</td>
+                                                        <td class="dataCell" width="70px">{!scRecord.nonPerpetual}</td>
+                                                        
+                                                        </tr>
+                                            </apex:repeat>
+
+                                    </table>
+                                </td>
+                        </apex:outputText>
+                        </tr>
+                    </apex:repeat>
+                </table>
+                <apex:outputPanel id="NoRecordsPanel">
+                    <apex:pageMessage summary="No records to display." severity="Info" strength="2" rendered="{!totalRecords == 0}" />
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:outputPanel> 
+    </apex:form>
+</apex:component>

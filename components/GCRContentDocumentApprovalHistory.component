@@ -1,0 +1,87 @@
+<!-- Naresh Kumar		12/05/2014
+ -->
+<apex:component controller="GCRContentDocApprovalHistoryController" access="public" allowDML="true">
+	<style>
+		.stepRow{
+            background-color:#70AAC6;
+            font-weight:bold;
+            font-color:#FFFFFF;            
+        }
+        .approved{
+        	font-color:green;
+            font-weight:bold;
+        }
+        .rejected{
+        	font-color:red;
+            font-weight:bold;
+        }
+        .pendingStatus{
+        	background-color:#FFCC00;
+        	font-weight:bold;
+        	color:#000000;
+        }
+        .approvedStatus{
+        	background-color:#4DFF4D;
+        	font-weight:bold;
+        	color:#000000;
+        }
+        .rejectedStatus{
+        	background-color:#FF6666;
+        	font-weight:bold;
+        	color:#000000;
+        }
+        
+	</style>
+	<apex:attribute name="idGCRDoument" description="GCR Document Id." type="Id" required="true" assignTo="{!gcrDocumentId}" />
+	<apex:attribute name="retURL" description="Return url" type="String" required="true" />
+	
+    <apex:pageBlock title="Approval History">
+        <apex:outputLabel value="No records to display" rendered="{!NOT(showApprovalHistory)}"/>
+        <apex:outputPanel rendered="{!showApprovalHistory}">        	
+            <apex:pageBlockTable value="{!approvals}" var="eachRecord">
+                <apex:column headerValue="Action" styleClass="{!eachRecord.styleClass}" style="{!eachRecord.style}">
+                    <apex:outputLink value="/apex/GCRContentDocumentApproveReject?id={!gcrDocumentId}&approvalRecord={!eachRecord.approvalRecord.id}&mode=noAction&retURL={!retURL}" rendered="{!AND(eachRecord.approvalRecord.Status__c == 'Pending',NOT(mode == 'noAction'))}" target="_parent">
+                        Approve / Reject 
+                    </apex:outputLink>   
+                    <apex:outputPanel rendered="{!AND(eachRecord.approvalRecord.Status__c == 'Pending',NOT(mode == 'noAction'), eachRecord.approvalRecord.Allow_Add_Approvers__c)}" >
+                    	&nbsp;|&nbsp;
+                    </apex:outputPanel>                 
+                    <apex:outputLink value="/apex/GCRContentDocAddApprovers?id={!gcrDocumentId}&gcrId={!gcrId}&index={!eachRecord.approvalRecord.Order__c}&submissionCounter={!eachRecord.approvalRecord.Approval_Submission_Counter__c}&approvalId={!eachRecord.approvalRecord.id}" rendered="{!AND( eachRecord.approvalRecord.Status__c == 'Pending',NOT(mode == 'noAction'), eachRecord.approvalRecord.Allow_Add_Approvers__c)}" target="_parent">
+                        Add More Approvers
+                    </apex:outputLink>
+                    <apex:outputText >
+                    	<b>{!eachRecord.actionTitle}</b>
+                    </apex:outputText>
+                    <apex:outputPanel rendered="{!AND(eachRecord.approvalRecord.Status__c == 'Pending',NOT(mode == 'noAction'))}" >
+	                    &nbsp;|&nbsp;
+	                    <a href="#" onclick="window.top.location.href = window.top.location.href + '&t=Actions'; return false;">
+	                        Ask for clarification.
+	                    </a>
+                    </apex:outputPanel>
+                </apex:column>
+                <apex:column headerValue="Submitted Date" styleClass="{!eachRecord.styleClass}" style="{!eachRecord.style}">
+                    <apex:outputText value="{!eachRecord.submittedDate}" />                    	
+                </apex:column>
+                <apex:column headerValue="Status" styleClass="{!eachRecord.styleClass}" style="{!eachRecord.style}">
+                    <span class="{!eachRecord.statusClass}">
+                        {!eachRecord.approvalRecord.Status__c}
+                    </span>
+                </apex:column>
+                <apex:column headerValue="Approved/Reject Date" styleClass="{!eachRecord.styleClass}" style="{!eachRecord.style}">
+                    <apex:outputText value="{!eachRecord.approvalRejectDate}" />
+                </apex:column>
+                <apex:column headerValue="Assigned To" styleClass="{!eachRecord.styleClass}"  style="{!eachRecord.style}">
+                    <apex:outputLink value="/{!eachRecord.approvalRecord.OwnerId}" target="_blank" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Owner.Name}
+                    </apex:outputLink>                    
+                    <apex:outputText rendered="{!(eachRecord.rowType == 'signatureDetail')}">                        
+                    	{!eachRecord.SingaturePersons}
+                    </apex:outputText>                     
+                </apex:column>
+                <apex:column headerValue="Comments" styleClass="{!eachRecord.styleClass}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}"  style="{!eachRecord.style}">
+                    {!eachRecord.approvalRecord.Comments__c}
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:outputPanel>
+    </apex:pageBlock>
+</apex:component>

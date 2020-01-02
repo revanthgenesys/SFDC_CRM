@@ -1,0 +1,423 @@
+<apex:page id="pg" contenttype="application/vnd.ms-excel#forecast.xls" controller="QuoteRevenueMonthForecastController"  sidebar="no">
+    <script>
+      function replaceAll(string, find, replace) {
+           return string.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+          }  
+      
+      function populateLinesAF1()  
+      
+      {
+       for(var i = 0; i < 54; i ++){
+                try{
+                    var commit = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtCommit');
+                    var land = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtLand');
+                    var best = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtBest');
+                    
+                    if(commit !=null) {
+                 temp = commit.value;
+                 commit.value = temp.replace(/,/g ,"");
+                 temp = commit.value;
+                 commit.value = temp.replace(/\\$/g,"");
+                 
+                
+                }
+               
+                if(land !=null) {
+                 temp = land.value;
+                 land.value = temp.replace(/,/g ,"");
+                 temp = land.value;
+                 land.value = temp.replace(/\\$/g,"");
+                
+                }
+        
+               if(best !=null) {
+                 temp = best.value;
+                 best.value = temp.replace(/,/g ,"");
+                 temp = best.value;
+                 best.value = temp.replace(/\\$/g,"");
+                
+                }
+        
+      }
+     catch(e){
+              }   
+    }
+       populateLinesAF();
+      
+      }
+      
+        
+        function formFix() 
+        {
+         for(var i = 0; i < 54; i ++){
+                try{
+                    var commit = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtCommit');
+                    var land = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtLand');
+                    var best = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtBest');
+                    
+                    if(commit !=null) {
+                 temp = commit.value;
+                 commit.value = temp.replace(/,/g ,"");
+                 temp = commit.value;
+                 commit.value = temp.replace(/\\$/g,"");
+                 
+                
+                }
+               
+                if(land !=null) {
+                 temp = land.value;
+                 land.value = temp.replace(/,/g ,"");
+                 temp = land.value;
+                 land.value = temp.replace(/\\$/g,"");
+                
+                }
+        
+               if(best !=null) {
+                 temp = best.value;
+                 best.value = temp.replace(/,/g ,"");
+                 temp = best.value;
+                 best.value = temp.replace(/\\$/g,"");
+                
+                }
+        
+      }
+     catch(e){
+              }   
+    }
+   } 
+       
+        function enableDisableInputBoxes(counter, check){
+            var commit = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+counter+':txtCommit');
+            var land = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+counter+':txtLand');
+            var best = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+counter+':txtBest');
+            if(check.checked){
+            
+                
+                if(commit !=null) {
+                 temp = commit.value;
+                 commit.value = temp.replace(/,/g ,"");
+                 temp = commit.value;
+                 commit.value = temp.replace(/\\$/g,"");
+                
+                }
+               
+                if(land !=null) {
+                 temp = land.value;
+                 land.value = temp.replace(/,/g ,"");
+                 temp = land.value;
+                 land.value = temp.replace(/\\$/g,"");
+                
+                }
+        
+               if(best !=null) {
+                 temp = best.value;
+                 best.value = temp.replace(/,/g ,"");
+                 temp = best.value;
+                 best.value = temp.replace(/\\$/g,"");
+                
+                }
+        
+                
+                commit.disabled = false;
+                land.disabled = false;
+                best.disabled = false;
+            }
+            else{
+                commit.disabled = true; 
+                land.disabled = true;
+                best.disabled = true;
+            }           
+        }
+        
+        function disableAll(){
+            for(var i = 0; i < 50; i ++){
+                try{
+                    var commit = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtCommit');
+                    var land = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtLand');
+                    var best = document.getElementById('pg:frm:pgblkAccSummary:pgblkSec:pgblktbl:'+i+':txtBest');
+                    
+                    if(commit != null)  {
+                     var temp = commit.value;
+                     commit.value =  "$" + temp.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+                      
+                    }
+           
+                   if(land != null)  {
+                     var temp = land.value;
+                     land.value =  "$" + temp.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+                      
+                    }
+           
+                  if(best != null)  {
+                     var temp = best.value;
+                      best.value =  "$" + temp.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+                      
+                    }
+           
+           
+                    
+           
+                    
+                    commit.disabled = true; 
+                    land.disabled = true;
+                    best.disabled = true;
+                }
+                catch(e){
+                }                       
+            }
+        }
+    </script>
+    <apex:form id="frm">
+        <div style="height:20px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">
+                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                </apex:facet>
+            </apex:actionStatus>
+        </div>
+        <apex:actionFunction action="{!populateWeeks}" name="populateWeeksAF" reRender="pgblkPhase" status="status" />
+        <apex:actionFunction action="{!populateLines}" name="populateLinesAF" reRender="pgblkAccSummary" status="status" />       
+        
+        <apex:actionFunction action="{!populateForecast}" name="populateForecastAF" reRender="pnlAccountDetails" status="status">
+            <apex:param name="selectedAccountId" assignTo="{!selectedAccountId}" value="" />
+            <apex:param name="selectedAccountName" assignTo="{!selectedAccountName}" value="" />            
+        </apex:actionFunction>
+    <!--    
+        <apex:pageBlock title="Revenue Forecast" id="pgblkPhase">
+            <apex:pageBlockSection columns="2">                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Select Period" />
+                    <apex:selectList id="Quarter" value="{!selectedQuarter}" size="1" onchange="populateWeeksAF(); return false;">
+                        <apex:selectOption itemValue="1-2015" itemLabel="Q1-2015"/>
+                        <apex:selectOption itemValue="2-2015" itemLabel="Q2-2015"/>
+                        <apex:selectOption itemValue="3-2015" itemLabel="Q3-2015"/>
+                        <apex:selectOption itemValue="4-2015" itemLabel="Q4-2015"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="pgblkSecItemWeeks">
+                    <apex:outputLabel value="Week" />
+                    <apex:selectList value="{!selectedWeek}" size="1"  onchange="populateLinesAF1(); return false;">
+                        <apex:selectOptions value="{!weeks}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+            
+            <apex:pageBlockSectionItem id="pgblkSecItemWeeksone">
+                    <apex:outputLabel value="CSM" />
+                     
+                     <apex:selectList value="{!selectedCs}" size="1"  onchange="populateLinesAF1(); return false;">
+                     <apex:selectOption itemValue="" itemLabel="--None--"/>
+                     <apex:selectOption itemValue="Cristina Cook" itemLabel="Cristina Cook"/>
+                     <apex:selectOption itemValue="Chris Boucher" itemLabel="Chris Boucher"/>
+                     <apex:selectOption itemValue="Mary Moulis" itemLabel="Mary Moulis"/>
+                     <apex:selectOption itemValue="Joe Rubio" itemLabel="Joe Rubio"/>
+                     <apex:selectOption itemValue="Nicole Rodgers" itemLabel="Nicole Rodgers"/>
+                     <apex:selectOption itemValue="Nora Tayiel" itemLabel="Nora Tayiel"/>
+                     <apex:selectOption itemValue="Robert Schulenberg" itemLabel="Robert Schulenberg"/>
+                     <apex:selectOption itemValue="Zumra Thweatt" itemLabel="Zumra Thweatt"/>
+                  
+                            
+                       
+                       
+                    </apex:selectList>
+                </apex:pageBlockSectionItem> 
+            </apex:pageBlockSection>
+        </apex:pageBlock>        
+        -->
+        
+        <apex:pageBlock title="Account Summary" id="pgblkAccSummary">
+            <apex:pageMessages />
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" onclick="formFix()" action="{!save}" reRender="pgblkAccSummary" status="status" /> 
+            </apex:pageBlockButtons>        
+            <apex:pageBlockSection columns="1" id="pgblkSec">
+                <apex:outputLabel value="No records(s) found." rendered="{!NOT(showAccountSummary)}" />
+                <apex:pageBlockTable value="{!lineItems}" var="eachItem"  rendered="{!showAccountSummary}" id="pgblktbl">
+                   <!--
+                    <apex:column style="{!eachItem.rowStyle}">
+                        <apex:inputCheckbox value="{!eachItem.selected}" rendered="{!NOT(eachItem.isTotal)}" id="chkSelect" onclick="enableDisableInputBoxes('{!eachItem.counter}', this); "/>
+                    </apex:column>
+                   -->   
+                   
+                    <apex:column headerValue="Account" style="{!eachItem.rowStyle}">
+                        <apex:commandLink value="{!eachItem.account}" onClick="populateForecastAF('{!eachItem.accountId}', '{!eachItem.account}'); return false;" rendered="{!NOT(eachItem.isTotal)}"/>            
+                        <apex:outputText rendered="{!eachItem.isTotal}">
+                                Total
+                        </apex:outputText>
+                    </apex:column>        
+                    <apex:column headerValue="CSM Owner"  style="{!eachItem.rowStyle}">
+                        <apex:outputText rendered="{!NOT(eachItem.isTotal)}">
+                            {!eachItem.csmOwner}
+                        </apex:outputText>
+                    </apex:column> 
+                   
+                   <!--
+                    <apex:column headerValue="Escalated Cases"  style="{!eachItem.rowStyle}">
+                        <apex:outputText rendered="{!NOT(eachItem.isTotal)}">
+                        0
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Time To Revenue"  style="{!eachItem.rowStyle}">
+                        <apex:outputText rendered="{!NOT(eachItem.isTotal)}">
+                        32
+                        </apex:outputText>
+                    </apex:column>                  
+                  
+                    <apex:column headerValue="Status" style="background-color:{!eachItem.status};font-weight:bold;color:#FFFFFF;{!eachItem.rowStyle}">
+                        <apex:inputField value="{!eachItem.record.Status__c}" rendered="{!NOT(eachItem.isTotal)}" />                      
+                    </apex:column>
+                    
+                    <apex:column headerValue="Revenue"  style="{!eachItem.rowStyle}">
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!eachItem.revenue}" />
+                        </apex:outputText>
+                    </apex:column>                            
+                     -->
+                    <apex:column headerValue="Low" style="{!eachItem.rowStyle};background-color:#FFFFCC;" id="clmCommit">
+                       
+                        <apex:outputText value="{0, number, ###,##0.00}"  rendered="{!NOT(eachItem.isTotal)}">
+                               <apex:param value="{!eachItem.commitQuantity}" />
+                        </apex:outputText>
+
+                       
+                           
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotal}">
+                               <apex:param value="{!eachItem.commitQuantity}" />
+                        </apex:outputText>
+                    </apex:column>         
+
+                   <apex:column headerValue="Last Week Low" style="{!eachItem.rowStyle};background-color:#FFFFCC;" id="clmpreviousCommit">
+                        
+                        
+                        
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                               <apex:param value="{!eachItem.previousLowQuantity}" />
+                         </apex:outputText>
+                    </apex:column>         
+       
+                   <apex:column headerValue="Change" style="{!eachItem.rowStyle};background-color:#FFFFCC;" id="clmPreviousCommitChange">
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.changeLowQuantity >= 0}">
+                               <apex:param value="{!eachItem.changeLowQuantity}" />
+                         </apex:outputText>
+                            <apex:outputText value="{0, number, ###,##0.00}" style="color:red;" rendered="{!eachItem.changeLowQuantity < 0}">
+                               <apex:param value="{!eachItem.changeLowQuantity}" />
+                         </apex:outputText>
+              
+                    </apex:column>         
+       
+       
+       
+                     
+                     <apex:column headerValue="Land" style="{!eachItem.rowStyle};background-color:#CCFFFF;" id="clmLand">
+                         <apex:outputText value="{0, number, ###,##0.00}"  rendered="{!NOT(eachItem.isTotal)}">
+                               <apex:param value="{!eachItem.landQuantity}" />
+                        </apex:outputText>
+                        
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.isTotal}">
+                               <apex:param value="{!eachItem.landQuantity}" />
+                         </apex:outputText>
+                    </apex:column>         
+                    
+                      <apex:column headerValue="Last Week Land" style="{!eachItem.rowStyle};background-color:#CCFFFF;" id="previousclmLand">
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                               <apex:param value="{!eachItem.previousLandQuantity}" />
+                         </apex:outputText>
+                    </apex:column>     
+                    
+                    <apex:column headerValue="Change" style="{!eachItem.rowStyle};background-color:#CCFFFF;" id="changeclmLand">
+                        <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.changeLandQuantity >= 0}">
+                               <apex:param value="{!eachItem.changeLandQuantity}" />
+                         </apex:outputText>
+                          <apex:outputText value="{0, number, ###,##0.00}" style="color:red;" rendered="{!eachItem.changeLandQuantity < 0}">
+                               <apex:param value="{!eachItem.changeLandQuantity}" />
+                         </apex:outputText>
+            
+                   
+                    </apex:column>     
+                          
+              
+                 
+                    
+                     <apex:column headerValue="Best"  style="{!eachItem.rowStyle};background-color:#FFFF99" id="clmBest">
+                         <apex:outputText value="{0, number, ###,##0.00}"  rendered="{!NOT(eachItem.isTotal)}">
+                               <apex:param value="{!eachItem.bestQuantity}" />
+                        </apex:outputText>
+                        
+                        
+                        <apex:outputText value="{0, number, ###,##0.00}"  rendered="{!eachItem.isTotal}">
+                               <apex:param value="{!eachItem.bestQuantity}" />
+                        </apex:outputText>
+                   
+                   
+                    </apex:column>   
+                
+                   
+                   
+                         
+                     <apex:column headerValue="Last Week Best"  style="{!eachItem.rowStyle};background-color:#FFFF99" id="previousclmBest">
+                        <apex:outputText value="{0, number, ###,##0.00}" >
+                               <apex:param value="{!eachItem.previousBestQuantity}" />
+                        </apex:outputText>
+                     
+                    
+                    </apex:column>   
+                        
+                
+                         
+                     <apex:column headerValue="Change"  style="{!eachItem.rowStyle};background-color:#FFFF99" id="changeclmBest">
+                       <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.changeBestQuantity >= 0}">
+                               <apex:param value="{!eachItem.changeBestQuantity}" />
+                        </apex:outputText>
+                       <apex:outputText value="{0, number, ###,##0.00}" style="color:red" rendered="{!eachItem.changeBestQuantity < 0}">
+                               <apex:param value="{!eachItem.changeBestQuantity}" />
+                        </apex:outputText>
+                    
+                    
+                    </apex:column>   
+                        
+                    
+                    
+                    
+                    <apex:column headerValue="Last Modified By"  style="{!eachItem.rowStyle}">
+                        <apex:outputText rendered="{!NOT(eachItem.isTotal)}">
+                            {!eachItem.record.LastModifiedBy.Name}
+                        </apex:outputText>
+                    </apex:column>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>     
+            <script>
+                disableAll();
+            </script> 
+        </apex:pageBlock>
+        <apex:outputPanel id="pnlAccountDetails" >
+            <apex:pageBlock title="{!accountDetailTitle}" id="pgblkDetails" rendered="{!selectedAccountId != null}">           
+                <apex:pageBlockSection columns="1" id="pgblkSecAccountDetails">
+                    <apex:outputLabel value="No record(s) found." rendered="{!NOT(showAccountDetails)}" />
+                    <apex:pageBlockTable value="{!forecasts}" var="eachItem" rendered="{!showAccountDetails}">
+                        <apex:column headerValue="Opportunity">
+                            <apex:outputLink value="/{!eachItem.phaseLine.Cloud_Billing_Phase__r.Cloud_Billing_Information__r.Opportunity__c}" target="_blank">
+                                {!eachItem.phaseLine.Cloud_Billing_Phase__r.Cloud_Billing_Information__r.Opportunity__r.Name}
+                            </apex:outputLink>
+                        </apex:column>                      
+                        <apex:column headerValue="Phase">
+                            {!eachItem.phase}
+                        </apex:column>
+                        <apex:column headerValue="Phase Status" style="background-color:{!eachItem.phaseLine.Cloud_Billing_Phase__r.Phase_Status__c};font-weight:bold;color:#FFFFFF;">
+                            {!eachItem.phaseLine.Cloud_Billing_Phase__r.Phase_Status__c}
+                        </apex:column>                                              
+                        <apex:column headerValue="Product">
+                            {!eachItem.product}
+                        </apex:column>
+                        <apex:column headerValue="Quantity">
+                            {!eachItem.quantity}
+                        </apex:column>          
+                        <apex:column headerValue="Revenue">
+                            <apex:outputText value="{0, number, ###,##0.00}">
+                               <apex:param value="{!eachItem.revenue}" />
+                            </apex:outputText>
+                        </apex:column>          
+                    </apex:pageBlockTable> 
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

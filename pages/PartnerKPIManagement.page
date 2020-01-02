@@ -1,0 +1,435 @@
+<apex:page controller="PartnerKPIManagementController" sidebar="false" cache="false" >
+    <script>
+        function PartnerKPIExport(selectedPeriod, stFilter){
+            var result = confirm('This action will take a while to complete, Do you want to Export Partner KPI data?') ;
+            if (result == true) {
+                window.open("/apex/PartnerKPIHeadersExport?sp="+selectedPeriod+"&stfilter="+stFilter);
+                window.open("/apex/PartnerKPIExport?sp="+selectedPeriod+"&stfilter="+stFilter); 
+            }          
+        }
+    </script>
+    <style>
+        table.gucrTable {
+            width: 100%;
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        table.gucrTable th {
+            background-color: #D8D8D8;
+            height: 20px;
+            align: center;
+            vertical-align: middle;
+            border: 1px solid black;
+            padding: 2px;
+        }
+        table.gucrTable td {
+            border-width: 1px;
+            padding: 2px;
+            vertical-align: middle;
+            border-style: solid;
+            border: 1px solid black;
+            background-color: #ffffff;
+        }  
+        
+        .fieldwidthPX { width: 40px; }
+        .noWrap { white-space: nowrap; height: 20px;}
+
+        .tooltip {
+            border-bottom: 1px dotted #000000; color: #000000; outline: none;
+            cursor: help; text-decoration: none;
+            position: relative;
+        }
+        .tooltip span {
+            margin-left: -999em;
+            position: absolute;
+        }
+        .tooltip:hover span {
+            border-radius: 5px 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; 
+            box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.1); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.1);
+            font-family: Calibri, Tahoma, Geneva, sans-serif;
+            position: absolute; left: 1em; top: 2em; z-index: 999;
+            margin-left: 0; width: 250px; white-space: normal;
+        }
+        .tooltip:hover img {
+            border: 0; margin: -10px 0 0 -55px;
+            float: left; position: absolute;
+        }
+        .tooltip:hover em {
+            font-family: Candara, Tahoma, Geneva, sans-serif; font-size: 1.2em; font-weight: bold;
+            display: block; padding: 0.2em 0 0.6em 0;
+        }
+        .classic { padding: 0.8em 1em; }
+        .custom { padding: 0.5em 0.8em 0.8em 2em; }
+        * html a:hover { background: transparent; }
+        .classic {background: #FFFFAA; border: 1px solid #FFAD33; }
+        .critical { background: #FFCCAA; border: 1px solid #FF3334; }
+        .help { background: #9FDAEE; border: 1px solid #2BB0D7; }
+        .info { background: #9FDAEE; border: 1px solid #2BB0D7; }
+        .warning { background: #FFFFAA; border: 1px solid #FFAD33; }
+        .bPageBlock .pbTitle {width: 0%;}
+    </style>
+    <apex:pageMessages />
+    <apex:form >
+        <apex:outputPanel rendered="{!(messageExists)}" id="messagesPanel" style="align:center;">
+            <apex:pageBlock >
+                <apex:pageBlockButtons location="top">
+                    <apex:commandButton value="Return to Partner KPI Management" action="{!returnToPartnerKPI}"/>
+                </apex:pageBlockButtons>
+            </apex:pageBlock> 
+        </apex:outputPanel>    
+        <apex:outputPanel rendered="{!(messageExists == false)}" id="workareaPanel">
+            <apex:pageBlock title="Partner KPI Management">
+                <apex:outputPanel id="pbSelectionPanel">
+                    <table border="0" width="100%" >
+                        <tr>
+                            <td width="15%">
+                                <apex:outputLabel value="Select Year : ">
+                                    <apex:inputText value="{!year}" styleClass="fieldwidthPX" maxlength="4">
+                                        <apex:actionSupport event="onchange" reRender="pbSelectionPanel, pbDataHeaderPanel, pbDataPanel, pbHistoryPanel" status="displayStatus" action="{!refreshPeriods}"/>                    
+                                    </apex:inputText>
+                                </apex:outputLabel>     
+                            </td>
+                            <td width="25%">
+                                <apex:outputLabel value="Period : ">
+                                    <apex:selectList value="{!selectedPeriod}" multiselect="false" size="1" >
+                                        <apex:selectOptions value="{!periods}"></apex:selectOptions>
+                                        <apex:actionSupport event="onchange" reRender="pbFiltersPanel, pbDataHeaderPanel, pbDataPanel, pbHistoryPanel" status="displayStatus" action="{!refreshCasesData}"/>
+                                    </apex:selectList>
+                                </apex:outputLabel>
+                            </td>
+                            <td width="60%">
+                                <apex:outputLabel value="Sold To (Partner): " id="pbFiltersPanel">
+                                    <apex:selectList value="{!selectedSoldToFilter}" multiselect="false" size="1" >
+                                        <apex:selectOptions value="{!soldToFilterOptions}"></apex:selectOptions>
+                                        <apex:actionSupport event="onchange" reRender="pbFiltersPanel, pbDataHeaderPanel, pbDataPanel,  pbHistoryPanel" status="displayStatus" action="{!applyFilters}"/>
+                                    </apex:selectList>
+                                </apex:outputLabel>
+                            </td>
+                        </tr>
+                    </table>
+                </apex:outputPanel>
+            </apex:pageBlock>
+            <!--
+        <apex:outputPanel id="pbFiltersPanel" >
+            <apex:pageBlock id="filtersPanel" title="Filters" rendered="{!(selectedPeriod != '-- SELECT --')}">
+                <table border="0">
+                    <tr>
+                        <td width="35%">
+                            <apex:outputLabel value="Sold To: ">
+                                <apex:selectList value="{!selectedSoldToFilter}" multiselect="false" size="1" >
+                                    <apex:selectOptions value="{!soldToFilterOptions}"></apex:selectOptions>
+                                </apex:selectList>
+                            </apex:outputLabel>
+                        </td>
+                        <td width="35%">
+                            <apex:outputLabel value="End User: ">
+                                <apex:selectList value="{!selectedEndUserFilter}" multiselect="false" size="1" >
+                                    <apex:selectOptions value="{!endUserFilterOptions}"></apex:selectOptions>
+                                </apex:selectList>
+                            </apex:outputLabel>
+                        </td>
+                        <td width="15%">
+                            <apex:outputLabel value="Region: ">
+                                <apex:selectList value="{!selectedRegionFilter}" multiselect="false" size="1" >
+                                    <apex:selectOptions value="{!regionFilterOptions}"></apex:selectOptions>
+                                </apex:selectList>
+                            </apex:outputLabel>
+                        </td>
+                        <td width="15%">
+                            <apex:commandButton value="Apply Filters" action="{!applyFilters}" reRender="pbFiltersPanel, pbDataPanel" status="displayStatus"/>
+                            <apex:commandButton value="Reset Filter" action="{!resetFilters}" reRender="pbFiltersPanel, pbDataPanel" status="displayStatus"/>
+                        </td>
+                    </tr>
+                </table>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        -->
+        <apex:outputPanel id="pbDataHeaderPanel">
+            <apex:actionStatus id="recalculateStatus" >
+                 <apex:facet name="start" >
+                     <apex:outputPanel >
+                        <apex:image url="{!$Resource.Loading2}" width="60" height="60"/>
+                        <span STYLE="color: red; font-size: 15pt">Calculating KPI Information... Please Wait!</span> 
+                     </apex:outputPanel>
+                 </apex:facet>
+            </apex:actionStatus>              
+            <apex:outputPanel layout="block" rendered="{!(selectedSoldToFilter != '-- ALL --')}">
+                <apex:pageBlock >
+                    <table class="gucrTable" width="100%">
+                        <tr>
+                            <th WIDTH="10%">
+                                Problem Description Weighted
+                            </th>
+                            <th WIDTH="10%">
+                                Support Info Provided Weighted
+                            </th>
+                            <th COLSPAN="2">Quality Assesment</th>
+                            <th COLSPAN="2">Closure Assesment</th>
+                            <th COLSPAN="2">GU Certified Summary</th>
+                            <th COLSPAN="2">Cases Closed by Default</th>
+                            <th COLSPAN="2">Total KPI Score</th>
+                            <!-- <th COLSPAN="2">%Cases Closed by Default</th> -->
+                        </tr>
+                        <tr>
+                            <th WIDTH="10%">{!selectedPeriod}</th>
+                            <th WIDTH="10%">{!selectedPeriod}</th>
+                            <th WIDTH="8%">{!selectedPeriod}</th>
+                            <th WIDTH="5%">YTD</th>
+                            <th WIDTH="8%">{!selectedPeriod}</th>
+                            <th WIDTH="5%">YTD</th>
+                            <th WIDTH="8%">{!selectedPeriod}</th>
+                            <th WIDTH="5%">YTD</th>
+                            <th WIDTH="10%">{!selectedPeriod}</th>
+                            <th WIDTH="5%">YTD</th>
+                            <th WIDTH="8%">{!selectedPeriod}</th>
+                            <th WIDTH="5%">YTD</th>
+                            <!--
+                            <th WIDTH="8%">{!selectedPeriod}</th>
+                            <th WIDTH="5%">YTD</th>
+                            -->
+                        </tr>
+                        <tr>
+                            <td>{!kpiHeader.Problem_Description__c}</td>
+                            <td>{!kpiHeader.Supporting_Information__c}</td>
+                            <td>{!kpiHeader.Quality_Assessment__c}</td>
+                            <td>{!kpiHeader.Quality_Assessment_YTD__c}</td>
+                            <td>{!kpiHeader.Closure_Assessment__c}</td>
+                            <td>{!kpiHeader.Closure_Assessment_YTD__c}</td>
+                            <td>{!kpiHeader.Training_Assessment__c}</td>
+                            <td>{!kpiHeader.Training_Assessment_YTD__c}</td>
+                            <td>{!kpiHeader.Cases_Closed_by_Default__c}</td>
+                            <td>{!kpiHeader.Cases_Closed_by_Default_YTD__c}</td>
+                            <td>
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!kpiHeader.Total_KPI_Score__c}" />
+                                </apex:outputText>                              
+                            </td>
+                            <td>
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!kpiHeader.Total_YTD_KPI_Score__c}" />
+                                </apex:outputText>                              
+                            </td>
+                            <!--
+                            <td>
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!kpiHeader.Closed_By_Default__c}" />
+                                </apex:outputText>                            
+                            </td>
+                            <td> 
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!kpiHeader.YTD_Closed_By_Default__c}" />
+                                </apex:outputText>                            
+                            </td>
+                            -->
+                        </tr>
+                    </table>
+                    <table width="100%" border="0">
+                        <tr>
+                            <td align="center">
+                                <apex:commandButton value="Recalculate (Selected Partner)" action="{!recalculateKPIHeader}" reRender="pbDataHeaderPanel" status="recalculateStatus"/>
+                                <!--
+                                <apex:commandButton value="Publish (Selected Partner)"/>
+                                -->
+                            </td>
+                        </tr>
+                    </table>
+                </apex:pageBlock>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:actionStatus id="displayStatus">
+             <apex:facet name="start" >
+                 <apex:outputPanel >
+                    <apex:image url="{!$Resource.Loading2}" width="60" height="60"/>
+                    <span STYLE="color: red; font-size: 15pt">Loading Cases ... Please wait!</span> 
+                 </apex:outputPanel>
+             </apex:facet>
+        </apex:actionStatus>            
+        <apex:outputPanel id="pbDataPanel">
+                <apex:outputPanel layout="block" rendered="{!(selectedPeriod != '-- SELECT --')}">
+                    <apex:pageMessage summary="No Cases to display." severity="Info" strength="2" rendered="{!cases.size == 0}" />
+                    <apex:pageBlock id="casesPanel" rendered="{!cases.size > 0}">
+                        <apex:pageBlockButtons location="top" style="margin-left:70%;">
+                                <font size="1pt" style="margin-left:1%;">
+                                    <b>
+                                    Cases
+                                    &nbsp;<apex:outputLabel value="{!startRecord}" />&nbsp;
+                                    to
+                                    &nbsp;<apex:outputLabel value="{!endRecord}" />&nbsp;
+                                    of
+                                    &nbsp;<apex:outputLabel value="{!totalRecords}" />
+                                    &nbsp; | &nbsp;
+                                    </b>
+                                </font>
+                                <font size="1pt">
+                                    <b>
+                                    Page
+                                    &nbsp;<apex:outputLabel value="{!pageNumber}"/>&nbsp;
+                                    of
+                                    &nbsp;<apex:outputLabel value="{!totalPages}"/>
+                                    &nbsp;&nbsp;
+                                    </b>
+                                </font>
+                            <apex:commandButton value="<< First" action="{!firstBtnClick}" disabled="{!disableFirst}" reRender="casesPanel" status="displayStatus"/>
+                            <apex:commandButton value="< Previous" action="{!previousBtnClick}" disabled="{!disablePrevious}" reRender="casesPanel" status="displayStatus"/>
+                            <apex:commandButton value="Next >" action="{!nextBtnClick}" disabled="{!disableNext}" reRender="casesPanel" status="displayStatus"/>
+                            <apex:commandButton value="Last >>" action="{!lastBtnClick}" disabled="{!disableLast}" reRender="casesPanel" status="displayStatus"/>
+                            &nbsp; | &nbsp;
+                            <apex:commandButton value="Refresh" action="{!refresh}" reRender="casesPanel" status="displayStatus"/>
+                            &nbsp; | &nbsp; 
+                            <!--
+                            <apex:commandButton value="Publish {!selectedPeriod} Data" onclick="return confirm('This action will clean up previously published data, Do you want to publish {!selectedPeriod} KPI Data?');" action="{!publishData}" />
+                            -->
+                            <apex:commandButton value="Export {!selectedPeriod} Data" onclick="PartnerKPIExport('{!selectedPeriod}', '{!selectedSoldToFilter}'); return false;" />
+                        </apex:pageBlockButtons>
+                        
+                        <div id="container" style="overflow-x:scroll;width:1280px;height:385px;"> 
+                         <apex:pageBlockTable value="{!cases}" var="c" rendered="{!cases.size > 0}" id="casesTable">
+                            <apex:column headerValue="Case Number" width="60px">
+                                <apex:outputLink value="/{!c.caseObject.Id}" target="_blank">{!c.caseObject.CaseNumber}</apex:outputLink>
+                            </apex:column> 
+                            <apex:column value="{!c.caseObject.Sold_To_Account__c}"  styleClass="noWrap"/>
+                            <apex:column value="{!c.caseObject.Sold_To_Account__r.Region__c}" styleClass="noWrap"/>
+                            <apex:column value="{!c.caseObject.End_User_Account__c}" styleClass="noWrap"/>
+                            <apex:column value="{!c.caseObject.ContactId}" styleClass="noWrap"/>
+                            <!--
+                            <apex:column value="{!c.caseObject.Contact.Email}"/>
+                            -->
+                            <apex:column value="{!c.caseObject.Support_Product__c}" styleClass="noWrap"/>
+                            <!-- 
+                            <apex:column value="{!c.caseObject.Priority}" styleClass="noWrap"/>
+                            <apex:column headerValue="Subject" width="100px" styleClass="noWrap">
+                                <a class="tooltip" href="#">
+                                    {!c.caseSubject}
+                                    <span class="classic">{!c.caseObject.Subject}</span>
+                                </a> 
+                            </apex:column> 
+                            -->
+                            <apex:column value="{!c.caseObject.CreatedDate}" styleClass="noWrap"/>
+                            <apex:column value="{!c.caseObject.ClosedDate}"  styleClass="noWrap"/>
+                             <!--
+                            <apex:column value="{!c.caseObject.Closure_Category__c}" styleClass="noWrap"/>
+                            <apex:column value="{!c.caseObject.Closure_Reason_Code__c}" styleClass="noWrap"/> 
+                            <apex:column headerValue="Business Impact" styleClass="noWrap">
+                                <a class="tooltip" href="#">
+                                     {!c.caseBusinessImpact}
+                                    <span class="classic">{!c.caseObject.Business_Impact_Product__c}</span>
+                                </a> 
+                            </apex:column>
+                            -->
+                            <apex:column value="{!c.caseObject.Problem_Description_clear_and_detail__c}">
+                                <apex:facet name="header">
+                                    Problem<br/>Description<br/>clear and<br/>detailed?
+                                </apex:facet>                              
+                            </apex:column> 
+                             <!--
+                            <apex:column value="{!c.caseObject.Supporting_Info_Provided__c}" styleClass="noWrap">
+                            -->
+                             
+                             <apex:column value="{!c.supportingInfoProvided}" styleClass="noWrap">
+                                <apex:facet name="header">
+                                    Supporting<br/>Info<br/>Provided?
+                                </apex:facet>
+                            </apex:column>    
+                            <!-- 
+                            <apex:column value="{!c.caseObject.Missing_Supporting_Information__c}"/>
+                            -->
+                            <apex:column value="{!c.caseObject.Should_have_been_solved_using_KB__c}">
+                                <apex:facet name="header">
+                                    Should<br/>have been<br/>solved using<br/>Docs/KB?
+                                </apex:facet>
+                            </apex:column>
+                            <!--
+                             <apex:column headerValue="Publicly Available Documents" styleClass="noWrap">
+                                <a class="tooltip" href="#">
+                                     {!c.casePubliclyAvailableDocuments}
+                                    <span class="classic">{!c.caseObject.Publicly_Available_Documents__c}</span>
+                                </a> 
+                            </apex:column> 
+                            -->
+                            <apex:column value="{!c.caseObject.Sub_Status__c}" styleClass="noWrap"/>
+                             
+                             
+                            <apex:column headerValue="Certified" value="{!c.Certified}" width="50px"/>
+                            <apex:column value="{!c.problemDescriptionWeighted}" width="60px">
+                                <apex:facet name="header">
+                                    Problem<br/>Description<br/>Weighted
+                                </apex:facet> 
+                            </apex:column> 
+                            <apex:column headerValue="" value="{!c.supportingInfoProvidedWeighted}" width="60px">
+                                <apex:facet name="header">
+                                    Supporting<br/>Info<br/>Provided<br/>Weighted
+                                </apex:facet> 
+                            </apex:column>
+                            <apex:column value="{!c.qualityAssessment}" width="60px">
+                                <apex:facet name="header">
+                                    Quality<br/>Assessment
+                                </apex:facet> 
+                            </apex:column>
+                            <apex:column value="{!c.closureAssessment}" width="60px">
+                                <apex:facet name="header">
+                                    Closure<br/>Assessment
+                                </apex:facet> 
+                            </apex:column>
+                            <apex:column value="{!c.gUCertifiedSummary}" width="60px">
+                                <apex:facet name="header">
+                                    GU Certified<br/>Summary
+                                </apex:facet> 
+                            </apex:column> 
+                            <apex:column value="{!c.casesClosedByDefault}" width="60px">
+                                <apex:facet name="header">
+                                     Case<br/>Closed<br/>By Default
+                                </apex:facet> 
+                            </apex:column> 
+                            <apex:column value="{!c.totalScore}" width="60px">
+                                <apex:facet name="header">
+                                    Total<br/>Score
+                                </apex:facet> 
+                            </apex:column>
+                            <apex:column value="{!c.totalScoreAvailable}" width="60px">
+                                <apex:facet name="header">
+                                    Total<br/>Score<br/>Available
+                                </apex:facet> 
+                            </apex:column>
+                            <apex:column headerValue="KPI 1" value="{!c.kPI}" width="50px"/>
+                            <apex:column value="{!c.subStatusGroup}" width="60px" styleClass="noWrap">
+                                <apex:facet name="header">
+                                    Sub<br/>Status<br/>Group
+                                </apex:facet> 
+                            </apex:column>
+                            <apex:column value="{!c.numAutoFollowUp}" width="60px">
+                                <apex:facet name="header">
+                                    Num<br/>Auto<br/>Follow Up
+                                </apex:facet> 
+                            </apex:column>                            
+                            <apex:column value="{!c.numClosedbyContact}" width="60px">
+                                <apex:facet name="header">
+                                    Num<br/>Closed By<br/>Contract
+                                </apex:facet> 
+                            </apex:column>
+                        </apex:pageBlockTable>
+                        </div>
+                        <script language="javascript">
+                            document.getElementById("container").style.width = (screen.width - 75) + "px";
+                        </script>
+                    </apex:pageBlock>
+                </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:outputPanel id="pbHistoryPanel">
+            <apex:pageBlock title="Publish History for {!selectedPeriod}" rendered="{!(selectedPeriod != '-- SELECT --')}">
+                <apex:pageBlockTable value="{!publishHistory}" var="history">
+                    <apex:column headerValue="Actions" width="60px;">
+                        <apex:commandLink value="Delete" onclick="return confirm('Do you want to delete this KPI Publish Request?');" action="{!publishHistoryDelete}" rendered="{!history.Status__c == 'Pending'}">
+                            <apex:param assignTo="{!publishHistoryIdToDelete}" name="publishHistoryIdToDelete" value="{!history.Id}"/>
+                        </apex:commandLink>
+                    </apex:column>
+                    <apex:column headerValue="Published User" value="{!history.Published_User__c}" />
+                    <apex:column headerValue="KPI Period" value="{!history.Period__c}" />
+                    <apex:column headerValue="Submitted Date" value="{!history.CreatedDate}" />
+                    <apex:column headerValue="Completed Date" value="{!history.Completed_Date__c}" />
+                    <apex:column headerValue="Status" value="{!history.Status__c}" />
+                </apex:pageBlockTable>
+            </apex:pageBlock>
+        </apex:outputPanel> 
+        </apex:outputPanel>     
+    </apex:form>
+</apex:page>

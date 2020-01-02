@@ -1,0 +1,58 @@
+<apex:page controller="OpportunityProductLinker" >
+    <script>
+        function setSelectedOppProduct(prId)
+        {
+            document.getElementById('{!$Component.frmMain.pbMain.hdnOppProduct}').value = prId;
+        }
+    </script>
+
+    <apex:form id="frmMain">
+        <apex:pageMessage severity="info" strength="3" summary="There are no other Opportunity Products available to link to for this Opportunity at this time." rendered="{!IF(itemsAreAvailableToLinkTo, false, true)}" />
+        <apex:pageBlock id="ctrlButtons">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Link Item" action="{!LinkSelectedRecord}" rendered="{!itemsAreAvailableToLinkTo}"/>
+                <apex:commandButton value="Clear Linked Item" action="{!ClearLinkedItem}" rendered="{!isAlreadyLinked}"/>
+                <apex:commandButton value="Cancel" action="{!Cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Parent Opportunity:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!parentOppName}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Opportunity Product to Link from is:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!sourceOpptyProductName}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection rendered="{!isAlreadyLinked}">
+                <apex:outputLabel value="This Opportunity Product is already linked to:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!alreadyLinkedProductName}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock id="pbMain">
+            <apex:inputhidden id="hdnOppProduct" value="{!selectedOppProductId}"/>
+            <apex:pageBlockTable value="{!opptyProducts}" var="oli">
+                <apex:column headerValue="Select">
+                    <input type="radio" name="Productitem" value="{!oli.Opportunity_Product_Line_Item_ID__c}" onchange="setSelectedOppProduct('{!oli.Opportunity_Product_Line_Item_ID__c}');"/> 
+                </apex:column>
+                <apex:column headerValue="Product Name">
+                    <apex:outputLabel value="{!oli.Product2.Name}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Description">
+                    <apex:outputLabel value="{!oli.Description__c}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Quantity">
+                    <apex:outputLabel value="{!oli.Quantity__c}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Total Price">
+                    <apex:outputLabel value="{!oli.TotalPrice}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Type">
+                    <apex:outputLabel value="{!oli.Product_Type__c}"></apex:outputLabel>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    
+    </apex:form>
+
+</apex:page>

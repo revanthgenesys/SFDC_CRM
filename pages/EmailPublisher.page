@@ -1,0 +1,162 @@
+<apex:page standardController="Case" showHeader="false" extensions="EmailPublisherExtensions">
+
+    <apex:form >
+    
+<script>
+  function onSendEmail(msg, id) {
+     if ( msg == "Success" )
+           window.top.location.href='/'+id;
+     else
+         alert (msg);
+  }
+  
+</script>
+    
+    <apex:outputPanel style="height:15px;">
+            &nbsp;
+            <apex:actionstatus id="status">             
+                <apex:facet name="start">
+                    <apex:outputLabel value="Sending Email, Please wait..."/>
+                </apex:facet>
+            </apex:actionstatus>
+        </apex:outputPanel>
+    <apex:actionFunction name="sendEmailAF" action="{!sendEmail}" oncomplete="onSendEmail('{!msg}', '{!ca.id}')" status="status" >
+        <apex:param name="from" assignTo="{!from}" value="" />
+        <apex:param name="subject" assignTo="{!subject}" value="" />
+        <apex:param name="body" assignTo="{!body}" value="" />  
+        <apex:param name="attFile" assignTo="{!attFile}" value="" />
+        <apex:param name="fileNames" assignTo="{!fileNames}" value="" />        
+    </apex:actionFunction>
+    <apex:pageBlock title="Email" id="sendEmailBlk">
+        <apex:pageMessages id="pgMsg" />
+        <apex:pageBlockButtons >
+            <apex:commandButton value="Send Email" onclick="sendEmail(); return false;" />
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection columns="1">
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Public"/> 
+                <apex:inputCheckbox value="{!isPublic}" id="chkIsPublic">
+                    <apex:actionSupport event="onchange" action="{!updateIsPublicField}" reRender="pgMsg"/>
+                </apex:inputCheckbox>           
+            </apex:pageBlockSectionItem>                      
+            
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1">
+            <apex:pageBlockSectionItem >
+                <apex:outputText value="Select the email audience" styleclass="fieldLabelTd"/>    
+                <apex:inputField value="{!ca.Select_them_email_audience__c}" id="selAudience" onselect="cngEmail" >
+                   <apex:actionSupport event="onchange" action="{!cngEmail}"/>       
+                </apex:inputField>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection> 
+        
+        <apex:outputPanel >
+          <apex:panelGrid >
+                <apex:outputText value="TO" styleClass="fieldLabelTd"/>
+                <apex:inputText value="{!toStr}" id="toStr" size="80"/>                              
+   
+                 <apex:outputText value="CC" styleClass="fieldLabelTd"/>
+                <apex:inputText value="{!ccStr}" id="ccStr" size="80"/>                              
+               
+                <apex:outputText value="BCC" styleClass="fieldLabelTd"/>
+                <apex:inputText value="{!bccStr}" id="bccStr" size="80"/>                              
+                          
+          </apex:panelGrid>
+       </apex:outputPanel>
+             
+        <apex:pageBlockSection columns="1">
+            <apex:pageBlockSectionItem >       
+                <apex:outputPanel id="emailPanel">
+                    <apex:emailPublisher id="myEmailPublisher" 
+                        entityId="{!case.id}" 
+                        width="500px"
+                        title="Send an Email"
+                        expandableHeader="false"
+                        autoCollapseBody="false"
+                        showAdditionalFields="true"
+                        fromVisibility="hidden" 
+                        toVisibility="hidden"                 
+                        ccVisibility="hidden"
+                        bccVisibility="hidden"                       
+                        emailBody="{!emailBody}"
+                        subject="{!emailSubj}"
+                        emailBodyFormat="HTML"
+                        toAddresses="{!toEmailAddr}"
+                        onSubmitFailure="alert('failed');"
+                        showSendButton="false"
+                        sendButtonName="Send Email"
+                        showAttachments="true"
+                    />
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>       
+       </apex:pageBlock>
+       </apex:form>  
+        <script>
+            function sendEmail(){                               
+                var id = '{!ca.id}';
+                id = id.substring(0,15);                
+                var att = document.getElementById('email_attach_'+ id +'_div');
+              // alert(att);
+              //alert(att.innerHTML);
+                var str = att.innerHTML;
+                var attFile = '';
+                var fileNames = '';
+                while(str.indexOf('FileDownload?file=') != -1){
+                    var startIndex = str.indexOf('FileDownload?file=');
+                    attFile = str.substring(startIndex+18, startIndex+33) + ',' + attFile;
+                    fileNames = str.substring(startIndex+51,str.indexOf('<',startIndex+36)) + ',' + fileNames;
+                  //alert(fileNames); 
+                    str = str.substring(startIndex+18, str.length);
+                } 
+                                       
+                var from = document.getElementById('from_' + id).value;
+                var subject = document.getElementById('subject_' + id).value;
+               
+                /* Obsoleted frame ID as of 2014-1021 */
+                /* var iframe = document.getElementById('emailPublisherRte_' + id + '_frame'); */
+                
+                var divWithIframe = document.getElementById('cke_1_contents');
+                if (divWithIframe == null) {
+                    alert('Internal Error: cannot find cke_1_contents');
+                    return;
+                }
+                /* alert("found divWithIframe: " + divWithIframe ); */
+                
+                var iframes = divWithIframe.getElementsByTagName('iframe');
+                if (iframes.length == 0) {
+                    alert('Internal Error: cannot find iframe elements');
+                    return;
+                }
+                var iframe = iframes[0];
+                /* alert("found iframe " + iframe); */
+
+               var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+          
+                var bodyEle = innerDoc.getElementById('emailPublisherRte_' + id + '_rta_body');
+                if (bodyEle == null) {
+                    alert('Internal Error: cannot find emailPublisherRet_ ... _rta_body');
+                    return;
+                }
+         
+                var body = bodyEle.innerHTML;       
+ 
+                if(subject == ''){
+                    alert('Please enter email subject.');
+                    return;                     
+                }
+                if(body == ''){
+                    alert('Please enter email body.');
+                    return;                     
+                }  
+                                       
+                sendEmailAF(from,subject,body,attFile,fileNames); 
+          
+            }
+            var id = '{!ca.id}';
+            id = id.substring(0,15); 
+            var subjectCtrl = document.getElementById('subject_' + id);             
+            if(subjectCtrl.value.indexOf('#') == -1)
+                subjectCtrl.value = 'Case # {!ca.CaseNumber} - ' + subjectCtrl.value;            
+        </script>
+</apex:page>

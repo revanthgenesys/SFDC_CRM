@@ -1,0 +1,37 @@
+<apex:page standardController="GL_Account__c" extensions="ManageLegalEntitiesController">
+    <apex:form id="frm">
+        <apex:pageBlock id="pgblk">
+            <apex:pageMessage summary="You cannot remove existing legal entities. you can only add new legal entities." severity="warning" strength="3" rendered="{!objGLA.Approval_Status__c != 'New'}"/>            
+            <apex:pageMessages />
+            <apex:outputLabel value="No legal entity found" rendered="{!list_GLLegalEntitiesWrapper.size == 0 && objGLA.Approval_Status__c != 'New'}" />
+            <apex:outputText rendered="{!list_GLLegalEntitiesWrapper.size == 0 && objGLA.Approval_Status__c == 'New'}">
+                <span style="color:red;font-weight:bold;">
+                    Please add at least one Legal Entity.  The GL Account record cannot be submitted for approval without a Legal Entity.    
+                </span>
+            </apex:outputText>
+            <apex:pageBlockButtons location="top" >
+                <apex:commandButton value="Manage Legal Entities" onclick="window.parent.location='/apex/ManageLegalEntities?id={!objGLA.id}';return false;" />                
+            </apex:pageBlockButtons>
+            <apex:pageBlockTable value="{!list_GLLegalEntitiesWrapper}" var="eachLE" id="pgblk" rendered="{!list_GLLegalEntitiesWrapper.size > 0}">
+                <apex:column headerValue="Legal Entity Name">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Legal_Entity_Name__c}"/>                
+                </apex:column>
+                <apex:column headerValue="Date">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.LastModifiedDate}"/>                
+                </apex:column>
+                <apex:column headerValue="Legal Entity ID">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Legal_Entity_ID__c}"/>                
+                </apex:column>
+                <apex:column headerValue="GL Account Status">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Status__c}"/>                
+                </apex:column>
+                <apex:column headerValue="Country">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Legal_Entity__r.Country__c}"/>                
+                </apex:column>
+                <apex:column headerValue="Region">                
+                    <apex:outputField value="{!eachLE.objLegalEntity.Region__c}"/>                
+                </apex:column>            
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

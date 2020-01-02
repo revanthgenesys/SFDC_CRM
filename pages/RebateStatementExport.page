@@ -1,0 +1,90 @@
+<apex:page controller="RebateStatementController" showHeader="false" sidebar="false" contentType="application/vnd.ms-excel#RebateStatementExport-{!rebateYear}.xls" cache="true"> 
+    <apex:form >
+	    <apex:variable var="availableRebateValue" value="{!rebate.Total_Earned_Rebate__c}" />
+        <table width="100%">
+            <tr>
+                <td width="20%" valign="top"><b>Partner Name</b></td>
+                <td width="20%" valign="top">{!pAccount.Name}</td>
+                <td width="20%" valign="top"><b>Channel Manager</b></td>
+                <td width="20%" valign="top">
+                    {!pAccount.Owner.Name} <br/> 
+                    {!pAccount.Owner.Title} <br/>
+                    {!pAccount.Owner.Email}
+                </td>
+                <td width="20%"  valign="top"> </td>
+            </tr>
+            <tr height="10px">
+                <td colspan="5"  valign="top"> </td>
+            </tr>
+            <tr>
+                <td  valign="top">
+                    <b>Earned Rebate</b> <br />
+                    <b>Total Rebate Used</b> <br />
+                    <b>Total Rebate In-Process</b> 
+                </td>
+                <td  valign="top">
+                    <apex:outputText value="{0, number, currency}">
+                        <apex:param value="{!rebate.Total_Earned_Rebate__c}" />
+                    </apex:outputText>
+                    <br />
+                    <apex:outputText value="{0, number, currency}">
+                        <apex:param value="{!totalRebateUsed}" />
+                    </apex:outputText>
+                    <br />
+                    <apex:outputText value="{0, number, currency}">
+                        <apex:param value="{!totalRebateInProcess}" />
+                    </apex:outputText>
+                </td>
+                <td  valign="top"><b>Regional Channel Manager</b></td>
+                <td  valign="top">
+                    {!pAccount.Owner.Manager.Name} <br/>
+                    {!pAccount.Owner.Manager.Title} <br/>
+                    {!pAccount.Owner.Manager.Email}
+                </td>
+                <td width="20%"  valign="top"> </td>
+            </tr>
+            <tr height="10px">
+                <td colspan="5"> </td>
+            </tr>
+            <tr>
+            </tr>
+            <tr height="10px">
+                <td colspan="2"> </td>
+            </tr>
+        </table>
+        <table width="100%" border="1" cellpadding="0" cellspacing="0">
+            <tr height="20px" valign="middle">
+                <th>Date</th>
+                <th>Expense Type</th>
+                <th>Requested By</th>
+                <th>Status</th>
+                <th>Rebate Amount</th>
+                <th>Balance</th>
+            </tr>
+            <tr height="20px" valign="middle">
+                <td colspan="5" align="right"><b>Opening Balance </b></td>
+                <td><b>{!availableRebateValue}</b></td>
+            </tr>
+            <apex:repeat value="{!rebateRequests}" var="rebateRequest" id="theRepeat">
+                <apex:variable var="availableRebateValue" value="{!IF(rebateRequest.Status__c == 'Processed', availableRebateValue - rebateRequest.Requested_Rebate_Amount__c, availableRebateValue)}"/>
+                <tr height="20px" valign="middle">
+                    <td>
+                        <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                            <apex:param value="{!rebateRequest.Date__c}" /> 
+                        </apex:outputText>  
+                    </td>
+                    <td>{!rebateRequest.Expense_Type__c}</td>
+                    <td>{!rebateRequest.Contact__r.Name}</td>
+                    <td>{!rebateRequest.Status__c}</td>
+                    <td>{!rebateRequest.Requested_Rebate_Amount__c}</td>
+                    <td>{!availableRebateValue}</td>
+                </tr>
+            </apex:repeat>
+            <tr height="20px" valign="middle">
+                <td colspan="5" align="right"><b>Closing Balance </b></td>
+                <td><b>{!availableRebateValue}</b></td>
+            </tr>
+            
+        </table>
+    </apex:form>
+</apex:page>

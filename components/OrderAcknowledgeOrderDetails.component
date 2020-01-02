@@ -1,0 +1,172 @@
+<apex:component controller="OrderAcknowledgeEmailTemplateController" access="global">
+    <apex:attribute name="orderId1" description="Order Id" type="Id" assignTo="{!orderId}" access="public" />
+    
+    <div style='text-align:left;'>
+        <table border="1"  cellpadding="5" cellspacing="5"  style="width:100%;padding:5px;font-size:12px;font-family:Verdana;border-collapse: collapse;border:solid 1px #000000;">
+            <tr style="background-color:#ff4f1f;color:#ffffff;">
+                <th style="text-align:left;">
+                    Item
+                </th>
+                <th style="text-align:left;">
+                    Name
+                </th>
+                <th style="text-align:left;" >
+                    Description
+                </th>
+                 <apex:outputPanel rendered="{!isSubscription}" >
+                <th style="text-align:left;" >
+                    Year
+                </th>
+                 </apex:outputPanel>
+                <th style="text-align:right;" >
+                    Quantity
+                </th>
+                <apex:outputPanel rendered="{!NOT(isMaintOrder)}">
+                    <th style="text-align:right;" >
+                        Unit Price
+                    </th>
+                    
+                    <th style="text-align:right;" >
+                        Ext Price
+                    </th>
+                </apex:outputPanel>
+                 <apex:outputPanel rendered="{!isAmendOrder}">
+                <th style="text-align:right;" >
+                       Quantity Change
+                </th>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!isAmendOrder}">
+                <th style="text-align:right;" >
+                       Ext Price Adjustment
+                </th>
+                  </apex:outputPanel>
+                <apex:outputPanel rendered="{!isMaintOrder}">
+                    <th style="text-align:right;" >
+                        Maintenance Amount
+                    </th>
+                </apex:outputPanel>
+
+                <apex:outputPanel rendered="{!isMaintOrder}">
+                    <th style="text-align:right;" >
+                        Maintenance Start Date
+                    </th>
+                </apex:outputPanel>
+                
+                <apex:outputPanel rendered="{!isMaintOrder}">
+                    <th style="text-align:right;" >
+                        Maintenance End Date
+                    </th>
+                </apex:outputPanel>
+                
+            </tr>
+            <apex:repeat value="{!OrderLineItems}" var="eachItem" rendered="{!If(Not(ISNULL(orderId)),true,false)}">
+                <tr>
+                    <td > 
+                        {!eachItem.APN_Number__c}
+                    </td>
+                    <td > 
+                        {!eachItem.Product__r.Name}
+                    </td>
+                    
+                    <td > 
+                        {!eachItem.Material_Description__c}
+                    </td>
+                    <apex:outputPanel rendered="{!isSubscription}">
+                    <td > 
+                         {!eachItem.Year__C}
+                    </td>
+                    </apex:outputPanel>
+                    <td style="text-align:right;"> 
+                        {!eachItem.Quantity__c}
+                    </td>
+                    <apex:outputPanel rendered="{!NOT(isMaintOrder)}">
+                        <td style="text-align:right;"> 
+ 
+                                                      
+                             
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'New' && (eachItem.Order__r.Order_Category__c != 'PureConnect Subscription' && eachItem.Order__r.Order_Category__c != 'PureEngage Subscription')}">
+                              <apex:param value="{!eachItem.Net_Unit_Price__c}"/>
+                            </apex:outputText> 
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'New' && eachItem.Year__c == 1 && (eachItem.Order__r.Order_Category__c =='PureConnect Subscription' || eachItem.Order__r.Order_Category__c =='PureEngage Subscription')}">
+                              <apex:param value="{!eachItem.Quote_Product__r.Net_Unit_Price_1__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'New' && eachItem.Year__c == 2 && (eachItem.Order__r.Order_Category__c =='PureConnect Subscription' || eachItem.Order__r.Order_Category__c =='PureEngage Subscription')}">
+                              <apex:param value="{!eachItem.Quote_Product__r.Net_Unit_Price_2__c}"/>
+                            </apex:outputText> 
+                         
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'Renewal'}">
+                              <apex:param value="{!eachItem.Revised_License_List_Price__c}"/>
+                            </apex:outputText> 
+                            
+                        </td>
+                        
+                        <td style="text-align:right;"> 
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'New' && (eachItem.Order__r.Order_Category__c != 'PureConnect Subscription' && eachItem.Order__r.Order_Category__c != 'PureEngage Subscription')}">
+                              <apex:param value="{!eachItem.Ext_Net_Price__c}"/>
+                            </apex:outputText>
+                                                      
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'New' && eachItem.Year__c == 1 && (eachItem.Order__r.Order_Category__c =='PureConnect Subscription' || eachItem.Order__r.Order_Category__c =='PureEngage Subscription')}">
+                              <apex:param value="{!eachItem.Quote_Product__r.Ext_Net_Price_1__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'New' && eachItem.Year__c == 2 && (eachItem.Order__r.Order_Category__c =='PureConnect Subscription' || eachItem.Order__r.Order_Category__c =='PureEngage Subscription')}">
+                              <apex:param value="{!eachItem.Quote_Product__r.Ext_Net_Price_2__c}"/>
+                              </apex:outputText>
+                              
+                                                       
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Support_Type_Formula__c == 'Renewal'}">
+                              <apex:param value="{!eachItem.Revised_Net_License_Value__c}"/>
+                            </apex:outputText>
+    
+                        </td>
+                        
+                       
+                        
+                     </apex:outputPanel>
+                     <apex:outputPanel rendered="{!isAmendOrder}">
+                      <td style="text-align:right;"> 
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Order__r.Classification__c == 'Amend Subscription'}" >
+                              <apex:param value="{!eachItem.Quantity_Change__c}"/>
+                            </apex:outputText>
+                         </td>
+                         </apex:outputPanel> 
+                         
+                     <apex:outputPanel rendered="{!isAmendOrder}">
+                      <td style="text-align:right;"> 
+                            <apex:outputText value="{0, number, ###,##0.00}" rendered="{!eachItem.Order__r.Classification__c == 'Amend Subscription'}" >
+                              <apex:param value="{!eachItem.Ext_Net_Price_Change__c}"/>
+                            </apex:outputText>
+                         </td>
+                         </apex:outputPanel>    
+                         
+                    <apex:outputPanel rendered="{!isMaintOrder}">
+                        <td style="text-align:right;"> 
+                            <apex:outputText value="{0, number, ###,##0.00}">
+                              <apex:param value="{!eachItem.Maintenance_Due__c}"/>
+                            </apex:outputText>
+                        </td>
+                     </apex:outputPanel>
+                    <apex:outputPanel rendered="{!isMaintOrder}">
+                        <td style="text-align:right;">                             
+                            <apex:outputText value="{0,date,dd-MM-YY}" rendered="{!eachItem.Order__r.Region__c == 'EMEA'}">
+                              <apex:param value="{!eachItem.Maintenance_Start_Date__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{0,date,MM-dd-YY}" rendered="{!eachItem.Order__r.Region__c != 'EMEA'}">
+                            <apex:param value="{!eachItem.Maintenance_Start_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                     </apex:outputPanel>
+                     <apex:outputPanel rendered="{!isMaintOrder}">
+                        <td style="text-align:right;">                             
+                            <apex:outputText value="{0,date,dd-MM-YY}" rendered="{!eachItem.Order__r.Region__c == 'EMEA'}">
+                              <apex:param value="{!eachItem.Maintenance_End_Date__c}"/>
+                            </apex:outputText>
+                            <apex:outputText value="{0,date,MM-dd-YY}" rendered="{!eachItem.Order__r.Region__c != 'EMEA'}">
+                            <apex:param value="{!eachItem.Maintenance_End_Date__c}"/>
+                            </apex:outputText>
+                        </td>
+                     </apex:outputPanel>
+                </tr>
+            </apex:repeat>
+        </table>
+    </div>
+</apex:component>

@@ -1,0 +1,151 @@
+<apex:page id="pg" standardController="Case" extensions="UpdateProductDetailsCntrl" showheader="false"  >
+    <apex:includeScript value="/support/console/46.0/integration.js"/>
+    <script type="text/javascript">  
+    /*function doneComplete(){
+            alert('entering##');
+            document.location.reload(true);
+            /*alert('entering##');
+		//Check if the page opened in console application
+		if(sforce.console.isInConsole()){
+            alert('Console##YES');
+			sforce.console.getFocusedPrimaryTabId(showTabId);
+		}
+		redirectToObjectDetail();
+		}
+		function refreshSuccess(result) {
+ 
+		}
+		function showTabId(result) {
+		//Display the tab ID
+		sforce.console.refreshPrimaryTabById(result.id, true, refreshSuccess,true);
+    }*/
+  	</script>
+    
+    <style>
+    /* This is for the full screen DIV */
+    .popupBackground {
+        /* Background color */
+        background-color:black;
+        opacity: 0.50;
+        filter: alpha(opacity = 50);
+     
+        /* Dimensions */
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 998;
+        position: absolute;
+         
+        /* Mouse */
+        cursor:wait;
+    }
+ 
+    /* This is for the message DIV */
+    .PopupPanel {
+        /* Background color */
+        border: solid 2px gray;
+        background-color: white;
+ 
+        /* Dimensions */
+        left: 50%;
+        width: 200px;
+        margin-left: -100px;
+        top: 50%;
+        height: 80px;
+        margin-top: -25px;
+        z-index: 999;
+        position: fixed;
+         
+        /* Mouse */
+        cursor:pointer;
+        }
+        .helpTxt {
+        font-size:14px; 
+        font-style:italic;
+    }
+    </style>
+    <apex:form id="frm">
+        <apex:pageBlock id="pgblk2" rendered="{!isPureConnectCloud}">
+         This page is not supported for PureConnect products. Please use the “Change Cloud Deployment/Contact/Service” button instead.
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Cancel" onclick="history.go(-1); return false;" />
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+        
+        <apex:pageBlock id="pgblk3" rendered="{!isElse}">
+         This case is for {!boaPlatform} Cloud Platform. Product list is not available for this Cloud Platform.
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Cancel" onclick="history.go(-1); return false;" />
+            </apex:pageBlockButtons> 
+        </apex:pageBlock>
+        
+        <apex:pageBlock id="pgblk" rendered="{!IF(OR(isPureEngageCloud == True, isPureCloud== True), TRUE, FALSE)}" >
+            <apex:pageMessages />
+            <apex:pageBlockButtons location="bottom"  >
+                <apex:commandButton value="Save" id="Save" action="{!saveCaseUpdates}" status="status" />
+                
+            <apex:commandButton value="Cancel" action="{!Cancel}" status="status" />
+        </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection columns="1" id="pgsecPltfrm" >
+                <apex:inputText value="{!boaPlatform}" label="Cloud Platform" id="txtPltfrm" style="width:195px"/>
+                <script>
+                    document.getElementById('pg:frm:pgblk:pgsecPltfrm:txtPltfrm').disabled = true;
+                </script>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" id="categ" >
+                <apex:pageBlockSectionItem id="grpitm">
+                <apex:outputLabel value="Product Category" />
+                <apex:outputPanel id="pnl09" layout="block" styleClass="requiredInput" >
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                        <apex:selectList value="{!selectedCategory}" size="1" label="Product Category" style="width:200px" >
+                    <apex:selectOptions value="{!categories}" />                
+                    <apex:actionSupport event="onchange" rerender="pcgrp,pgsecProduct,pgsecMajorVersion,pgsecComponent,pgblk" 
+                     action="{!onchangeCategory}" status="status" />
+                </apex:selectList>
+                    </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" id="pcgrp" >
+          <apex:pageBlockSectionItem id="grpitm">
+                <apex:outputLabel value="Product Group" />
+                <apex:outputPanel id="pnl10" layout="block" styleClass="requiredInput" >
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                        <apex:selectList value="{!selectedPureCnctGrp}" size="1" label="Product Group" style="width:200px" >
+                            <apex:selectOptions value="{!pureCnctGroups}" />                
+                            <apex:actionSupport event="onchange" action="{!onchangePCGroup}" status="status" rerender="pgsecProduct,pcPrblm " />
+                        </apex:selectList>
+                    </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+        </apex:pageBlockSection>
+            
+            <apex:pageBlockSection columns="1" id="pgsecProduct" >
+            <apex:pageBlockSectionItem id="pgsecItemProductLine1">
+                <apex:outputLabel value="Product" />
+                <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput" >
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />          
+                        <apex:selectList value="{!selectedProduct}" size="1" style="width:200px" >
+                            <apex:selectOptions value="{!products}" />             
+                            <apex:actionSupport event="onchange" rerender="pgblk,pcPrblm,pgsecComponent" action="{!onchangeProduct}" status="status" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+       </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" id="pgsecComponent" rendered="{!IF(AND(isPureEngageCloud == True, isPureCloud== false), TRUE, FALSE)}" >
+            <apex:selectList value="{!selectedComponent}" size="1" label="Component" style="width:200px" >
+                <apex:selectOptions value="{!components}" />                
+                <apex:actionSupport event="onchange" rerender="pgblk" status="status" />
+            </apex:selectList>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pcPrblm"  > 
+          <apex:pageBlockSectionItem id="sectPcPrblm">
+           <apex:outputLabel value="Problem Category" />           
+               <apex:selectList value="{!selectedPureCnctProblm}" size="1" label="Problem Area" style="width:200px" >
+                     <apex:selectOptions value="{!pureCnctProbCateg}" />                
+               </apex:selectList>             
+           </apex:pageBlockSectionItem> 
+       </apex:pageBlockSection>    
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

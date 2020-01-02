@@ -1,0 +1,39 @@
+<apex:page standardController="Invoice__c" extensions="InvoiceButtonEntentionController">
+
+<!-- objInvoice.Status__c == 'Invoice Attached' && objInvoice.Attachments.size > 0 IS "SFDC Invoice" -->
+
+    <apex:PageMessages />
+    <apex:form >
+        <apex:pageBlock id="buttonBlock">   
+            <apex:pageBlockButtons location="top">
+
+                <apex:commandLink value="Edit" action="{!URLFOR($Action.Invoice__c.Edit,objInvoice.id,[retURL=URLFOR($Action.Invoice__c.View, objInvoice.id)], true)}"
+                                  target="_parent" styleClass="btn"/>
+
+                <apex:commandLink value="Clone"
+                                  action="{!URLFOR($Action.Invoice__c.Clone,objInvoice.id,[retURL=URLFOR($Action.Invoice__c.View, objInvoice.id)], true)}"
+                                  target="_parent" styleClass="btn" rendered="{!$Profile.Name == 'System Administrator'}"/>
+
+                <apex:commandLink action="{!generateInvoicePDF}" value="Generate Invoice PDF"
+                                  target="_blank" styleClass="btn"
+                                  rendered="{!objInvoice.Order__r.Offering_Type__c == 'PureEngage' ||
+                                            objInvoice.Order__r.Offering_Type__c == 'Premier Edition'}"/>
+
+                <apex:outputText value="{!Invoice__c.Invoice_Number__c}" rendered="false"/>
+
+                <apex:commandLink action="{!generateInvoiceExcel}" value="Generate Invoice Excel" 
+                                  target="_blank" styleClass="btn"
+                                  rendered="{!objInvoice.Order__r.Offering_Type__c == 'PureEngage' ||
+                                            objInvoice.Order__r.Offering_Type__c == 'Premier Edition'}"/>
+
+                <apex:commandLink action="{!sendInvoice}" value="Send Invoice" styleClass="btn" target="_parent"
+                                  rendered="{!objInvoice.Status__c == 'Invoice Attached' &&
+                                            objInvoice.Attachments.size > 0 &&
+                                            (objInvoice.Order__r.Offering_Type__c == 'PureEngage' ||
+                                            objInvoice.Order__r.Offering_Type__c == 'Premier Edition')}"/>
+
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+
+</apex:page>

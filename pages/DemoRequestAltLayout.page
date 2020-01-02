@@ -1,0 +1,174 @@
+<apex:page standardController="Demo_Request__c" showHeader="true" tabStyle="Demo_Request__c" extensions="DemoRequestAltLayoutExt">
+    <apex:sectionHeader title="Demo Request" subtitle="{!Demo_Request__c.Name}"/>
+    <chatter:feedWithFollowers entityId="{!Demo_Request__c.Id}"/>
+    <br />
+    <apex:form >
+        <apex:pageBlock title="Demo Request Detail" mode="mainDetail">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!edit}" value="Edit"/>
+                <apex:commandButton action="{!decline}" value="Decline"/>
+                <apex:commandButton action="{!acceptAssign}" value="Accept or Assign"/>
+                <apex:commandButton action="{!reschedule}" value="Reschedule"/>
+                <apex:commandButton action="{!cancel}" value="Cancel Demo"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="" columns="2" collapsible="false">
+                <apex:outputField label="Demo Request ID" value="{!Demo_Request__c.name}"/>
+                <apex:outputText label="Submission Source" value="{!source}"/>
+                <apex:outputField label="State" value="{!Demo_Request__c.State__c}"/>
+                <apex:outputField label="Request Type" value="{!Demo_Request__c.Request_Type__c}"/>
+                <apex:outputField label="Reschedule Reason" value="{!Demo_Request__c.Reschedule_Reason__c}" rendered="{!if(Demo_Request__c.State__c == 'Rescheduled', true, false)}"/>
+                <apex:outputField label="Escalation Reason" value="{!Demo_Request__c.Escalation_Reason__c}" rendered="{!if(Demo_Request__c.State__c == 'Escalated', true, false)}" />
+                <apex:outputField label="Cancel Reason" value="{!Demo_Request__c.Cancel_Reason__c}" rendered="{!if(Demo_Request__c.State__c == 'Cancelled', true, false)}" />
+                <apex:outputField label="Demo Owner" value="{!Demo_Request__c.Demo_Owner__c}" rendered="{!if(Demo_Request__c.State__c == 'Accepted' || Demo_Request__c.State__c == 'Completed', true, false)}" />
+                <apex:outputField label="Suppress Notification" value="{!Demo_Request__c.SuppressNotification__c}" rendered="{!if(Demo_Request__c.SuppressNotification__c, true, false)}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="General Information" columns="2" collapsible="true">
+                <apex:outputField label="Requester Name" value="{!Demo_Request__c.Requester_Name__c}"/>
+                <apex:outputField label="Demo Date/Time" value="{!Demo_Request__c.Demo_Date_Time__c}"/>
+                <apex:outputField label="Requester Company" value="{!Demo_Request__c.Requester_Company__c}" />
+                <apex:outputField label="Demo Length" value="{!Demo_Request__c.Demo_Time_Length__c}" />
+                <apex:outputField label="Requester E-mail" value="{!Demo_Request__c.Requester_Email_Addr__c}" />
+                <apex:outputField label="Demo Location" value="{!Demo_Request__c.Demo_Location__c}" />
+                <apex:outputField label="Requester Phone" value="{!Demo_Request__c.Requester_Phone__c}" />
+                <apex:outputField label="Location Details" 
+                                  value="{!Demo_Request__c.On_site_Location__c}" 
+                                  rendered="{!if(Demo_Request__c.Demo_Location__c == 'On-site (Requires Approval)', true, false)}" />
+                <apex:outputField label="Location Details" 
+                                  value="{!Demo_Request__c.HQ_Meeting_Room__c}" 
+                                  rendered="{!if(Demo_Request__c.Demo_Location__c == 'ININ HQ Campus', true, false)}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Audience Information" columns="1" collapsible="true" rendered="{!if(Demo_Request__c.Request_Type__c != 'Bootcamp', true, false)}">
+                <apex:outputField label="Audience Name" value="{!Demo_Request__c.Account__c}" rendered="{!if(Demo_Request__c.Account__c != '', true, false)}" />
+                <apex:outputField label="Audience Name" value="{!Demo_Request__c.Lead__c}" rendered="{!if(Demo_Request__c.Lead__c != '', true, false)}" />
+                <apex:outputField label="Audience Name" value="{!Demo_Request__c.CompanyName__c}" rendered="{!if(Demo_Request__c.CompanyName__c != '' && Demo_Request__c.Account__c == '', true, false)}" />
+                <apex:outputField label="Audience Type" value="{!Demo_Request__c.AudienceType__c}"/>
+                <apex:outputField label="Vertical" value="{!Demo_Request__c.Vertical__c}" />
+                <apex:outputField label="Audience Website" value="{!Demo_Request__c.Prospects_Website__c}" />
+                <apex:outputField label="Audience Business" value="{!Demo_Request__c.Prospect_Business__c}" />
+                <apex:outputField label="Audience Needs" value="{!Demo_Request__c.Prospect_Needs__c}" />
+                <apex:outputField label="Audience Hot Buttons" value="{!Demo_Request__c.Hot_Buttons_Pain_Points__c}" />
+                <apex:outputField label="Audience Attendees" value="{!Demo_Request__c.Name_Title_Attendees__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Opportunity Information" columns="1" collapsible="true" rendered="{!if(source == 'Opportunity', true, false)}">
+                <apex:outputField label="Opportunity" value="{!Demo_Request__c.Opportunity__c}"/>
+                <apex:outputField label="Opportunity Type" value="{!Demo_Request__c.Opportunity_Type__c}"/>
+                <apex:outputField label="Expected Revenue" value="{!Demo_Request__c.Expected_Revenue__c}"/>
+                <apex:outputField label="Deal Size (Seats)" value="{!Demo_Request__c.Deal_Size_Seats__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Training Information" columns="1" collapsible="true" rendered="{!if(Demo_Request__c.Request_Type__c == 'Training' || Demo_Request__c.Request_Type__c == 'Bootcamp', true, false)}">
+                <apex:outputField label="Audience Name" value="{!Demo_Request__c.Account__c}" rendered="{!if(Demo_Request__c.Account__c != '', true, false)}" />
+                <apex:outputField label="Audience Name" value="{!Demo_Request__c.Lead__c}" rendered="{!if(Demo_Request__c.Lead__c != '', true, false)}" />
+                <apex:outputField label="Audience Name" value="{!Demo_Request__c.CompanyName__c}" rendered="{!if(Demo_Request__c.CompanyName__c != '' && Demo_Request__c.Account__c == '', true, false)}" />
+                <apex:outputField label="Audience Type" value="{!Demo_Request__c.AudienceType__c}"/>
+                <apex:outputField label="Maximum Attendees" value="{!Demo_Request__c.MaxAttendees__c}"/>                
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="ININ Information" columns="2" collapsible="true" rendered="{!if(Demo_Request__c.ININ_Record_ID__c != '', true, false)}">
+                <apex:outputField label="ININ Record Name" value="{!Demo_Request__c.ININ_Record_Name__c}"/>
+                <apex:outputField label="ININ Record ID" value="{!Demo_Request__c.ININ_Record_ID__c}"/>
+                <apex:outputField label="ININ Created By Name" value="{!Demo_Request__c.ININ_Created_By_Name__c}" />
+                <apex:outputField label="ININ Created By ID" value="{!Demo_Request__c.ININ_Created_By_ID__c}" />
+                <apex:outputField label="ININ Record Owner Name" value="{!Demo_Request__c.ININ_Record_Owner_Name__c}" />
+                <apex:outputField label="ININ Record Owner ID" value="{!Demo_Request__c.ININ_Record_Owner_ID__c}" />
+                <apex:outputField label="ININ Demo Owner Name" value="{!Demo_Request__c.ININ_Demo_Owner_Name__c}" />
+                <apex:outputField label="ININ Demo Owner ID" value="{!Demo_Request__c.ININ_Demo_Owner_ID__c}" />
+                <apex:outputField label="ININ Account Name" value="{!Demo_Request__c.ININ_Account_Name__c}" />
+                <apex:outputField label="ININ Account ID" value="{!Demo_Request__c.ININ_Account_ID__c}" />
+                <apex:outputField label="ININ Opportunity Name" value="{!Demo_Request__c.ININ_Opportunity_Name__c}" />
+                <apex:outputField label="ININ Opportunity ID" value="{!Demo_Request__c.ININ_Opportunity_ID__c}" />
+                <apex:outputField label="ININ Lead Name" value="{!Demo_Request__c.ININ_Lead_Name__c}" />
+                <apex:outputField label="ININ Lead ID" value="{!Demo_Request__c.ININ_Lead_ID__c}" />
+                <apex:outputField label="ININ Last Activity Date" value="{!Demo_Request__c.ININ_Last_Activity_Date__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="System Information" columns="2" collapsible="true" >
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Created By" for="created" />
+                    <apex:outputPanel id="created">
+                        <apex:outputField value="{!Demo_Request__c.CreatedById}"/>, &nbsp; 
+                        <apex:outputField value="{!Demo_Request__c.CreatedDate}"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Last Modified By" for="modified" />
+                    <apex:outputPanel id="modified">
+                        <apex:outputField value="{!Demo_Request__c.LastModifiedById}"/>, &nbsp;               
+                        <apex:outputField value="{!Demo_Request__c.LastModifiedDate}"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+    <apex:tabPanel switchType="client" selectedTab="tabItems" id="DemoRequestTabPanel" tabClass="activeTab" inactiveTabClass="inactiveTab">        
+        <apex:tab label="Items" name="RequestItems" id="tabItems" rendered="{!if(Demo_Request__c.Request_Type__c != 'Bootcamp', true, false)}">
+            <apex:form >
+                <apex:pageBlock title="" mode="mainDetail">
+                    <apex:pageBlockButtons location="top" >
+                        <apex:commandButton action="{!updateItems}" value="Update Demo Items"/>
+                    </apex:pageBlockButtons>                    
+                    <apex:pageBlockSection columns="1" rendered="{!if(Demo_Request__c.Other_Applications__c != '', true, false)}" showHeader="false">
+                        <apex:outputField label="Other Applications" value="{!Demo_Request__c.Other_Applications__c}"/>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+            </apex:form>            
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Platform_Junctions__r"/>
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Solution_Taxonomy_Junction__r"/>
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Gen_Concept_Junctions__r"/>
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Product_Junctions__r" />
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Integration_Junctions__r" />            
+        </apex:tab>
+        <apex:tab label="Competitors" name="Competitors" id="tabCompetitors" rendered="{!if(Demo_Request__c.Request_Type__c != 'Bootcamp', true, false)}">
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Competitor_Junctions__r" rendered="{!$ObjectType.Demo_Request_Competitor_Junction__c.accessible}" />
+        </apex:tab>
+        <apex:tab label="Presenters" name="Presenters" id="tabPresenters"  rendered="{!isTS}" >
+            <apex:form >
+                <apex:pageBlock title="" mode="mainDetail">
+                    <apex:pageBlockButtons location="top" >
+                        <apex:commandButton action="{!addPresenters}" value="Add Presenter(s)"/>
+                    </apex:pageBlockButtons>                    
+                </apex:pageBlock>               
+            </apex:form> 
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Request_Presenter_Junctions__r" />
+        </apex:tab>
+        <apex:tab label="Activities" name="Activities" id="tabActivities"  rendered="{!$ObjectType.Demo_Request_Tracking__c.accessible}" >
+            <apex:pageBlock >
+                <apex:form >
+                    <apex:pageBlock title="" mode="mainDetail">
+                        <apex:pageBlockButtons location="top" >
+                            <apex:commandButton action="{!manageActivities}" value="Manage Activities"/>
+                        </apex:pageBlockButtons>                    
+                    </apex:pageBlock> 
+                </apex:form>
+                <apex:pageBlockTable value="{!tracks}" var="ty">
+                       <apex:column >
+                           <apex:facet name="header">Activity</apex:facet>
+                           <apex:outputField value="{!ty.Activity_Type__c}" />
+                       </apex:column>
+                       <apex:column >
+                           <apex:facet name="header">Date/Time</apex:facet>
+                           <apex:outputField value="{!ty.Activity_Date_Time__c}" />
+                       </apex:column>
+                       <apex:column >
+                           <apex:facet name="header">Duration</apex:facet>
+                            <apex:outputField value="{!ty.Activity_Duration__c}" />
+                       </apex:column>
+                       <apex:column >
+                           <apex:facet name="header">Completed By</apex:facet>
+                           <apex:outputField value="{!ty.Activity_Completed_By__c}" />
+                       </apex:column>
+                       <apex:column >
+                            <apex:facet name="header">State</apex:facet> 
+                            <apex:outputField value="{!ty.Activity_State__c}" />
+                       </apex:column>
+                </apex:pageBlockTable>
+            </apex:pageBlock>
+        </apex:tab>
+        <apex:tab label="Declines" name="Declines" id="tabDeclines">
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Declines__r" pageSize="10" rendered="{!$ObjectType.Demo_Request_Decline__c.accessible}" />
+        </apex:tab>
+        <apex:tab label="Training Attendees" name="Contacts" id="tabContacts" rendered="{!if(Demo_Request__c.Request_Type__c == 'Training' || Demo_Request__c.Request_Type__c == 'Bootcamp', true, false)}">
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="Demo_Request_Contact_Junctions__r" pageSize="10" rendered="{!$ObjectType.Demo_Request_Contact_Junction__c.accessible}" />
+        </apex:tab>
+        <apex:tab label="Approval" name="Approval" id="tabApproval" rendered="{!if(Demo_Request__c.Demo_Location__c == 'On-site (Requires Approval)' && Demo_Request__c.Request_Type__c != 'Bootcamp', true, false)}" >
+            <apex:relatedList subject="{!Demo_Request__c.Id}" list="ProcessSteps" />
+        </apex:tab>
+    </apex:tabPanel>
+</apex:page>

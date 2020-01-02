@@ -1,0 +1,85 @@
+<apex:component controller="BootstrapMultiselectController">
+    <apex:attribute name="size" description="Size of listboxes."
+                    type="Integer" required="true" />
+    <apex:attribute name="width" description="Width of listboxes."
+                    type="String" required="false" />
+    
+    <apex:attribute name="leftOptions"
+                    description="Options list for left listbox." type="SelectOption[]"
+                    required="true" assignTo="{!lOptions}" />
+    <apex:attribute name="rightOptions"
+                    description="Options list for right listbox." type="SelectOption[]"
+                    required="true" assignTo="{!rOptions}" />
+    
+    
+    <apex:outputPanel id="panel">
+        <select id="{!$Component.panel}:pList" multiple="multiple" size="{!size}" 
+                onchange="javascript:buildOutputS('{!$Component.panel}:pList', '{!$Component.hiddenS}', '{!$Component.hiddenN}')">
+            <apex:repeat value="{!options}" var="c">
+                <apex:outputText rendered="{!c.Selected}">
+                    <option value='{!c.Value}' selected='selected'>{!c.Name}</option>
+                </apex:outputText>
+                <apex:outputText rendered="{!not c.Selected}">
+                    <option value='{!c.Value}' >{!c.Name}</option>
+                </apex:outputText>
+            </apex:repeat>
+        </select>
+        <apex:inputHidden value="{!unselected}" id="hiddenN" />
+        <apex:inputHidden value="{!selected}" id="hiddenS" />
+    </apex:outputPanel>
+    <script type="text/javascript">
+    $j = jQuery.noConflict();
+    $j(document).ready(function() {
+        var s = "#{!$Component.panel}:pList".replace( /(:)/g, "\\\\$1" );
+        console.log(s);
+        $j(s).multiselect({
+            buttonWidth: '100%',
+            buttonText: function(options, select) {
+                if (options.length === 0) {
+                    return 'No option selected ...';
+                }
+                else if (options.length > 6) {
+                    return 'Many options selected!';
+                }
+                    else {
+                        var labels = [];
+                        options.each(function() {
+                            if ($j(this).attr('label') !== undefined) {
+                                labels.push($j(this).attr('label'));
+                            }
+                            else {
+                                labels.push($j(this).html());
+                            }
+                        });
+                        return labels.join(', ') + '';
+                    }
+            }
+    	});
+    });
+    if (!buildOutputS) {
+        // Create a string from the content of a listbox
+        var buildOutputS = function(list, se, unsel) {
+            var listBox = document.getElementById(list);
+            var hiddenInput = document.getElementById(se);
+            var hiddenInput2 = document.getElementById(unsel);
+            var sel = '';
+            var un = ''
+            for ( var x = 0; x < listBox.options.length; x++) {
+                if(listBox.options[x].selected)
+                    sel += encodeURIComponent(listBox.options[x].value) + '&'
+                    + encodeURIComponent(listBox.options[x].text) + '&';
+                else 
+                    un += encodeURIComponent(listBox.options[x].value) + '&'
+                    + encodeURIComponent(listBox.options[x].text) + '&';
+            }
+            sel.length--;
+            un.length--;
+            console.log('Selected:' + sel);
+            console.log('UnSelected:' + un);
+            hiddenInput.value = sel.slice(0, -1);
+            hiddenInput2.value = un.slice(0, -1);
+        }
+        }
+    buildOutputS('{!$Component.panel}:pList', '{!$Component.hiddenS}', '{!$Component.hiddenN}');
+    </script>
+</apex:component>

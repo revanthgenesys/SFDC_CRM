@@ -1,0 +1,1742 @@
+<apex:page id="pg" title="{!quote.Name}" controller="CreateQuoteCloudController" tabStyle="BigMachines__Quote__c" sidebar="false" action="{!cloneQuoteOnLoad}" docType="html-5.0" >
+    <apex:stylesheet value="{!$Resource.QuotingToolStyles}"/>
+    <apex:form id="form">
+        <apex:actionFunction name="saveBeforeReload" action="{!saveBeforeReload}"/>
+        <apex:actionFunction name="convertToRealQuote" action="{!convertToRealQuote}" reRender="form" status="status"/>
+        <apex:actionFunction name="synchAndGoToDQAF" action="{!synchAndGoToDQ}" reRender="pnlDQJS" onComplete="goToDQ(); return false;" status="status"/>
+        <apex:actionFunction name="synchAndGoAndReviseDQAF" action="{!synchAndGoToDQ}" reRender="pnlDQJS" onComplete="goToDQAndRevise(); return false;" status="status"/>
+        <apex:actionFunction name="getDQStatusAF" action="{!getDQStatus}" reRender="pnlDQJS" onComplete="confirmDQRevise(); return false;" status="status"/>
+        <apex:actionFunction name="changeProductTier" action="{!changeProductTier}"/>
+        
+        
+        <apex:inputText style="position:absolute;top:-1000px;"/>
+        <table cellpadding="0" cellspacing="0" width="100%;">
+            <td width="20%">
+                <apex:sectionHeader title="{!IF(blnIsSimulated,'Estimation','Quote Edit')}" subtitle="{!quote.Name}"/>
+            </td>
+            <td width="80%">            
+            </td>
+        </table>
+        <apex:outputPanel >
+            <apex:commandButton value="Save" action="{!doCalculations}" status="status" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!blnIsSimulated}">
+            <apex:commandButton value="Convert To Quote" action="{!convertToRealQuoteBtnHandler}" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel >
+            <apex:commandButton value="Return to Opportunity" onclick="location.href='/{!quote.BigMachines__Opportunity__c}'; return false;"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!NOT(blnIsSimulated) && (NOT(IsQuoteUnLocked) || quote.BigMachines__Status__c == 'Quote Rejected') 
+                                    && quote.BigMachines__Status__c != 'Order Accepted' && quote.BigMachines__Status__c != 'Order Submitted'}">
+            <apex:commandButton value="Revise" action="{!reviseMajorBtnHandler}" status="status" reRender="quoteInfo,msgs" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!NOT(blnIsSimulated) && quote.BigMachines__Status__c != 'Order Accepted'}">
+            <apex:commandButton value="Clone" action="{!cloneBtnHandler}" status="status" reRender="quoteInfo" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!IsQuoteUnLocked && NOT(blnIsSimulated)}">
+            <apex:commandButton value="Submit Quote" action="{!finalizeQuote}" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || (quote.BigMachines__Status__c = 'Order Rejected' && blnIsReviseOrder)}">
+            <apex:commandButton value="Submit Order" action="{!submitOrderBtnHandler}" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!quote.BigMachines__Status__c = 'Order Rejected' && NOT(blnIsReviseOrder)}">
+            <apex:commandButton value="Revise Order" action="{!reviseOrderBtnHandler}" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!IsQuoteUnLocked}">
+            <apex:commandButton value="Product Configuration" onclick="openProductConfigurator('ProductConfigurator');" rerender="Sample" rendered="{!Not(blnIsOldQuote)}"/>
+            &nbsp;
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!blnisPureBridgeOpp}"><!--Rony Joseph - PureBridge Project -->
+            <apex:commandButton value="Genesys PS is required" onclick="GenesysPSRequiredChecked();return false;" reRender="sample"/>
+            &nbsp;
+        </apex:outputPanel>                                                                                         
+        <apex:outputPanel rendered="{!NOT(CONTAINS($Label.On_Premise_Tool_Profiles,$Profile.Name)) || $Profile.Name = 'GEN - Finance' || $Profile.Name = 'Regional Sales Ops' || IF(CONTAINS($Label.Quote_Export_to_Excel,$User.Alias), True, False)}" >
+            <apex:commandLink title="Export To Excel" onclick="window.open('/apex/ExportToExcelCloud?id={!quote.Id}','_blank')" reRender="sample" rendered="{!Not(blnIsOldQuote)}">
+                <apex:image url="{!$Resource.ExcelIcon}" width="25px" height="22px"/>
+            </apex:commandLink>
+        </apex:outputPanel>
+        <apex:outputPanel >
+            <apex:commandLink title="Export To PDF" onclick="window.open('/apex/proposalcloud?id={!quote.id}&internal=1','_blank', 'toolbar=no, scrollbars=yes, resizable=yes, top=100, left=100, width=1100, height=700')" reRender="sample" rendered="{!Not(blnIsOldQuote)}">
+                <apex:image url="{!$Resource.pdf_icon}" width="25px" height="22px"/>
+            </apex:commandLink>
+        </apex:outputPanel>
+        <br/><br/>
+        <apex:pageMessages id="msgs" escape="false"/>
+        <apex:outputPanel rendered="{!blnHasViolations && list_Violations != null}">
+            <div style="background-color:#c00;padding-left:5px;">
+                <apex:pageBlock title="Deal Qualification Validation" >
+                    <apex:pageBlockButtons id="buttons" location="top">
+                        <apex:commandButton value="Go To Deal Qualification" onclick="getDQStatusAF(); return false;" />
+                        Click on this button to go to/revise your Deal Qualification criteria on your Opportunity.
+                    </apex:pageBlockButtons>
+                    <b>
+                        <apex:outputLabel value="This is to highlight the differences between the Quote and the Approved Criteria." />
+                    </b>
+                    <br/>
+                    <apex:pageBlockTable value="{!list_Violations}" var="eachViolation">
+                        <apex:column headerValue="Difference Type">
+                            {!eachViolation.approvalName}
+                        </apex:column>
+                        <apex:column headerValue="Value On Quote">
+                            {!eachViolation.fieldValueOnQuote}
+                        </apex:column>
+                        <apex:column headerValue="Approved limits in Deal Qualification">
+                            {!eachViolation.fieldValueApproved}
+                        </apex:column>
+                        <apex:column headerValue="Description" >
+                            {!eachViolation.Description}
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+            </div>
+        </apex:outputPanel>
+        <apex:pageMessage severity="ERROR" strength="1" rendered="{!blnShowExportScreeningMsg}">
+            Please complete Export Screening Check-list for the End User Account.&nbsp;
+            <input type="button" class="btn" value="Export Screening Checklist" 
+                   onclick="alert('Please re-submit the order once the check-list is saved.');window.open('/apex/Compliance_new_edit_redirect?retURL=/{!quote.End_User_ID__c}');"/> 
+        </apex:pageMessage>
+        <apex:pageMessage severity="ERROR" strength="1" rendered="{!blnShowExportScreeningExpireMsg}">
+            Please extend the expiration date of Export Screening Check-list for the End User Account.&nbsp;
+            <input type="button" class="btn" value="Export Screening Checklist" 
+                   onclick="alert('Please re-submit the order once the check-list is saved.');window.open('../{!escid}');"/> 
+        </apex:pageMessage>
+        <div id="profileTabSetContainer" class="profileTabSetContainer zen" style="display: block;">
+            <div class="zen-box zen-tabs zen-simpleTabs profileTabs" id="TabPanel">
+                <div class="zen-inner">
+                    <div id="profileTabSetHeader" class="zen-header profileTabSetHeader">
+                        <ul id="profileTabSet" class="profileTabSet zen-tabControl" role="tablist">
+                            <li class="{!IF(strSelectedTab=='Quote Details','zen-current','')}">
+                                <apex:commandLink value="{!IF(blnIsSimulated,'Estimation Details','Quote Details')}" action="{!showQuoteDetails}" title="Quote Details" styleClass="profileTab"/>
+                            </li>
+                            <apex:outputPanel layout="none" rendered="{!NOT(blnIsSimulated)}">
+                                <li class="{!IF(strSelectedTab=='Special Offers','zen-current','')}">
+                                    <apex:commandLink value="Special Offers" action="{!showSpecialOffers}" title="Special Offers" styleClass="profileTab" rendered="{!Not(blnIsOldQuote)}"/>
+                                </li>
+                            </apex:outputPanel>
+                            <li>
+                                <apex:commandLink value="Quote Output" action="{!showProposalOptions}" title="Quote Output" styleClass="profileTab" rendered="{!Not(blnIsOldQuote)}"/>
+                            </li>
+                            <apex:outputPanel layout="none" rendered="{!NOT(blnIsSimulated)}">
+                                <li class="{!IF(strSelectedTab=='Order Submission','zen-current','')}">
+                                    <apex:commandLink value="Order Submission" action="{!showOrderSubmission}" title="Order Submission" styleClass="profileTab" rendered="{!Not(blnIsOldQuote)}"/>
+                                </li>
+                                <li>
+                                    <apex:commandLink value="History and Attachments" action="{!showHistoryAndAttachments}" title="History and Attachments" styleClass="profileTab" rendered="{!Not(blnIsOldQuote)}"/>
+                                </li>
+                            </apex:outputPanel>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <apex:pageBlock title="{!quote.Offering_Type__c} Quoting Tool" id="pgblk" rendered="{!strSelectedTab=='Quote Details'}">
+            <!-- Header Section -->
+            <apex:pageBlockSection id="quoteInfo" title="{!IF(blnIsSimulated,'Estimation Information','Quoting Information')}">
+                <apex:pageBlockSectionItem rendered="{!NOT(blnIsSimulated)}">
+                    <apex:outputLabel value="Quote Number"/>
+                    <apex:outputLink value="{!URLFOR($Action.BigMachines__Quote__c.View, quote.Id, null, true)}" target="_blank">{!quote.Name}</apex:outputLink>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Deal Qualification Status" />
+                    <apex:outputLink value="#" target="_blank" onclick="openDQ(); return false;"> <b>{!dqStatus}</b> </apex:outputLink>
+                </apex:pageBlockSectionItem>
+                <!--Anju July 2018 PCC Subscriptions -->
+                <apex:pageBlockSectionItem rendered="{!quote.Order_Type__c != $Label.New_Subscription && quote.Amendment_For__c!= null}">
+                    <apex:outputLabel value="Subscription #"/>
+                    <apex:outputLink value="{!URLFOR($Action.Subscription__c.View, quote.Amendment_For__c, null, true)}" target="_blank">{!quote.Amendment_For__r.Name}</apex:outputLink>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!quote.Order_Type__c != $Label.New_Subscription && quote.Amendment_For__c!= null}"/>
+                <apex:outputField value="{!quote.End_User_ID__c}"/>
+                <!--removing rendered="{!NOT(quote.Quote_Cloned_Revised__c != null && IsQuoteUnLocked)}"-->
+                <apex:outputField value="{!quote.BigMachines__Opportunity__c}" />
+                <!--<apex:inputField id="oppty" value="{!quote.BigMachines__Opportunity__c}" rendered="{!quote.Quote_Cloned_Revised__c != null && IsQuoteUnLocked}" required="true">
+<apex:actionSupport event="onchange" action="{!changeOpportunity}" reRender="quoteInfo,msgs" status="changeStatus"/>
+<apex:actionStatus id="changeStatus">
+<apex:facet name="start">
+<apex:image value="/img/loading.gif"/>
+</apex:facet> 
+</apex:actionStatus>
+</apex:inputField>-->
+                <apex:outputField value="{!quote.Sold_To_Name__c}"/>
+                <apex:outputText label="Quote Status" style="font-weight:bold" value="{!quote.BigMachines__Status__c}"/>
+                <apex:outputField value="{!quote.CreatedDate}"/>
+                <apex:outputField value="{!quote.Revision_No__c}" rendered="{!NOT(blnIsSimulated)}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked || quote.BigMachines__Status__c = 'Quote Approved'}">
+                    <apex:outputLabel value="Expiry Date"/>
+                    <apex:inputField value="{!quote.Expiration_Date__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!NOT(IsQuoteUnLocked || quote.BigMachines__Status__c = 'Quote Approved')}">
+                    <apex:outputLabel value="Expiry Date"/>
+                    <apex:outputField value="{!quote.Expiration_Date__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:inputTextarea value="{!quote.BigMachines__Description__c}" cols="70" rows="5" rendered="{!IsQuoteUnLocked}"/>
+                <apex:outputField value="{!quote.BigMachines__Description__c}" style="" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:outputField value="{!quote.Sold_To_Region__c}" rendered="{!NOT(blnIsSimulated)}" />
+                <apex:outputField value="{!quote.BigMachines__Is_Primary__c}"/>
+                <apex:pageBlockSectionItem rendered="{!NOT(blnIsSimulated)}">
+                    <apex:outputLabel value="Sub Region"/>
+                    <apex:outputField value="{!quote.Sub_Sub_Region__c}" rendered="{!NOT(blnIsSimulated)}" />
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Order_Date_Submitted__c}" rendered="{!NOT(ISBLANK(quote.Order_Date_Submitted__c))}"/>
+                <apex:outputText rendered="{!ISBLANK(quote.Order_Date_Submitted__c)}"/>
+                <!--<apex:pageBlockSectionItem rendered="{!NOT(blnIsSimulated)}" >
+<apex:outputLabel value="Quote Submitted Date"/>
+<apex:outputField value="{!quote.Approval_Submission_Date__c}"/>
+</apex:pageBlockSectionItem>
+
+<apex:pageBlockSectionItem rendered="{!NOT(blnIsSimulated)}">
+<apex:outputLabel value="Quote Approved Date"/>
+<apex:outputField value="{!quote.Approval_Date__c}"/>
+</apex:pageBlockSectionItem>
+-->
+                <apex:outputField value="{!quote.Opp_Sold_To_Country__c}"/>
+                <apex:pageBlockSectionItem rendered="{!quote.BigMachines__Status__c != 'Quote Approved' && quote.BigMachines__Status__c != 'Order Submitted'}"/>
+                <apex:inputField value="{!quote.Sent_to_Customer__c}" rendered="{!quote.BigMachines__Status__c = 'Quote Approved'}"/>
+                <apex:outputField value="{!quote.Sent_to_Customer__c}" rendered="{!quote.BigMachines__Status__c = 'Order Submitted'}"/>
+                <apex:outputField label="Start Date" value="{!quote.Billing_Start_Date__c}" rendered="{!quote.BigMachines__Status__c == 'Order Accepted'}" />
+                <apex:pageBlockSectionItem rendered="{!quote.BigMachines__Status__c == 'Order Accepted'}"/>
+                <apex:outputField value="{!quote.Subscription_Start_Date__c}" />
+                <apex:outputField value="{!quote.Subscription_End_Date__c}" />
+                <!--<apex:inputField value="{!quote.Subscription_Amend_Date__c}" required="true" rendered="{!quote.Order_Type__c == $Label.Amend_Subscription && IsQuoteUnLocked}"/>-->
+                <apex:outputField value="{!quote.Subscription_Amend_Date__c}" rendered="{!quote.Order_Type__c == $Label.Amend_Subscription}"/> <!--&& NOT(IsQuoteUnLocked)}"/> -->
+                <apex:pageBlockSectionItem rendered="{!quote.Order_Type__c == $Label.Amend_Subscription}"/>
+                <apex:outputField value="{!quote.CurrencyISOCode}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked && quote.Order_Type__c != $Label.Amend_Subscription}">
+                    <apex:outputLabel value="Billing Period"/>
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <!--<apex:actionRegion >-->
+                        <apex:selectList id="periods" value="{!quote.Billing_Period__c}" size="1" required="true">
+                            <apex:selectOption itemValue="Monthly" itemLabel="Monthly"/>
+                            <apex:selectOption itemValue="Quarterly" itemLabel="Quarterly" rendered="{!quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription}"/>
+                            <apex:selectOption itemValue="Semi-Annually" itemLabel="Semi-Annually" rendered="{!quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription}"/>
+                            <apex:selectOption itemValue="Annually" itemLabel="Annually"/>
+                            <apex:actionSupport event="onchange" action="{!changeBillingPeriod}" status="status" reRender="pgblk,msgs,TotalsBlock"/>
+                        </apex:selectList>
+                        <!--</apex:actionRegion>-->
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Billing_Period__c}" rendered="{!NOT(IsQuoteUnLocked) || quote.Order_Type__c == $Label.Amend_Subscription }"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked}">
+                    <apex:outputLabel value="Payment Terms"/>
+                    <apex:outputPanel layout="block" styleClass="requiredInput" >
+                        <apex:outputPanel styleClass="requiredBlock"/>
+                        <apex:selectList id="periods" value="{!quote.Order_Payment_Terms__c}" size="1" required="true">
+                            <apex:selectOptions value="{!list_PaymentTerms}"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Order_Payment_Terms__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked}">
+                    <apex:outputLabel value="{!IF(quote.Order_Type__c==$Label.Renew_Subscription, 'Extended', 'Initial')} Subscription Term"/>
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <!--<apex:actionRegion >-->
+                        <apex:selectList id="periods" value="{!quote.Initial_Subscription_Term__c}" size="1" required="true">
+                            <apex:selectOptions value="{!initialSubscrTerms}"/>
+                            <apex:actionSupport event="onchange" action="{!changeBillingPeriod}" status="status" reRender="pgblk,msgs,TotalsBlock"/>
+                        </apex:selectList>
+                        <!--</apex:actionRegion>-->
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:outputField label="{!IF(quote.Order_Type__c==$Label.Renew_Subscription, 'Extended', 'Initial')} Subscription Term" value="{!quote.Initial_Subscription_Term__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:inputField label="Invoice Delivery Method" value="{!quote.Delivery_Method__c}" rendered="{!IsQuoteUnLocked}"/>
+                <apex:outputField label="Invoice Delivery Method" value="{!quote.Delivery_Method__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:outputField value="{!quote.Renewal_Subscription_Term__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked}">
+                    <apex:outputLabel value="{!$ObjectType.BigMachines__Quote__c.fields.Renewal_Subscription_Term__c.label}"/>
+                    <apex:selectList id="renewSubscriptionTerms" value="{!quote.Renewal_Subscription_Term__c}" size="1">
+                        <apex:selectOption itemValue="Automatic Annual" itemLabel="Automatic Annual"/>
+                        <apex:selectOption itemValue="Automatic Initial Subscription" itemLabel="Automatic Initial Subscription"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:inputField value="{!quote.Payment_Method__c}" rendered="{!IsQuoteUnLocked}"/>
+                <apex:outputField value="{!quote.Payment_Method__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked && quote.Order_Type__c != $Label.Amend_Subscription && quote.Order_Type__c != $Label.Renew_Subscription}" helpText="{!IF(quote.Offering_Type__c == 'PureCloud', 'For Renew Subscriptions, Ramp period is locked to zero though the actual ramp period for the original subscription is still available.', 'No of days')}">
+                    <apex:outputLabel value="Ramp Period (Days)"/>
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <apex:selectList id="periods" value="{!quote.Ramp_Period__c}" size="1" required="true">
+                            <apex:selectOptions value="{!list_RampPeriods}"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!NOT(IsQuoteUnLocked) || quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription}" helpText="{!IF(quote.Offering_Type__c == 'PureCloud', 'For Renew Subscriptions, Ramp period is locked to zero though the actual ramp period for the original subscription is still available.', 'No of days')}">
+                    <apex:outputLabel value="Ramp Period (Days)"/>
+                    <apex:outputField value="{!quote.Ramp_Period__c}" />
+                </apex:pageBlockSectionItem>
+                <!--<apex:inputField value="{!quote.Overage_Allowance__c}" rendered="{!IsQuoteUnLocked}"/>-->
+                <apex:pageBlockSectionItem helptext="{!$ObjectType.BigMachines__Quote__c.fields.Overage_Allowance__c.InlineHelpText}" rendered="{!IsQuoteUnLocked}">
+                    <apex:outputLabel value="{!$ObjectType.BigMachines__Quote__c.fields.Overage_Allowance__c.label}"/>
+                    <apex:selectList id="Burstallowanceoptions" value="{!quote.Overage_Allowance__c}" size="1">
+                        <apex:selectOption itemValue="0%" itemLabel="0%" rendered="{!quote.Overage_Allowance__c == '0.00%'}"/>
+                        <apex:selectOption itemValue="20%" itemLabel="20%"/>
+                        <apex:selectOption itemValue="Other" itemLabel="Other"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Overage_Allowance__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <!--<apex:outputField value="{!quote.Billing_Category__c}"/>-->
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.BigMachines__Quote__c.fields.Billing_Category__c.label}"/>
+                    <apex:outputText value="{!if(quote.Billing_Period__c = 'Quarterly','Annual Quarterly',if(quote.Billing_Period__c = 'Semi-Annually','Semi-Annually',quote.Billing_Category__c))}" />
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Overage_Allowance_Other__c}" rendered="{!quote.Overage_Allowance__c == 'Other'}"/>
+                <apex:pageBlockSectionItem rendered="{!quote.Overage_Allowance__c != 'Other'}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked}">
+                    <apex:outputLabel value="Pricing Model"/>
+                    <apex:outputPanel layout="block" styleClass="requiredInput">
+                        <apex:outputPanel styleClass="requiredBlock"/>
+                        <apex:selectList id="calculationType" value="{!quote.Pricing_Model__c}" size="1">
+                            <apex:selectOption itemValue="Named" itemLabel="Named"/>
+                            <apex:selectOption itemValue="Concurrent" itemLabel="Concurrent"/>
+                            <apex:actionSupport event="onchange" action="{!changePricingModel}" status="status" reRender="pgblk,msgs"/>
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Pricing_Model__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:inputField value="{!quote.Price_Escalation__c}" id="AnnualPriceIncrease" rendered="{!IsQuoteUnLocked}" required="true"/>
+                <apex:outputField value="{!quote.Price_Escalation__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:selectList value="{!quote.Product_Tier__c}" size="1" required="true" rendered="{!IsQuoteUnLocked}" onfocus="this.oldvalue = this.value;"
+                                 onchange="if(confirm('Do you want to proceed?')) {changeProductTier();} else {this.value = this.oldvalue;}">
+                    <apex:selectOptions value="{!productTier}"/>
+                </apex:selectList>
+                <apex:outputField value="{!quote.Product_Tier__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:outputField label="Annual Price Increase (Other) %" value="{!quote.Annual_Price_Escalation_Other__c}"  rendered="{!quote.Price_Escalation__c == 'Other'}"/>
+                <apex:pageBlockSectionItem rendered="{!quote.Price_Escalation__c == 'Other'}"/>
+                <apex:inputField value="{!quote.Deployment_Model__c}" required="true" rendered="{!IsQuoteUnLocked}"/>
+                <apex:outputField value="{!quote.Deployment_Model__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <!--<apex:pageBlockSectionItem rendered="{!AND(IsQuoteUnLocked,NOT(blnCustomMSAType))}">
+
+Added by Ashish Goyal
+Updated label for the MSA Link to Governing Contract Link
+and MSA Link Type to Governing Type
+
+<apex:outputlabel value="Governing Contract Type" for="msalinktype"/>
+<apex:actionRegion >
+<apex:inputField required="true" id="msalinktype" value="{!quote.MSA_Link_Type__c}"  >
+<apex:actionSupport event="onchange"  status="status" reRender="quoteInfo" action="{!setMSALink}"/>
+</apex:inputField>
+</apex:actionRegion>
+</apex:pageBlockSectionItem>-->
+                <apex:outputField value="{!quote.MSA_Link_Type__c}" label="Governing Contract Type" />
+                <apex:inputCheckbox value="{!quote.Treat_SO_as_PO__c}" rendered="{!IsQuoteUnLocked}"/>
+                <apex:outputField value="{!quote.Treat_SO_as_PO__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked && blnCustomMSAType}" id="msalink">
+                    <apex:outputLabel value="Governing Contract Link" for="msaLinkInput"/>
+                    <apex:inputField id="msaLinkInput" value="{!quote.MSA_Link__c}" required="true"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.MSA_Link__c}" label="Governing Contract Link" rendered="{!OR(NOT(IsQuoteUnLocked),IsQuoteUnLocked && NOT(blnCustomMSAType))}" id="msalinkOutput"/> 
+                <!-- Kartik : Modified the MSA link field for resolving issue CSO0001965 
+<apex:pageBlockSectionItem rendered="{!AND(IsQuoteUnLocked,NOT(blnCustomMSAType))}" id="msalink">
+<apex:outputLabel value="Governing Contract Link" for="msaLinkInput"/>
+<apex:inputField id="msaLinkInput" value="{!quote.MSA_Link__c}" required="true"/>
+</apex:pageBlockSectionItem>
+<apex:outputField value="{!quote.MSA_Link__c}" label="Governing Contract Link" rendered="{!OR(NOT(IsQuoteUnLocked),blnCustomMSAType)}" id="msalinkOutput"/>
+<apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked && blnCustomMSAType}" id="msalink">
+<apex:outputLabel value="Governing Contract Link" for="msaLinkInput"/>
+<apex:inputField id="msaLinkInput" value="{!quote.MSA_Link__c}" required="true"/>
+</apex:pageBlockSectionItem>
+<apex:outputField value="{!quote.MSA_Link__c}" label="Governing Contract Link" rendered="{!OR(NOT(IsQuoteUnLocked),IsQuoteUnLocked && NOT(blnCustomMSAType))}" id="msalinkOutput"/> -->
+                
+                <apex:outputField value="{!quote.Order_Type__c}"/>
+                <apex:pageBlockSectionItem rendered="{!blnMSALInkTypeChange}" id="msalinktypechange">
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <apex:outputText value="{!$Label.PC_MSA_Link_Type_Change_Message}" style="color:Red " />
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Lever__c}" rendered="{!blnisPureBridgeOpp}"/>
+                <apex:outputField value="{!quote.BigMachines__Opportunity__r.Avaya_Contract_Expiration__c}" rendered="{!blnisPureBridgeOpp}"/>
+                <apex:outputField value="{!quote.Top_Play__c}"/>
+                <apex:outputField value="{!quote.Reason_for_New_when_Sub_s_Already_Exist__c}" rendered="{!quote.Reason_for_New_when_Sub_s_Already_Exist__c != ''}"/>
+                <apex:pageBlockSectionItem rendered="{!quote.Reason_for_New_when_Sub_s_Already_Exist__c == ''}"/>
+                <apex:outputField value="{!quote.Offer__c}"/>                                               
+                <!--<apex:inputField value="{!quote.Require_Contractual_Discount__c}" rendered="{!IsQuoteUnLocked}">
+<apex:actionSupport event="onclick" action="{!refreshContractDiscount}" rerender="quoteInfo" status="status"/>
+</apex:inputField>
+<apex:inputField value="{!quote.Customer_Contractual_Rate__c}" rendered="{!IsQuoteUnLocked && quote.Require_Contractual_Discount__c}" />
+<apex:outputField value="{!quote.Customer_Contractual_Rate__c}" rendered="{!NOT(IsQuoteUnLocked) && quote.Require_Contractual_Discount__c}" />-->
+            </apex:pageBlockSection>
+            <!--Added for DDS Calculation by Anto Starts-->
+            <apex:pageBlockSection id="DDS" title="DDS Information" rendered="{!$Permission.DDS_Cloud_Information_Visible}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Deal Size" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Deal_Size__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Raw Score Discount"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Raw_Score_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Deal Score Raw Score"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Raw_Score__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Partner Discount"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!if(objDDSHistory!= null && objDDSHistory.Deal_Registration_Discount__c > 0 && objDDSHistory.Partner_Discount__c > 0, objDDSHistory.Partner_Discount__c - objDDSHistory.Deal_Registration_Discount__c,objDDSHistory.Partner_Discount__c)}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Deal Registration Discount"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Deal_Registration_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Customer Discount"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Customer_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Consolidated Contractual Discount"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Consolidated_Contractual_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Deal Score After Contractual Discount Adjustment"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Deal_Score_After_Contractual_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Third Party Discount" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Third_Party_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Third Party Discount Impact" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Third_Party_Discount_Impact__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Hardware Discount" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Hardware_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Hardware Discount Impact" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Hardware_Discount_Impact__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Max License Discount" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Max_License_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Max License Discount Impact" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Max_License_Discount_Impact__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="PS Discount" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.PS_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="PS Discount Impact"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.PS_Discount_Impact__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:inputhidden />
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Total Impact"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Total_Impact__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:inputhidden />
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Deal Score After Overall Adjustment"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Deal_Score_After_Overall_Adjustment__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection id="DDSScore" title="DDS">
+                <!--Mukunth modified rendered condition for Mega Deal check for DDS-->
+                <apex:outputText value="{!quote.Deal_Score__c}"  style="width:50px;font-size: 24px;color:white;font-weight:bold;background:{!case(quote.Deal_Score__c ,5,'green',4,'green',3, 'orange',2,'red','red')};" rendered="{!quote.Deal_Score__c != null && NOT(isMegaDealBln)}">
+                </apex:outputText>
+                <!--Mukunth modified rendered condition for Mega Deal check for DDS-->
+                <apex:pageBlockSectionItem rendered="{!quote.Deal_Score__c == null && objDDSHistory.Deal_Size__c != null && objDDSHistory.Deal_Size__c != 0 && NOT(isMegaDealBln)}">
+                    <apex:outputLabel value="Deal Score"/>
+                    <apex:outputText value="0"  style="width:50px;font-size:24px;color:white;font-weight:bold;background:red">
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!quote.Deal_Score__c == null && objDDSHistory.Deal_Size__c == null}">
+                    <apex:outputLabel value="Deal Score"/>
+                    <apex:outputText value="">
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <!--Mukunth modified Mega Deal check for DDS-->
+                <apex:pageBlockSectionItem rendered="{!isMegaDealBln}">
+                    <apex:pageMessage summary="{!$Label.DDS_Mega_Deal_Message}" severity="Info" strength="3" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!isMegaDealBln}">
+                </apex:pageBlockSectionItem>
+                <!-- Mukunth code end-->
+                <!--Mukunth modified rendered condition on below pagemessages-->
+                <apex:pageMessage summary="Congratulations! This deal ranks amongst the top in its peer group." severity="Info" strength="3" rendered="{!quote.Deal_Score__c = 5 && IsQuoteUnLocked && NOT(isMegaDealBln)}" />
+                <apex:pageMessage summary="This deal scores 4, which is an above average score. Nice work!" severity="Info" strength="3" rendered="{!quote.Deal_Score__c = 4 && IsQuoteUnLocked && NOT(isMegaDealBln)}" />
+                <apex:pageMessage summary="This deal has earned a score of 3.  This is a good score but continue to evaluate the deal to see if it can be improved." severity="Info" strength="3" rendered="{!quote.Deal_Score__c = 3 && IsQuoteUnLocked && NOT(isMegaDealBln)}" />
+                <apex:pageMessage summary="Based on a combination of factors this deal only earns a score of 2.  Please review the deal to determine ways to improve the score." severity="Info" strength="3" rendered="{!quote.Deal_Score__c =2 && IsQuoteUnLocked && NOT(isMegaDealBln)}" />
+                <apex:pageMessage summary="Based on a combination of factors this deal only earns a score of 1, which indicates it is not a good deal compared to its peers.  Please review the deal to determine if a score improvement is possible." severity="Info" strength="3" rendered="{!quote.Deal_Score__c=1 && IsQuoteUnLocked && NOT(isMegaDealBln)}"/>
+                <apex:inputHidden rendered="{! !IsQuoteUnLocked || quote.Deal_Score__c == null || quote.Deal_Score__c < 1}"/>
+                <apex:pageBlockSectionItem helpText="{!$Label.DDS_Cloud_Discount_HelpText}">
+                    <apex:outputLabel value="Discount" />
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Raw_Score_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!objDDSHistory != null && objDDSHistory.Partner_Discount__c > 0}">
+                    <apex:outputLabel value="Partner Discount"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!if(objDDSHistory.Deal_Registration_Discount__c > 0 && objDDSHistory.Partner_Discount__c > 0, objDDSHistory.Partner_Discount__c - objDDSHistory.Deal_Registration_Discount__c,objDDSHistory.Partner_Discount__c)}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:inputHidden rendered="{!objDDSHistory == null || objDDSHistory.Partner_Discount__c == null || objDDSHistory.Partner_Discount__c == 0}"/>
+                <apex:pageBlockSectionItem rendered="{!objDDSHistory != null && objDDSHistory.Deal_Registration_Discount__c > 0}">
+                    <apex:outputLabel value="Deal Registration Discount"/>
+                    <apex:outputText value="{0, number,###,###,##0.00}">
+                        <apex:param value="{!objDDSHistory.Deal_Registration_Discount__c}"/>
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                <apex:inputHidden rendered="{!objDDSHistory == null || objDDSHistory.Deal_Registration_Discount__c == null || objDDSHistory.Deal_Registration_Discount__c == 0}"/>
+                <apex:outputText value="{!quote.Compensation_Multiplier__c}" rendered="{!(quote.Order_Type__c != 'Renew Subscription') || (quote.Order_Type__c == 'Renew Subscription' && $Profile.Name != 'GEN – Sales CSM')}"/>
+                
+                <apex:pageBlockSectionItem rendered="{!quote.Deal_Score__c != null && objDDSHistory != null && objDDSHistory.Raw_Score__c != null && quote.Deal_Score__c < objDDSHistory.Raw_Score__c}">
+                    <apex:outputLabel value="Other factors influencing score:"/>
+                    <apex:outputText value="{!SUBSTITUTE(JSENCODE(if(objDDSHistory.Third_Party_Discount_Impact__c != null && objDDSHistory.Third_Party_Discount_Impact__c != 0, '&#8226; Third Party Discount Impact\\n','') 
+                                            + if(objDDSHistory.Hardware_Discount_Impact__c != null && objDDSHistory.Hardware_Discount_Impact__c != 0, '&#8226; Hardware Discount Impact\\n','')
+                                            + if(objDDSHistory.Max_License_Discount_Impact__c != null && objDDSHistory.Max_License_Discount_Impact__c != 0, '&#8226; Max License Discount Impact\\n','')
+                                            + if(objDDSHistory.PS_Discount_Impact__c != null && objDDSHistory.PS_Discount_Impact__c != 0, '&#8226; PS Discount Impact\\n','')
+                                            ), '\\\n', '<br/>')}" escape="false"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!quote.Deal_Score__c == null || objDDSHistory == null || objDDSHistory.Raw_Score__c == null || quote.Deal_Score__c == objDDSHistory.Raw_Score__c}">
+                    <apex:outputLabel value="Other factors influencing score:"/>
+                    <apex:outputText value="{!SUBSTITUTE(JSENCODE('&#8226; N/A\\n'), '\\\n', '<br/>')}" escape="false"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Cutoffs"/>
+                    <apex:outputText escape="false" value="{!objDDSHistory.Cutoff__c}">
+                    </apex:outputText>
+                </apex:pageBlockSectionItem>
+                
+            </apex:pageBlockSection>
+            <!--Added for DDS Calculation by Anto Ends-->
+            <apex:pageBlockSection title="{!IF(blnIsSimulated,'Estimation Products','Quote Products')}" collapsible="false"/>
+            <apex:commandButton value="Search Products" rendered="{!IsQuoteUnLocked && Not(blnIsOldQuote)}" onclick="openProductConfigurator('SearchProducts');" rerender="sample"/>
+            &nbsp;&nbsp;
+            <apex:commandButton reRender="sample" value="Product Configuration" rendered="{!IsQuoteUnLocked && Not(blnIsOldQuote)}" onclick="openProductConfigurator('Product Configuration');"/>
+            &nbsp;&nbsp;
+            <apex:commandButton value="Calculate Deal Score" rendered="{!IsQuoteUnLocked && Not(blnIsOldQuote)}"  action="{!doCalculations}" status="status" reRender="pgblk,msgs,TotalsBlock,pnlDQJS"/>
+            <table width="100%">
+                <tr>
+                    <td style="text-align:left;" width="50%">
+                        <apex:panelGrid columns="2" rendered="{!list_QuoteProducts.size > 0}">
+                            <apex:panelGroup >
+                                <b>Group By :</b>
+                            </apex:panelGroup>
+                            <apex:panelGroup >
+                                <apex:selectList value="{!quote.Grid_Group_By__c}" size="1">
+                                    <apex:selectOption itemValue="Recurring/Non-Recurring" itemLabel="Recurring/Non-Recurring"/>
+                                    <apex:selectOption itemValue="Categories" itemLabel="Categories"/>
+                                    <apex:selectOption itemValue="Sub Categories" itemLabel="Sub Categories"/>
+                                    <apex:selectOption itemValue="Bundles/Products" itemLabel="Bundles/Products"/>
+                                    <apex:selectOption itemValue="Proposal Groups" itemLabel="Proposal Groups"/>
+                                    <apex:selectOption itemValue="3rd Party/Genesys" itemLabel="3rd Party/Genesys"/>
+                                    <apex:selectOption itemValue="Use Cases" itemLabel="Use Cases"/>
+                                    <apex:actionSupport event="onchange" action="{!createCurrentPageList}" status="status" reRender="QuoteProductsSection"/>
+                                </apex:selectList>
+                            </apex:panelGroup>
+                        </apex:panelGrid>
+                    </td>
+                    <td style="text-align:left;" width="25%">
+                        <apex:commandButton value="Save" action="{!doCalculations}" rendered="{!IsQuoteUnLocked && Not(blnIsOldQuote)}" status="status" reRender="pgblk,msgs,TotalsBlock,pnlDQJS"/>
+                    </td>
+                    <td style="text-align:right;" width="25%">
+                        <apex:commandLink value="Select Columns" action="{!selectColumnsHandler}" status="status" reRender="selectColumns" 
+                                          style="font-size:105%" rendered="{!CONTAINS($Label.On_Premise_Tool_Profiles,$Profile.Name) 
+                                                                           || $Profile.Name = 'System Administrator' || $Profile.Name = 'General User Access Group SU'
+                                                                           || $Profile.Name = 'GEN - Finance'}"/>
+                    </td>
+                </tr>
+            </table>
+            <br/>
+            <apex:inputHidden value="{!strToDelete}" id="strToDelete"/>
+            <apex:outputPanel id="QuoteProductsSection">
+                <!-- Pagination Information -->
+                <apex:outputPanel rendered="{!intTotalNoOfDisplayedRecords > intPageSize}">
+                    <center>
+                        <b>Total Records : {!intTotalNoOfDisplayedRecords}&nbsp;&nbsp;</b>
+                        <apex:commandLink action="{!first}" status="status" reRender="QuoteProductsSection" rendered="{!HasPrevious}" style="text-decoration:none">
+                            First
+                        </apex:commandLink>
+                        <apex:outputText value="First" rendered="{!NOT(HasPrevious)}" style="color:gray"/>
+                        &nbsp;
+                        <apex:commandLink action="{!previous}" status="status" reRender="QuoteProductsSection" rendered="{!HasPrevious}" style="text-decoration:none">
+                            <apex:image url="/img/search_prevarrow.gif" title="Previous" styleClass="prevArrow"/>
+                            &nbsp;
+                            Previous
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasPrevious)}" style="color:gray">
+                            <apex:image url="/img/search_prevarrow_disabled.gif"/>
+                            &nbsp;
+                            Previous
+                        </apex:outputPanel>
+                        &nbsp;
+                        ({!PageNumStr})
+                        &nbsp;
+                        <apex:commandLink action="{!next}" status="status" reRender="QuoteProductsSection" rendered="{!HasNext}" style="text-decoration:none">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow.gif" title="Next" styleClass="nextArrow"/>
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasNext)}" style="color:gray">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow_disabled.gif"/>
+                        </apex:outputPanel>
+                        &nbsp;
+                        <apex:commandLink action="{!last}" status="status" reRender="QuoteProductsSection" title="Last" rendered="{!HasNext}" style="text-decoration:none">
+                            Last
+                        </apex:commandLink>
+                        <apex:outputText value="Last" rendered="{!NOT(HasNext)}" style="color:gray"/>
+                    </center>
+                    <br/>
+                </apex:outputPanel>
+                <table class="list " border="0" cellpadding="0" cellspacing="0" id="quoteProdGrid">
+                    <thead>
+                        <tr class="headerRow">
+                            <th class="headerRow" style="width: 15px;"></th>
+                            <apex:outputPanel layout="none" rendered="{!IsQuoteUnLocked}">
+                                <th class="headerRow" style="width: 10px;">
+                                    <apex:inputCheckBox id="check" value="{!blnIsHeaderChecked}">
+                                        <apex:actionSupport event="onchange" action="{!checkUncheckAll}"/>
+                                    </apex:inputCheckBox>
+                                </th>
+                                <th class="headerRow" style="width: 50px;">Action</th>
+                            </apex:outputPanel>
+                            <th class="headerRow" style="width: 45px;">Play/<br/>Offer</th>
+                            <th class="headerRow" style="width: 45px;">Group</th>
+                            <th class="headerRow" style="width: 200px;">Product</th>
+                            <apex:outputPanel layout="none" rendered="{!objColumnPreference.Sub_Category__c}">
+                                <th class="headerRow" style="width: 150px;">Sub Category</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!objColumnPreference.Unit_of_measure__c}">
+                                <th class="headerRow" style="width: 100px;">Unit of<br/>measure</th>
+                            </apex:outputPanel>
+                            <!--<th class="headerRow" style="width: 50px;">Concurrent</th>-->
+                            <th class="headerRow" style="width: 50px;">Qty</th>
+                            <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c}">
+                                <th class="headerRow" style="width: 100px;">List Price</th>
+                            </apex:outputPanel>
+                            <!--Anju PCC Partner Price -->
+                            <apex:outputPanel layout="none" rendered="{!AND(objColumnPreference.Partner_Price__c,  quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c)}">
+                                <th class="headerRow" style="width: 80px;">Partner<br/>Price</th>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!objColumnPreference.Ext_List_Price__c}">
+                                <th class="headerRow" style="width: 100px;">Ext {!IF(quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c,'Partner', 'List')}<br/>Price</th>
+                            </apex:outputPanel>
+                            <th class="headerRow" style="width: 60px;">Discount</th>
+                            <th class="headerRow" style="width: 50px;">% / Amt</th>
+                            <th class="headerRow" style="width: 50px;">Adjust-<br/>ment %</th>
+                            <apex:outputPanel layout="none" rendered="{!blnHasBundles}">
+                                <th class="headerRow" style="width: 50px;">Bundle<br/>Disc %</th>
+                            </apex:outputPanel>
+                            <th class="headerRow" style="width: 50px;">Total<br/>Disc %</th>
+                            <apex:outputPanel layout="none" rendered="{!objColumnPreference.Net_Unit_Price__c}">
+                                <th class="headerRow" style="width: 100px;">Net Unit Price</th>
+                            </apex:outputPanel>
+                            <th class="headerRow" style="width: 100px;">Ext Net Price</th>
+                            <apex:outputPanel layout="none" rendered="{!objColumnPreference.Third_Party__c}">
+                                <th class="headerRow" style="width: 50px;">3rd<br/>Party<br/>GC %</th>
+                            </apex:outputPanel>
+                            <!--<apex:outputPanel layout="none" rendered="{!objColumnPreference.PM_Approver__c}">
+<th class="headerRow" style="width: 50px;">PM<br/>Approver</th>
+</apex:outputPanel>-->
+                            <!--Anju July 2018 PCC Subscriptions-->
+                            <apex:outputPanel layout="none" rendered="{!quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription}">
+                                <th class="headerRow" style="width: 100px;">Qty Change<br/>History</th>
+                            </apex:outputPanel>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:outputPanel layout="none" rendered="{!IsQuoteUnLocked}">
+                            <!-- Mass Update Row -->
+                            <tr style="background-color:#D4D4CF;">
+                                <td colspan="2"></td>
+                                <td>
+                                    <apex:commandlink action="{!deleteQuoteProducts}" title="Remove Selected Quote Product" onclick="var retVal = confirm('Are you sure you want to delete selected product(s)?'); if(retVal == false) return retVal;" reRender="QuoteProductsSection,TotalsBlock,msgs,chkOverrideTrainingUnit" status="status" rendered="{!Not(blnIsOldQuote)}">
+                                        <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>
+                                    </apex:commandlink>
+                                </td>
+                                <td colspan="{!3 + IF(objColumnPreference.Sub_Category__c,1,0) + IF(objColumnPreference.Unit_of_measure__c,1,0) + IF(AND(objColumnPreference.Partner_Price__c,  quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c),1,0)}">&nbsp;</td>
+                                <td class="dataCell" colspan="{!1 + IF(objColumnPreference.List_Price__c,1,0) + IF(objColumnPreference.Ext_List_Price__c,1,0)}">
+                                    <apex:inputField value="{!objMassUpdateInput.Quantity__c}" required="false" style="width:45px;"/>
+                                </td>
+                                <td class="dataCell">
+                                    <apex:inputField value="{!objMassUpdateInput.Disc__c}" style="width:55px;"/>
+                                </td>
+                                <td class="dataCell">
+                                    <apex:selectList value="{!objMassUpdateInput.or_Amount__c}" size="1">
+                                        <apex:selectOption itemValue="" itemLabel=""/>
+                                        <apex:selectOption itemValue="%" itemLabel="%"/>
+                                        <apex:selectOption itemValue="Amt" itemLabel="Amt"/>
+                                    </apex:selectList>
+                                </td>
+                                <td colspan="{!3 + IF(blnHasBundles,1,0) + IF(objColumnPreference.Net_Unit_Price__c,1,0) + 
+                                             IF(objColumnPreference.Third_Party__c,1,0) + IF(objColumnPreference.PM_Approver__c,1,0) + IF(quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription,1,0)}">
+                                    <apex:commandButton value="Mass Update Selected" action="{!massUpdateBtnHandler}" status="status" reRender="pgblk,msgs" rendered="{!Not(blnIsOldQuote)}"/>
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:variable value="{!((intPageNum-1) * intPageSize) + 1}" var="rowNumLevel1"/>
+                        <apex:repeat value="{!list_GroupHeaders}" var="strGroupHeader">
+                            <apex:variable value="{!0}" var="rowNumLevel2"/>
+                            <apex:repeat value="{!map_GroupHeaderToQuoteProdWrapper[strGroupHeader]}" var="objQPWrapper">
+                                <apex:outputPanel layout="none" rendered="{!rowNumLevel2 == 0}">
+                                    <tr style="background-color:rgba(255, 249, 179, 0.75)">
+                                        <td colspan="100">
+                                            <!-- Group By Information -->
+                                            {!IF(strGroupHeader == 'BLANK','',strGroupHeader)}
+                                        </td>
+                                    </tr>
+                                </apex:outputPanel>
+                                <apex:variable value="{!1}" var="rowNumLevel2"/>
+                                <!-- Quote Product Rows -->
+                                <tr class="dataRow" style="{!IF(objQPWrapper.record.Hide_Record__c,'display:none','')}">
+                                    <td class="dataCell">{!rowNumLevel1}.</td>
+                                    <apex:outputPanel layout="none" rendered="{!IsQuoteUnLocked}">
+                                        <td class="dataCell">
+                                            <apex:inputCheckBox id="check" value="{!objQPWrapper.selected}" disabled="{!objQPWrapper.record.Bundle_Line__c != null || objQPWrapper.record.Is_Overage__c}"/>
+                                        </td>
+                                        <td class="dataCell" style="{!IF(objQPWrapper.record.Is_Overage__c || (objQPWrapper.record.Bundle_Line__c != null && objQPWrapper.record.Bundle__r.Group_Type__c != 'Use Case') || (quote.Order_Type__c == 'Amend Subscription' && objQPWrapper.record.BigMachines__Product__r.Sub_Category__c == 'PureSuccess Offer'),'display:none','')}">
+                                            <apex:commandlink action="{!deleteQuoteProduct}" title="Remove Quote Product" onclick="deleteQP('{!$Component.strToDelete}');" reRender="QuoteProductsSection,TotalsBlock,msgs,chkOverrideTrainingUnit" status="status" rendered="{!Not(blnIsOldQuote)}">
+                                                <apex:param name="quoteProductIdToBeDeleted" assignTo="{!quoteProductIdToBeDeleted}" value="{!objQPWrapper.record.id}" />
+                                                <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>
+                                            </apex:commandlink>
+                                            <!--<apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}" title="Remove Quote Product" onclick="deleteQP('{!$Component.strToDelete}','{!objQPWrapper.record.id}');"/>-->
+                                        </td>
+                                        <td class="dataCell" style="{!IF(objQPWrapper.record.Is_Overage__c || (objQPWrapper.record.Bundle_Line__c != null && objQPWrapper.record.Bundle__r.Group_Type__c != 'Use Case') || (quote.Order_Type__c == 'Amend Subscription' && objQPWrapper.record.BigMachines__Product__r.Sub_Category__c == 'PureSuccess Offer'),'','display:none')}">
+                                        </td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell"><!--Rony Joseph - April 5th 2019 -Display Play and Offer Assocaited with Quote Product-->
+                                        <apex:outputPanel rendered="{!(objQPWrapper.record.Play__c != '' &&  objQPWrapper.record.Offer__c != '') && (objQPWrapper.record.Play__c != 'None')}">
+                                            <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="{!objQPWrapper.strPlayOffer}" />
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!objQPWrapper.record.Play__c == '' && objQPWrapper.record.Offer__c == ''}">
+                                        </apex:outputPanel>
+                                    </td>                                                                                                             
+                                    <td class="dataCell">
+                                        <apex:selectList value="{!objQPWrapper.record.Group_Number__c}" size="1" 
+                                                         rendered="{!ISBLANK(objQPWrapper.record.Bundle__c) && IsQuoteUnLocked}">
+                                            <apex:selectOption itemValue="" itemLabel=""/>
+                                            <apex:selectOptions value="{!list_ProposalGroupNumberOptions}"/>
+                                        </apex:selectList>
+                                        <apex:outputField value="{!objQPWrapper.record.Group_Number__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:inputField value="{!objQPWrapper.record.Name}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Is_Product_Name_Editable__c && IsQuoteUnLocked}"/>
+                                        <apex:outputText value="{!if(contains(objQPWrapper.record.BigMachines__Product__r.product_group__c,'PureSuccess'),objQPWrapper.record.BigMachines__Product__r.description__c,objQPWrapper.record.Name)}" rendered="{!NOT(objQPWrapper.record.BigMachines__Product__r.Is_Product_Name_Editable__c && IsQuoteUnLocked)}"/>
+                                        <br/>
+                                        (
+                                        <apex:outputText value="{!if(contains(objQPWrapper.record.BigMachines__Product__r.product_group__c,'PureSuccess'),objQPWrapper.record.BigMachines__Product__r.description__c,objQPWrapper.record.APN_Number__c)}" rendered="{!if(objQPWrapper.record.BigMachines__Product__r.Type__c<>'Bundle',true,false)}"/>
+                                        <apex:commandLink reRender="TotalsBlock" onclick="window.open('../apex/ShowBundleproducts?productid={!objQPWrapper.record.BigMachines__Product__r.id}&quoteid={!quote.id}&id={!objQPWrapper.record.id}','Window1','menubar=no,width=430,height=360,toolbar=no');" rendered="{!if(objQPWrapper.record.BigMachines__Product__r.Type__c=='Bundle',true,false)}">
+                                            <apex:outputText value="{!if(contains(objQPWrapper.record.BigMachines__Product__r.product_group__c,'PureSuccess'),objQPWrapper.record.BigMachines__Product__r.description__c,objQPWrapper.record.Name)}"/>
+                                        </apex:commandLink>
+                                        )
+                                        <apex:outputPanel layout="none" rendered="{!NOT(ISBLANK(objQPWrapper.record.BigMachines__Product__r.Flavors_Available__c))}">
+                                            <br/>
+                                            <apex:outputPanel layout="block" styleClass="requiredInput" rendered="{!IsQuoteUnLocked}">
+                                                <apex:outputPanel styleClass="requiredBlock"/>
+                                                <apex:selectList value="{!objQPWrapper.record.Flavor__c}" size="1" style="color:blue">
+                                                    <apex:selectOption itemValue="" itemLabel=""/>
+                                                    <apex:selectOptions value="{!map_FlavorsToSelectOptions[objQPWrapper.record.BigMachines__Product__r.Flavors_Available__c]}"/>
+                                                </apex:selectList>
+                                            </apex:outputPanel>
+                                            <apex:outputText value="{!objQPWrapper.record.Flavor__c}" rendered="{!NOT(IsQuoteUnLocked)}" style="color:blue"/>
+                                        </apex:outputPanel>
+                                    </td>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Sub_Category__c}">
+                                        <td class="dataCell">
+                                            {!objQPWrapper.record.BigMachines__Product__r.Sub_Category__c}
+                                        </td>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Unit_of_measure__c}">
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!objQPWrapper.record.Unit_of_Measure__c}"/>
+                                        </td>
+                                    </apex:outputPanel>
+                                    <!--<td class="dataCell">
+<apex:outputText value="{!objQPWrapper.record.BigMachines__Product__r.Is_Concurrent__c}"/>
+</td>-->
+                                    <td class="dataCell">
+                                        <apex:inputField value="{!objQPWrapper.record.Quantity__c}" required="false" style="width:45px;" rendered="{!IsQuoteUnLocked && ISBLANK(objQPWrapper.record.Build_Type__c) && !contains(objQPWrapper.record.BigMachines__Product__r.product_group__c,'PureSuccess Direct Offer') && !contains(objQPWrapper.record.BigMachines__Product__r.product_group__c,'PureSuccess Indirect Offer') && !objQPWrapper.record.PureBridge_Free_GU__c}"/>
+                                        <apex:outputField value="{!objQPWrapper.record.Quantity__c}" rendered="{!contains(objQPWrapper.record.BigMachines__Product__r.product_group__c,'PureSuccess Direct Offer') || contains(objQPWrapper.record.BigMachines__Product__r.product_group__c,'PureSuccess Indirect Offer') || (NOT(IsQuoteUnLocked && ISBLANK(objQPWrapper.record.Build_Type__c))) || objQPWrapper.record.PureBridge_Free_GU__c}"/>
+                                    </td>
+                                    
+                                    <!--Mukunth modified below code for 6 digit project-->
+                                    <!--<apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c}">
+<td class="dataCell">
+<apex:inputField value="{!objQPWrapper.record.List_Price__c}" style="width:95px;" rendered="{!IsQuoteUnLocked && (objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable' || (strManualListPriceUpdate == '1' && CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15))))}"/>
+<apex:outputText value="{0, number,###,###,##0.00}" rendered="{!NOT(IsQuoteUnLocked) || (IsQuoteUnLocked && (NOT(objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable') && (strManualListPriceUpdate == '0' || (strManualListPriceUpdate == '1' && NOT(CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15)))))))}">
+<apex:param value="{!objQPWrapper.record.List_Price__c}"/>
+</apex:outputText>
+</td>
+</apex:outputPanel>-->
+                                    
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c &&
+                                                                              (objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null ||
+                                                                              objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2')}">
+                                        <td class="dataCell">
+                                            <apex:inputField value="{!objQPWrapper.record.List_Price__c}" style="width:95px;" rendered="{!IsQuoteUnLocked && (objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable' || (strManualListPriceUpdate == '1' && CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15))))}"/>
+                                            <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!NOT(IsQuoteUnLocked) || (IsQuoteUnLocked && (NOT(objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable') && (strManualListPriceUpdate == '0' || (strManualListPriceUpdate == '1' && NOT(CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15)))))))}">
+                                                <apex:param value="{!objQPWrapper.record.List_Price__c}"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </apex:outputPanel>
+                                    
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c &&
+                                                                              objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                        <td class="dataCell">
+                                            <apex:inputField value="{!objQPWrapper.record.List_Price__c}" style="width:95px;" rendered="{!IsQuoteUnLocked && (objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable' || (strManualListPriceUpdate == '1' && CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15))))}"/>
+                                            <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!NOT(IsQuoteUnLocked) || (IsQuoteUnLocked && (NOT(objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable') && (strManualListPriceUpdate == '0' || (strManualListPriceUpdate == '1' && NOT(CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15)))))))}">
+                                                <apex:param value="{!objQPWrapper.record.List_Price__c}"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </apex:outputPanel>
+                                    
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c &&
+                                                                              objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                        <td class="dataCell">
+                                            <apex:inputField value="{!objQPWrapper.record.List_Price__c}" style="width:95px;" rendered="{!IsQuoteUnLocked && (objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable' || (strManualListPriceUpdate == '1' && CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15))))}"/>
+                                            <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!NOT(IsQuoteUnLocked) || (IsQuoteUnLocked && (NOT(objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable') && (strManualListPriceUpdate == '0' || (strManualListPriceUpdate == '1' && NOT(CONTAINS($Label.Manual_List_Price_Update_for_Cloud, LEFT($User.Id,15)))))))}">
+                                                <apex:param value="{!objQPWrapper.record.List_Price__c}"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </apex:outputPanel>
+                                    <!--Mukunth code end -->
+                                    
+                                    <!-- Anju Pcc partner discount -->
+                                    <apex:outputPanel layout="none" rendered="{!AND(objColumnPreference.Partner_Price__c, quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c)}">
+                                        <td class="dataCell">
+                                            <apex:inputField value="{!objQPWrapper.record.Partner_Price__c}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable' && IsQuoteUnLocked}"/>
+                                            <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!NOT(objQPWrapper.record.BigMachines__Product__r.Price_Type__c == 'Editable' && IsQuoteUnLocked)}">
+                                                <apex:param value="{!objQPWrapper.record.Partner_Price__c}"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Ext_List_Price__c}">
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!objQPWrapper.record.Ext_List__c}"/>
+                                        </td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell">
+                                        <apex:inputField value="{!objQPWrapper.record.Disc__c}" style="width:55px;" rendered="{!IsQuoteUnLocked && objQPWrapper.record.BigMachines__Product__r.Discountable__c}"/>
+                                        <apex:outputField value="{!objQPWrapper.record.Disc__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:selectList value="{!objQPWrapper.record.or_Amount__c}" size="1" rendered="{!IsQuoteUnLocked && objQPWrapper.record.BigMachines__Product__r.Discountable__c}">
+                                            <apex:selectOption itemValue="" itemLabel=""/>
+                                            <apex:selectOption itemValue="%" itemLabel="%"/>
+                                            <apex:selectOption itemValue="Amt" itemLabel="Amt"/>
+                                        </apex:selectList>
+                                        <apex:outputField value="{!objQPWrapper.record.or_Amount__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objQPWrapper.record.Adjustment__c}"/>
+                                    </td>
+                                    <apex:outputPanel layout="none" rendered="{!blnHasBundles}">
+                                        <td class="dataCell">
+                                            {!objQPWrapper.record.Bundle_Discount__c}
+                                        </td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objQPWrapper.record.Total_Discount__c}"/>
+                                    </td>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Net_Unit_Price__c}">
+                                        <td class="dataCell">
+                                            <!--Mukunth modified below code for 6 digit project 05-APR-2019-->
+                                            <!--<apex:outputField value="{!objQPWrapper.record.Net_Unit_Price__c}"/>-->
+                                            <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null || objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                                <apex:param value="{!objQPWrapper.record.Net_Unit_Price__c}"/>
+                                            </apex:outputText>
+                                            <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                                <apex:param value="{!objQPWrapper.record.Net_Unit_Price__c}"/>
+                                            </apex:outputText>
+                                            <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                                <apex:param value="{!objQPWrapper.record.Net_Unit_Price__c}"/>
+                                            </apex:outputText>
+                                            <!--Mukunth code end-->
+                                        </td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell">
+                                        <apex:outputField value="{!objQPWrapper.record.Ext_Net_Price__c}"/>
+                                    </td>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Third_Party__c}">
+                                        <td class="dataCell">
+                                            <apex:outputText value="{!IF(OR(objQPWrapper.record.Third_Party__c == 'True',objQPWrapper.record.Third_Party__c == 'TRUE',objQPWrapper.record.Third_Party__c == 'true'),'Yes','No')}"/>
+                                        </td>
+                                    </apex:outputPanel>
+                                    <!--<apex:outputPanel layout="none" rendered="{!objColumnPreference.PM_Approver__c}">
+<td class="dataCell">
+<apex:outputField value="{!objQPWrapper.record.Pm_Approver__c}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Shipment_Approval__c = 'Required for all Orders' || objQPWrapper.record.BigMachines__Product__r.Shipment_Approval__c = 'Required for New Orders Only'}"/>
+</td>
+</apex:outputPanel>-->
+                                    <!--Anju July 2018 PCC Subscriptions-->
+                                    <apex:outputPanel layout="none" rendered="{!quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription}">
+                                        <apex:variable value="{!objQPWrapper.record.BigMachines__Product__c};{!objQPWrapper.record.Is_Overage__c}" var="uniqueKey"/>
+                                        <!--<td class="dataCell" style="background-color: {!IF(NOT(objQPWrapper.record.Is_Overage__c), map_ProdChangeHistoryColor[uniqueKey], '')}">
+<i><apex:outputText value="{!IF(NOT(objQPWrapper.record.Is_Overage__c), map_ProdChangeHistory[uniqueKey], '')}"/></i>
+</td>-->
+                                        <td class="dataCell" style="background-color: {!map_ProdChangeHistoryColor[uniqueKey]}">
+                                            <i>
+                                                <apex:outputText value="{!map_ProdChangeHistory[uniqueKey]}"/>
+                                            </i>
+                                        </td>
+                                    </apex:outputPanel>
+                                    <apex:variable value="{!IF(NOT(objQPWrapper.record.Hide_Record__c), rowNumLevel1 + 1, rowNumLevel1)}" var="rowNumLevel1"/>
+                                </tr>
+                            </apex:repeat>
+                        </apex:repeat>
+                    </tbody>
+                </table>
+                <br/>
+                <!--Anju July 2018 PCC Subscriptions-->
+                <!--Removed Products -->
+                <apex:pageBlockSection id="removedProds" columns="1" title="Removed Products (From Original Subscription)" rendered="{!(quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription) && list_RemovedPrevProds.size > 0}">
+                    <apex:outputpanel rendered="{!(quote.Order_Type__c == $Label.Amend_Subscription || quote.Order_Type__c == $Label.Renew_Subscription) && list_RemovedPrevProds.size > 0}">
+                        <table class="list " border="0" cellpadding="0" cellspacing="0" id="quoteRemovProdGrid">
+                            <thead>
+                                <tr class="headerRow">
+                                    <th class="headerRow" style="width: 15px;"></th>
+                                    <th class="headerRow" style="width: 80px;">Group</th>
+                                    <th class="headerRow" style="width: 200px;">Product</th>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Sub_Category__c}">
+                                        <th class="headerRow" style="width: 150px;">Sub Category</th>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Unit_of_measure__c}">
+                                        <th class="headerRow" style="width: 100px;">Unit of<br/>measure</th>
+                                    </apex:outputPanel>
+                                    <!--<apex:outputPanel layout="none" rendered="{!quote.Offering_Type__c != 'PureCloud'}">
+<th class="headerRow" style="width: 50px;">Concurrent</th>
+</apex:outputPanel>-->
+                                    <th class="headerRow" style="width: 70px;">Qty</th>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c}">
+                                        <th class="headerRow" style="width: 100px;">List Price</th>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="none" rendered="{!AND(objColumnPreference.Partner_Price__c,  quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c)}">
+                                        <th class="headerRow" style="width: 100px;">Partner<br/>Price</th>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Ext_List_Price__c}">
+                                        <th class="headerRow" style="width: 100px;">Ext List<br/>Price</th>
+                                    </apex:outputPanel>
+                                    <th class="headerRow" style="width: 70px;">Discount</th>
+                                    <th class="headerRow" style="width: 50px;">% / Amt</th>
+                                    <th class="headerRow" style="width: 70px;">Adjust-<br/>ment %</th>
+                                    <th class="headerRow" style="width: 80px;">Total<br/>Disc %</th>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Net_Unit_Price__c}">
+                                        <th class="headerRow" style="width: 100px;">Net Unit<br/>Price</th>
+                                    </apex:outputPanel>
+                                    <th class="headerRow" style="width: 100px;">Ext Net<br/>Price</th>
+                                    <apex:outputPanel layout="none" rendered="{!objColumnPreference.Third_Party__c}">
+                                        <th class="headerRow" style="width: 50px;">3rd<br/>Party<br/>GC %</th>
+                                    </apex:outputPanel>
+                                    <!--<apex:outputPanel layout="none" rendered="{!objColumnPreference.PM_Approver__c}">
+<th class="headerRow" style="width: 50px;">PM<br/>Approver</th>
+</apex:outputPanel>-->
+                                    <th class="headerRow" style="width: 80px;">Qty Change<br/>History</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <apex:variable value="{!0}" var="removProdCount"/>
+                                <apex:repeat value="{!list_RemovedPrevProds}" var="removProd">
+                                    <apex:variable value="{!removProdCount + 1}" var="removProdCount"/>
+                                    <tr class="dataRow">
+                                        <td class="dataCell">{!removProdCount}.</td>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.Group_Number__c}"/>
+                                        </td>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.Product__r.Name}"/>
+                                            <br/>
+                                            <apex:outputText value="{!' (' + removProd.Product__r.APN_Number__c +')'}"/>
+                                        </td>
+                                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Sub_Category__c}">
+                                            <td class="dataCell">
+                                                <apex:outputField value="{!removProd.Product__r.Sub_Category__c}"/>
+                                            </td>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Unit_of_measure__c}">
+                                            <td class="dataCell">
+                                                <apex:outputField value="{!removProd.Product__r.Unit_of_Measure__c}"/>
+                                            </td>
+                                        </apex:outputPanel>
+                                        <!--<apex:outputPanel layout="none" rendered="{!quote.Offering_Type__c != 'PureCloud'}">
+<td class="dataCell">
+<apex:outputField value="{!removProd.Product__r.Is_Concurrent__c}"/>
+</td>
+</apex:outputPanel>-->
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.Quantity__c}"/>
+                                        </td>
+                                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.List_Price__c}">
+                                            <td class="dataCell">
+                                                <apex:outputField value="{!removProd.List_Price__c}"/>
+                                            </td>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel layout="none" rendered="{!AND(objColumnPreference.Partner_Price__c,  quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c)}">
+                                            <td class="dataCell">
+                                                <apex:outputField value="{!removProd.Partner_Price__c}"/>
+                                            </td>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Ext_List_Price__c}">
+                                            <td class="dataCell">
+                                                <apex:outputField value="{!removProd.Ext_List__c}"/>
+                                            </td>
+                                        </apex:outputPanel>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.Disc__c}"/>
+                                        </td>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.or_Amount__c}"/>
+                                        </td>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.Adjustment__c}"/>
+                                        </td>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.Total_Discount__c}"/>
+                                        </td>
+                                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Net_Unit_Price__c}">
+                                            <td class="dataCell">
+                                                <apex:outputField value="{!removProd.Net_Unit_Price__c}"/>
+                                            </td>
+                                        </apex:outputPanel>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!removProd.Ext_Net_Price__c}"/>
+                                        </td>
+                                        <apex:outputPanel layout="none" rendered="{!objColumnPreference.Third_Party__c}">
+                                            <td class="dataCell">
+                                                <apex:outputText value="{!IF(OR(removProd.Product__r.Third_Party__c == 'True',removProd.Product__r.Third_Party__c == 'TRUE',removProd.Product__r.Third_Party__c == 'true'),'Yes','No')}"/>
+                                            </td>
+                                        </apex:outputPanel>
+                                        <!--<apex:outputPanel layout="none" rendered="{!objColumnPreference.PM_Approver__c}">
+<td class="dataCell">              
+<apex:outputField value="{!removProd.PM_Approver__c}"/>
+</td>
+</apex:outputPanel>-->
+                                        <td class="dataCell" style="background-color: {!strChngeHistColors[4]}"><i>Removed</i></td>
+                                    </tr>
+                                </apex:repeat>
+                            </tbody>
+                        </table>
+                    </apex:outputpanel>
+                </apex:pageBlockSection>
+                <!--Removed Products -->
+                <!-- Pagination Information -->
+                <apex:outputPanel layout="none" rendered="{!intTotalNoOfRecords > intPageSize}">
+                    <br/>
+                    <center>
+                        <b>Total Records : {!intTotalNoOfRecords}&nbsp;&nbsp;</b>
+                        <apex:commandLink action="{!first}" status="status" reRender="QuoteProductsSection" rendered="{!HasPrevious}" style="text-decoration:none">
+                            First
+                        </apex:commandLink>
+                        <apex:outputText value="First" rendered="{!NOT(HasPrevious)}" style="color:gray"/>
+                        &nbsp;
+                        <apex:commandLink action="{!previous}" status="status" reRender="QuoteProductsSection" rendered="{!HasPrevious}" style="text-decoration:none">
+                            <apex:image url="/img/search_prevarrow.gif" title="Previous" styleClass="prevArrow"/>
+                            &nbsp;
+                            Previous
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasPrevious)}" style="color:gray">
+                            <apex:image url="/img/search_prevarrow_disabled.gif"/>
+                            &nbsp;
+                            Previous
+                        </apex:outputPanel>
+                        &nbsp;
+                        ({!PageNumStr})
+                        &nbsp;
+                        <apex:commandLink action="{!next}" status="status" reRender="QuoteProductsSection" rendered="{!HasNext}" style="text-decoration:none">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow.gif" title="Next" styleClass="nextArrow"/>
+                        </apex:commandLink>
+                        <apex:outputPanel rendered="{!NOT(HasNext)}" style="color:gray">
+                            Next
+                            &nbsp;
+                            <apex:image url="/img/search_nextarrow_disabled.gif"/>
+                        </apex:outputPanel>
+                        &nbsp;
+                        <apex:commandLink action="{!last}" status="status" reRender="QuoteProductsSection" title="Last" rendered="{!HasNext}" style="text-decoration:none">
+                            Last
+                        </apex:commandLink>
+                        <apex:outputText value="Last" rendered="{!NOT(HasNext)}" style="color:gray"/>
+                    </center>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <br/><br/>
+            <apex:outputPanel layout="none" id="bottomSection">
+                <table width="100%">
+                    <tr>
+                        <td valign="top" width="50%">
+                            <apex:outputPanel style="width:45%">
+                                <!-- Proposal Groups Table -->
+                                <apex:pageBlock title="Proposal Groups" id="QPBlock">
+                                    <apex:pageBlockButtons location="top">
+                                        <apex:commandButton value="Modify" action="{!editofProposalGroup}" rendered="{!NOT(blnEditProposalGroup) && IsQuoteUnLocked && Not(blnIsOldQuote)}" rerender="QPBlock" status="status"/>
+                                        <apex:commandButton value="Save" action="{!saveProposalGroup}" rendered="{!blnEditProposalGroup && Not(blnIsOldQuote)}" status="status" reRender="bottomSection,QuoteProductsSection,msgs"/>
+                                        <apex:commandButton value="Cancel" action="{!cancelEditofProposalGroup}" rendered="{!blnEditProposalGroup && Not(blnIsOldQuote)}" rerender="QPBlock" status="status"/>
+                                    </apex:pageBlockButtons>
+                                    <apex:outputPanel layout="none" rendered="{!NOT(blnEditProposalGroup)}">
+                                        <b>Ungrouped Items Sub Total : </b>
+                                        <apex:outputField value="{!objUngrouped.Sub_Total__c}"/>
+                                        <br/><br/>
+                                        <apex:variable var="rowNum" value="{!0}"/>
+                                        <apex:pageBlockTable value="{!list_ProposalGroups}" var="objPG" rendered="{!list_ProposalGroups.size > 0}">
+                                            <apex:column >
+                                                <apex:facet name="header">
+                                                    Group<br/>Number
+                                                </apex:facet>
+                                                <apex:outputText value="{!objPG.Group_Number__c}"/>
+                                            </apex:column>
+                                            <apex:column value="{!objPG.Name__c}"/>
+                                            <apex:column value="{!objPG.Description__c}"/>
+                                            <apex:column value="{!objPG.Discount__c}"/>
+                                            <apex:column value="{!objPG.Sub_Total__c}"/>
+                                            <apex:column headerValue="Goal Seek" rendered="{!IsQuoteUnLocked}">
+                                                <apex:inputField value="{!objPG.Goal_Seek__c}" style="width : 80px"/>
+                                                &nbsp;
+                                                <apex:commandLink value="Goal Seek" action="{!goalSeekForPG}" status="status" reRender="bottomSection,QuoteProductsSection,msgs" styleClass="btn" style="text-decoration : none;" rendered="{!Not(blnIsOldQuote)}">
+                                                    <apex:param name="strPGIndex" assignTo="{!strPGIndex}" value="{!rowNum}" />
+                                                </apex:commandlink>
+                                                &nbsp;
+                                                <apex:commandLink value="Goal Seek Reset" action="{!goalSeekResetForPG}" status="status" reRender="bottomSection,QuoteProductsSection,msgs" styleClass="btn" style="text-decoration : none;" rendered="{!Not(blnIsOldQuote)}">
+                                                    <apex:param name="strPGIndex" assignTo="{!strPGIndex}" value="{!rowNum}" />
+                                                </apex:commandlink>
+                                                <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                            </apex:column>
+                                        </apex:pageBlockTable>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel layout="none" rendered="{!blnEditProposalGroup}" id="PGEditPanel">
+                                        <apex:pageMessage severity="error" strength="1" rendered="{!blnHasProposalGroupErrors}">
+                                            {!strProposalGroupErrorMsg}
+                                        </apex:pageMessage>
+                                        <apex:variable var="rowNum" value="{!0}"/>
+                                        <apex:pageBlockTable value="{!list_ProposalGroupsBeingEdited}" var="objPG">
+                                            <apex:column headerValue="Action">
+                                                <apex:commandlink action="{!removeProposalGroup}" rerender="PGEditPanel" title="Remove Proposal Group" status="status" rendered="{!Not(blnIsOldQuote)}">
+                                                    <apex:param name="strPGIndex" assignTo="{!strPGIndex}" value="{!rowNum}" />
+                                                    <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>
+                                                </apex:commandlink>
+                                                <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Name">
+                                                <apex:inputField value="{!objPG.Name__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Description">
+                                                <apex:inputField value="{!objPG.Description__c}" style="width:200px;"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Discount %">
+                                                <apex:inputField value="{!objPG.Discount__c}"/>
+                                            </apex:column>
+                                        </apex:pageBlockTable>
+                                        <br/>
+                                        <apex:commandLink action="{!addProposalGroup}" reRender="PGEditPanel" title="Add Proposal Group" status="status" rendered="{!Not(blnIsOldQuote)}">
+                                            <apex:image value="{!$Resource.PlusSign}" width="25px" height="25px"/>
+                                        </apex:commandLink>
+                                    </apex:outputPanel>
+                                </apex:pageBlock>
+                                <br/>
+                                <apex:panelGrid columns="{!IF(IsQuoteUnLocked,'3','2')}">
+                                    <!--
+<apex:outputText value="Net Price Goal Seek : " style="font-weight:bold"/>
+<apex:inputField value="{!quote.Goal_Seek__c}" rendered="{!IsQuoteUnLocked}"/>
+<apex:outputField value="{!quote.Goal_Seek__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+<apex:panelGroup rendered="{!IsQuoteUnLocked}">
+<apex:commandButton value="Goal Seek" action="{!goalSeekBtnHandler}" status="status" reRender="bottomSection,QuoteProductsSection,msgs"/>&nbsp;
+<apex:commandButton value="Goal Seek Reset" action="{!goalSeekResetBtnHandler}" status="status" reRender="bottomSection,QuoteProductsSection,msgs"/>
+</apex:panelGroup>
+-->
+                                    <apex:outputText value="Adjustment % : " style="font-weight:bold"/>
+                                    <apex:inputField value="{!quote.Adjustment__c}" rendered="{!IsQuoteUnLocked}"/>
+                                    <apex:outputField value="{!quote.Adjustment__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                                    <apex:panelGroup rendered="{!IsQuoteUnLocked}">
+                                        <apex:commandButton value="Apply Adjustment" action="{!applyAdjustmentBtnHandler}" status="status" reRender="bottomSection,QuoteProductsSection,msgs" rendered="{!Not(blnIsOldQuote)}"/>
+                                        &nbsp;
+                                        <apex:commandButton value="Adjustment Reset" action="{!adjustmentResetBtnHandler}" status="status" reRender="bottomSection,QuoteProductsSection,msgs" rendered="{!Not(blnIsOldQuote)}"/>
+                                    </apex:panelGroup>
+                                </apex:panelGrid>
+                            </apex:outputPanel>
+                            <!--Suggested Discount Anju June 2018-->
+                            <apex:outputPanel rendered="{!quote.BigMachines__Opportunity__r.Direct_Indirect_Sale__c = 'Direct' && quote.Product_Tier__c = 'Enterprise'}">
+                                <apex:pageBlockSection title="Suggested Discount" id="pnlSecApprovedDiscount" >
+                                    <apex:pageBlockSectionItem helpText="(assumes standard T&C's)">
+                                        <apex:outputLabel value="Seat Size Discount" />
+                                        <apex:outputText value="{!dq.Seat_Discount_Range__c}" />
+                                    </apex:pageBlockSectionItem>
+                                </apex:pageBlocksection>
+                            </apex:outputPanel>
+                        </td>
+                        <td valign="top" width="50%">
+                            <!-- Totals Table -->
+                            <apex:pageBlock title="Totals" id="TotalsBlock">
+                                <table class="list " border="0" cellpadding="0" cellspacing="0">
+                                    <tr class="headerRow">
+                                        <th class="headerRow"></th>
+                                        <th class="headerRow">Amount</th>
+                                    </tr>
+                                    <!--<tr class="dataRow">
+<th class="dataCell">Commited Monthly Recurring Revenue Pre Discount</th>
+<td class="dataCell">
+<apex:outputField value="{!quote.CMRR_Pre_Discount__c}"/>
+</td>
+</tr>   --> 
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Annual Contract Value Pre Discount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.ACV_Pre_Discount__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Total Contract Value Pre Discount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.TCV_Pre_Discount__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="display: {!IF(quote.Base_Agent_Discount__c=null || quote.Base_Agent_Discount__c=0.00, 'none', 'table-row')};">
+                                        <th class="dataCell">Base Agent Discount %</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Base_Agent_Discount__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="display: {!IF(quote.Hardware_Discount__c=null || quote.Hardware_Discount__c=0.00, 'none', 'table-row')};">
+                                        <th class="dataCell">Telco, MPLS, Hardware, 3rd Party, and Miscellaneous Costs Discount %</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Hardware_Discount__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="display: {!IF(quote.Business_Users_Add_On__c=null || quote.Business_Users_Add_On__c=0.00, 'none', 'table-row')};">
+                                        <th class="dataCell">Business Users and Add-On Discount %</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Business_Users_Add_On__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="display: {!IF(quote.Data_Center_Provisioning_Discount__c=null || quote.Data_Center_Provisioning_Discount__c=0.00, 'none', 'table-row')};">
+                                        <th class="dataCell">Data Center Provisioning Discount %</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Data_Center_Provisioning_Discount__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="display: {!IF(quote.Overage_Discount__c=null || quote.Overage_Discount__c=0.00, 'none', 'table-row')};">
+                                        <th class="dataCell">Overage Discount %</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Overage_Discount__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Total Discount (Genesys and Third-Party Products) %</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Discount_Genesys_and_Third_Party__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Total Discount (Genesys Products Only) %</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Discount_Genesys_Products_Only__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow">
+                                        <th class="dataCell">Total Discount (Genesys and Third-Party Products) Amount</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Discount__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Total_Overage__c != null && quote.Total_Overage__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Estimated {!IF(quote.Billing_Category__c != 'M2M', 'Overage Fees', 'Usage Fees')}</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Overage__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Total_Education__c != null && quote.Total_Education__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Education</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Education__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription) && quote.Total_Education__c != null && quote.Total_Education__c > 0 && quote.Total_Education_Change__c != null, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Education Changes</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Education_Change__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Total_Hardware__c != null && quote.Total_Hardware__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Hardware</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Hardware__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription) && quote.Total_Hardware__c != null && quote.Total_Hardware__c > 0 && quote.Total_Hardware_Change__c != null, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Hardware Changes</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Total_Hardware_Change__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Setup_Provisioning_Charges__c != null && quote.Setup_Provisioning_Charges__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Setup Provisioning Charges</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Setup_Provisioning_Charges__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription) && quote.Setup_Provisioning_Charges_Change__c != null && quote.Setup_Provisioning_Charges_Change__c > 0 && quote.Setup_Provisioning_Charges_Change__c != null, 'table-row', 'none')};">
+                                        <th class="dataCell">Setup Provisioning Charges Change</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Setup_Provisioning_Charges_Change__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;">
+                                        <th class="dataCell">Minimum {!CASE(quote.Billing_Period__c, 'Annually', 'Annual', 'Semi-Annually', 'Semi-Annual', 'Other', TEXT(quote.No_Of_Months__c)+' Months', quote.Billing_Period__c)} Fees</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Minimum_Fees_Period__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Pre_Credit_CMRR__c != null && quote.Pre_Credit_CMRR__c != quote.CMRR__c, 'table-row', 'none')};">
+                                        <th class="dataCell">Pre-Credit CMRR</th>
+                                        <td class="dataCell">
+                                            {!quote.CurrencyISOCode}
+                                            <apex:outputText value="{0, number, ###,##0.00}">
+                                                <apex:param value="{!quote.Pre_Credit_CMRR__c}"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Pre_Credit_ACV__c != null && quote.Pre_Credit_ACV__c != quote.Annual_Contract_Value__c, 'table-row', 'none')};">
+                                        <th class="dataCell">Pre-Credit ACV</th>
+                                        <td class="dataCell">
+                                            {!quote.CurrencyISOCode}
+                                            <apex:outputText value="{0, number, ###,##0.00}">
+                                                <apex:param value="{!quote.Pre_Credit_ACV__c }"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Pre_Credit_TCV__c != null && quote.Pre_Credit_TCV__c != quote.Total_Contract_Value__c, 'table-row', 'none')};">
+                                        <th class="dataCell">Pre-Credit TCV</th>
+                                        <td class="dataCell">
+                                            {!quote.CurrencyISOCode}
+                                            <apex:outputText value="{0, number, ###,##0.00}">
+                                                <apex:param value="{!quote.Pre_Credit_TCV__c}"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;">
+                                        <!--   <th class="dataCell">Commited Monthly Recurring Revenue (CMRR)</th> -->
+                                        <th class="dataCell">Commited Monthly Recurring Revenue</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.CMRR__c}"/>
+                                        </td>
+                                    </tr>
+                                    <!--Anju July 2018 PCC Subscriptions-->
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription || quote.Order_Type__c==$Label.Renew_Subscription) && quote.CMRR_Change__c != null, 'table-row', 'none')};">
+                                        <th class="dataCell">CMRR Changes</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.CMRR_Change__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(!ISBLANK(quote.Telco_cost__c) && quote.Telco_cost__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Monthly Telco/MPLS/Data Center Fees</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Telco_cost__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription || quote.Order_Type__c==$Label.Renew_Subscription) && !ISBLANK(quote.Telco_cost__c) && quote.Telco_cost__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Telco CMRR Changes</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Telco_CMRR_Change__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;">
+                                        <th class="dataCell">Annual Contract Value (ACV)</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Annual_Contract_Value__c}"/>
+                                        </td>
+                                    </tr>
+                                    <!--Anju July 2018 PCC Subscriptions-->
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription || quote.Order_Type__c==$Label.Renew_Subscription) && quote.Annual_Contract_Value_Change__c != null, 'table-row', 'none')};">
+                                        <th class="dataCell">Annual Contract Value (ACV) Changes</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Annual_Contract_Value_Change__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;">
+                                        <th class="dataCell">Total Non-Recurring Fees</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Non_Recurring_Fees__c}"/>
+                                        </td>
+                                    </tr>
+                                    <!--Anju July 2018 PCC Subscriptions-->
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription) && quote.Non_Recurring_Fees_Changes__c != null, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Non-Recurring Fees Changes</th>
+                                        <td class="dataCell">
+                                            <apex:outputField value="{!quote.Non_Recurring_Fees_Changes__c}"/>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#ffff99;display:{!IF(quote.Migration_Credit__c != null && quote.Migration_Credit__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Credit (Recurring and One-Time)</th>
+                                        <td class="dataCell">
+                                            ({!quote.CurrencyISOCode}
+                                            <apex:outputText value="{0, number, ###,##0.00}">
+                                                <apex:param value="{!quote.Migration_Credit__c}"/>
+                                            </apex:outputText>)
+                                        </td>
+                                    </tr>  
+                                    <tr class="dataRow" style="background-color:#f7d2b2;display: {!IF(!ISBLANK(Quote.Token_Value__c) && Quote.Token_Value__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Tokens</th>
+                                        <td class="dataCell">
+                                            <b>
+                                                <apex:outputField value="{!quote.Token_Value__c}"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#f7d2b2;display: {!IF((quote.Order_Type__c==$Label.Amend_Subscription || quote.Order_Type__c==$Label.Renew_Subscription) && !ISBLANK(Quote.Token_Value__c) && Quote.Token_Value__c  > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Tokens Change</th>
+                                        <td class="dataCell">
+                                            <b>
+                                                <apex:outputField value="{!quote.Total_Tokens_Change__c}"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#f7d2b2;display: {!IF(!ISBLANK(Quote.PureSuccess_Offer_Subscription_Amount__c) && Quote.PureSuccess_Offer_Subscription_Amount__c> 0, 'table-row', 'none')};">
+                                        <th class="dataCell">PureSuccess Offer Amount</th>
+                                        <td class="dataCell">
+                                            <b>
+                                                <apex:outputField value="{!quote.PureSuccess_Offer_Subscription_Amount__c}"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#f7d2b2;display: {!IF(!ISBLANK(Quote.A_La_Carte_PureSuccess_Services_Amount__c) && Quote.A_La_Carte_PureSuccess_Services_Amount__c > 0, 'table-row', 'none')};">
+                                        <th class="dataCell">A La Carte PureSuccess Services Amount</th>
+                                        <td class="dataCell">
+                                            <b>
+                                                <apex:outputField value="{!quote.A_La_Carte_PureSuccess_Services_Amount__c}"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr class="dataRow" style="background-color:#b3e6ff;">
+                                        <th class="dataCell">Total Contract Value (TCV)</th>
+                                        <td class="dataCell">
+                                            <b>
+                                                <apex:outputField value="{!quote.Total_Contract_Value__c}"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <!--Anju July 2018 PCC Subscriptions-->
+                                    <tr class="dataRow" style="background-color:#b3e6ff;display:{!IF((quote.Order_Type__c==$Label.Amend_Subscription) && quote.Total_Contract_Value_Change__c != null, 'table-row', 'none')};">
+                                        <th class="dataCell">Total Contract Value (TCV) Changes</th>
+                                        <td class="dataCell">
+                                            <b>
+                                                <apex:outputField value="{!quote.Total_Contract_Value_Change__c}"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </apex:pageBlock>
+                        </td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+        </apex:pageBlock>
+        <apex:outputPanel id="selectColumns">
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!blnShowSelectColumns}"/>
+            <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!blnShowSelectColumns}">
+                <apex:pageBlock title="Select Columns">
+                    <apex:pageBlockButtons location="both">
+                        <apex:commandButton value="Save" action="{!saveColumnsHandler}" status="closingStatus" reRender="selectColumns,QuoteProductsSection" rendered="{!Not(blnIsOldQuote)}"/>
+                        <apex:commandButton value="Cancel" action="{!cancelColumnsHandler}" status="closingStatus" reRender="selectColumns" rendered="{!Not(blnIsOldQuote)}"/>
+                        <apex:actionStatus id="closingStatus">
+                            <apex:facet name="start">
+                                <apex:image value="/img/loading.gif"/>
+                            </apex:facet>
+                        </apex:actionStatus>
+                    </apex:pageBlockButtons>
+                    <table class="list " border="0" cellpadding="0" cellspacing="0">
+                        <tr class="headerRow">
+                            <th class="headerRow">Column</th>
+                            <th class="headerRow">Show</th>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">Sub Category</td>
+                            <td class="dataCell">
+                                <apex:inputCheckbox value="{!objColumnPreference.Sub_Category__c}"/>
+                            </td>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">Unit of measure</td>
+                            <td class="dataCell">
+                                <apex:inputCheckbox value="{!objColumnPreference.Unit_of_measure__c}"/>
+                            </td>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">List Price</td>
+                            <td class="dataCell">
+                                <apex:inputCheckbox value="{!objColumnPreference.List_Price__c}"/>
+                            </td>
+                        </tr>
+                        <tr class="dataRow" style="display: {!IF(quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c, 'table-row', 'none')};">
+                            <td class="dataCell" >
+                                <apex:outputlabel value="Partner Price"/>
+                            </td>
+                            <td class="dataCell">
+                                <apex:inputCheckbox value="{!objColumnPreference.Partner_Price__c}"/>
+                            </td>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <apex:outputlabel value="{!IF(quote.BigMachines__Opportunity__r.PureConnect_Cloud_Partner_Approved__c, 'Ext Partner Price', 'Ext List Price')}"/>
+                            </td>
+                            <td class="dataCell">
+                                <apex:inputCheckbox value="{!objColumnPreference.Ext_List_Price__c}"/>
+                            </td>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">Net Unit Price</td>
+                            <td class="dataCell">
+                                <apex:inputCheckbox value="{!objColumnPreference.Net_Unit_Price__c}"/>
+                            </td>
+                        </tr>
+                        <tr class="dataRow">
+                            <td class="dataCell">3rd Party<br/>GC %</td>
+                            <td class="dataCell">
+                                <apex:inputCheckbox value="{!objColumnPreference.Third_Party__c}"/>
+                            </td>
+                        </tr>
+                        <!-- <tr class="dataRow">
+<td class="dataCell">PM Approver</td>
+<td class="dataCell">
+<apex:inputCheckbox value="{!objColumnPreference.PM_Approver__c}"/>
+</td>
+</tr> -->
+                    </table>
+                </apex:pageBlock>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:pageBlock title="Special Offers" rendered="{!strSelectedTab=='Special Offers'}">
+            <apex:pageBlockSection columns="1">
+                <!--<apex:inputField value="{!quote.Business_Exceptions__c}" rendered="{!IsQuoteUnLocked}"/>
+<apex:outputField value="{!quote.Business_Exceptions__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>-->
+                <apex:inputField value="{!quote.Include_Special_Offer_in_Output__c}" rendered="{!IsQuoteUnLocked}" id="includeSpecialOffer"/>
+                <apex:outputField value="{!quote.Include_Special_Offer_in_Output__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <apex:pageBlockSectionItem rendered="{!IsQuoteUnLocked}">
+                    <apex:outputLabel value="Special Offers/Business Exceptions"/>
+                    <apex:inputField value="{!quote.Special_Offer_Terms__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!quote.Special_Offer_Terms__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+                <!--    <apex:inputField value="{!quote.Additional_Legal_Terms__c}" rendered="{!IsQuoteUnLocked}"/>
+<apex:outputField value="{!quote.Additional_Legal_Terms__c}" rendered="{!NOT(IsQuoteUnLocked)}"/>
+
+<apex:inputField value="{!quote.Legal_Terms__c}" rendered="{!IsQuoteUnLocked}"/>
+<apex:outputField value="{!quote.Legal_Terms__c}" rendered="{!NOT(IsQuoteUnLocked)}"/> -->
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:outputPanel layout="none" rendered="{!strSelectedTab=='Order Submission'}">
+            <apex:pageMessage severity="info" strength="2" rendered="{!NOT(IsOrderInfoAvailable)}">
+                Order Submission becomes available once the quote is approved.
+            </apex:pageMessage>
+            <apex:pageBlock rendered="{!IsOrderInfoAvailable}">
+                <apex:pageBlockButtons >
+                    <apex:commandButton value="Cancel" action="{!cancelBtnHandler}" rendered="{!blnIsReviseOrder && Not(blnIsOldQuote)}"/>
+                </apex:pageBlockButtons>
+                <!-- Edit Mode -->
+                <apex:outputPanel layout="none" rendered="{!quote.BigMachines__Status__c = 'Quote Approved' || quote.Revise_Minor__c || blnIsReviseOrder}">
+                    <apex:pageBlockSection title="PO details" collapsible="false" columns="2">
+                        <apex:pageBlockSectionItem rendered="{!NOT(quote.Treat_SO_as_PO__c)}">
+                            <apex:outputLabel value="PO#"/>
+                            <apex:outputPanel layout="block" styleClass="requiredInput">
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:inputField value="{!quote.Order_PO_Number__c}"/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!quote.Treat_SO_as_PO__c}">
+                            <apex:outputLabel value="PO#"/>
+                            <apex:inputField value="{!quote.Order_PO_Number__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Attach PO (if not already attached)"/>
+                            <apex:inputFile value="{!objAttachment.body}" filename="{!objAttachment.name}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!NOT(quote.Treat_SO_as_PO__c)}">
+                            <apex:outputLabel value="PO Date"/>
+                            <apex:outputPanel layout="block" styleClass="requiredInput" >
+                                <apex:outputPanel styleClass="requiredBlock"/>
+                                <apex:inputField value="{!quote.Order_PO_Date__c}"/>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!quote.Treat_SO_as_PO__c}">
+                            <apex:outputLabel value="PO Date"/>
+                            <apex:inputField value="{!quote.Order_PO_Date__c}"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!quote.Order_Special_Instructions__c}"/>
+                        <apex:inputField value="{!quote.Order_PO_Received_Date__c}"/>
+                        <apex:inputField value="{!quote.Contract_Signature_Date__c}"/>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+                <!-- Read Mode -->
+                <apex:outputPanel id="orderReadOnly" layout="none" rendered="{!NOT(quote.BigMachines__Status__c = 'Quote Approved' || quote.Revise_Minor__c || blnIsReviseOrder)}">
+                    <apex:pageBlockSection title="PO details" collapsible="false" columns="2">
+                        <apex:outputField value="{!quote.Order_PO_Number__c}"/>
+                        <apex:pageBlockSectionItem />
+                        <apex:outputField value="{!quote.Order_PO_Date__c}"/>
+                        <apex:outputField value="{!quote.Order_Special_Instructions__c}"/>
+                        <apex:outputField value="{!quote.Order_PO_Received_Date__c}"/>
+                        <apex:outputField value="{!quote.Contract_Signature_Date__c}"/>
+                        <apex:pageBlockSectionItem />
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Order"/>
+                            <apex:outputLink value="{!URLFOR($Action.Order__c.View, quote.Order__c, null, true)}" target="_blank">{!IF(strNewOrderName='',quote.Order__r.Name,strNewOrderName)}</apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+    <!--
+<apex:include pageName="OrderSubmission" rendered="{!strSelectedTab=='Order Submission'}"/>
+<apex:include pageName="CreateOrderMultipleShipPCC" rendered="{!AND(strSelectedTab=='Order Submission',quote.Shipping_Required__c)}"/>
+-->
+    <apex:include pageName="OrderSubmission" rendered="{!strSelectedTab=='Order Submission'}" id="orderSubmissionPage"/>
+    <div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <apex:outputPanel id="popPanel">
+                    <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                    <apex:outputPanel styleClass="custPopup" layout="block">
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            Please wait ... &nbsp; 
+                            <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:facet>
+        </apex:actionStatus>
+    </div>
+    <apex:form >
+        <apex:outputPanel id="revisePopup">
+            <apex:outputPanel id="revisePopPanel" rendered="{!showReviseDQPopup}">
+                <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:center;">
+                        <apex:pageBlock title="Revise?">
+                            <apex:pageBlockButtons location="bottom">
+                                <apex:commandButton value="Revise" onclick="synchAndGoAndReviseDQAF(); return false;" rendered="{!Not(blnIsOldQuote)}"/>
+                                <apex:commandButton value="Cancel" onclick="hideReviseVisibilityAF(); return false;" rendered="{!Not(blnIsOldQuote)}"/>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="1">
+                                <b>
+                                    Deal qualification will be revised, click Ok to revise and go to deal qualification or Cancel.
+                                </b>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        <apex:actionFunction name="showReviseVisibilityAF" action="{!showReviseVisibility}" reRender="revisePopup" status="status" />
+        <apex:actionFunction name="hideReviseVisibilityAF" action="{!hideReviseVisibility}" reRender="revisePopup" status="status" />
+        <apex:actionFunction name="GenesysPSRequiredChecked" action="{!saveBeforeReload}" reRender="revisePopup" status="status" onComplete="window.open('https://genesys--c.na61.visual.force.com/apex/PSDealSupportQuery?supportarea=Professional+Services&isPSSMART=yes&type=Budgetary+Estimate+%28BE%29');return false;"/>
+        
+    </apex:form>
+    <script>
+    function saveAndReload()
+    {
+        saveBeforeReload();
+        return false;
+    }
+    function convertToRealQuoteJS()
+    {
+        convertToRealQuote();
+        return false;
+    }
+    function deleteQP(decisionInputId)
+    {
+        var r = confirm("Are you sure you want to delete this record ?");
+        if(r == true)
+        {
+            document.getElementById(decisionInputId).value = 'yes';
+        }
+        else
+        {
+            document.getElementById(decisionInputId).value = 'no';
+        }
+    }
+    </script>
+    <apex:outputPanel id="pnlDQJS">
+        <script>            
+        function openDQ()
+        {
+            var url = '/apex/DealQualificationCloud?oppId={!quote.BigMachines__Opportunity__c}&ot={!quote.Offering_Type__c}&pt={!quote.Quote_Business_Type__c}'; 
+            window.open(url, '_blank');
+        }
+        function confirmDQRevise()
+        {               
+            if('{!dqStatus}' == '' ||'{!dqStatus}' == 'Not Approved' || '{!dqStatus}' == 'In Progress' || '{!dqStatus}' == 'Revision Pending' ){
+                synchAndGoToDQAF();
+            }
+            else{
+                showReviseVisibilityAF();                                       
+            }
+        }
+        
+        function goToDQ()
+        {            
+            var url = '/apex/DealQualificationCloud?oppId={!quote.BigMachines__Opportunity__c}&ot={!quote.Offering_Type__c}&pt={!quote.Quote_Business_Type__c}';
+            window.open(url, '_blank');  
+            hideReviseVisibilityAF(); 
+            location.href='/apex/CreateQuoteCloud?id={!quote.id}';             
+        }
+        function goToDQAndRevise()
+        {            
+            var url = '/apex/DealQualificationCloud?oppId={!quote.BigMachines__Opportunity__c}&ot={!quote.Offering_Type__c}&pt={!quote.Quote_Business_Type__c}&REVISE=1';
+            window.open(url, '_blank');  
+            hideReviseVisibilityAF();  
+            location.href='/apex/CreateQuoteCloud?id={!quote.id}';            
+        } 
+        function openProductConfigurator(strButtonName)
+        {
+            var strAnnualPriceIncrease = '{!quote.Price_Escalation__c}';
+            
+            if(strAnnualPriceIncrease == null || strAnnualPriceIncrease == '')
+                alert('Please select Annual Price Increase % and click save before adding the products.');
+            else
+            {    
+                if(strButtonName == 'SearchProducts')
+                    window.open('/apex/ConfigurationCloud?id={!quote.Id}&tab=search','Product Configuration', 'fullscreen=yes,resizable=yes,scrollbars=yes');
+                else
+                    window.open('/apex/ConfigurationCloud?id={!quote.Id}','Product Configuration', 'fullscreen=yes,resizable=yes,scrollbars=yes,width=1000,height=500');
+            }        
+        }              
+        </script>
+    </apex:outputPanel>
+</apex:page>

@@ -1,0 +1,130 @@
+<apex:page controller="RqiAqiForm" id="samplePage" >
+	<apex:includeScript value="{!$Resource.pkb_jquery_1_6_2}"/>
+    <h1>RQI and AQI Sampling Page</h1><br/>
+    <apex:form id="auditForm">
+        <apex:pageMessages id="msgs" />
+        <p>Select a user</p>
+        <span id="lookup_field"><apex:inputField value="{!authorname.Author__c}"/></span>  
+        <p>Select a time period.</p>
+        
+        
+        <input type="radio" name="usedate" id="useprevmonths" /><label for="useprevmonths">Use the Previous 2 Months</label>
+        <br/>
+        <input type="radio" name="usedate" id="usedaterange" /><label for="usedaterange">Use the following date range</label><br/>
+        <br/>
+        
+        <div class="dateranges" style="display:none;">
+	        <table>
+	            <tr><td style="vertical-align:middle">Start Date</td><td style="vertical-align:middle"><apex:inputText styleclass="startdateclass" id="date1" value="{!dateRange1}" onfocus="DatePicker.pickDate(false, this.id,false);"/></td></tr>
+	            <tr><td style="vertical-align:middle">End Date</td><td style="vertical-align:middle"><apex:inputText styleclass="enddateclass" id="date2" value="{!dateRange2}" onfocus="DatePicker.pickDate(false, this.id,false);"/></td></tr>
+	        </table>
+        </div>
+        <br/>
+        <apex:actionFunction name="userOptions" action="{!valuesFromUser}" rerender="resultsTblC,resultsTblA" oncomplete="$('#inprogress').hide();showResults();">
+            <apex:param name="casesorarticles" value="" />
+            <apex:param name="datestart" value="" />
+            <apex:param name="dateend" value="" />
+        </apex:actionFunction>
+        <script type="text/javascript">
+        	var requestedData='';
+            function getSelected(a)
+            {
+                var date1 = $('.startdateclass').val();
+                var date2 = $('.enddateclass').val();
+                var retType = a;
+                requestedData = a;
+                if($('.lookupInput input').val() == null || $('.lookupInput input').val() == ''){
+                	alert('please select a user');
+                	$('#inprogress').hide();
+                	return false;
+                }
+                
+                if($('#useprevmonths:checked').html() == null && (date1 == '' || date2 == '')){
+                	alert('please select a date');
+                	$('#inprogress').hide();
+                	return false;
+                }
+                
+                userOptions(retType,date1,date2);
+            }
+            
+            // show only the results that the user requested data for
+            function showResults(){
+            	if(requestedData=='retCases'){
+            		$('#rqiTable').show();
+            		$('#aqiTable').hide();
+            	}else{
+            		$('#aqiTable').show();
+            		$('#rqiTable').hide();
+            	}
+            }
+            
+            $(document).ready(function(){
+                // hide the select field that pops up next to the lookup field
+                $('#lookup_field select').hide();
+                
+                // logic to hide the date range options unless user wants to search past 2 months prior
+                var times = 0;
+                $('input[name="usedate"]').change(function(){
+                	times++;
+                	if($(this).attr('id')=='usedaterange'){
+                		$('div.dateranges').toggle();
+                		$('div.dateranges input').val('');
+                	}else if (times>0){
+                		$('div.dateranges').hide();
+                		$('div.dateranges input').val('');
+                	}
+                });
+            });
+          
+           
+        </script>
+        
+    </apex:form>
+    <h3>Select type of Audit</h3>
+    
+    <!--TODO Taylor: remove the BRs tags, maybe use the salesforce page block for both sections and add styling there -->
+    <br/><br/>
+    <button id="retCases" onclick="$('#inprogress').show();getSelected(this.id);">Get Cases for RQI</button>
+    <button id="retArticles" onclick="$('#inprogress').show();getSelected(this.id);">Get Articles for AQI</button>
+    <br/><br/><br/>
+    <div class="displayResults">
+    
+    	
+    	<img style="display:none;" id="inprogress" src="{!$Resource.favorite_icon_maybe}"></img>
+        <!-- RQI Table for displaying Cases --> 
+        <div id="rqiTable" style="display:none;">
+            <apex:pageBlock title="Cases" id="resultsTblC">
+              <apex:dataTable id="rqitable" value="{!caseList}"  var="rc" cellPadding="4" border="1" rendered="{!caseList.size>0}"> 
+               <apex:column style="vertical-align:middle;">
+                <apex:facet name="header">Case Number</apex:facet>
+                <apex:outputLink value="/{!rc.id}" styleclass="caseLink" target="_blank">{!rc.CaseNumber}</apex:outputLink>
+               </apex:column>
+               <apex:column style="vertical-align:middle;">
+                <apex:facet name="header">Create a New Audit</apex:facet>
+                <button class='createRqiAudit' id="{!rc.id}" onclick="$(this).hide();window.open('/apex/CreateRQIAQI?id={!rc.id}&authorId={!authorname.Author__c }&casesorarticles={!cType}','_blank');">Create RQI Audit</button>
+               </apex:column>
+              </apex:dataTable>
+              <apex:outputText value="No Cases to display please adjust the date range or user" rendered="{!caseList.size=0}"/>
+             </apex:pageBlock>
+             
+         </div>
+         <!-- AQI Table for displaying Articles -->
+         <div id="aqiTable" style="display:none;">
+            <apex:pageBlock title="Articles" id="resultsTblA">
+              <apex:dataTable id="aqitable" value="{!articleList}"  var="ac" cellPadding="4" border="1" rendered="{!articleList.size>0}"> 
+               <apex:column style="vertical-align:middle;">
+                <apex:facet name="header">Article Number</apex:facet>
+                <apex:outputLink value="/{!ac.id}" styleclass="articleLink" target="_blank">{!ac.ArticleNumber}</apex:outputLink>
+               </apex:column>
+               <apex:column style="vertical-align:middle;">
+                <apex:facet name="header">Create a New Audit</apex:facet>
+                <button class='createAqiAudit' id="{!ac.id}" onclick="$(this).hide();window.open('/apex/CreateRQIAQI?id={!ac.id}&authorId={!authorname.Author__c }&casesorarticles={!cType}','_blank');">Create AQI Audit</button>
+               </apex:column>
+              </apex:dataTable>
+              <apex:outputText value="No Articles to display please adjust the date range or user" rendered="{!articleList.size=0}"/>
+             </apex:pageBlock>
+         </div>
+    </div>
+    
+</apex:page>

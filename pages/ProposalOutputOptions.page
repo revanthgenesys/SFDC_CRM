@@ -1,0 +1,287 @@
+<apex:page title="Quote : {!BigMachines__Quote__c.Name}" standardController="BigMachines__Quote__c" extensions="ProposalOptionsExt" sidebar="false" id="pg">
+    <apex:sectionHeader title="Proposal Options" subtitle="{!BigMachines__Quote__c.Name}"/>
+    
+    <c:QuoteTabPanel1 QuoteId="{!BigMachines__Quote__c.id}" 
+         typeOfQuote="{!IF(BigMachines__Quote__c.Quote_Business_Type__c == 'Renewal','Renewal','On Premise')}"
+         selectedTab="Proposal Output" showHeader="false"/>
+    <apex:form id="form">
+        <apex:actionFunction name="viewContractAF" action="{!viewContract}" status="status" reRender="pnlRefresh" oncomplete="validateContact(); return false;">
+            <apex:param name="contactId" assignTo="{!contactId}" value="" />
+        </apex:actionFunction>
+        <apex:outputText value="{!BigMachines__Quote__c.Cover_Letter_Text__c}" rendered="false"/>
+        <apex:outputText value="{!BigMachines__Quote__c.Sold_To_Name__r.Name}" rendered="false"/>
+        <apex:outputPanel rendered="{!NOT(BigMachines__Quote__c.BigMachines__Status__c == 'Quote Approved' ||
+                                    BigMachines__Quote__c.BigMachines__Status__c == 'Order Submitted' || 
+                                    AND(BigMachines__Quote__c.BigMachines__Status__c == 'Revision Pending',
+                                    BigMachines__Quote__c.Quote_Business_Type__c == 'Renewal') ||
+                                    BigMachines__Quote__c.BigMachines__Status__c == 'Order Accepted')}">
+            <hr/>
+            <apex:pageMessage severity="info" strength="2">
+                You can access Quote proposal output once your Opportunity is reviewed and approved.
+            </apex:pageMessage>
+        </apex:outputPanel>
+        <apex:pageMessages /> 
+        
+      
+        
+        
+        <apex:pageBlock rendered="{!BigMachines__Quote__c.BigMachines__Status__c == 'Quote Approved' ||
+                                    BigMachines__Quote__c.BigMachines__Status__c == 'Order Submitted' || 
+                                    AND(BigMachines__Quote__c.BigMachines__Status__c == 'Revision Pending',
+                                    BigMachines__Quote__c.Quote_Business_Type__c == 'Renewal') ||
+                                    BigMachines__Quote__c.BigMachines__Status__c == 'Order Accepted'}" id="pgblk">
+            <p></p>
+            <apex:outputtext style="color:red;font-size:14px;font-weight:bold;" value="Please note Genesys proposal is a non-binding offer solely for budgetary consideration."></apex:outputtext>
+            <p></p>
+    
+            <apex:pageBlockButtons id="buttons">
+                <!--<apex:commandButton value="View Proposal" status="status" action="{!viewContract}" rendered="{!BigMachines__Quote__c.Quote_Business_Type__c == 'Renewal'}"
+                  reRender="displaySection" oncomplete="location.href='/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!BigMachines__Quote__c.id}&retURL={!SUBSTITUTE(SUBSTITUTE(LEFT($Api.Partner_Server_URL_210, FIND( '/services', $Api.Partner_Server_URL_260)), 'visual.force', 'salesforce'), 'c.', '')}apex/ProposalOptions?id={!BigMachines__Quote__c.id}'; return false;"/>
+                <apex:commandButton value="View Proposal" status="status" action="{!viewContract}" rendered="{!BigMachines__Quote__c.Quote_Business_Type__c != 'Renewal'}"
+                  reRender="pnlRefresh" oncomplete="location.href='/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!BigMachines__Quote__c.id}&retURL={!SUBSTITUTE(SUBSTITUTE(LEFT($Api.Partner_Server_URL_210, FIND( '/services', $Api.Partner_Server_URL_260)), 'visual.force', 'salesforce'), 'c.', '')}apex/ProposalOptions?id={!BigMachines__Quote__c.id}'; return false;"/>-->
+                  <apex:commandButton value="View Proposal" status="status" action="{!viewContract}" rendered="{!BigMachines__Quote__c.Quote_Business_Type__c == 'Renewal'}"
+                  reRender="displaySection" oncomplete="location.href='/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!BigMachines__Quote__c.id}&retURL=https://genesys--c.cs10.visual.force.com/apex/ProposalOptions?id={!BigMachines__Quote__c.id}'; return false;"/>
+                  <apex:commandButton value="View Proposal" onclick="viewContractJS(); return false;"  rendered="{!BigMachines__Quote__c.Quote_Business_Type__c != 'Renewal'}"/>
+                  
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Proposal Sections" collapsible="false" columns="2">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Cover Page"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Cover_Page__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Cover Letter"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Cover_Letter__c}"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Executive Summary"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Executive_Summary__c}"/>
+</apex:pageBlockSectionItem>
+
+<apex:pageBlockSectionItem >
+                    <apex:outputLabel value="What You Want to Achieve"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_What_You_Want_to_Achieve__c}"/>
+</apex:pageBlockSectionItem>
+
+<apex:pageBlockSectionItem >
+                    <apex:outputLabel value="The Genesys Solution"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_The_Genesys_Solution__c}"/>
+</apex:pageBlockSectionItem>
+
+<apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Why Genesys"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Why_Genesys__c}"/>
+</apex:pageBlockSectionItem>
+
+
+<apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Genesys Unique Benefits"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Genesys_Unique_Benefits__c}"/>
+</apex:pageBlockSectionItem>
+
+<apex:pageBlockSectionItem >
+                    <apex:outputLabel value="A True Partner on Your CX Journey"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Impacting_the_lives_of_people__c}"/>
+</apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Display Options" collapsible="false" columns="2" id="displaySection" rendered="{!BigMachines__Quote__c.Quote_Business_Type__c == 'Renewal'}">                
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Maintenance_Due__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Reinstatment__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Revised_Net__c}"/>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Show End of Support"/>
+                        <apex:inputField value="{!BigMachines__Quote__c.Show_EOS__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Truncate_Decimals__c}"/>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Show End of Support Fees"/>
+                        <apex:inputField value="{!BigMachines__Quote__c.Show_EOS_Fees__c}"/>
+                    </apex:pageBlockSectionItem>
+                    <!--<apex:inputField value="{!BigMachines__Quote__c.Hide_End_User__c}"/>-->
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Product_Code__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_P2P_Uplift_Fee__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Billing_Plan__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Quaterly_Semi_Annual_Fee__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Rates__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Reinstatement_Fee__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_KPIs__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Periods__c}"/>                 
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Shelving_Fees__c}"/>
+                    <apex:outputText />
+                    <apex:inputField value="{!BigMachines__Quote__c.Show_Revision__c}"/>
+                    <!--<apex:inputField value="{!BigMachines__Quote__c.Group_Product_By__c}" required="true"/>-->
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Group Product By"/>
+                        <apex:outputPanel layout="block" styleClass="requiredInput" >
+                            <apex:outputPanel styleClass="requiredBlock"/>
+                            <apex:selectList value="{!BigMachines__Quote__c.Group_Product_By__c}" size="1">
+                                <apex:selectOption itemValue="Invoice Number" itemLabel="Invoice Number"/>
+                                <apex:selectOption itemValue="Part Number" itemLabel="Part Number"/>                                
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Display Options" collapsible="false" columns="2" id="displaySectionLicense" rendered="{!BigMachines__Quote__c.Quote_Business_Type__c != 'Renewal'}">
+                <apex:pageBlockSectionItem id="pgblkOutputOutputFormat">
+                    <apex:outputLabel value="Output Format"/>
+                    <apex:outputPanel layout="block" styleClass="requiredInput" id="pnlOutputFormat">
+                        <apex:outputPanel styleClass="requiredBlock"/>
+                            <apex:selectList value="{!BigMachines__Quote__c.Group_Product_By__c}" size="1" id="lstDisplayOption">
+                                <apex:selectOption itemValue="Category View" itemLabel="Category View"/>
+                                <apex:selectOption itemValue="Proposal View" itemLabel="Proposal View"/>                                
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>                    
+                    <apex:selectList id="lstLangauge" value="{!objQuote.Proposal_Language__c}" size="1">
+                        <apex:selectOptions value="{!languages}"/>
+                    </apex:selectList>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Decimal_In_Total__c}" />
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Discount__c}" />
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Volume_Discount__c}" />
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Adjustments__c}" />
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Maintenance_Months__c}" />
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Table_of_Contents__c}" />
+                    <!--<apex:inputField value="{!BigMachines__Quote__c.Hide_End_User__c}" />-->
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Quote_Version__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Product_Description__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_List_Price__c}"/>
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Ext_List_Price__c}"/>  
+                    <apex:inputField value="{!BigMachines__Quote__c.Hide_Line_Item_Pricing__c}"/>                
+                    <apex:inputField value="{!BigMachines__Quote__c.Proposal_Date__c}"/> 
+                    <!-- 
+                    <apex:inputField id="txtContact" value="{!BigMachines__Quote__c.Contact__c}" />
+                     -->                    
+                    <apex:pageBlockSectionItem id="pgsecItemEndUserAccount1">
+                        <apex:outputLabel value="Contact" />
+                        <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput">
+                            <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                            <apex:inputHidden value="{!BigMachines__Quote__c.Contact__c}" id="hdnContactId" />                        
+                            <apex:inputText id="txtContact" value="{!BigMachines__Quote__c.Contact__r.Name}" maxlength="100">               
+                            </apex:inputText>                                
+                            <a href="javascript:void(0);"> 
+                                <img id="theImage" src="/s.gif" height="10" width="10"  
+                                        onclick="openCustomLookup('Contact','pg:form:pgblk:displaySectionLicense:pgsecItemEndUserAccount1:txtContact','pg:form:pgblk:displaySectionLicense:pgsecItemEndUserAccount1:hdnContactId');return false;" title="Contact" 
+                                        class="lookupIcon" onmouseout="this.className='lookupIcon';" alt="Contact Lookup" onmouseover="this.className='lookupIconOn';" /> 
+                            </a>                            
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>  
+                    
+                    <apex:inputField value="{!BigMachines__Quote__c.Proposal_Title__c}" style="width:500px"/>
+                                                                    
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="true" title="Address" collapsible="false" columns="1">
+                   <apex:inputField value="{!BigMachines__Quote__c.Sold_To_Address__c}" />                                                                    
+                    <apex:inputField value="{!BigMachines__Quote__c.Sold_To_City__c}" />                                                                    
+                    <apex:inputField value="{!BigMachines__Quote__c.Sold_To_State__c}" />                                                                    
+                    <apex:inputField value="{!BigMachines__Quote__c.Sold_To_Country__c}" /> 
+                    <apex:inputField value="{!BigMachines__Quote__c.Sold_To_Zip_Code__c}" />
+            </apex:pageBlockSection>
+             <apex:pageBlockSection showHeader="true"  Title="Proposal Output Verbiage Section"   collapsible="false" columns="1">
+            <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.Cover_Letter_Text__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.Product_Description__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.Executive_Summary__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.What_you_want_to_Achieve__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.Genesys_Solution__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.Why_Genesys__c}"/>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.Genesys_Unique_Benefits__c}"/>
+            </apex:pageBlockSection>
+             <apex:pageBlockSection showHeader="false" collapsible="false" columns="1">
+                <apex:inputField value="{!BigMachines__Quote__c.Impacting_the_lives_of_everyday_people__c}"/>
+            </apex:pageBlockSection>
+            </apex:pageBlockSection>
+            <apex:outputPanel id="pnlRefresh"> </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+    <style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            /* These are the 3 css properties you will need to change so the popup 
+            displays in the center of the screen. First set the width. Then set 
+            margin-left to negative half of what the width is. You can add 
+            the height property for a fixed size pop up if you want.*/
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+    </style>
+    <div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">    
+            <apex:outputPanel id="popPanel">
+                <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:center;">
+                        Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            </apex:facet>                           
+        </apex:actionStatus>
+    </div> 
+    <script>
+        function viewContractJS(){          
+            var contactVal = document.getElementById('pg:form:pgblk:displaySectionLicense:pgsecItemEndUserAccount1:hdnContactId').value;
+            viewContractAF(contactVal);
+        }
+        function openCustomLookup(type, nameField, idField){
+            var searchString = document.getElementById(nameField).value;                
+            searchString = searchString == null ? '' : searchString;
+            if(type == 'Contact'){              
+                var url = '/apex/CustomLookup?namefield=' + nameField + '&idfield=' + idField + '&searchText='+searchString;
+                url = url + '&obj=Contact';
+                url = url + '&endUserId={!BigMachines__Quote__c.End_User_ID__c}';
+                url = url + '&soldToId={!BigMachines__Quote__c.Sold_To_Name__c}&contactsOnly=true';                                
+                window.open(url,'lookupWindow','width=550,height=550,top=50,toolbar=no,personalbar=no,location=no,directories=no,statusbar=no,menubar=no,status=no,re sizable=yes,left=60,screenX=60,top=100,screenY=100,resizable=yes,scrollbars=yes');
+            }
+        }
+      
+        function setContactAF(){
+        }
+      
+        window.onload = function() {
+            document.getElementById('pg:form:pgblk:displaySectionLicense:pgblkOutputOutputFormat:lstDisplayOption').focus();
+        } 
+        
+        function validateContact(){
+            
+            if(document.getElementById('pg:form:pgblk:displaySectionLicense:pgsecItemEndUserAccount1:txtContact').value == ''){
+                alert('Please select the Contact to view quote.');
+                return false;
+            }
+            location.href='/apex/loop__looplus?filter=proposal&sessionId={!$Api.Session_ID}&eid={!BigMachines__Quote__c.id}&retURL=/apex/ProposalOutputOptions?id={!BigMachines__Quote__c.id}';
+            return true;                        
+        }      
+   
+    </script>
+</apex:page>

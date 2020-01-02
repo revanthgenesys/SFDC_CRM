@@ -1,0 +1,1023 @@
+<apex:page standardController="Case" extensions="MACTemplatecontroller" sidebar="false" >
+ 
+ 
+ <apex:form id="frmid">     
+   <apex:pageBlock id="pgblk" >   
+       
+     <apex:outputLabel value="Create a MAC (Move, Add, Change) Request" /> 
+     
+     <br/>
+     <apex:outputText value="Welcome to the MAC Wizard. Please choose from one of the options below." style="font-style:italic; font-size:small;"/>
+     <br/>
+     <apex:outputText value="There may be some options which do not apply to your implementation of Interaction Center. 
+       Please take this into consideration when making your choice. Thank You." style="font-style:italic; font-size:small;"/>
+       
+      <apex:pageMessages id="messages"/>  
+           
+     <apex:pageBlockSection columns="1" >
+         <apex:inputField value="{!cs.MAC_Type_PureCnct__c}" label="MAC Type">
+              <apex:actionSupport event="onchange" reRender="frmid"/>  
+         </apex:inputField>
+      </apex:pageBlockSection>
+ 
+      <apex:inputField value="{!cs.Problem_Sub_Type__c}" id="subtp"/>
+      <script>
+            document.getElementById("{!$Component.subtp}").hidden=true;
+      </script>
+     
+    <!-- #############################01.Add A User####################### -->
+        <apex:pageBlockSection columns="1"  rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Add A User',true,false)}" id="adduserb"   >
+            <apex:pageBlockSectionItem > 
+           <b>User First Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>
+                    <apex:inputText value="{!FirstName}" label="User First Name" style="width: 235px;" rendered="true"/>
+                </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem > 
+           <b>User Last Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>
+            <apex:inputText label="User Last Name" value="{!LastName}" style="width: 235px;"  />     
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem > 
+             <b>User ID (must be unique)</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+            <apex:inputText label="User ID (must be unique)" value="{!UserID}" style="width: 235px;" />      
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem > 
+             <b>User Password</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+            <apex:inputText label="User Password" value="{!Password}" style="width: 235px; "  />      
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem > 
+             <b>User Extension</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+            <apex:inputText label="User Extension" value="{!Extension}"  style="width: 235px;"  />      
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>        
+            <apex:pageBlockSectionItem > 
+             <b>User can activate self?</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:selectList label="User can activate self?" value="{!SelfActivation}"     size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="Yes" itemLabel="Yes"/>   
+                <apex:selectOption itemValue="No" itemLabel="No"/>   
+            </apex:selectList>    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>    
+            <apex:pageBlockSectionItem > 
+             <b>Maximum Calls?</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:selectList label="Maximum Calls" value="{!MaximumCalls}"  size="1"   >
+                <apex:selectOption itemValue="" itemLabel=""/>  
+                <apex:selectOption itemValue="0" itemLabel="0"/>  
+                <apex:selectOption itemValue="1" itemLabel="1"/>   
+                <apex:selectOption itemValue="2" itemLabel="2"/>   
+            </apex:selectList>   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>    
+            <apex:pageBlockSectionItem > 
+             <b>Maximum Chats</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:selectList label="Maximum Chats" value="{!MaximumChats}"  size="1"  >
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="0" itemLabel="0"/>  
+                <apex:selectOption itemValue="1" itemLabel="1"/>   
+                <apex:selectOption itemValue="2" itemLabel="2"/>   
+            </apex:selectList> 
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>     
+            <apex:pageBlockSectionItem > 
+             <b>User to mimic additional settings after</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User to mimic additional settings after" value="{!UserToMimicAdditionalSettings}" style="width: 235px;" />      
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>    
+             <apex:pageBlockSectionItem >
+               <b> Workgroup Membership (Comma Separated)</b> &nbsp;
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputTextarea label="Workgroup Membership (Comma Separated)"  value="{!WorkgroupMembership}" style="width: 360px; height: 50px" />           
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>    
+              
+            <apex:inputTextarea label="Additional Instructions Regarding This MAC/User" value="{!AdditionalInstructions}" style="width: 360px; height: 100px" />  
+       
+        </apex:pageBlockSection>                
+
+     
+    <!-- #############################02.Delete Existing User####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Delete Existing User',true,false)}" id="deluser"> 
+          <apex:pageBlockSectionItem > 
+             <b>User First Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User First Name" value="{!FirstName}" style="width: 235px;" />         
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>User Last Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User Last Name" value="{!LastName}" style="width: 235px;" />       
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>User ID</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User ID" value="{!UserID}" style="width: 235px;" />      
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>User Extension</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User Extension" value="{!Extension}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>    
+    
+        </apex:pageBlockSection>
+    <!-- #############################03.Modify Existing User####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Modify Existing User',true,false)}" id="Moduser">  
+   
+            <apex:pageBlockSectionItem > 
+             <b>User First Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User First Name"  value="{!CurrentUserFirstName}" style="width: 235px;"/>
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>   
+            <apex:pageBlockSectionItem > 
+             <b>User Last Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User Last Name" value="{!CurrentUserLastName}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>User ID</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User ID" value="{!CurrentUserID}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem > 
+             <b>User Extension</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User Extension" value="{!CurrentUserExtension}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>            
+             
+             <apex:inputText label="User New First Name" value="{!UserNewFirstName}" style="width: 235px;" />
+             <apex:inputText label="User New Last Name" value="{!UserNewLastName}" style="width: 235px;" />
+             <apex:inputText label="User New Password" value="{!UserNewPassword}" style="width: 235px;" />
+             <apex:inputText label="User New Extension" value="{!UserNewExtension}" style="width: 235px;" />             
+             <apex:selectList label="User Can Activate Self" value="{!UserSelfActivation}"     size="1">
+                <apex:selectOption itemValue="" itemLabel=""/>  
+                <apex:selectOption itemValue="Yes" itemLabel="Yes"/>   
+                <apex:selectOption itemValue="No" itemLabel="No"/>   
+            </apex:selectList>             
+             <apex:selectList label="New User Maximum Calls" value="{!NewUserMaximumCalls}"  size="1"   >
+                <apex:selectOption itemValue="" itemLabel=""/>  
+                <apex:selectOption itemValue="0" itemLabel="0"/>  
+                <apex:selectOption itemValue="1" itemLabel="1"/>   
+                <apex:selectOption itemValue="2" itemLabel="2"/>   
+            </apex:selectList>            
+             <apex:selectList label="New User Maximum Chats" value="{!NewUserMaximumChats}"  size="1"   >
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="0" itemLabel="0"/>  
+                <apex:selectOption itemValue="1" itemLabel="1"/>   
+                <apex:selectOption itemValue="2" itemLabel="2"/>   
+            </apex:selectList>   
+            
+           <apex:outputText value="To modify workgroup membership, please choose an action and then type out the workgroups." style="font-style:italic; font-size:small;" />        
+             <apex:selectList label="Workgroup Action" value="{!WorkgroupAction}"  size="1"   >
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="Add these users to a workgroup" itemLabel="Add these users to a workgroup"/>  
+                <apex:selectOption itemValue="Remove these users from this workgroup" itemLabel="Remove these users from this workgroup"/>   
+                <apex:selectOption itemValue="These users should be the only users of this workgroup" itemLabel="These users should be the only users of this workgroup"/>   
+            </apex:selectList>
+             
+             <apex:inputTextarea label="Workgroups" value="{!WorkgroupChanges}" style="width: 360px; height: 50px"  />
+             <apex:inputTextarea label="Additional Instructions regarding this user modification" value="{!ModifyUserAdditionalInstructions}" style="width: 360px; height: 100px" />
+         
+        </apex:pageBlockSection>
+    
+    <!-- #############################04.Add A New Workgroup####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Add A New Workgroup',true,false)}" id="newwg">  
+        <apex:pageBlockSectionItem > 
+             <b>Workgroup Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Workgroup Name"  value="{!WorkgroupName}" style="width: 235px;"  />    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+            <apex:pageBlockSectionItem > 
+             <b>Workgroup is Callable (Has Queue)</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:selectList label="Workgroup is Callable (Has Queue)" value="{!WorkgroupHasQueue}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/>  
+                <apex:selectOption itemValue="Yes" itemLabel="Yes"/>   
+                <apex:selectOption itemValue="No" itemLabel="No"/>                              
+            </apex:selectList>   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>     
+           
+            <apex:inputText label="Workgroup Extension" value="{!WorkgroupExtension}" style="width: 235px;"  />
+            <apex:selectList label="Max Calls Per User" value="{!WorkgroupMaxCalls}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="0" itemLabel="0"/>   
+                <apex:selectOption itemValue="1" itemLabel="1"/> 
+                <apex:selectOption itemValue="2" itemLabel="2"/>  
+                <apex:selectOption itemValue="3" itemLabel="3"/>                
+            </apex:selectList>
+            <apex:selectList label="Max Chats Per User" value="{!WorkgroupMaxChats}"  size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="0" itemLabel="0"/>   
+                <apex:selectOption itemValue="1" itemLabel="1"/>  
+                <apex:selectOption itemValue="2" itemLabel="2"/>  
+                <apex:selectOption itemValue="3" itemLabel="3"/>                
+            </apex:selectList>
+            <apex:inputText label="Workgroup to mimic additional settings after" value="{!WorkgroupToMimicAdditionalSettings}" style="width: 235px;"  />
+            <apex:inputTextarea label="Add these users to this workgroup" value="{!WorkgroupMembers}" style="width: 360px; height: 100px"  />
+            <apex:inputTextarea label="Additional instructions regarding this workgroup add" value="{!WorkgroupAdditionalInstructions}" style="width: 360px; height: 100px" />
+           
+        </apex:pageBlockSection>
+
+    <!-- #############################05.Modify Existing Workgroup####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Modify Existing Workgroup',true,false)}" id="modwg">  
+        <apex:pageBlockSectionItem > 
+             <b>Current Workgroup Name</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Current Workgroup Name" value="{!ModifyWGName}" style="width: 235px;" />   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>      
+            
+            <apex:outputlabel value="Enter Current Workgroup Name " styleClass="errorMsg" rendered="{!IF(error==true,true,false)}" />   
+            <apex:inputText label="New Workgroup Extension" value="{!NewWorkgroupExtension}"  style="width: 235px;" />
+            <apex:selectList label="Workgroup Is Callable (Has Queue)" value="{!NewWorkgroupHasQueue}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="Yes" itemLabel="Yes"/>   
+                <apex:selectOption itemValue="No" itemLabel="No"/>                
+            </apex:selectList>
+            <apex:selectList label="Workgroup Max Calls" value="{!WorkgroupMaxCalls}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/>  
+                <apex:selectOption itemValue="0" itemLabel="0"/>   
+                <apex:selectOption itemValue="1" itemLabel="1"/> 
+                <apex:selectOption itemValue="2" itemLabel="2"/>   
+                <apex:selectOption itemValue="3" itemLabel="3"/>                
+            </apex:selectList>
+            <apex:selectList label="Workgroup Max Chats" value="{!WorkgroupMaxChats}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="0" itemLabel="0"/>   
+                <apex:selectOption itemValue="1" itemLabel="1"/>  
+                <apex:selectOption itemValue="2" itemLabel="2"/>   
+                <apex:selectOption itemValue="3" itemLabel="3"/>                
+            </apex:selectList>
+            <apex:selectList label="User Action" value="{!WorkgroupUserAction}" size="1"> 
+                <apex:selectOption itemValue="" itemLabel=""/>  
+                <apex:selectOption itemValue="Add these users to a workgroup" itemLabel="Add these users to a workgroup"/>   
+                <apex:selectOption itemValue="Remove these users from this workgroup" itemLabel="Remove these users from this workgroup"/>  
+                <apex:selectOption itemValue="These users should be the only users of this workgroup" itemLabel="These users should be the only users of this workgroup"/>                
+            </apex:selectList>
+            <apex:inputTextarea label="User" value="{!WorkgroupUsers}" style="width: 360px; height: 50px" />
+            <apex:inputTextarea label="Additional instructions for this workgroup modification" value="{!WorkgroupAdditionalInstructions}" style="width: 360px; height: 100px" />   
+               
+        </apex:pageBlockSection>
+
+    <!-- #############################06.Create new Managed Phone/Station####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Create new Managed Phone/Station',true,false)}" id="createPS">   
+        <apex:pageBlockSectionItem > 
+             <b>MAC address of phone:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="MAC address of phone:" value="{!MACAddressOfPhone}"  style="width: 235px;" />     
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+            <apex:pageBlockSectionItem > 
+             <b>Phone Model:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:selectList label="Phone Model:" value="{!PhoneModel}" size="1">
+                    <apex:selectOption itemValue="" itemLabel=""/> 
+                    <apex:selectOption itemValue="Audiocodes 405" itemLabel="Audiocodes 405"/> 
+                    <apex:selectOption itemValue="Audiocodes 405HD" itemLabel="Audiocodes 405HD"/> 
+                    <apex:selectOption itemValue="Audiocodes 420HD" itemLabel="Audiocodes 420HD"/> 
+                    <apex:selectOption itemValue="Audiocodes 430HD" itemLabel="Audiocodes 430HD"/> 
+                    <apex:selectOption itemValue="Audiocodes 440HD" itemLabel="Audiocodes 440HD"/> 
+                    <apex:selectOption itemValue="Genesys 405" itemLabel="Genesys 405"/> 
+                    <apex:selectOption itemValue="Genesys 405HD" itemLabel="Genesys 405HD"/> 
+                    <apex:selectOption itemValue="Genesys 420HD" itemLabel="Genesys 420HD"/>  
+                    <apex:selectOption itemValue="Interaction SIP Station II" itemLabel="Interaction SIP Station II"/> 
+                    <apex:selectOption itemValue="Interaction SIP Station" itemLabel="Interaction SIP Station"/> 
+                    <apex:selectOption itemValue="Polycom IP300" itemLabel="Polycom IP300"/> 
+                    <apex:selectOption itemValue="Polycom IP301" itemLabel="Polycom IP301"/> 
+                    <apex:selectOption itemValue="Polycom IP320" itemLabel="Polycom IP320"/> 
+                    <apex:selectOption itemValue="Polycom IP330" itemLabel="Polycom IP330"/> 
+                    <apex:selectOption itemValue="Polycom IP331" itemLabel="Polycom IP331"/> 
+                    <apex:selectOption itemValue="Polycom IP335" itemLabel="Polycom IP335"/> 
+                    <apex:selectOption itemValue="Polycom IP4000" itemLabel="Polycom IP4000"/> 
+                    <apex:selectOption itemValue="Polycom IP430" itemLabel="Polycom IP430"/> 
+                    <apex:selectOption itemValue="Polycom IP450" itemLabel="Polycom IP450"/> 
+                    <apex:selectOption itemValue="Polycom IP500" itemLabel="Polycom IP500"/> 
+                    <apex:selectOption itemValue="Polycom IP5000" itemLabel="Polycom IP5000"/> 
+                    <apex:selectOption itemValue="Polycom IP501" itemLabel="Polycom IP501"/> 
+                    <apex:selectOption itemValue="Polycom IP550" itemLabel="Polycom IP550"/> 
+                    <apex:selectOption itemValue="Polycom IP560" itemLabel="Polycom IP560"/> 
+                    <apex:selectOption itemValue="Polycom IP600" itemLabel="Polycom IP600"/> 
+                    <apex:selectOption itemValue="Polycom IP6000" itemLabel="Polycom IP6000"/> 
+                    <apex:selectOption itemValue="Polycom IP601" itemLabel="Polycom IP601"/> 
+                    <apex:selectOption itemValue="Polycom IP650" itemLabel="Polycom IP650"/> 
+                    <apex:selectOption itemValue="Polycom IP670" itemLabel="Polycom IP670"/> 
+                    <apex:selectOption itemValue="Polycom IP7000" itemLabel="Polycom IP7000"/> 
+                    <apex:selectOption itemValue="Polycom VVX101" itemLabel="Polycom VVX101"/> 
+                    <apex:selectOption itemValue="Polycom VVX201" itemLabel="Polycom VVX201"/> 
+                    <apex:selectOption itemValue="Polycom VVX300" itemLabel="Polycom VVX300"/> 
+                    <apex:selectOption itemValue="Polycom VVX301" itemLabel="Polycom VVX301"/> 
+                    <apex:selectOption itemValue="Polycom VVX310" itemLabel="Polycom VVX310"/> 
+                    <apex:selectOption itemValue="Polycom VVX311" itemLabel="Polycom VVX311"/> 
+                    <apex:selectOption itemValue="Polycom VVX400" itemLabel="Polycom VVX400"/> 
+                    <apex:selectOption itemValue="Polycom VVX401" itemLabel="Polycom VVX401"/> 
+                    <apex:selectOption itemValue="Polycom VVX410" itemLabel="Polycom VVX410"/> 
+                    <apex:selectOption itemValue="Polycom VVX411" itemLabel="Polycom VVX411"/> 
+                    <apex:selectOption itemValue="Polycom VVX500" itemLabel="Polycom VVX500"/> 
+                    <apex:selectOption itemValue="Polycom VVX501" itemLabel="Polycom VVX501"/> 
+                    <apex:selectOption itemValue="Polycom VVX600" itemLabel="Polycom VVX600"/>
+                    <apex:selectOption itemValue="Soft Phone" itemLabel="Soft Phone"/>                
+            </apex:selectList>   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+                      
+            <apex:inputText label="If softphone, full computer name" value="{!ComputerName}" style="width: 235px;" />
+            <apex:pageBlockSectionItem > 
+             <b>Location of phone:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="Location of phone:" value="{!LocationOfPhone}" style="width: 235px;"  />      
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+           
+            <apex:pageBlockSectionItem > 
+             <b>Language:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="Language:" value="{!Language}" style="width: 235px;"  />    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+           
+            <apex:pageBlockSectionItem > 
+             <b>Phone name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="Phone name:" value="{!PhoneName}" style="width: 235px;"  />     
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+             
+             <apex:pageBlockSectionItem > 
+             <b>Extension for phone:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="Extension for phone:" value="{!ExtensionForPhone}" style="width: 235px;"  />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>            
+            
+            <apex:pageBlockSectionItem > 
+             <b># of Line keys:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="# of Line keys:" value="{!NumOfLineKeys}" style="width: 235px;"  />   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+   
+                <apex:selectRadio label="Enable MW:" value="{!EnableMWI}">
+                <apex:selectOptions value="{!items}"/>            
+            </apex:selectRadio>
+ 
+        </apex:pageBlockSection>
+    
+    <!-- #############################07.DID/DNIS Table Modification####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'DID/DNIS Table Modification',true,false)}" id="modDIDDNS">  
+            <apex:pageBlockSectionItem > 
+             <b>DID:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="DID:" value="{!DID}" style="width: 235px;"  />    
+            </div>
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>  
+            
+            <apex:pageBlockSectionItem > 
+             <b>User/Workgroup/Phone assigned to:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:inputText label="User/Workgroup/Phone assigned to:" value="{!UserWorkgroupPhoneAssignedTo}" style="width: 235px;"  />    
+            </div>
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>  
+             
+          <apex:inputTextarea label="Additional Instructions:" value="{!AdditionalInstructions}" style="width: 360px; height: 100px" />
+          
+        </apex:pageBlockSection>
+  
+    <!-- #############################08.Wav File Upload####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Wav File Upload',true,false)}" id="waveupload">  
+           <apex:pageBlockSectionItem > 
+             <b>Language folder for files to be placed in:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="Language folder for files to be placed in:" value="{!LanguageFolderForFilesToBePlacedIn}" style="width: 235px;"  />     
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+          <apex:pageBlockSectionItem > 
+             <b>Overwrite duplicate files:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+                <apex:selectRadio label="Overwrite duplicate files:"  value="{!OverwriteDuplicateFiles}">
+                <apex:selectOptions value="{!Items1}"/>   
+            </apex:selectRadio>  
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+            
+            <apex:inputTextarea label="Additional instructions:" value="{!AdditionalInstructions}" style="width: 360px; height: 100px"  />  
+                   
+        </apex:pageBlockSection>
+    
+    <!-- #############################09.TSRA Add User####################### --> 
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'TSRA Add User',true,false)}" id="tsraadduser">  
+            <apex:pageBlockSectionItem > 
+                 <b>User Name:</b> &nbsp; 
+                  <apex:outputPanel >
+                    <div class="requiredInput">
+                        <div class="requiredBlock"></div>    
+                  <apex:inputText label="User Name:" value="{!UserName}" style="width: 235px;" />   
+                </div>
+                </apex:outputPanel>
+           </apex:pageBlockSectionItem>  
+            
+            <apex:pageBlockSectionItem > 
+                 <b>User email:</b> &nbsp; 
+                  <apex:outputPanel >
+                    <div class="requiredInput">
+                        <div class="requiredBlock"></div>    
+                  <apex:inputText label="User email:" value="{!UserEmail}" style="width: 235px;"  />
+                </div>
+                </apex:outputPanel>
+           </apex:pageBlockSectionItem>  
+            <apex:inputText label="User to mirror access after:" value="{!UserToMirrorAccessAfter}" style="width: 235px;" />
+           
+        </apex:pageBlockSection>
+
+    <!-- #############################10.TSRA Password Reset####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'TSRA Password Reset',true,false)}" id="tsrapwdrst">  
+            <apex:pageBlockSectionItem > 
+             <b>User Name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User Name:" value="{!UserName}" style="width: 235px;"  />    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+            <apex:pageBlockSectionItem > 
+             <b>User Email:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User Email:" value="{!UserEmail}" style="width: 235px;"  /> 
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+          
+        </apex:pageBlockSection>
+        
+    <!-- #############################11.TSRA User Deletion####################### --> 
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'TSRA User Deletion',true,false)}" id="tsradeluser"> 
+        
+            <apex:pageBlockSectionItem > 
+             <b>User Name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="User Name:" value="{!UserName}" style="width: 235px;"  />   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+            
+            <apex:pageBlockSectionItem > 
+             <b>User Email:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:inputText label="User Email:" value="{!UserEmail}" style="width: 235px;"  />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+ 
+        </apex:pageBlockSection>
+ 
+    <!-- #############################12.Attendant Modification####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Attendant Modification',true,false)}" id="attentmodification">  
+        
+        <apex:pageBlockSectionItem > 
+             <b>Profile name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Profile name:" value="{!ProfileName}" style="width: 235px;" />   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>  
+            
+            <apex:pageBlockSectionItem > 
+             <b>Schedule name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:inputText label="Schedule name:" value="{!ScheduleName}" style="width: 235px;"  />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+             <apex:pageBlockSectionItem > 
+             <b>Modification request:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:inputTextarea label="Modification request:" value="{!ModificationRequest}" style="width: 360px; height: 100px"  />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            
+        </apex:pageBlockSection>
+ 
+    <!-- #############################13.Attendant Add New Profile/Schedule####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Attendant Add new profile/schedule',true,false)}" id="attentaddnewprof">  
+            
+            <apex:pageBlockSectionItem > 
+             <b>Profile name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Profile name:" value="{!ProfileName}" style="width: 235px;"  />  
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            
+           <apex:pageBlockSectionItem > 
+             <b>Schedule name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Schedule name:" value="{!ScheduleName}" style="width: 235px;"  />  
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            
+            <apex:pageBlockSectionItem > 
+             <b>DNIS:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="DNIS:" value="{!DNIS}" style="width: 235px;"  /> 
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>Time zone:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Time zone:" value="{!TimeZone}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem > 
+             <b>Is this an unplanned schedule?</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+                <apex:selectRadio label="Is this an unplanned schedule?" value="{!IsUnplannedSchedule}">
+                <apex:selectOptions value="{!Items2}"/>   
+            </apex:selectRadio>
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>    
+            <apex:pageBlockSectionItem > 
+             <b>Schedule run time/days:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputTextarea label="Schedule run time/days:" value="{!ScheduleRunTimeDays}" style="width: 360px; height: 100px" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>              
+              <apex:inputText label="Schedule greeting wav file:" value="{!ScheduleGreetingWavFile}" style="width: 235px;"  />            
+            <apex:pageBlockSectionItem > 
+             <b>Menu options:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputTextarea label="Menu options:" value="{!MenuOptions}" style="width: 360px; height: 100px" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem>              
+              <apex:inputTextarea label=" Desired call flow:" value="{!DesiredCallFlow}" style="width: 360px; height: 100px" />                  
+          
+        </apex:pageBlockSection>
+    
+    <!-- #############################14.Schedule Report Modification####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Scheduled Report Modification',true,false)}" id="scherepordmod">  
+        <apex:pageBlockSectionItem > 
+             <b>Report name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:inputText label="Report name:" value="{!ReportName}"  style="width: 235px;" />    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>Modification request:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputTextarea label="Modification request:" value="{!ModificationRequest}" style="width: 360px; height: 100px" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+         
+        </apex:pageBlockSection>
+
+    <!-- #############################15.Schedule Reports Add/Delete User####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Scheduled Reports Add/Delete User',true,false)}" id="schereportadd">  
+            <apex:pageBlockSectionItem > 
+             <b>Add/Delete?</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:selectRadio label="Add/Delete?" value="{!AddDelete}">
+                <apex:selectOptions value="{!Items3}"/>   
+            </apex:selectRadio> 
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>User name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="User name:" value="{!UserName}"  style="width: 235px;"/>
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>Report name:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="Report name:" value="{!ReportName}" style="width: 235px;"/>
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+           
+        </apex:pageBlockSection>
+    
+    <!-- #############################16.Add Schedule Report####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Add Scheduled Report',true,false)}" id="addscheldreport">  
+            
+            <apex:pageBlockSectionItem > 
+             <b>Name of report:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Name of report:" value="{!NameOfReport}" style="width: 235px;" />   
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            
+           <apex:pageBlockSectionItem > 
+             <b>Filter Type</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:selectList label="Filter Type" value="{!FilterType}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="Crystal Reports" itemLabel="Crystal Reports"/>   
+                <apex:selectOption itemValue="Interactions Reporter" itemLabel="Interactions Reporter"/>  
+                <apex:selectOption itemValue="Report assistant" itemLabel="Report assistant"/>                              
+            </apex:selectList>  
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>Report Type:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Report Type:" value="{!ReportType}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>Report Delivery:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Report Delivery:" value="{!ReportDelivery}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>Time Range:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Time Range:" value="{!TimeRange}" style="width: 235px;" />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>Recipient Email:</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Recipient Email:" value="{!RecipientEmail}"  style="width: 235px;"/>
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+             
+            <apex:inputText label="Report parameters to add:" value="{!ReportParametersToAdd}" style="width: 235px;" />
+            <apex:inputTextarea label="Additional Instructions:" value="{!AdditionalInstructions}" style="width: 360px; height: 100px" />
+           
+        </apex:pageBlockSection>
+    
+    <!-- #############################17.Toll Free Number Add####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Toll Free Number Add',true,false)}" id="tollnoadd"> 
+        <apex:pageBlockSectionItem > 
+             <b>Amount of numbers requested</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:selectList label="Amount of numbers requested" value="{!AmountOfNumbersRequested}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="1" itemLabel="1"/>   
+                <apex:selectOption itemValue="2" itemLabel="2"/>  
+                <apex:selectOption itemValue="3" itemLabel="3"/>   
+                <apex:selectOption itemValue="4" itemLabel="4"/>    
+                <apex:selectOption itemValue="5" itemLabel="5"/>    
+                <apex:selectOption itemValue="6" itemLabel="6"/>    
+                <apex:selectOption itemValue="7" itemLabel="7"/>    
+                <apex:selectOption itemValue="8" itemLabel="8"/>    
+                <apex:selectOption itemValue="9" itemLabel="9"/>    
+                <apex:selectOption itemValue="10" itemLabel="10"/>    
+                <apex:selectOption itemValue="11" itemLabel="11"/>    
+                <apex:selectOption itemValue="12" itemLabel="12"/>    
+                <apex:selectOption itemValue="13" itemLabel="13"/>    
+                <apex:selectOption itemValue="14" itemLabel="14"/>    
+                <apex:selectOption itemValue="15" itemLabel="15"/>    
+                <apex:selectOption itemValue="16" itemLabel="16"/>    
+                <apex:selectOption itemValue="17" itemLabel="17"/>    
+                <apex:selectOption itemValue="18" itemLabel="18"/>    
+                <apex:selectOption itemValue="19" itemLabel="19"/>    
+                <apex:selectOption itemValue="20" itemLabel="20"/> 
+                 <apex:selectOption itemValue="21" itemLabel="21"/>   
+                <apex:selectOption itemValue="22" itemLabel="22"/>  
+                <apex:selectOption itemValue="23" itemLabel="23"/>   
+                <apex:selectOption itemValue="24" itemLabel="24"/>    
+                <apex:selectOption itemValue="25" itemLabel="25"/>    
+                <apex:selectOption itemValue="26" itemLabel="26"/>    
+                <apex:selectOption itemValue="27" itemLabel="27"/>    
+                <apex:selectOption itemValue="28" itemLabel="28"/>    
+                <apex:selectOption itemValue="29" itemLabel="29"/>    
+                <apex:selectOption itemValue="30" itemLabel="30"/>    
+                <apex:selectOption itemValue="31" itemLabel="31"/>    
+                <apex:selectOption itemValue="32" itemLabel="32"/>    
+                <apex:selectOption itemValue="33" itemLabel="33"/>    
+                <apex:selectOption itemValue="34" itemLabel="34"/>    
+                <apex:selectOption itemValue="35" itemLabel="35"/>                          
+                                           
+            </apex:selectList>     
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:inputTextarea label="Number range preferred" value="{!NumberRangePreferred}" style="width: 360px; height: 100px"  />
+           
+        </apex:pageBlockSection>
+
+    <!-- #############################18.Toll Free Number Remove####################### -->
+
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Toll Free Number Remove',true,false)}" id="tollnoremov">  
+           <apex:pageBlockSectionItem > 
+             <b>Number to be removed</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:inputText label="Number to be removed" value="{!NumberToBeRemoved}" style="width: 235px;"  />    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:inputTextarea label="Attendant profile names that use this number" value="{!AttendantProfileNames}" style="width: 360px; height: 100px"  />
+          
+        </apex:pageBlockSection>
+    
+    <!-- #############################19.Toll Free Number Modification####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Toll Free Number Modification',true,false)}" id="tollnomod">  
+            <apex:pageBlockSectionItem > 
+             <b>Number needing modified</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+              <apex:inputText label="Number needing modified" value="{!NumberNeedingModification}" style="width: 235px;"  />     
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+            <apex:outputPanel >
+             <b>Modification request</b><br/> &nbsp;
+             </apex:outputPanel>
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputTextarea label="Modification request" value="{!ModificationRequest}" style="width: 360px; height: 100px"  />    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+           
+        </apex:pageBlockSection>
+        
+     <!-- #############################21.DID Number Add####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'DID Number Add',true,false)}" id="didnoadd"> 
+        <apex:pageBlockSectionItem > 
+             <b>Amount of numbers requested</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+             <apex:selectList label="Amount of numbers requested" value="{!AmountOfNumbersRequested}" size="1">
+                <apex:selectOption itemValue="" itemLabel=""/> 
+                <apex:selectOption itemValue="1" itemLabel="1"/>   
+                <apex:selectOption itemValue="2" itemLabel="2"/>  
+                <apex:selectOption itemValue="3" itemLabel="3"/>   
+                <apex:selectOption itemValue="4" itemLabel="4"/>    
+                <apex:selectOption itemValue="5" itemLabel="5"/>    
+                <apex:selectOption itemValue="6" itemLabel="6"/>    
+                <apex:selectOption itemValue="7" itemLabel="7"/>    
+                <apex:selectOption itemValue="8" itemLabel="8"/>    
+                <apex:selectOption itemValue="9" itemLabel="9"/>    
+                <apex:selectOption itemValue="10" itemLabel="10"/>    
+                <apex:selectOption itemValue="11" itemLabel="11"/>    
+                <apex:selectOption itemValue="12" itemLabel="12"/>    
+                <apex:selectOption itemValue="13" itemLabel="13"/>    
+                <apex:selectOption itemValue="14" itemLabel="14"/>    
+                <apex:selectOption itemValue="15" itemLabel="15"/>    
+                <apex:selectOption itemValue="16" itemLabel="16"/>    
+                <apex:selectOption itemValue="17" itemLabel="17"/>    
+                <apex:selectOption itemValue="18" itemLabel="18"/>    
+                <apex:selectOption itemValue="19" itemLabel="19"/>    
+                <apex:selectOption itemValue="20" itemLabel="20"/> 
+                 <apex:selectOption itemValue="21" itemLabel="21"/>   
+                <apex:selectOption itemValue="22" itemLabel="22"/>  
+                <apex:selectOption itemValue="23" itemLabel="23"/>   
+                <apex:selectOption itemValue="24" itemLabel="24"/>    
+                <apex:selectOption itemValue="25" itemLabel="25"/>    
+                <apex:selectOption itemValue="26" itemLabel="26"/>    
+                <apex:selectOption itemValue="27" itemLabel="27"/>    
+                <apex:selectOption itemValue="28" itemLabel="28"/>    
+                <apex:selectOption itemValue="29" itemLabel="29"/>    
+                <apex:selectOption itemValue="30" itemLabel="30"/>    
+                <apex:selectOption itemValue="31" itemLabel="31"/>    
+                <apex:selectOption itemValue="32" itemLabel="32"/>    
+                <apex:selectOption itemValue="33" itemLabel="33"/>    
+                <apex:selectOption itemValue="34" itemLabel="34"/>    
+                <apex:selectOption itemValue="35" itemLabel="35"/>                          
+                                           
+            </apex:selectList>     
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:inputTextarea label="Area Code Preferred" value="{!AreaCodePreferred}" style="width: 360px; height: 100px"  />
+            
+            <apex:inputTextarea label="Additional Information" value="{!AdditionalInformation}" style="width: 360px; height: 100px"  />          
+        </apex:pageBlockSection>
+        
+        
+    <!-- #############################20.Other MAC Request####################### -->
+        <apex:pageBlockSection columns="1" rendered="{!IF(cs.MAC_Type_PureCnct__c == 'Other MAC Request',true,false)}" id="othrmacreq">  
+        
+        <apex:pageBlockSectionItem > 
+             <b>A number at which you can be reached</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputText label="A number at which you can be reached"  value="{!PhoneNumber}" style="width: 235px;"  />    
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem > 
+             <b>MAC request</b> &nbsp; 
+              <apex:outputPanel >
+                <div class="requiredInput">
+                    <div class="requiredBlock"></div>    
+               <apex:inputTextarea label="MAC request" value="{!MACRequest}" style="width: 360px; height: 100px"  />
+            </div>
+            </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+            <apex:inputText label="Title (Will be appended to the incident description for reference)"  value="{!Title}" style="width: 360px;" />
+        
+        </apex:pageBlockSection>
+    
+      <apex:pageBlockButtons location="bottom">           
+        <apex:actionStatus id="saveStatus">
+            <apex:facet name="stop">
+                 <apex:outputPanel >
+                    <apex:commandButton action="{!submitPage}" value="Submit" reRender="messages" status="saveStatus"/>
+                     <apex:commandButton value="Cancel" id="Cancel" onclick="history.go(-2); return false;" immediate="true"/> 
+                 </apex:outputPanel>    
+                    </apex:facet>
+                        <apex:facet name="start">
+                        <apex:outputPanel >
+                            <apex:commandButton value="Saving..." disabled="true" />
+                        </apex:outputPanel>                    
+                    </apex:facet>                    
+               </apex:actionStatus>                                
+        </apex:pageBlockButtons> 
+               
+    </apex:pageBlock>  
+  
+ </apex:form>
+</apex:page>

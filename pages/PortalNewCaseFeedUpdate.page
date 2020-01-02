@@ -1,0 +1,74 @@
+<apex:page controller="PortalNewCaseFeedUpdate" sidebar="false">
+
+<style type="text/css">
+<!-- MS - hide rich text toolbar formatting buttons which insert <div> or <a> tags and generate error -->
+html .cke_button__justifycenter {display: none; !important}
+html .cke_button__justifyleft {display: none; !important}
+html .cke_button__justifyright {display: none; !important}
+html .cke_button__link {display: none; !important} 
+html .cke_button__sfdcimage {display: none; !important} 
+html .cke_button__indent {display: none; !important} 
+html .cke_button__outdent {display: none; !important} 
+</style>
+
+<apex:variable value="{!IF(updtype='cls','Closure Comment', IF(updtype='opn', 'Reason for Re-opening', 'Update'))}" var="updLabel"/>
+
+  <apex:form id="frm">
+  <!--  <apex:pageMessages /> -->
+     <apex:pageMessage severity="ERROR" strength="1"  summary="{!errMsg}" rendered="{!errMsg != ''}" />
+        <apex:outputPanel style="height:10px;">
+            &nbsp;
+            <apex:actionstatus id="status">
+                <apex:facet name="start">
+                    <apex:outputLabel value="Working, Please wait." style="color:blue;font-weight:bold;"/>
+                </apex:facet>
+            </apex:actionstatus>
+        </apex:outputPanel>
+    <br/>
+     <apex:outputText value="Note: rich text support is limited. You will not be able to save the update if it includes unsupported formatting, such as tables or colored text." 
+      style="font-style:italic; color:red; font-size:16px; " >
+   </apex:outputText>
+   
+        <apex:pageBlock >       
+            <apex:pageBlockButtons id="pbb" location="bottom">    
+                       
+                <apex:commandButton action="{!saveOpen}" value="Save" rendered="{!updtype='upd'}" />
+                <apex:commandButton action="{!reopenCase}" value="Submit" rendered="{!updtype='opn'}"/>
+                <apex:commandButton action="{!saveClose}" value="Close Case" rendered="{!updtype='cls'}"/>
+                
+                <apex:commandButton action="{!cancel}" value="Cancel" immediate="true"/>
+            </apex:pageBlockButtons>
+           
+            
+             <apex:pageBlockSection columns="1">  
+  
+              <apex:outputPanel >
+                <apex:outputLabel value="Case"/> &nbsp; {!cs.CaseNumber}: &nbsp; {!cs.Subject}
+              </apex:outputPanel>
+               <br/>  
+                <apex:outputLabel value="Post Update" rendered="{!updtype='upd'}"/> 
+                <apex:outputLabel value="Request to Re-open" rendered="{!updtype='opn'}"/>                                               
+            </apex:pageBlockSection>
+             
+            <apex:pageBlockSection columns="1" rendered="{!updtype='cls'}" >                  
+                 <apex:pageBlockSectionItem >
+                   <apex:outputLabel value="Status:"/>
+                   <apex:outputLabel value="Closed" style="font-weight: bold"/>   
+                </apex:pageBlockSectionItem>    
+                                                                                       
+                 <apex:selectList id="SubStatus" label="Sub Status" value="{!selectedSubStatClose}" size="1" >
+                         <apex:selectOption itemLabel="Resolved" itemValue="Resolved"/>
+                         <apex:selectOption itemLabel="Cancelled" itemValue="Cancelled"/>
+                 </apex:selectList>     
+           </apex:pageBlockSection>
+           
+         <apex:pageBlockSection columns="1" title="{!updLabel}">
+            <apex:inputTextarea value="{!caseupdate}" richText="true" rows="10" > 
+                <apex:actionSupport oncomplete="" reRender="frm"/>
+             </apex:inputTextarea>
+         </apex:pageBlockSection>
+         
+        </apex:pageBlock>
+    </apex:form>
+      
+</apex:page>

@@ -1,0 +1,547 @@
+<apex:page controller="ProposalCloudController" applyBodyTag="false" standardStylesheets="false" language="{!objQuote.Proposal_Language__c}" readOnly="true" renderAs="pdf">
+    <apex:stylesheet value="{!URLFOR($Resource.ServiceOrderCSS)}"/>    
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.internal == '1'}">
+        <img src="{!$Resource.Watermark}" height="110%" width="110%" style="position: fixed;background-repeat:repeat;left: 1cm; top:2cm; z-index:0"/>
+    </apex:outputPanel>
+
+    <table style="width:100%;">
+        <tr>
+            <td width="32%">
+                <img src="{!$Resource.GenesysLogo}" width="200px;"/><br/>
+                <apex:outputField value="{!objQuote.Selling_Entity__c}"/>
+            </td>
+            <td width="34%">&nbsp;</td>
+            <td width="34%" style="text-align:right;">
+                <table cellspacing="3" cellpadding="3" style="font-size:10pt;">
+                    <tr>
+                        <th>Services Order</th>
+                        <td>
+                            <apex:outputField value="{!objQuote.Name}"/>    
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr/><tr/>
+        <tr>
+            <td>&nbsp;</td>
+            <td>
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;" align="center" width="90%">
+                    <tr>
+                        <td class="tableHeader">Bill To</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Sold_To_Name__r.Name}"/><br/>
+                            <apex:outputPanel layout="none" rendered="{!list_QuoteAddresses.size>0}">                                
+                                <apex:outputField value="{!list_QuoteAddresses[0].Address__c}"/><br/>
+                                <apex:outputField value="{!list_QuoteAddresses[0].City__c}"/>&nbsp;
+                                <apex:outputField value="{!list_QuoteAddresses[0].State__c}"/>&nbsp;
+                                <apex:outputField value="{!list_QuoteAddresses[0].Zip_Code__c}"/><br/>
+                                <apex:outputField value="{!list_QuoteAddresses[0].Country__c}"/> 
+                            </apex:outputPanel>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="right" width="90%">
+                    <tr>
+                        <td class="tableHeader">Quote Expiration</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Expiration_Date__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tableHeader">Date Created</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Proposal_Date__c}" rendered="{!objQuote.Proposal_Date__c != null}"/>
+                            <apex:outputField value="{!objQuote.Quote_Created_Date_Formula__c}" rendered="{!objQuote.Proposal_Date__c == null}"/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr/><tr/>
+        <tr>
+            <td>
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="left" width="90%">
+                    <tr>
+                        <td class="tableHeader">Account Executive</td>
+                        <td class="tableHeader">Customer Contact</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputField value="{!objQuote.Owner.Name}"/>
+                        </td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Contact__r.Name}"/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="center" width="90%">
+                    <tr>
+                        <td class="tableHeader">Phone</td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Contact__r.ContactPhone__c}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="tableHeader">E-mail</td>
+                        <td>
+                            <apex:outputText value="{!objQuote.Contact__r.Email}"/>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <apex:outputPanel layout="none" rendered="{!blnHasRecurring}">
+                    <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="right" width="90%">
+                        <tr>
+                            <td class="tableHeader">Initial Subscription Term</td>
+                            <td class="tableHeader">Renewal Subscription Term</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                {!IF(objQuote.Initial_Subscription_Term__c == 'Other',TEXT(objQuote.No_Of_Months__c) & ' Months',objQuote.Initial_Subscription_Term__c)}
+                            </td>
+                            <td>
+                                <apex:outputField value="{!objQuote.Renewal_Subscription_Term__c}"/>
+                            </td>
+                        </tr>
+                    </table>
+                </apex:outputPanel>
+            </td>
+        </tr>
+        <tr/><tr/>
+        <tr>
+            <td>
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="left" width="90%">
+                    <tr>
+                        <td class="tableHeader">Edition</td>
+                        <td class="tableHeader">Pricing Model</td>
+                        <td class="tableHeader">Ramp Period (days)</td>
+                        <td class="tableHeader">Deployment Model</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputField value="{!objQuote.Product_Tier__c}"/>
+                        </td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Pricing_Model__c}"/>
+                        </td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Ramp_Period__c}"/>
+                        </td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Deployment_Model__c}"/>
+                        </td> 
+                    </tr>
+                </table>
+            </td>
+            <td colspan="2">
+                <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:center;" align="center" width="90%">
+                    <tr>
+                        <td class="tableHeader">Payment Terms</td>
+                        <td class="tableHeader">Billing Period</td>
+                        <td class="tableHeader">Currency</td>
+                      <!--  <td class="tableHeader">Min. Period Fees</td> -->
+                    </tr>
+                    <tr>
+                        <td>
+                            <apex:outputField value="{!objQuote.Order_Payment_Terms__c}"/>
+                        </td>
+                        <td>
+                            <apex:outputField value="{!objQuote.Billing_Period__c}"/>
+                        </td>
+                        <td>
+                            <apex:outputField value="{!objQuote.CurrencyISOCode}"/>
+                        </td>
+                    <!--    <td>
+                            <apex:outputField value="{!objQuote.CMRR__c}"/>
+                        </td>-->
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <br/><br/><br/>
+    <apex:repeat value="{!list_ProductGroups}" var="objProductGroup">
+        
+        <apex:outputPanel layout="none" rendered="true">
+            <apex:outputPanel rendered="{!objProductGroup.Group_Name__c == 'Software Licensing' && blnHasRecurring}">
+                <apex:outputText value="Recurring Fees:" styleClass="mainHeader"/>
+                <br/><br/>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!(objProductGroup.Group_Name__c = 'Monthly Telco/MPLS/Data Center Fees' || objProductGroup.Group_Name__c = 'Monthly Telco') && blnHasMonthlyTelco}">
+                <apex:outputText value="Monthly Recurring Telco/MPLS/Data Center Fees:" styleClass="subHeader"/>
+                <br/><br/>
+            </apex:outputPanel>
+            <apex:outputPanel rendered="{!objProductGroup.Group_Name__c == 'Upfront Provisioning Fees' && blnHasNonRecurring}">
+                <apex:outputText value="Non-Recurring Fees:" styleClass="mainHeader"/>
+                <br/><br/>
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!map_ProductGroupsToShow[objProductGroup.Group_Name__c]}">
+            <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+                <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                    <td colspan="15">{!objProductGroup.Header_Text__c}</td>
+                </tr>
+                <tr style="font-weight:bold;text-align:center;">
+                    <th width="8%">Quantity</th>
+                    <th width="20%">Product</th>
+                    <apex:outputPanel layout="none" rendered="{!NOT(objQuote.Hide_Discount__c)}">
+                        <th>List Price</th>
+                    </apex:outputPanel>
+                    <th>Unit</th>
+                    <apex:outputPanel layout="none" rendered="{!NOT(objQuote.Hide_Discount__c)}">
+                        <th>Discount (%)</th>
+                    </apex:outputPanel>
+                    <th>Net Unit Price</th>     
+                    <apex:outputPanel layout="none" rendered="{!AND(objQuote.Group_Product_By__c == 'Standard View',contains(map_ProdGroupCategorization['Recurring Fees'], objProductGroup.Group_Name__c))}">
+                        <th>Extended Price Per Period <br/>
+                        ({!CASE(objQuote.Billing_Period__c, 'Other', TEXT(objQuote.No_Of_Months__c)+' Months', objQuote.Billing_Period__c)})</th>
+                    </apex:outputPanel>
+                    <apex:outputPanel layout="none" rendered="{!AND(objQuote.Group_Product_By__c == 'Standard View',contains(map_ProdGroupCategorization['Monthly Recurring (Telco) Fees'], objProductGroup.Group_Name__c))}"> 
+                        <th>Extended Price Per Period<br/>(Monthly)
+                        </th>
+                    </apex:outputPanel> 
+                    <apex:outputPanel layout="none" rendered="{!OR(objQuote.Group_Product_By__c != 'Standard View',contains(map_ProdGroupCategorization['Non-Recurring Fees'], objProductGroup.Group_Name__c))}"> 
+                        <th>Extended Price</th>
+                    </apex:outputPanel>   
+                    
+                </tr>
+                <apex:repeat value="{!map_ProductGroupToQuoteProducts[objProductGroup.Group_Name__c]}" var="objQP">
+                    <tr style="text-align:center;">
+                        <td><apex:outputText value="{!objQP.Product_Quantity__c}"/></td>
+                        <td><apex:outputText value="{!objQP.Name}"/></td>
+                        <apex:outputPanel layout="none" rendered="{!NOT(objQuote.Hide_Discount__c)}">
+                            <td>{!strCurrencySymbol}
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!objQP.List_Price__c}"/>
+                                </apex:outputText>
+                            </td>
+                        </apex:outputPanel>
+                        <td><apex:outputText value="{!objQP.Unit_of_Measure__c}"/></td>
+                        <apex:outputPanel layout="none" rendered="{!NOT(objQuote.Hide_Discount__c)}">
+                            <td><apex:outputField value="{!objQP.Total_Discount__c}"/></td>
+                        </apex:outputPanel>
+                        <td>{!strCurrencySymbol}
+                            <apex:outputText value="{0, number, ###,##0.00}">
+                                <apex:param value="{!objQP.Net_Unit_Price__c}"/>
+                            </apex:outputText>
+                        </td>
+                        <td>{!strCurrencySymbol}
+                            <apex:outputText value="{0, number, ###,##0.00}">
+                                <apex:param value="{!IF(contains(map_ProdGroupCategorization['Monthly Recurring (Telco) Fees'], objProductGroup.Group_Name__c), objQP.Extended_Price_Per_Month__c, objQP.Extended_Price_Per_Period__c)}"/>
+                            </apex:outputText>
+                        </td>
+                    </tr>
+                </apex:repeat>
+            </table>
+            <br/><br/>
+            <!--Added By Ranjith on May 24, 2017 -- Starts -->
+            <apex:outputPanel rendered="{!blnDisplayMonthlyTelcoTable && (objProductGroup.Header_Text__c='Monthly Telco/MPLS/Data Center Fees' || objProductGroup.Group_Name__c='Monthly Telco')}">
+            <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+                <tr>
+                    <td>
+                        Genesys will provide {!objMonthlyTelcoProd.Product_Quantity__c} Telco Channels within the primary PureConnect Cloud Data Center to support your call traffic to and from the PSTN.  An equal number of lines will be reserved within the secondary data center to serve as back up.
+                    </td>
+                    <td style="text-align:right;">
+                        Customer will pay {!strCurrencySymbol}{!objMonthlyTelcoProd.Ext_Net_Price__c} per month for {!objMonthlyTelcoProd.Product_Quantity__c} Telco dedicated Telco Channels within the primary Data Center and an equal number used for back up within the secondary data center.<br/><br/>
+                        Genesys will provide access to an additional {!objMonthlyTelcoProd.Product_Quantity__c} Telco Channels for use as needed, and when available.  Customer will be invoiced<br/>{!strCurrencySymbol}{!ROUND(objMonthlyTelcoProd.List_Price__c, 2)} per month for each additional Telco Channel utilized.
+                    </td>
+                </tr>
+                <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';text-align:center;">
+                    <td>Telco Usage</td>
+                    <td>Costs</td>
+                </tr>
+                <tr>
+                    <td>Domestic U.S. Outbound and Inbound Call Traffic established over the PSTN. (CS-012-NV-AR11)</td>
+                    <td style="text-align:right;">{!strCurrencySymbol}{!ROUND(0.012*conversionRate, 3)} per minute billed in one second increments.</td>
+                </tr>
+                <tr>
+                    <td>Intrastate Call Traffic:</td>
+                    <td style="text-align:right;">{!strCurrencySymbol}{!ROUND(0.0151*conversionRate, 4)} per minute billed in one second increments.</td>
+                </tr>
+                <tr>
+                    <td>International Call Traffic:(CS-012-NV-AR12)</td>
+                    <td style="text-align:right;">International calls are billed at the usage rates in effect at the time of the call.  An International Usage Rate Schedule will be provided upon request.</td>
+                </tr>
+                <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';text-align:center;">
+                    <td>Assigned Phone Numbers</td>
+                    <td>Costs</td>
+                </tr>
+                <tr>
+                    <td>Toll Free Phone Numbers: (CS-012-NV-AR04)</td>
+                    <td style="text-align:right;">{!strCurrencySymbol}{!ROUND(2.50*conversionRate, 2)} per Toll Free Phone Number, per Month</td>
+                </tr>
+                <tr>
+                    <td>Direct Inward Dial Phone Numbers: (CS-012-NV-AR06)</td>
+                    <td style="text-align:right;">{!strCurrencySymbol}{!ROUND(1.50*conversionRate, 2)} per Direct Inward Dial Phone Number, per Month</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="font-weight:bold;font-style:italic;text-align:center;">Telco Pricing excludes taxes, surcharges and tariffs, which are billed separately as incurred.</td>
+                </tr>
+            </table>
+            </apex:outputPanel>
+            <br/><br/>
+            <!--Added By Ranjith on May 24, 2017 -- Ends -->
+        </apex:outputPanel>
+    </apex:repeat>
+    
+    <!--Added By Ranjith on May 24, 2017 -- Starts -->
+    <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+        <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';text-align:left;">
+            <td colspan="15">SPECIAL TERMS &amp; NOTES</td>
+        </tr>
+        <tr>
+            <td>
+                <apex:outputPanel style="font-size:9pt;font-family:Dialog;">
+                    <apex:outputPanel layout="none" rendered="{!objQuote.Include_Special_Offer_in_Output__c}">
+                        <b>Pricing Notes/Business Exceptions:</b><br/><br/>
+                        <apex:outputText value="{!objQuote.Special_Offer_Terms__c}" escape="false"/>
+                        <br/><br/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                Professional Services costs are not included and will be quoted separately in the Genesys Statement of Work.<br/><br/>
+                Agent limit: This pricing and service package is subject to change and Genesys’ sole discretion if Customer’s actual use exceeds 6000 Agents in two of any three consecutive months.<br/><br/>
+                <apex:outputpanel rendered="{!objQuote.Order_Type__c != 'Add-On' && objQuote.Order_Type__c != 'Add On'}">
+                This Services Order is governed by the executed Genesys Master Subscription Agreement, the PureConnect Supplemental Terms, and any other referenced documents.<br/><br/>
+                </apex:outputpanel> 
+                <apex:outputText value="Minimum Annual Fees are paid upfront upon Agreement execution.  Charges for subsequent years shall be billed annually in advance on the anniversary of the term start date." rendered="{!objQuote.Billing_Period__c='Annually'}"/>
+                <apex:outputText value="Minimum Quarterly Fees are paid upfront upon Agreement execution.  Charges for subsequent quarters shall be billed quarterly in advance on the anniversary of the term start date." rendered="{!objQuote.Billing_Period__c='Quarterly'}"/>
+                <apex:outputText value="Minimum Monthly Fees are paid monthly in arrears. " rendered="{!objQuote.Billing_Period__c='Monthly'}"/>
+                <br/><br/>
+                <apex:outputpanel rendered="{!objQuote.Order_Type__c != 'Add-On' && objQuote.Order_Type__c != 'Add On'}">
+                Additional recurring fees (including but not limited to telco, MPLS and data center fees) and overage fees shall be billed monthly in arrears.<br/><br/><br/>
+                Genesys reserves the right to pass through to Customer any fees charged by third party service providers (example: MPLS service providers) for terminations by Customer without cause. <br/><br/><br/>
+                Genesys will provide Rack space, cross-connects and POTS lines to support Telco/MPLS circuits terminated by Customer within the PureConnect Data Centers. Customer will be provided an Agreement Addendum upon circuit delivery outlining the one-time upfront costs and monthly recurring costs for these Data Center Services. <br/><br/><br/>
+                The <b>“Ramp Period”</b> means the optional period of time shown in this Services Order, during which Customer will transition to Full Production. The Ramp Period will begin on the “Live” date.<br/><br/>
+                <b>“Live”</b> means the earlier of (a) the day in which there is at least one (1) User of the PureConnect Services in an environment capable of supporting the agreed Minimum Monthly User/agent commitment counts as shown in this Services Order, or (b) thirty (30) days after implementation completion (as described in the applicable SOW).<br/><br/>
+                <b>“Full Production”</b> means the day upon which the earlier of the following occurs: (i) Customer reaches the agreed Minimum Monthly User/agent commitment counts as shown in this Services Order; (ii) Customer notifies Genesys of its intent to end the Ramp Period; or (iii) the Ramp Period expires.  The Minimum Term will begin on the first day of the first full calendar month immediately following transition to Full Production.<br/><br/>
+                During the Ramp Period, Genesys will invoice Customer for its actual use of the PureConnect Services. Genesys will invoice Customer for its actual use of the PureConnect Services during the month in which the Ramp Period ends.  For example and not limitation, if Full Production is the tenth day of January, then Genesys will invoice Customer for its actual use of the PureConnect Services for the rest of January. <br/><br/>
+                In the first full month following Full Production, and monthly thereafter, Genesys will invoice Customer for Users and Items exceeding the Minimum Commitments, along with other usage fees or other Monthly Recurring Charges.<br/><br/><br/>   
+                </apex:outputpanel>           
+             <!--   <b>Minimum Monthly Commitment Overages:</b><br/>
+                Customer may, at any time during the Minimum Term, increase the number of Users and/or Items by up to twenty percent (20%) over the committed Minimum Numbers and any increase in Users and Items pursuant to this sentence may be made by Customer without any Addendum(s) to this Services Order or the PureConnect Agreement.  <br/><br/>
+                Should Customer increase the number of Users and/or Items by more than twenty percent (20%) over the committed Minimum Numbers, Customer must sign an Addendum to this Services Order to increase the Minimum Number of Users and/or Items; provided, however, that (i) the pricing outlined below will apply to each additional User and/or Item based on the feature set utilized unless such increases in the Minimum Monthly Commitment may entitle Customer to volume pricing discounts in the User and/or Item Cost per Month, and (ii) the term for the added User(s) and/or Item(s) shall end on the last day of the Minimum Term, and (iii) aside from amending the Minimum Number of Users and/or Items and the increase in the Total Minimum Error! No bookmark name given. Fees to account for the increase in the Minimum Numbers, the amendment shall not amend any of the other terms or provisions of this Services Order or the PureConnect Agreement.<br/>
+            --></td>
+        </tr>
+    </table>    
+    <br/><br/><br/>
+    <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+        <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';text-align:center;">
+            <td>IVR Sessions (CS-012-NV-AR07)</td>
+            <td>Costs</td>
+        </tr>
+        <tr>
+            <td>IVR Sessions are used to provide Automated Attendant and IVR capabilities.  Genesys will provide customer with access to two (2) IVR sessions per Agent at no cost.  Additional sessions are billable based upon actual use on a monthly basis.</td>
+            <td style="text-align:right;">Customer is provided with two (2) IVR sessions per Agent at no cost.  Each additional session is billed at a rate of {!strCurrencySymbol}{!ROUND(50.00*conversionRate, 2)} per Session, per Month </td>
+        </tr>
+    </table>
+    <br/><br/><br/>
+    <apex:outputPanel rendered="{!objQuote.Product_Tier__c!='RCM Internet Option'}">
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+            <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';text-align:center;">
+                <td>Miscellaneous Services</td>
+                <td>Costs</td>
+            </tr>
+            <tr>
+                <td>Cloud Recording Storage</td> 
+                <td style="text-align:right;">                    
+                    {!CASE(objQuote.Product_Tier__c,'Standard',1,'Preferred',2,4)} GB provided per Recorder Add-on.<br/>  
+                    {!strCurrencySymbol}{!ROUND(3.00*conversionRate, 2)} per GB, per month for each additional GB of storage utilized.
+                </td>
+            </tr>
+            <tr>
+                <td>Cloud Data Storage</td>
+                <td style="text-align:right;">
+                    {!CASE(objQuote.Product_Tier__c,'Standard',20,'Preferred',50,100)} GB provided.  <br/>  
+                    {!strCurrencySymbol}{!ROUND(3.00*conversionRate, 2)} per GB, per month for each additional GB of storage utilized.
+                </td>
+            </tr>
+            <tr>
+                <td>Additional Development and Configuration Fees</td>
+                <td style="text-align:right;">{!strCurrencySymbol}{!CASE(objQuote.Product_Tier__c,'Standard',ROUND(225*conversionRate, 2),'Preferred',ROUND(200*conversionRate, 2),ROUND(185*conversionRate, 2))} per Hour</td>
+            </tr>
+            <tr>
+                <td>Move, Add and Change Requests (MAC)</td>
+                <td style="text-align:right;">{!strCurrencySymbol}{!CASE(objQuote.Product_Tier__c,'Standard',ROUND(150*conversionRate, 2),'Preferred',ROUND(135*conversionRate, 2),ROUND(125*conversionRate, 2))} per MAC</td>
+            </tr>
+        </table>
+    </apex:outputPanel>
+    <!--Added By Ranjith on May 24, 2017 -- Ends -->
+    
+    <apex:outputPanel style="font-size:9pt;font-family:Dialog;">        
+        <apex:outputPanel rendered="{!objQuote.Additional_Legal_Terms__c}">
+            <b>Legal Notes:</b>
+            <apex:outputField value="{!objQuote.Legal_Terms__c}"/>
+            <br/><br/>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!NOT(ISBLANK(objQuote.SOW_Link__c))}">
+            <b>Client Management:</b>
+            The SoW for Setup Services which details the scope, timeline, and payment schedule is available at:&nbsp; 
+            <apex:outputLink value="{!objQuote.SOW_Link__c}" target="_blank">SOW Link</apex:outputLink>
+            Notwithstanding anything to the contrary contained in the Agreement, the following 
+            (below, attached, or found at &nbsp;<apex:outputLink value="{!objQuote.SOW_Link__c}" target="_blank">SOW Link</apex:outputLink>)
+            shall serve to amend the Agreement. In the event of conflict between the Business Exceptions and the Agreement, 
+            the Business Exceptions will prevail for the purposes and subject matter therein contained.
+            <br/><br/>
+        </apex:outputPanel>
+        <div class="page-break"/>
+        <apex:outputPanel layout="none" rendered="{!objQuote.Treat_SO_as_PO__c}">
+            <div style="color:white">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustRev,$CurrentPage.parameters.signCust)}</div>
+     
+            _____________ The Company does not issue purchase orders for these services and will agree to the terms and conditions set forth below.
+            <br/><br/>
+        </apex:outputPanel>
+        <div width="100%" style="border: 1px solid black;border-collapse:collapse;">
+            <apex:outputText style="font-weight:bold;font-size:115%" value="Terms and Conditions:"/>
+                This Services Order, together with the applicable Master Subscription Agreement that can be found at&nbsp;
+                <apex:outputLink value="{!objQuote.MSA_Link__c}" target="_blank">MSA Link</apex:outputLink>,
+                and all other schedules referenced by url or otherwise, are incorporated herein by reference, and contain the terms 
+                and conditions under which Genesys provides the above Covered Products to Customer ("Agreement"). 
+                
+                <apex:outputpanel rendered="{!objQuote.Order_Type__c != 'Add-On' && objQuote.Order_Type__c != 'Add On'}">
+                    The Agreement constitutes the entire understanding between Customer and Genesys for the Covered Products, 
+                    and supersedes all previous agreements and understandings between the parties regarding the subject matter herein. 
+                    Customer acknowledges that it has read and agrees to the terms and conditions set forth herein and at the URLs as referenced in this Agreement.
+                    <apex:outputPanel layout="none" rendered="{!objQuote.Treat_SO_as_PO__c}">
+                        <br/>
+                        <b>Customer’s execution on the line above indicates compliance with the  customer’s business practices in making a purchase commitment equal to the Total Contract Value displayed herein. 
+                        All minimum charges, plus period overages are billable under this executed service order for the duration of the specified Term including any subsequent renewals.</b>
+                    </apex:outputPanel>
+                </apex:outputpanel> 
+                
+            <apex:outputPanel layout="none">
+                <br/>
+                <b>Unless otherwise specified in this Service Order, (a) the price and quantities above do not include network services required for the use of the above Covered Product and 
+                (b) the use of Genesys Network Services will be billed at the then-current rates at the end of each billing month.</b>
+            </apex:outputPanel>
+        </div>
+        <br/><br/><br/><br/><br/>
+    </apex:outputPanel>
+    <apex:outputPanel layout="none" rendered="{!NOT(objQuote.Hide_Totals__c)}">
+        
+        <table border="1" style="border: 1px solid black;border-collapse:collapse;text-align:right;font-size:11pt;" align="right">
+            <tr>
+                <td><b>Minimum {!CASE(objQuote.Billing_Period__c, 'Annually', 'Annual', 'Semi-Annually', 'Semi-Annual', 'Other', TEXT(objQuote.No_Of_Months__c)+' Months', objQuote.Billing_Period__c)} Fees:</b></td>
+                <td><b><apex:outputField value="{!objQuote.Minimum_Fees_Period__c}"/></b></td>
+            </tr>
+            <tr>
+                <td><b>Monthly Recurring Telco/MPLS/Data Center Fees:</b></td>
+                <td><b><apex:outputField value="{!objQuote.CMRR__c}"/></b></td>
+            </tr>
+            <tr style="display: {!IF(!ISBLANK(objQuote.Total_Education__c) && objQuote.Total_Education__c >= 0, 'table-row', 'none')};">
+                <td>Subtotal for Education:</td>
+                <td><apex:outputField value="{!objQuote.Total_Education__c}"/></td>
+            </tr>
+            <tr style="display: {!IF(!ISBLANK(objQuote.Total_Hardware__c) && objQuote.Total_Hardware__c >= 0, 'table-row', 'none')};">
+                <td>Subtotal for Hardware:</td>
+                <td><apex:outputField value="{!objQuote.Total_Hardware__c}"/></td>
+            </tr>
+            <tr style="display: {!IF(!ISBLANK(objQuote.Setup_Provisioning_Charges__c) && objQuote.Setup_Provisioning_Charges__c >= 0, 'table-row', 'none')};">
+                <td>Subtotal for Upfront Provisioning Fees:</td>
+                <td><apex:outputField value="{!objQuote.Setup_Provisioning_Charges__c}"/></td>
+            </tr>
+            <tr>
+                <td><b>Total Non-Recurring Fees:</b></td>
+                <td width="32%"><b><apex:outputField value="{!objQuote.Non_Recurring_Fees__c}"/></b></td>
+            </tr>
+        </table>
+        <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+        <table border="1" width="50%" style="border: 1px solid black;border-collapse:collapse;text-align:right;font-size:11pt;" align="right">
+            <tr>
+                <td>Term:</td>
+                <td>{!IF(objQuote.Initial_Subscription_Term__c == 'Other', TEXT(objQuote.No_Of_Months__c) & ' Months',objQuote.Initial_Subscription_Term__c)}</td>
+            </tr>
+          <!--  <tr>
+                <td>Annual Contract Value:</td>
+                <td><apex:outputField value="{!objQuote.Annual_Contract_Value__c}"/></td>
+            </tr> -->
+            <tr>
+                <td>Year 1 Cost:</td>
+                <td>{!objQuote.CurrencyIsoCode}
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!objQuote.Non_Recurring_Fees__c + objQuote.Annual_Contract_Value__c}"/>
+                    </apex:outputText>
+                </td>
+            </tr>
+            <tr style="display: {!IF(!ISBLANK(objQuote.Genesys_University_Training_Total__c) && objQuote.Genesys_University_Training_Total__c != 0, 'table-row', 'none')};">
+                <td>Genesys University Total:</td>
+                <td width="32%"><apex:outputField value="{!objQuote.Genesys_University_Training_Total__c}"/></td>
+            </tr>
+            <tr>
+                <td>Total Contract Value:</td>
+                <td><apex:outputField value="{!objQuote.Total_Contract_Value__c}"/></td>
+            </tr>
+        </table>
+    </apex:outputPanel>
+    <br/><br/><br/><br/><br/><br/><br/><br/><br/>
+    
+    <table width="100%" cellpadding="10">            
+        <tr>
+            <th width="50%">{!objQuote.Sold_To_Name__r.Name}</th>
+            <th align="right" width="50%">
+                {!objQuote.BigMachines__Opportunity__r.Sold_To_Country__r.PureConnect_Cloud_Selling_Entity__c}
+            </th>
+        </tr>
+        <tr>
+            <td style="color:white">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustRev,$CurrentPage.parameters.signCust)}</td>
+            <td align="right" style="color:white;align:right">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCust,$CurrentPage.parameters.signCustRev)}</td>
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Signature</td>
+            <td align="right">___________________________________<br/>Signature</td>
+        </tr>
+        <tr>
+            <td style="color:white">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustNameRev,$CurrentPage.parameters.signCustName)}</td>
+            <td align="right" style="color:white;align:right">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustName,$CurrentPage.parameters.signCustNameRev)}</td>
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Print name</td>
+            <td align="right">___________________________________<br/>Print name</td>
+        </tr>
+        <tr>
+            <td style="color:white">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustTitleRev,$CurrentPage.parameters.signCustTitle)}</td> 
+            <td align="right" style="color:white;align:right">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustTitle,$CurrentPage.parameters.signCustTitleRev)}</td> 
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Title</td>
+            <td align="right">___________________________________<br/>Title</td>
+        </tr>
+        <tr>
+            <td style="color:white">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustDateRev,$CurrentPage.parameters.signCustDate)}</td> 
+            <td align="right" style="color:white;align:right">{!if(Contains($CurrentPage.parameters.deliveryOption,'Reverse Order'),$CurrentPage.parameters.signCustDate,$CurrentPage.parameters.signCustDateRev)}</td> 
+        </tr>
+        <tr>
+            <td>___________________________________<br/>Date</td> 
+            <td align="right">___________________________________<br/>Date</td> 
+        </tr>
+    </table>
+    <br/><br/><br/><br/><br/><br/><br/>
+    <apex:outputPanel rendered="{!$CurrentPage.parameters.deliveryOption != 'Download PDF' && $CurrentPage.parameters.deliveryOption != 'Download'}">
+        <table cellspacing="1" cellpadding="5" border="1" style="border: 1px solid black;border-collapse:collapse;page-break-before:auto;page-break-inside:avoid;" width="100%">
+            <tr class="tableHeader" style="font-size:9pt;font-family:'Calibri';">
+                <td colspan="15">Required Approvals</td>
+            </tr>
+            <tr style="font-weight:bold;text-align:center;">
+                <th width="20%">Role</th>
+                <th width="40%">Name</th>            
+                <th width="40%">Initials</th>
+            </tr>
+            <tr>
+                <td height="30px">Legal</td>
+                <td style="color:white">{!$CurrentPage.parameters.signLegName}</td>
+                <td style="color:white">{!$CurrentPage.parameters.signLeg}</td>
+            </tr>
+            <tr>
+                <td height="30px">Finance</td>
+                <td style="color:white">{!$CurrentPage.parameters.signFinName}</td>
+                <td style="color:white">{!$CurrentPage.parameters.signFin}</td>
+            </tr>            
+        </table>
+    </apex:outputPanel>
+</apex:page>

@@ -1,0 +1,660 @@
+<apex:page standardController="Partner_Application__c" extensions="PartnerApplicationDetailExtension" title="Partner Application - {!partnerApplication.Name}"
+        sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+      
+    <style>
+        body form .apexp label {
+            font-weight: 600;
+            line-height: 1.125rem;
+            color: #4a4a56;
+            font-size: 0.70rem;
+        }
+        tr.dataRow {
+           background-color:white;
+        }
+    </style>
+
+      <apex:includeScript value="{!$Resource.jquery19}"/>
+  
+
+  <script>  
+  
+  var path="{!URLFOR($Resource.GenesysPartnerLogo)}";
+  document.getElementById("phHeaderLogoImage").style.width = "175px";
+  document.getElementById("phHeaderLogoImage").style.height= "75px";
+  document.getElementById("phSearchInput").placeholder= "Search Partner Portal....";
+  $('#phSearchContainer').hide();  
+  var commName = "{!$Site.Prefix}";
+  var h2 = $("#sidebarDiv").find("h2");
+  $(h2).each(function() {
+  if( $(this).text() == 'Recent Items')
+  {
+   $(this).parent().parent().hide(); 
+  }
+  });  
+  </script> 
+    
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="partnerApp" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="body">
+                <apex:form >
+
+                    <!--<apex:sectionHeader title="Partner Application" subtitle="{!partnerApplication.Name}" />-->
+                    <apex:pageMessages />
+                    <apex:pageBlock title="Partner Application">            
+                            <apex:pageBlockButtons >
+                                <apex:commandButton value="Business Terms" rendered="{!AND(partnerApplication.Status__c == 'Approved',ISPICKVAL($User.UserType,'Standard'),OR(currentUserProfile != 'Custom Potential Partner User',blnDoTermsExist),blnTechAndServiceCnt== false)}" action="{!goToTBusinessTerms}"/>
+                                <apex:commandButton value="Contract Request" onclick="window.open('/apex/GCRequest?appId={!partnerApplication.id}&accid={!partnerApplication.Account__c}&crt=Partner Contract&t=gcrDetails')" rendered="{!AND(partnerApplication.Status__c == 'Approved',blnTechAndServiceCnt== true)}"/>
+                                <apex:commandButton value="Print" onclick="window.print(); return false;" />
+                                <apex:commandButton value="Edit" onclick="location.href='/partner/Partner_Application?id={!partnerApplication.Id}';return false;" rendered="{!AND(currentUserProfile = 'Custom Potential Partner User',partnerApplication.Status__c == 'In Progress')}"/>
+                        <apex:commandButton value="Agreement" onclick="window.open('/apex/Partneragreement?appId={!partnerApplication.id}&accid={!partnerApplication.Account__c}&conid={!partnerApplication.Contact__c}')" rendered="{!AND(partnerApplication.Status__c == 'Approved',isTechPartner==true)}"/>    
+                        </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="1" title="Company Profile and Partner Category" collapsible="false">                                     
+                                <!--<apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_1}" var="f">                        
+                                    <apex:outputField value="{!partnerApplication[f]}" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                              
+                                </apex:repeat>-->
+                                <apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_1}" var="f">
+                                        <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                           <apex:outputPanel >{!mapFieldLabelVsHelpText[f.label]}</apex:outputPanel>                                     
+                                                <apex:outputPanel >
+                                                    <div class = "">
+                                                    <div class = ""></div>
+                                                        <apex:outputPanel id="selectValues" rendered="{!(f.label =='Industry')}"> 
+                                                          <table border="0" >
+                                                           <tr>
+                                                             <th>Industry</th>
+                                                             <th>Vertical</th>
+                                                           </tr> 
+                                                            <apex:repeat id="pbtInds" value="{!list_IndustryNVertical}" var="ind" rendered="{!(f.label =='Industry')}">
+                                                             <tr>
+                                                              <td><apex:outputField value="{!ind.Industry__c}"/></td>
+                                                              <td><apex:outputField value="{!ind.Vertical_Markets__c }"/></td>
+                                                             </tr> 
+                                                            </apex:repeat>
+                                                           </table> 
+                                                        </apex:outputPanel>
+                                                        <apex:outputField value="{!partnerApplication[f]}" rendered="{!NOT(f.type =='textarea') && NOT(f.label =='Industry')}" /> 
+                                                        <apex:outputField value="{!partnerApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                                    </div>
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                    </apex:repeat>
+                                <apex:outputPanel id="integrate" >  
+                                    <apex:pageBlockSection columns="1">           
+                                        <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                           <apex:outputLabel value="Do you want to integrate to Genesys products: " for="file"/>
+                                             <apex:outputField value="{!partnerApplication.Do_you_want_to_integrate_to_Genesys_prod__c}"/>  
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem rendered="{!partnerApplication.Do_you_want_to_integrate_to_Genesys_prod__c ==true}"  dataStyle="width:100%" labelStyle="width:19%">
+                                                <apex:outputPanel >What is the added value you can offer by integrating with Genesys products?</apex:outputPanel>
+                                                <apex:outputPanel >
+                                                    <div class = "">
+                                                    <div class = ""></div>
+                                                        <apex:outputField value="{!partnerApplication.Value_Added_to_Genesys__c}" style="width:400px; height:60px;" />                                                      
+                                                    </div>
+                                                </apex:outputPanel>                                
+                                        </apex:pageBlockSectionItem>
+                                    </apex:pageBlockSection>
+                                </apex:outputPanel>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="1" title="Partner Company Details">
+                                <apex:repeat value="{!$ObjectType.Account.FieldSets.Partner_Application_Part_2}" var="f">                       
+                                    <!--<apex:outputField value="{!paAccount[f]}" label="{!mapFieldLabelVsHelpText[f.label]}" />  -->
+                                    
+                                    
+                                    <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%" rendered="{!IF(mapFieldLabelVsHelpText[f.label]  == 'HQ Address 1' || mapFieldLabelVsHelpText[f.label]  == 'State/Province' || mapFieldLabelVsHelpText[f.label]  == 'Country' , false , true)}">
+                                        <apex:outputPanel rendered="{!IF(mapFieldLabelVsHelpText[f.label]  == 'HQ Address 1', false , true)}">
+                                           
+                                           <apex:outputLabel rendered="{!IF(mapFieldLabelVsHelpText[f.label]  == 'HQ Address 1', false , true)}">{!mapFieldLabelVsHelpText[f.label]}</apex:outputLabel> 
+                                        </apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <!--<apex:outputPanel styleClass="clsPCD" rendered="{!if(mapFieldLabelVsHelpText[f.label] == 'HQ Address 2' || mapFieldLabelVsHelpText[f.label] == 'HQ Address 3' || mapFieldLabelVsHelpText[f.label] == 'VAT Number' || mapFieldLabelVsHelpText[f.label] == 'Standard Industrial Classification Code (SIC)', false, true)}">-->
+                                            <apex:outputPanel styleClass="clsPCD" rendered="{!if(mapFieldLabelVsHelpText[f.label] == 'HQ Address 2' || mapFieldLabelVsHelpText[f.label] == 'HQ Address 3'|| mapFieldLabelVsHelpText[f.label] == 'HQ Address 1' || mapFieldLabelVsHelpText[f.label] == 'VAT Number' || mapFieldLabelVsHelpText[f.label] == 'Standard Industrial Classification Code (SIC)', false, true)}">
+                                                <div class = "">
+                                                    <div class = ""></div>
+                                                    
+                                                    <!--<apex:outputLabel value="{!mapFieldLabelVsHelpText[f.label]}" />-->
+                                                    <apex:outputField value="{!paAccount[f]}" rendered="{!NOT(f.type =='textarea')}" /> 
+                                                    <apex:outputField value="{!paAccount[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                                                    
+                                                </div>
+                                            </apex:outputPanel>
+                                            
+                                            <apex:outputPanel rendered="{!IF(mapFieldLabelVsHelpText[f.label] == 'HQ Address 2' || mapFieldLabelVsHelpText[f.label] == 'HQ Address 3' || mapFieldLabelVsHelpText[f.label] == 'VAT Number' || mapFieldLabelVsHelpText[f.label] == 'Standard Industrial Classification Code (SIC)', true,  false)}">
+                                                
+                                                <!--<apex:outputLabel value="{!mapFieldLabelVsHelpText[f.label]}" />-->
+                                                <apex:outputField value="{!paAccount[f]}" rendered="{!NOT(f.type =='textarea')}" /> 
+                                                <apex:outputField value="{!paAccount[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem rendered="{!IF(mapFieldLabelVsHelpText[f.label] == 'HQ Address 1', true,  false)}" dataStyle="width:100%" labelStyle="width:20%">
+                                      <apex:outputPanel id="pnlHQ"  rendered="{!IF(mapFieldLabelVsHelpText[f.label] == 'HQ Address 1', true,  false)}">
+                                          <apex:pageBlockSection columns="1">                      
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="HQ Address 1" />                       
+                                              <apex:outputField value="{!paAccount.Street1__c}" styleClass="clsAdd1_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="HQ Address 2" />                       
+                                              <apex:outputField value="{!paAccount.Street2__c}" styleClass="clsAdd2_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="HQ Address 3" />                       
+                                              <apex:outputField value="{!paAccount.Street3__c}" styleClass="clsAdd3_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="Billing City" />                       
+                                              <apex:outputField value="{!paAccount.BillingCity}" styleClass="clsCity_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="Jurisdiction of Incorporation (Country / State / Province)" />
+                                                                    
+                                                      
+                                              <apex:outputField value="{!paAccount.StateProvince__c}" styleClass="clsState_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="Zip Code" />                       
+                                              <apex:outputField value="{!paAccount.ZipCode__c}" styleClass="clsZipCode_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                         </apex:pageBlockSection>
+                                       </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>                                                                                                                                    
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="1" title="Your Contact Information � Primary Contact">
+                                <!--<apex:repeat value="{!$ObjectType.Contact.FieldSets.Partner_Application_Part_2_2}" var="f">
+                                    <apex:outputField value="{!paContact[f]}" label="{!mapFieldLabelVsHelpTextContact[f.label]}" rendered="{!(f.label != 'Last Name')}"/>
+                                    <apex:outputField value="{!paContact[f]}" Label="Name" rendered="{!(f.label == 'Last Name')}" />  
+                                </apex:repeat> -->
+                                
+                                <apex:outputField value="{!paContact.FirstName}"/>
+                      <apex:outputField value="{!paContact.LastName}"/>
+                          <apex:repeat value="{!$ObjectType.Contact.FieldSets.Partner_Application_Part_2_2}" var="f">
+                                    <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%" rendered="{!(f.Label != 'Country')}">
+                                        <apex:outputPanel >{!mapFieldLabelVsHelpTextContact[f.label]}</apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <apex:outputPanel rendered="{! IF(mapFieldLabelVsHelpTextContact[f.label] == 'Address 2' || mapFieldLabelVsHelpTextContact[f.label] == 'Address 3' || mapFieldLabelVsHelpTextContact[f.label] == 'City' || mapFieldLabelVsHelpTextContact[f.label] == 'State/Province' || mapFieldLabelVsHelpTextContact[f.label] == 'Zip/Postal Code'  , false, true)}">
+                                            
+                                                <div class = "">
+                                                    <div class = ""></div>
+                                                    <apex:outputField value="{!paContact[f]}" rendered="{!AND(NOT(f.type =='textarea'),(f.label != 'Last Name'))}" /> 
+                                                    <apex:outputField value="{!paContact[f]}" style="width:400px; height:60px;" rendered="{!AND(f.type =='textarea',(f.label != 'Last Name'))}"/>                                                      
+                                                    <apex:outputField value="{!paContact[f]}" rendered="{!(f.label == 'Last Name')}" Label="Name" />
+                                                    
+                                                </div>
+                                            </apex:outputPanel> 
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:repeat>
+                               
+                               
+                              <apex:pageBlockSectionItem dataStyle="">  
+                                
+                                    <apex:outputPanel id="opSameAddress2" > 
+                                    <apex:pageBlockSection columns="1">                      
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Address 1" />                       
+                                      <apex:outputField value="{!paContact.Street1__c}" />
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Address 2" />                       
+                                      <apex:outputField value="{!paContact.Street2__c}"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Address 3" />                       
+                                      <apex:outputField value="{!paContact.Street3__c}"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="City" />                       
+                                      <apex:outputField value="{!paContact.City__c}"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="State/Province" />
+                                      <apex:outputField value="{!paContact.MailingState}"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Zip/Postal Code" />                       
+                                      <apex:outputField value="{!paContact.ZipCode__c}"/>
+                                   </apex:pageBlockSectionItem>
+                                   </apex:pageBlockSection>
+                                 </apex:outputPanel>
+                                 
+                             </apex:pageBlockSectionItem>   
+                              
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="opSameAddress1">
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem >
+                                   <apex:outputLabel value="Same address as HQ" />
+                                   <apex:outputField value="{!partnerApplication.Same_address_as_HQ__c}" />
+                                    
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:outputPanel> 
+                               </apex:pageBlockSectionItem>             
+                            </apex:pageBlockSection> 
+                            <apex:pageBlockSection columns="2" title="Executive Management Team" id="execMgmtTeam">              
+                                <apex:pageBlockTable value="{!execMgmtTeam}" var="eachRecord">                        
+                                    <apex:column headerValue="Position">
+                                        <apex:outputField value="{!eachRecord.record.Position__c}" />
+                                    </apex:column>
+                                    <apex:column headerValue="Name">
+                                        <apex:outputField value="{!eachRecord.record.Name}" />
+                                    </apex:column>
+                                    <apex:column headerValue="Email">
+                                        <apex:outputField value="{!eachRecord.record.Email__c}" />
+                                    </apex:column>                      
+                                </apex:pageBlockTable>                    
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2"  title="Company Ownership - Please list persons/firms who have more than 10% ownership of the Company." id="companyOwnership">             
+                                <apex:pageBlockTable value="{!companyOwnership}" var="eachRecord"> 
+                                    <apex:column headerValue="Name">
+                                        <apex:outputField value="{!eachRecord.record.Name}" />
+                                    </apex:column>
+                                    <apex:column headerValue="Person/Firm">
+                                        <apex:outputField value="{!eachRecord.record.Person_Firm__c}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="% Ownership">
+                                        <apex:outputField value="{!eachRecord.record.Ownership__c}" />
+                                    </apex:column>                      
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection columns="2" title="Government Interests & Compliance" >
+                                <!--<apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_3}" var="f">
+                                    <apex:outputField value="{!partnerApplication[f]}" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                          
+                                </apex:repeat>-->
+                                
+                             <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlASR">
+                          
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does the company have sales revenue derived from Government sales? If so, what is the approximate percentage of the company's overall annual sales revenue (turnover) derived from Government sales?" />
+                                    <apex:outputField value="{!partnerApplication.AnnualSalesRevenue_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                             
+                    
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlASR2"> 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.AnnualSalesRevenue_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.AnnualSalesRevenueComments__c}"  style="width:400px; height:60px;"/>
+                               </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                             </apex:pageBlockSectionItem> 
+                             
+                             <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlOS1">
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official own any of the Company?  If yes, provide details on the ownership structure and amount." />
+                                   <apex:outputField value="{!partnerApplication.Ownership_PL__c}"/>
+                                  </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlOS2"> 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.Ownership_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.Ownership_Comments__c}"  style="width:400px; height:60px;"/>
+                               </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                             </apex:pageBlockSectionItem> 
+                              
+                              <!-- field 2 start-->
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlRTAD1">                 
+                             
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official have the right to appoint or dismiss members of the Company’s governing board of Directors? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.RightToAppointOrDismiss_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              <apex:pageBlockSectionItem > 
+                              <apex:outputPanel id="pnlRTAD2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.RightToAppointOrDismiss_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%">                   
+                                  <apex:outputField value="{!partnerApplication.RightToAppointOrDismissComments__c}"  style="width:400px; height:60px;"/>                   
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                             </apex:pageBlockSectionItem>  
+                              <!-- field 2 end -->
+                              <!-- field 3 start-->
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlAODM1">                  
+                               
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official have the right to appoint or dismiss the Company’s Chief Executive Officer, General Manager or Managing Director? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.AppointOrDismissMD_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                              </apex:outputPanel> 
+                             </apex:pageBlockSectionItem> 
+                             <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlAODM2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.AppointOrDismissMD_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.AppointOrDismissMDComments__c}"  style="width:400px; height:60px;"/>
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                            </apex:pageBlockSectionItem>  
+                              <!-- field 3 end -->
+                              <!-- field 7 start-->
+                              <apex:outputPanel id="pnlGoVe1">
+                              <apex:pageBlockSectionItem >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official have the right to veto any of the Company’s investment or purchase decisions? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.Government_Veto_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlGoVe2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.Government_Veto_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.Government_Veto_Comments__c}"  style="width:400px; height:60px;"/>
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 7 end -->
+                              <!-- field 4 start-->
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlPIO1">                  
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Do any officers, directors or employees of the Company hold any legislative, administrative or judicial office or serve as an official or agent of any public international organization? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.PublicInternationalOrg_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlPIO2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.PublicInternationalOrg_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.PublicInternationalOrgComments__c}"  style="width:400px; height:60px;" />
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>  
+                             </apex:pageBlockSectionItem> 
+                              <!-- field 4 end -->
+                              <!-- field 8 start-->
+                              <apex:outputPanel id="pnlConEx1">
+                              <apex:pageBlockSectionItem >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Have any employees, including any member of the Company’s executive management team, been convicted of, or pleaded guilty to an offense involving fraud or corruption? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.Convicted_Executive_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              <apex:outputPanel id="pnlConEx2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.Convicted_Executive_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.Convicted_Executive_Comments__c}"  style="width:400px; height:60px;" />
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 8 end -->
+                              <!-- field 5 start-->
+                               
+                              <apex:outputPanel id="pnlBEmp1">
+                              <apex:pageBlockSectionItem >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Has the company, any affiliate company or any Employee ever been debarred, prohibited or otherwise banned from bidding on Government contracts or tenders in any country in which the company conducts business? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.BannedEmployee_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:pageBlockSectionItem>
+                               
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlBEmp2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.BannedEmployee_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.BannedEmployeeComments__c}"  style="width:400px; height:60px;"/>
+                             </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                               
+                              <!-- field 5 end -->
+                              <!-- field 6 start-->
+                              <apex:outputPanel id="pnlExEnAc1">
+                              <apex:pageBlockSectionItem >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Has the company, any affiliate company or any of its current directors, Key Employees, owners, agents, or Affiliates ever been involved in any US or local government export enforcement activity? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.ExportEnforcementActivity_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlExEnAc2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.ExportEnforcementActivity_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.ExportEnforcementActivityComments__c}"  style="width:400px; height:60px;"/>
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 6 end -->
+                              
+                              <!-- field 11 start-->
+                              <apex:outputPanel id="pnlCCUS1">
+                              <apex:pageBlockSectionItem >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does the company or any of its affiliates do business in or with any country currently under US embargo?" />
+                                   <apex:outputField value="{!partnerApplication.CountryCurrentlyUnderUS_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              <apex:pageBlockSectionItem />
+                              <!-- field 11 end -->
+                              
+                              <!-- field 9 start-->
+                              <apex:outputPanel id="pnlConIn1">
+                              <apex:pageBlockSectionItem >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel >Does any employee have a conflict of interest arising from a business, professional, private or family relationship with any of the following:<br></br> -  Actual or potential customer of Genesys <br></br>-    Actual or potential competitor or supplier of Genesys<br></br>-    Director or employee of Genesys <br></br>If yes, provide details. </apex:outputLabel>
+                                   <apex:outputField value="{!partnerApplication.Conflict_of_Interest_PL__c}"/>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              <apex:outputPanel id="pnlConIn2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.Conflict_of_Interest_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.Conflict_of_Interest_Comments__c}"  style="width:400px; height:60px;"/>
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 9 end -->
+                              <!-- field 10 start-->
+                              <apex:outputPanel id="pnlCOFGE1">
+                              <apex:pageBlockSectionItem >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Are any company officers, directors or employees current or former employees of Genesys? If yes, provide details." />
+                                   <apex:outputField value="{!partnerApplication.Current_or_Former_Genesys_Employee_PL__c}"/>
+                                  </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              <apex:outputPanel id="pnlCOFGE2" > 
+                               <apex:pageBlockSectionItem rendered="{!partnerApplication.Current_or_Former_Genesys_Employee_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:outputField value="{!partnerApplication.Current_or_Former_Genesys_Employee_Comme__c}"  style="width:400px; height:60px;"/>
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 10 end -->
+                            </apex:pageBlockSection>                 
+                            <!--<apex:pageBlockSection columns="2"  title="Categories and Countries Combination(s)" id="categoryAndCountry" rendered="{!currentUserProfile == 'Custom Potential Partner User'}">-->
+                            <apex:pageBlockSection columns="1"  title="Categories and Countries Combination(s)" id="categoryAndCountry">
+                                <!--<apex:pageBlockTable value="{!list_Categories}" var="strCategory"> 
+                                    <apex:column headerValue="Category">
+                                        <apex:outputText value="{!strCategory}"/>
+                                    </apex:column>
+                                    <apex:column headerValue="Countries">
+                                        <apex:repeat value="{!map_CategoryToCountries[strCategory]}" var="strCountry">
+                                            <apex:outputText value="{!strCountry}"/><br/>
+                                        </apex:repeat>
+                                    </apex:column>
+                                    <apex:column headerValue="Offering Type">
+                                     <apex:repeat value="{!map_CategoryToOffering[strCategory]}" var="strOffering">
+                                            <apex:outputText value="{!strOffering}"/><br/>
+                                        </apex:repeat>
+                                    </apex:column>
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection> -->
+                                <apex:outputPanel >
+                                <table class="list" border="0" cellpadding="0" cellspacing="0">
+                                    <thead>
+                                        <tr class="headerRow">
+                                            <th class="headerRow">Category</th>
+                                            <th class="headerRow">Countries</th>
+                                            <th class="headerRow">Offering Type</th>
+                                            <th class="headerRow">Who else does your company <br/> partner with in the CX space?</th>
+                                            <th class="headerRow">What is your desired timeline <br/> for developing an integration and <br/> listing it in Genesys AppFoundry?</th>
+                                            <th class="headerRow">How is this project prioritized <br/> in your development pipeline?</th>
+                                            <th class="headerRow">What is your reason <br/> for integration?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <apex:repeat value="{!categoryToPACCMap}" var="key">
+                                            <apex:variable var="TRReq" value="no" />
+                                                <apex:repeat value="{!categoryToPACCMap[key]}" var="paRec">
+                                                    <tr >
+                                                        <apex:outputPanel rendered="{!TRReq == 'no'}" >
+                                                        <td rowspan="{!categoryRowspan[key]}" >{!key}</td>
+                                                        </apex:outputPanel>
+                                                        <td >
+                                                        {!paRec.Country__r.Name}
+                                                        </td>
+                                                        <td >{!paRec.PlatformType__c}</td>
+                                                        <td >{!IF(key=='Technology Partner',paRec.Company_partner_CX_space__c,'-')}</td>
+                                                        <td >{!IF(key=='Technology Partner',paRec.Genesys_AppFoundry__c,'-')}</td>
+                                                        <td >{!IF(key=='Technology Partner',paRec.Project_priority_in_your_Development__c,'-')}</td>
+                                                        <td >{!IF(key=='Technology Partner',paRec.Reason_for_integration__c,'-')}</td>
+                                                    </tr>
+                                                    <apex:variable var="TRReq" value="yes" />
+                                                </apex:repeat>
+                                        </apex:repeat>
+                                    </tbody>
+                                </table>
+                                </apex:outputPanel>
+                            </apex:pageBlockSection> 
+
+                             <apex:pageBlockSection columns="1" rendered="{!partnerApplication.Services_Partner_as_Subcontractor__c}" title="Services Partner Assessment Form (SPAF) for Subcontractor Applicants Only">
+                                <apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_4}" var="f">
+                                    <apex:outputField value="{!partnerApplication[f]}" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                  
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                            
+                              <!--  app summary Rates display Section goes here.... -->
+                                           
+                            <apex:outputPanel id="summaryRatesForm" >
+                            <apex:variable value="{!0}" var="rowNum"/>
+                            <!--<apex:pageBlockSection columns="2" title="Please provide a summary of your list rates for services to Genesys Professional Services.">            
+                                    <apex:pageBlockTable value="{!appsummaryRateList}" var="eachRecord"> 
+                                         <apex:column headerValue="Action">
+                                            <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                        </apex:column>
+                                         <apex:column headerValue="Resource or Skill Type">
+                                           <apex:outputField value="{!eachRecord.record.Resource_or_Skill_Type__c}"  />
+                                          </apex:column>
+                                          
+                                        <apex:column headerValue="Rate or Rate Range">
+                                        <apex:outputField value="{!eachRecord.record.Rate_or_Rate_Range__c}"  />
+                                        </apex:column>
+                                        <apex:column headerValue="Currency">
+                                            <apex:outputField value="{!eachRecord.record.Currency_Type__c}"  />
+                                        </apex:column>
+                                        <apex:column headerValue="Comments">
+                                            <apex:outputField value="{!eachRecord.record.Comments__c}"  />
+                                        </apex:column>                        
+                                    </apex:pageBlockTable>
+                                    </apex:pageBlockSection>-->
+                            </apex:outputPanel>
+                           
+                            <!-- Partner App Summary Info End -->
+                           
+                           
+                            
+                            
+                             <!--<apex:pageBlockSection columns="2"  title="Please list the numbers of individuals in the following Genesys related technical functions.  This section is required for your application.">             
+                                 <apex:pageBlockTable value="{!$ObjectType.Partner_Application_Head_Count__c.FieldSets.Partner_Head_Count_Table}" var="f">
+                                <apex:column >
+                                     <apex:outputText value="{!IF(ISBLANK($ObjectType.Partner_Application_Head_Count__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Partner_Application_Head_Count__c.Fields[f].inlineHelpText)}"/>  
+                                </apex:column>
+                                <apex:repeat value="{!list_PAHeadCount}"  var="objHeadCount">
+                                   <apex:column headerValue="{!objHeadCount.Region__c}">   
+                                   <apex:outputField value="{!objHeadCount[f]}" />
+                                    </apex:column>                       
+                                     
+                                </apex:repeat> 
+                           </apex:pageBlockTable>  
+                                <apex:outputLabel value=""/>
+                                <apex:outputField value="{!Partner_Application__c.Number_of_Employees__c}" label="How many employees have Genesys University Certifications?" />
+                                 
+                            </apex:pageBlockSection>-->
+                            
+                            <!-- Partner App Employee Info Start -->
+                            
+                            <apex:outputPanel id="employerForm">
+                            <apex:variable value="{!0}" var="rowNum"/>
+                            
+                            <!-- Commented by Ravi On 8-15-2014 -->
+                            
+                            <!--<apex:pageBlockSection title="Please provide details on your employee Genesys University Certifications.  This section is required for your application." >          
+                                        <apex:pageBlockTable value="{!paEmployeeList}" var="eachRecord"> 
+                                        <apex:column headerValue="Action">
+                                            <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                        </apex:column>
+                                        <apex:column headerValue="Employee Name">
+                                        <apex:outputField value="{!eachRecord.record.Employee_Name__c}"/>
+                                        </apex:column>
+                                        <apex:column headerValue="Certification Name">
+                                        
+                                        <apex:outputField value="{!eachRecord.record.Certification_Name__c}"/>
+                                        </apex:column>
+                                        <apex:column headerValue="Year Acheived">
+                                            <apex:outputtext value="{!eachRecord.record.Year_Aheived__c}" />
+                                        </apex:column>
+                                        <apex:column headerValue="Resource Country of Residence">
+                                            <apex:outputField value="{!eachRecord.record.Resource_Country_of_Residence__c}" />
+                                        </apex:column>                                         
+                                    </apex:pageBlockTable>
+                                    
+                                </apex:pageBlockSection>-->
+                              <br> </br>
+                            </apex:outputPanel>
+                            
+                            <!-- Commend by Ravi on 8/15/2014 --->
+                            
+                                <apex:pageBlockSection columns="1" rendered="{!partnerApplication.Services_Partner_as_Subcontractor__c}">
+                                <apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_5}" var="f">
+                                    <apex:outputField value="{!partnerApplication[f]}" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                  
+                                </apex:repeat>
+                            </apex:pageBlockSection>
+                              
+                    </apex:pageBlock>        
+                </apex:form>
+                <!--<apex:relatedList list="Partner_App_Categories_and_Countries__r" rendered="{!currentUserProfile != 'Custom Potential Partner User' && currentUserProfile != 'Genesys Portal End User_PP' && currentUserProfile != 'Genesys Portal Potential Partner'}"></apex:relatedList>-->
+
+                     
+                <apex:relatedList list="ProcessSteps" rendered="{!(currentUserProfile != 'Custom Potential Partner User' && currentUserProfile != 'Genesys Portal Potential Partner' && currentUserProfile != 'Genesys Portal End User_PP')}"></apex:relatedList>
+                <!--<apex:relatedList list="Application_Comments__r" ></apex:relatedList> -->
+        </apex:define>
+    </apex:composition>
+       
+</apex:page>

@@ -1,0 +1,76 @@
+<apex:component >
+    <apex:attribute name="selectedPerson" description="This is a string name for the User." type="String" required="true"/>
+    <apex:attribute name="rescheduleDate" description="This is a string to represent date" type="String" required="true"/>
+    <apex:attribute name="rescheduleTime" description="This is a string to represent time" type="String" required="true"/>
+    <apex:attribute name="origDate" description="This is a string to represent date" type="String" required="false"/>
+    <apex:attribute name="origTime" description="This is a string to represent time" type="String" required="false"/>
+    <apex:attribute name="comments" description="This is a string to represent decline comments" type="String" required="true"/>
+    <apex:attribute name="declineReason" description="This is a string to represent decline reason" type="String" required="true"/>
+    <apex:attribute name="demo" description="The related demo request" type="Demo_Request__c" required="true"/>
+    <apex:attribute name="declineReasons" description="The selectoptions for decline reasons" type="SelectOption[]" required="true"/>
+    <apex:attribute name="lastDecline" description="This is a bool indicating if this will decline the request" type="Boolean" />
+    <apex:attribute name="lastTSCDecline" description="This is a bool indicating last tsc, which will escalate the request" type="Boolean" />
+    
+    <div class="row">
+        <h2>Declining &nbsp;&nbsp;&nbsp;<apex:outputText value="{!selectedPerson}"/></h2><br/><br/>
+       
+        <apex:pageMessages />
+        <table class="table">
+            <tr>
+                <td>Original Demo Date/Time:</td>
+                <td>
+                    <b><apex:outputField value="{!demo.Demo_Date_Time__c}"></apex:outputField></b>
+                </td>
+            </tr>
+            <tr>
+                <td>Alternate Date &amp; Time</td>
+                <td>
+                    <apex:input id="newddate" value="{!rescheduleDate}"></apex:input>&nbsp;<apex:input id="newdtime" value="{!rescheduleTime}"></apex:input>
+                    <br/>*If you do not wish to give an alternative time, please leave the date and time as the default (Same as Demo's).
+                </td>
+            </tr>
+            <tr>
+                <td>Reason</td>
+                <td>
+                    <apex:selectList id="reason" size="1" value="{!declineReason}" title="Select a Decline Reason">
+                        <apex:selectOptions value="{!declineReasons}"></apex:selectOptions>
+                    </apex:selectList>
+                </td>
+            </tr>
+            <tr>
+                <td>Comments</td>
+                <td>
+                    <apex:inputTextarea id="comments" value="{!comments}" cols="80" rows="5"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <script>
+    $j = jQuery.noConflict();
+    $j(document).ready(function() {
+        $j('[id$=newddate]').datepicker({
+            autoclose:true, 
+            format: "mm/dd/yyyy",
+            startDate: new Date()
+        }).datepicker("setDate","
+                      <apex:outputText value="{0}">
+                      <apex:param value="{!origDate}"/>
+                      </apex:outputText>");
+        $j('[id$=newdtime]').timepicker({ 
+            'scrollDefault': 'now',
+            'step': 15,
+            'timeFormat': 'h:i A'
+        }).timepicker("setTime","
+                      <apex:outputText value="{0}">
+                      <apex:param value="{!origTime}"/>
+                      </apex:outputText>");
+    });
+    </script>
+    <apex:pageBlock rendered="{!lastDecline}">
+        <b>Warning</b>&nbsp;This is the last decline. This will send the customer an email notifying them.<br/><br/>
+    </apex:pageBlock>
+    <apex:pageBlock rendered="{!lastTSCDecline}">
+        <b>Warning</b>&nbsp;This is the last TSC decline. This will notify management.<br/><br/>
+    </apex:pageBlock>
+    
+</apex:component>

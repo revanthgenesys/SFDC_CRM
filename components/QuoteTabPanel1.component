@@ -1,0 +1,70 @@
+<apex:component controller="QuoteTabPanelController" >
+    <apex:stylesheet value="/resource/1395692691000/tabcss"/>
+    <apex:attribute name="showHeader" description="" type="Boolean" default="true"/>
+    <apex:attribute name="typeOfQuote" description="Type of Quote" type="String" default="Renewal"/>
+    <apex:attribute name="selectedTab" description="This is name of the tab that needs to be selected." type="String" required="true" />
+    <apex:attribute name="QuoteId" description="This is the Quote Id." type="Id" required="true" />
+    <apex:attribute name="QuoteName" description="This is the Quote Name." type="String" required="{!showHeader}" />
+    <apex:sectionHeader title="Quote Edit" subtitle="{!QuoteName}" rendered="{!showHeader}"/>    
+    <apex:outputPanel rendered="{!typeOfQuote == 'Renewal'}">
+        <div id="profileTabSetContainer" class="profileTabSetContainer zen" style="display: block;">
+            <div class="zen-box zen-tabs zen-simpleTabs profileTabs" id="TabPanel">
+                <div class="zen-inner">
+                    <div id="profileTabSetHeader" class="zen-header profileTabSetHeader">
+                        <ul id="profileTabSet" class="profileTabSet zen-tabControl" role="tablist">
+                            <li class="{!IF(selectedTab=='Configuration','zen-current','')}"><a href="/apex/ConfigurationPage?id={!QuoteId}" class="profileTab" title="Configuration">Configuration</a></li>
+                            <li class="{!IF(selectedTab=='Quote Details','zen-current','')}"><a href="/apex/CreateQuote?id={!QuoteId}" class="profileTab" title="Quote Details">Quote Details</a></li>
+                            <li class="{!IF(selectedTab=='Add Products','zen-current','')}"><a href="/apex/AddQuoteProducts?id={!QuoteId}" class="profileTab" title="Add Products">Add Products</a></li>
+                            <li class="{!IF(selectedTab=='Approval History & Attachments','zen-current','')}"><a href="/apex/QuoteApprovalHistoryAndAttachments?id={!QuoteId}" class="profileTab" title="History, Notes & Attachments">History, Notes and Attachments</a></li>
+                            <li class="{!IF(selectedTab=='Billing Plan','zen-current','')}"><a href="/apex/QuoteBillingPlan?id={!QuoteId}" class="profileTab" title="Billing Plan">Billing Plan</a></li>
+                            <li class="{!IF(selectedTab=='CO-Term Service Contracts','zen-current','')}"><a href="/apex/ServiceContractCoTerm?id={!QuoteId}&showtabs=1" class="profileTab" title="CO-Term Service Contracts,Splits and Drops">CO-Term Service Contracts,Splits and Drops</a></li>
+                            <li class="{!IF(selectedTab=='Proposal Options','zen-current','')}"><a href="/apex/ProposalOptions?id={!QuoteId}" class="profileTab" title="Proposal Options">Proposal Options</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!typeOfQuote == 'Cloud'}">
+        <div id="profileTabSetContainer" class="profileTabSetContainer zen" style="display: block;">
+            <div class="zen-box zen-tabs zen-simpleTabs profileTabs" id="TabPanel">
+                <div class="zen-inner">
+                    <div id="profileTabSetHeader" class="zen-header profileTabSetHeader">
+                        <ul id="profileTabSet" class="profileTabSet zen-tabControl" role="tablist">
+                            <li class="{!IF(selectedTab=='Quote Details','zen-current','')}"><a href="{!IF($CurrentPage.parameters.retPage == '', URLFOR($Page.CreateQuoteOnPremise1), $CurrentPage.parameters.retPage)}?id={!QuoteId}" class="profileTab" title="Quote Details">Quote Details</a></li>
+                            <li class="{!IF(selectedTab=='Special Offers','zen-current','')}"><a href="{!IF($CurrentPage.parameters.retPage == '', URLFOR($Page.CreateQuoteOnPremise1), $CurrentPage.parameters.retPage)}?id={!QuoteId}&tab=SpecialOffers" class="profileTab" title="Special Offers">Special Offers</a></li>
+                            <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                                <li class="{!IF(selectedTab=='Proposal Options','zen-current','')}"><a href="/apex/ProposalOptionsCloud?id={!QuoteId}&retPage={!$CurrentPage.parameters.retPage}" class="profileTab" title="Quote Output">Quote Output</a></li>
+                            </apex:outputPanel>    
+                            <li class="{!IF(selectedTab=='Order Info','zen-current','')}"><a href="{!$CurrentPage.parameters.retPage}?id={!QuoteId}&tab=OrderSubmission" class="profileTab" title="Order Submission">Order Submission</a></li>
+                            <li class="{!IF(selectedTab=='Approval History & Attachments','zen-current','')}"><a href="{!URLFOR($Page.QuoteApprovalHistoryAndAttachments)}?id={!QuoteId}&retPage={!$CurrentPage.parameters.retPage}" class="profileTab" title="History and Attachments">History and Attachments</a></li>                                    
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!typeOfQuote != 'Renewal' && typeOfQuote != 'Cloud'}">
+        <div id="profileTabSetContainer" class="profileTabSetContainer zen" style="display: block;">
+            <div class="zen-box zen-tabs zen-simpleTabs profileTabs" id="TabPanel">
+                <div class="zen-inner">
+                    <div id="profileTabSetHeader" class="zen-header profileTabSetHeader">
+                        <ul id="profileTabSet" class="profileTabSet zen-tabControl" role="tablist">
+                            <li class="{!IF(selectedTab=='Quote Details','zen-current','')}"><a href="{!IF($CurrentPage.parameters.retPage == '', URLFOR($Page.CreateQuoteOnPremise1), $CurrentPage.parameters.retPage)}?id={!QuoteId}" class="profileTab" title="Quote Details">Quote Details</a></li>
+                            <apex:outputPanel rendered="{!(objQuote.Offering_Type__c != 'PureConnect Subscription' && objQuote.Offering_Type__c != 'PureEngage Subscription')}">
+                            	<li class="{!IF(selectedTab=='Genesys Care','zen-current','')}"><a href="{!IF($CurrentPage.parameters.retPage == '', URLFOR($Page.CreateQuoteOnPremise1), $CurrentPage.parameters.retPage)}?id={!QuoteId}&tab=GenesysCare" class="profileTab" title="Genesys Care">Genesys Care</a></li>
+                        	</apex:outputPanel>
+                            <li class="{!IF(selectedTab=='Special Offers','zen-current','')}"><a href="{!IF($CurrentPage.parameters.retPage == '', URLFOR($Page.CreateQuoteOnPremise1), $CurrentPage.parameters.retPage)}?id={!QuoteId}&tab=SpecialOffers" class="profileTab" title="Special Offers">Special Offers</a></li>
+                            <apex:outputPanel rendered="{!IF(($CurrentPage.parameters.retPage == 'CreateQuoteCIC' || $CurrentPage.parameters.retPage == 'CreateQuoteSubscription'), false, true)}">
+                                <li class="{!IF(selectedTab=='Proposal Output','zen-current','')}"><a href="{!URLFOR($Page.ProposalOutputOptions)}?id={!QuoteId}&retPage={!$CurrentPage.parameters.retPage}" class="profileTab" title="Proposal Output" >Proposal Output</a></li>                            
+                            </apex:outputPanel>   
+                            <li class="{!IF(selectedTab=='Proposal Options','zen-current','')}"><a href="{!URLFOR($Page.ProposalOptions1)}?id={!QuoteId}&retPage={!$CurrentPage.parameters.retPage}" class="profileTab" title="Quote Output">Quote Output</a></li>     
+                            <li class="{!IF(selectedTab=='Order Info','zen-current','')}"><a href="{!$CurrentPage.parameters.retPage}?id={!QuoteId}&tab=OrderSubmission" class="profileTab" title="Order Submission">Order Submission</a></li>
+                            <li class="{!IF(selectedTab=='Approval History & Attachments','zen-current','')}"><a href="{!URLFOR($Page.QuoteApprovalHistoryAndAttachments)}?id={!QuoteId}&retPage={!$CurrentPage.parameters.retPage}" class="profileTab" title="History and Attachments">History and Attachments</a></li>                                    
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+</apex:component>

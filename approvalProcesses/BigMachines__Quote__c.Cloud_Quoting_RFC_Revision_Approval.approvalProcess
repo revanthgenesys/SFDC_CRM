@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApprovalProcess xmlns="http://soap.sforce.com/2006/04/metadata">
+    <active>true</active>
+    <allowRecall>true</allowRecall>
+    <allowedSubmitters>
+        <type>creator</type>
+    </allowedSubmitters>
+    <allowedSubmitters>
+        <type>owner</type>
+    </allowedSubmitters>
+    <approvalPageFields>
+        <field>Name</field>
+        <field>Owner</field>
+        <field>Discount__c</field>
+    </approvalPageFields>
+    <approvalStep>
+        <allowDelegate>true</allowDelegate>
+        <assignedApprover>
+            <approver>
+                <name>Regional_Finance_Controller</name>
+                <type>queue</type>
+            </approver>
+            <whenMultipleApprovers>FirstResponse</whenMultipleApprovers>
+        </assignedApprover>
+        <label>RFC Approval</label>
+        <name>RFC_Approval</name>
+    </approvalStep>
+    <description>Approval Process for Quotes Re-submitted for approval after revision of approved quote and ACV deviation is less than 5%.</description>
+    <emailTemplate>Cloud_Approval_Process/Cloud_Approval_Process_Request</emailTemplate>
+    <enableMobileDeviceAccess>false</enableMobileDeviceAccess>
+    <entryCriteria>
+        <formula>AND(BigMachines__Status__c == &apos;Revision Pending&apos;,
+NOT(ISBLANK(Approved_ACV__c)),
+Approved_ACV__c != 0,
+(ABS(Annual_Contract_Value__c - Approved_ACV__c)/Approved_ACV__c) &lt;= 0.05,
+OR(Offering_Type__c == &apos;Premier Edition&apos;,Offering_Type__c == &apos;Self Service&apos;,Offering_Type__c == &apos;Mobile Marketing&apos;,Offering_Type__c == &apos;Proactive Communications&apos;,Offering_Type__c == &apos;Social Analytics&apos;,
+Offering_Type__c == &apos;Outbound Engagement&apos;))</formula>
+    </entryCriteria>
+    <finalApprovalActions>
+        <action>
+            <name>Final_Approval_Email_E</name>
+            <type>Alert</type>
+        </action>
+        <action>
+            <name>PE_Cloud_Approval_Quote_Status_Approved</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalApprovalActions>
+    <finalApprovalRecordLock>true</finalApprovalRecordLock>
+    <finalRejectionActions>
+        <action>
+            <name>Final_Rejection</name>
+            <type>Alert</type>
+        </action>
+        <action>
+            <name>PE_Cloud_Approval_Quote_Status_Rejected</name>
+            <type>FieldUpdate</type>
+        </action>
+    </finalRejectionActions>
+    <finalRejectionRecordLock>false</finalRejectionRecordLock>
+    <initialSubmissionActions>
+        <action>
+            <name>PE_Cloud_Approval_Quote_Status_Pending</name>
+            <type>FieldUpdate</type>
+        </action>
+    </initialSubmissionActions>
+    <label>Cloud Quoting - RFC Revision Approval</label>
+    <recallActions>
+        <action>
+            <name>PE_Cloud_Approval_Quote_Status_Rev_Pend</name>
+            <type>FieldUpdate</type>
+        </action>
+    </recallActions>
+    <recordEditability>AdminOnly</recordEditability>
+    <showApprovalHistory>true</showApprovalHistory>
+</ApprovalProcess>

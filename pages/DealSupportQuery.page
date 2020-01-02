@@ -1,0 +1,570 @@
+<apex:page controller="DealSupportQueryController" tabstyle="Deal_Support__c" standardStylesheets="false" 
+    sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+        <style>
+
+               /* popup_box DIV-Styles  Start*/
+                #popup_box {
+                    display:none; /* Hide the DIV */
+                    position:fixed;  
+                    _position:absolute; /* hack for internet explorer 6 */  
+                    height:700px;
+                    width:600px;  
+                    background:#FFFFFF;  
+                    left: 300px;
+                    top: 50px;
+                    z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+                    margin-left: 15px;  
+                   
+                    /* additional features, can be omitted */
+                    border:2px solid #1797C0;      
+                    padding:15px;  
+                    font-size:15px;  
+                    -moz-box-shadow: 0 0 5px #ff0000;
+                    -webkit-box-shadow: 0 0 5px #ff0000;
+                    box-shadow: 0 0 5px #ff0000;
+                   
+                }
+                
+                #container {
+                    background: #d2d2d2; /*Sample*/
+                    width:100%;
+                    height:100%;
+                }
+                
+                a{ 
+                cursor: pointer; 
+                text-decoration:none; 
+                }
+                
+                /* This is for the positioning of the Close Link */
+                #popupBoxClose {
+                    font-size:20px;  
+                    line-height:15px;  
+                    right:5px;  
+                    top:5px;  
+                    position:absolute;  
+                    color:#6fa5e2;  
+                    font-weight:500;      
+                }
+                /* popup_box DIV-Styles  Close*/
+            </style> 
+        <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+          <script type="text/javascript">
+           var j$ = jQuery.noConflict();   
+             
+           j$(document).ready( function() {
+             var objRT = j$('.clsRequestType');
+             var objSA = j$('.clsSupportArea');
+             var objDataType = j$('.clsDataType');
+             hideRequestType(objSA);  
+             DisableControl(objRT);
+             DisableQuoteControl(objDataType);
+             OpportunityOnChange();
+             AccountOnChange();
+             //j$('.clsWrap').hide();
+             
+             j$(".clsBoxClose").click( function() {           
+                unloadPopupBox();
+             });
+             
+             
+           });
+           
+        function hideRequestType(obj)
+            { 
+            //var OfferType = '{!strOfferingType}'; 
+            //alert(OfferType);  
+            if(j$(obj).val() == 'Pricing'){  
+                //j$('.clsOfferingType').val(OfferType);  
+                //j$('[id$=ifOfferingType]').val(OfferType);         
+                j$('.opRequestType').hide(); 
+                }
+             else
+             {
+                 j$('.opRequestType').show();         
+               }
+              return false;    
+            }
+            function loadPopupBox(fType) 
+            {    
+              j$('[id$=hdnFileType]').val(fType);
+              
+              // To Load the Popupbox
+              j$('#popup_box').fadeIn("slow");
+              j$("#container").css({ // this is just for style
+                 "opacity": "0.3" 
+               }); 
+              return false;       
+            }      
+            
+           function GetAttachmentId(obj)       
+            {
+              j$('[id$=hdnFileId]').val(obj);
+              return true;
+            }
+            
+            function DisableControl(obj)
+            {
+               if(j$(obj).val() =='User Access')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',true);
+               } 
+               else if (j$(obj).val() == 'Data Management')
+                   {              
+                      
+                     j$('.clsQuoteId').attr('Disabled',false);  
+                     j$('.clsErrMsg').attr('Disabled',true);       
+                   }      
+               else if(j$(obj).val() == 'Opportunity/Quote Error')
+               {       
+                 j$('.clsQuoteId').attr('Disabled',false);
+                 j$('.clsErrMsg').attr('Disabled',false);
+               }
+                else if(j$(obj).val() == 'Partner Request')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',true);
+               }
+               else if(j$(obj).val() == 'Training')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',true);
+               }
+               else if(j$(obj).val() == 'General Inquiry')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',false);
+               }
+             
+               else
+               {
+                 j$('.clsQuoteId').attr('Disabled',false);
+                 j$('.clsErrMsg').attr('Disabled',false);
+               }
+               return false;
+            }
+            function DisableQuoteControl(obj)
+            {
+               if(j$(obj).val() == 'Quote' || $(obj).val()=='Opportunity/Quote Error' || $(obj).val() == 'Account' || $(obj).val()=='Contact')
+               {
+                 j$('.clsQuoteId').attr('Disabled',false);         
+               }       
+               else
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);        
+               }
+               return false;
+            }
+            function unloadPopupBox() 
+            {    
+             // TO Unload the Popupbox
+
+             j$('#popup_box').fadeOut("slow");
+             j$("#container").css({ // this is just for style       
+                "opacity": "1" 
+             });
+             return false;
+            }
+            function validation()
+            {
+              var objDesc = CKEDITOR.instances[jQuery(".clsDesc").attr("id")].getData();
+              alert(objDesc);
+              return false;
+            }
+            function AccountOnChange()
+            {
+              if(j$('.ifAccount').val()!='' && j$('.ifAccount').val()!=null) 
+                  { 
+                  j$('.ifOpportunity').val('');
+                  //j$('.ifOpportunity').attr('readonly',true);
+                  j$('.ifOpportunity').hide();
+                  }
+              else
+                  {
+                  //j$('.ifOpportunity').attr('readonly',false);
+                   j$('.ifOpportunity').show();
+                  }    
+              return false;
+            }
+             function OpportunityOnChange()
+            {
+            if(j$('.ifOpportunity').val()!='' && j$('.ifOpportunity').val()!=null)
+                {
+                  j$('.ifAccount').val('');
+                  //j$('.ifAccount').attr('readonly',true);
+                  j$('.ifAccount').hide();
+                 }
+             else
+                 {
+                 //j$('.ifAccount').attr('readonly',false);
+                 j$('.ifAccount').show();
+                 }    
+              return false;
+            }
+            
+            
+            /*function RequiredAction(ra)
+            {
+              if(j$(ra).val() == 'Inactivate Line of Business')
+              {
+                j$('.clsWrap').show();
+              }  
+              else  
+                j$('.clsWrap').hide();
+            }*/
+          </script>
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="dealsupport" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="body">
+            <apex:sectionHeader title="Deal Support" subtitle="{!strRecordName}" rendered="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}"/>
+            <apex:form >
+            
+           <!-- {!objDS.PS_SMART_DSR__c}-->
+            
+               <!-- Hidden field to get the Select file type for Attachment -->
+                    <!-- Hidden field to get the Select file type for Attachment -->
+                   <apex:inputHidden value="{!FileDescType}" id="hdnFileType" />
+                   <apex:inputHidden value="{!sAttachmentId}" id="hdnFileId" />
+                    <div id="popup_box" style="height:200px;margin-top:200px;">   <!-- OUR PopupBox DIV-->
+                    <!--<APEX:PAGEMESSAGES />-->
+                   <apex:pageBlock id="pbLive">
+                   
+                      <div style="float:left;width:10px;color:black;"><a id="popupBoxClose" class="clsBoxClose" onclick="unloadPopupBox();">X</a></div>
+                        <table style="width:100%;margin-top:30px">
+                          <tr><td>                    
+                             <apex:outputPanel id="Panel" > 
+                                  <div id="upload" class="upload">
+                                    <table><tr>
+                                      <td><apex:inputFile id="fileToUpload" value="{!fileBody}" filename="{!fileName}" styleClass="input-file"/></td> 
+                                      <td><apex:actionRegion renderRegionOnly="false"><apex:commandButton value="Upload Attachment" action="{!uploadFile}" /></apex:actionRegion></td>
+                                      
+                                    </tr></table>
+                                  </div>   
+                             </apex:outputPanel> 
+                          </td></tr>
+                        </table>
+                      
+                    </apex:pageBlock> 
+                   </div><!-- Close PopupBox DIV-->  
+                 <!--</apex:form>-->
+        <!--<apex:form id="abc" >  -->       
+                <apex:inputText style="position:absolute;top:-500px;"/>
+                <apex:pageMessages id="msgs"/>
+                <apex:outputPanel rendered="{!NOT(IsSave)}" >
+                    <center>                
+                        <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(objDS.Opportunity__c),objDS.Account__c,objDS.Opportunity__c)}';return false;"/>
+                        &nbsp;&nbsp;
+                        <apex:commandButton value="View Deal Support Request" onclick="location.href='/{!objDS.Id}';return false;" rendered="false"/>
+                    </center>
+                </apex:outputPanel>
+                <apex:pageBlock id="mainBlock" rendered="{!IsSave}" >
+                     <apex:outputLabel value="Already have PureBridge DSR For this Opportunity" rendered="{!IsDsrExist== true}" /> <apex:outputLink value="/{!objDSpureplay[0].id}" style="position:relative;left:80px;top:2px;color:red;" rendered="{!IsDsrExist== true}"  >Return to DSR</apex:outputLink>
+                    <apex:pageBlockButtons >                
+                        <apex:commandButton value="Submit" action="{!submit}" rendered="{!IsDsrExist==false}" />
+                        <apex:commandButton value="Cancel" action="{!cancel}" rendered="{!IsDsrExist==false}" immediate="true"/>
+                    </apex:pageBlockButtons>
+                   
+                    <!-- PageBlock section stats for all -->
+                    <apex:actionregion >
+                    <apex:pageBlockSection id="mainSection" columns="2" title="Request Details" rendered="{!IsDsrExist==false}" >      
+                        <apex:outputField value="{!objDS.Support_Area__c}" />
+                         <apex:pageBlockSectionItem >               
+                            <apex:outputLabel value="Status"/>
+                            <apex:outputLabel value="New" />                
+                         </apex:pageBlockSectionItem> 
+                         
+                        <apex:pageBlockSectionItem dataStyleClass="opRequestType" labelStyleClass="opRequestType" >                    
+                            <apex:outputLabel value="Request Type"/>  
+                            <apex:outputField value="{!objDS.Request_Type__c}" />                    
+                        </apex:pageBlockSectionItem>
+                        
+                         <apex:inputField value="{!objDS.Priority__c}" required="true" styleClass="clsPriority"/>                 
+                        <apex:outputField value="{!objDS.Requester__c}" />
+                        <apex:inputField value="{!objDS.Request_Type_SS__c}"  styleClass="clsPriority" rendered="{!objDS.Support_Area__c =='Pre-Sales Support'}"/>    
+                        
+                        <apex:inputField id="Primaryplay" value="{!objDS.Primary_Play__c}" rendered="{!objDS.Request_Type__c = 'Play Assistance'}" required="true"/>
+                          <apex:pageBlockSectionItem rendered="{!if(objDS.Support_Area__c == 'ININ Sales Support' ||(objDS.Request_Type__c == 'References')|| (objDS.Support_Area__c == 'Sales Ops' && objDS.Request_Type__c =='Data Management')|| (objDS.Request_Type__c =='Product Idea Lab') ||(objDS.Request_Type__c =='Security Support')|| (objDS.Support_Area__c =='Play Support') ||  (objDS.Support_Area__c =='Pre-Sales Support'),false,true)}">
+                            <apex:outputLabel value="Lead Platform"/> 
+                            <apex:inputField id="ifOfferingType" value="{!objDS.Offering_Type__c}"  required="true">
+                                
+                            </apex:inputField> 
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objDS.P2P_Region__c}" rendered="{!objDS.Support_Area__c =='Play Support' && (objDS.Request_Type__c =='Migrations Assistance' || objDS.Request_Type__c =='PureBridge' || objDS.Request_Type__c =='PureBridge Trial' )}"  required="true" />  
+                        <!--<apex:outputLabel value="" rendered="{!objDS.Request_Type__c =='Product Idea Lab'}"/ > -->
+                        <apex:outputLabel value="" rendered="{!if((objDS.Request_Type__c == 'Product Idea Lab') || (objDS.Request_Type__c  == 'Security Support') ,true,false)}"/> 
+                        <apex:outputField value="{!objDS.Account__c}" rendered="{!IsOppExist==true}"/>  
+                        
+                        <apex:inputField value="{!objDS.Account__c}" rendered="{!IsOppExist==false}" onchange="return AccountOnChange();" styleClass="ifAccount" required="{!IF( (objDS.Requested_Action__c ='Inactivate Line of Business') ||(objDS.Request_Type__c =='PureBridge') || (objDS.Request_Type__c== 'PureBridge Trial'),true,false)}"/>   
+                        <apex:inputField value="{!objDS.SC_Engagement_DSR_Number__c}"  styleClass="clsPriority" rendered="{!objDS.Support_Area__c =='Pre-Sales Support'}"  />
+                        
+                        <!--<apex:pageBlockSectionItem rendered="{!objDS.Support_Area__c = 'Product Management' }">-->
+                        <apex:inputField value="{!objDS.P2P_Region__c}" rendered="{!(objDS.Support_Area__c =='Play Support' && objDS.Request_Type__c =='Play Assistance') || objDS.Support_Area__c =='Finance – Field Finance'}" required="true" />   
+                       <apex:pageBlockSectionItem rendered="{!if((objDS.Support_Area__c == 'Product Management') || (objDS.Support_Area__c == 'Security') ,true,false)}"> 
+                              <apex:outputLabel value="{!IF(TEXT($User.UserType) != 'PowerPartner','Lead Platform','Platform Detail')}"/>                 
+                                <apex:inputField value="{!objDS.Lead_Offer_Type__c}" required="{!IF(objDS.Support_Area__c ='Security',true,false)}"/>                  
+                        </apex:pageBlockSectionItem>
+                        
+                       <apex:pageBlockSectionItem id="pbsFocusArea" rendered="{!objDS.Support_Area__c = 'Sales Ops'}" >
+                            <apex:outputLabel value="Data Type"/>
+                            <apex:outputPanel >
+                            <!--<apex:inputField value="{!objDS.Focus_Area__c}"   styleClass="clsDataType" onchange="return DisableQuoteControl(this);"  /> -->
+                            <apex:inputField value="{!objDS.Focus_Area__c}"   styleClass="clsDataType" /> 
+                            <apex:inputField value="{!objDS.Request_Type__c}" style="display:none;"/>
+                            <apex:inputField value="{!objDS.Support_Area__c}" style="display:none;"/>                    
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>    
+                        <apex:pageBlockSectionItem rendered="{!objDS.Support_Area__c = 'Product Management'&& objDS.Request_Type__c !='Product Idea Lab' && objDS.Request_Type__c !='Data Protection'}">
+                              <apex:outputLabel value="Primary Solution"/>                 
+                                <apex:inputField value="{!objDS.Primary_Solution__c}"/>                  
+                        </apex:pageBlockSectionItem>
+                        
+                            
+                        <apex:pageBlockSectionItem rendered="{!objDS.Support_Area__c = 'Product Management' && objDS.Request_Type__c !='Product Idea Lab' && objDS.Request_Type__c !='Data Protection'}">
+                            <apex:outputLabel value="Products"/>                 
+                            <apex:inputField value="{!objDS.Products__c}"/>                 
+                        </apex:pageBlockSectionItem>
+                        
+                       <apex:inputField value="{!objDS.Offering_Type__c}" rendered="{!objDS.Support_Area__c == 'ININ Sales Support'}" />   
+                       
+                        <apex:inputField value="{!objDS.Opportunity__c}" rendered="{!IsOppExist==false && objDS.Request_Type__c !='Product Idea Lab' && objDS.Request_Type__c !='Security Support' && objDS.Support_Area__c != 'Play Support' && objDS.Support_Area__c != 'Pre-Sales Support' && objDS.Support_Area__c != 'Finance – Field Finance' }" styleClass="ifOpportunity" onchange="return OpportunityOnChange();" />
+                         <apex:inputField value="{!objDS.Opportunity__c}"  rendered="{!IsOppExist==false && (objDS.Request_Type__c =='Product Idea Lab'|| objDS.Request_Type__c =='Security Support' || objDS.Support_Area__c == 'Play Support' || objDS.Support_Area__c == 'Pre-Sales Support' || objDS.Support_Area__c == 'Finance – Field Finance') }"  onchange="return OpportunityOnChange();" required="{!IF(((objDS.Support_Area__c ='Finance – Field Finance' && IsOppExist==false) || objDS.Request_Type__c =='PureBridge' || objDS.Request_Type__c== 'PureBridge Trial') ,true,false)}"/>
+                        <!--<apex:inputField value="{!objDS.Requested_Action__c}" required="true"  > -->                        
+                        
+                            <apex:inputField value="{!objDS.Requested_Action__c}" id="reqAction" rendered="{!objDS.Request_Type__c == 'Data Management'}"  required="true" styleClass="clsReqAct">
+                                <apex:actionSupport event="onchange" reRender="wrapper,wrapper1" />
+                            </apex:inputField>   
+                        
+                        
+                        <apex:outputField value="{!objDS.Opportunity__c}" rendered="{!objDS.Opportunity__c != null && IsOppExist==true}"/>   
+                        <apex:pageBlockSectionItem rendered="{!objDS.Opportunity__c != null && objDS.Request_Type__c !='Product Idea Lab' && objDS.Request_Type__c != 'Security Support' && objDS.Request_Type__c != 'SC-DSR Issues / Error' && objDS.Request_Type__c != 'Field Finance'}" >
+                         <apex:outputLabel value="Opportunity Offering Type" />
+                         <apex:Outputfield value="{!objDS.Offering_Type2__c }"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objDS.Vendor_in_Place__c}" rendered="{!objDS.Request_Type__c == 'PureBridge' || objDS.Request_Type__c == 'PureBridge Trial'}" required="true" />   
+                        <apex:inputField value="{!objDS.Type__c}" rendered="{!objDS.Request_Type__c == 'PureBridge' || objDS.Request_Type__c == 'PureBridge Trial'}" required="true"  />
+                        <apex:inputField value="{!objDS.Requested_PureBridge_Levers__c}" rendered="{!objDS.Request_Type__c == 'PureBridge' || objDS.Request_Type__c == 'PureBridge Trial'}" required="true"  />
+    
+                        <apex:outputLabel rendered="{!objDS.Request_Type__c == 'SC-DSR Issues / Error'}" />
+                        <apex:pageBlockSectionItem helpText="Provide the Offer Detail: eg Voicebots/Chatbots"  rendered="{!objDS.Support_Area__c == 'Play Support' && objDS.Request_Type__c == 'Play Assistance'}">
+                        <apex:outputLabel value="Offer" />
+                         <apex:inputField value="{!objDS.Offer__c}" rendered="{!objDS.Support_Area__c == 'Play Support' && objDS.Request_Type__c == 'Play Assistance'}" />
+                        <!--<apex:inputField value="{!objDS.Request_Due_Date__c}" rendered="{!objDS.Support_Area__c != 'Sales Ops'}"  />-->
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!objDS.Request_Due_Date__c}" rendered="{!objDS.Support_Area__c != 'Sales Ops' && objDS.Support_Area__c != 'References' && objDS.Support_Area__c != 'Play Support' && objDS.Support_Area__c != 'Pre-Sales Support' && objDS.Support_Area__c != 'Security' }"  id="demo" onfocus="DatePicker.pickDate(false, this , false);"  styleClass="clsWrap" />
+                        
+                        <apex:inputField value="{!objDS.Opportunity_Amount__c}" rendered="{!objDS.Request_Type__c =='Product Idea Lab'}" />
+                        <apex:inputField value="{!objDS.Reason_for_Escalation__c}" rendered="{!objDS.Request_Type__c =='Product Idea Lab'}" />
+                        <apex:inputField value="{!objDS.Ideas_Lab_Reference_Number__c}" rendered="{!objDS.Request_Type__c =='Product Idea Lab'}" required="true" />  
+                        <apex:inputField value="{!objDS.Customer_Contact_who_Escalated__c}" rendered="{!objDS.Request_Type__c =='Product Idea Lab'}" required="true" />
+                        <!--<apex:outputField value="{!objDS.Region__c}" rendered="{!objDS.Support_Area__c != 'Sales Ops'}"/> --> 
+                        
+                       <!-- Below fields are added by aparna -->
+                        <apex:inputField value="{!objDS.Type_of_Reference_Activity__c}" rendered="{!objDS.Request_Type__c =='References'}" required="true"/>  
+                        <apex:inputField value="{!objDS.Site_Visit_Geographic_Radius__c}" rendered="{!objDS.Request_Type__c =='References'}"/> 
+                        <apex:inputField value="{!objDS.Reference_Needed_by__c}" rendered="{!objDS.Request_Type__c =='References'}" required="true"/>
+                       <apex:outputField value="{!objDS.DirectIndirect_Sale__c}" rendered="{!objDS.Request_Type__c =='References'}" />
+                       <apex:outputField value="{!objDS.ForecastStatus1__c}" rendered="{!objDS.Request_Type__c =='References'}" />
+                       <apex:outputField value="{!objDS.Stage_Name__c}" rendered="{!objDS.Request_Type__c =='References'}" />
+                       <apex:outputField value="{!objDS.End_User_Country__c}" rendered="{!objDS.Request_Type__c =='References'}" />
+                       
+                       
+                         <!--
+                            End: Added By Aparna
+                          
+                        -->
+                        
+                        
+                      
+                        <apex:outputField value="{!objDS.Region__c}" rendered="{!objDS.Support_Area__c != 'Sales Ops' &&  objDS.Support_Area__c != 'Play Support' && objDS.Support_Area__c != 'Pre-Sales Support' && objDS.Support_Area__c != 'Finance – Field Finance'&& objDS.Support_Area__c != 'References'}"/>
+                        
+                        <apex:inputField value="{!objDS.When_does_the_customer_need_this_feature__c}" rendered="{!objDS.Request_Type__c =='Product Idea Lab'}" />  
+                        <apex:inputField value="{!objDS.Complexity__c}" rendered="{!objDS.Request_Type__c =='Value Consulting Inquiry'}" /> 
+                        <apex:inputField value="{!objDS.Activity__c}" rendered="{!objDS.Request_Type__c =='Value Consulting Inquiry'}" required="true"  /> 
+                        <apex:inputField value="{!objDS.Security_Issue_Type__c}" rendered="{!objDS.Request_Type__c =='Security Support'}" required="true" >
+                         <apex:actionSupport event="onchange" action="{!duedateupdate}" reRender="wrappers" />
+                        </apex:inputField>
+                        <!--<apex:inputField value="{!objDS.Security_SME_Reviewed__c}" rendered="{!objDS.Request_Type__c =='Security Support'}"   /> -->
+                        
+                        
+                       <!-- <apex:inputField value="{!objDS.Request_Due_Date__c}" id="wrappers1" rendered="{!objDS.Support_Area__c == 'Security' }"    onfocus="DatePicker.pickDate(false, this , false);"  styleClass="clsWrap" /> -->
+                        <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Request Due Date"  rendered="{!objDS.Support_Area__c == 'Security' }"  />
+                        <!--<apex:outputLabel value="{!objDS.Request_Due_Date__c}" id="wrappers" rendered="{!objDS.Support_Area__c == 'Security' }" styleClass="clsWrap" />-->
+                        <apex:outputText value="{0,date,MM'/'dd'/'yyyy}" id="wrappers" rendered="{!objDS.Support_Area__c == 'Security' }"  >
+                        <apex:param value="{!objDS.Request_Due_Date__c}" id="wrappersq" /> 
+                        </apex:outputText>
+                        
+                        </apex:pageBlockSectionItem>
+                        <!--
+                            Start: Added By Ashish (08/09/2018)
+                            Desc: Added new request type as Competitive Intelligence, on request of Debbie
+                        -->
+                        <apex:pageBlockSectionItem rendered="{!objDS.Support_Area__c ='Competitive Intelligence'}">
+                            <apex:outputLabel value="Deal Size" />
+                            <apex:inputField value="{!objDS.Deal_Size__c}" />
+                        </apex:pageBlockSectionItem>
+                        
+                        <!-- End: Added By Ashish -->
+                       
+                           <!-- start : "references" is  Added By Aparna in below condition -->
+                        <apex:pageBlockSectionItem id="pbsFocusArea1" rendered="{!objDS.Support_Area__c ='Subscription PureSuccess' || objDS.Support_Area__c ='References'||objDS.Support_Area__c ='Business Consulting'|| objDS.Support_Area__c ='Customer Care' || objDS.Support_Area__c='Deal Desk' || objDS.Support_Area__c = 'Finance'|| objDS.Support_Area__c = 'Pricing' || objDS.Support_Area__c ='Product Management' || objDS.Support_Area__c ='Quote Request' || objDS.Support_Area__c = 'Tools/Systems Support' || objDS.Support_Area__c = 'Transactional Help'|| objDS.Support_Area__c = 'Competitive Intelligence'|| objDS.Support_Area__c = 'Security' ||  objDS.Support_Area__c = 'Security' ||  objDS.Support_Area__c = 'Value Consulting' ||  objDS.Support_Area__c = 'Finance – Field Finance'}" >                            
+                                             
+                            <apex:inputField value="{!objDS.Request_Type__c}" style="display:none;"/>
+                            <apex:inputField value="{!objDS.Support_Area__c}" style="display:none;"/>                  
+                           
+                           
+                       </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem id="pbsFocusArea2" rendered="{!objDS.Support_Area__c ='Tools/Systems Support'}">
+                         <apex:inputField value="{!objDS.Focus_Area__c}" style="display:none;"/> 
+                         
+                        </apex:pageBlockSectionItem>
+                        <!-- <apex:pageBlockSectionItem id="pbsFocusArea2" rendered="{!objDS.Support_Area__c ='Product Management'}">
+                         <apex:inputField value="{!objDS.Request_Type__c}" style="display:none;"/>
+                         <apex:inputField value="{!objDS.Support_Area__c}" style="display:none;"/>  
+                        </apex:pageBlockSectionItem> -->
+                        <!-- Ended for dependent picklist-->
+                        <apex:outputField value="{!objDS.ININ_Opportunity_URL__c}" rendered="{!objDS.ININ_Opportunity_URL__c != null && IsOppExist==true}"/>                
+                        <!-- <apex:outputField value="{!objDS.Requested_Action__c}" rendered="{!objDS.Focus_Area__c != 'Account' || objDS.Focus_Area__c != 'Contact'}" />
+                        <apex:inputField value="{!objDS.Requested_Action__c}" rendered="{!objDS.Focus_Area__c = 'Account' || objDS.Focus_Area__c = 'Contact'}" > -->
+                        <apex:pageBlockSectionItem id="pbsQuote" rendered="{!objDS.Support_Area__c = 'Sales Ops'}">
+                            <apex:outputLabel value="Quote ID"/>
+                            <apex:inputText id="Quote" value="{!objDS.Quote__c}" styleClass="clsQuoteId"/>
+                        </apex:pageBlockSectionItem>
+                         <!-- Changes on 27 July 2017 Start -->
+                           <apex:outputLabel value=""  rendered="{!objDS.Support_Area__c = 'Pre-Sales Support'}" />  
+                          <!-- <apex:outputLink value="https://genesys.gosavo.com/Document/Index/46135747?id=46135747&view=" style="position:relative;left:80px;top:2px;background-color:yellow;" >Request Type - Tips and Requirements</apex:outputLink>   -->
+                           <apex:outputLink value="https://genesys.gosavo.com/Document/Index/46135747?id=46135747&view=" style="position:relative;left:80px;top:2px;color:red;" rendered="{!objDS.Request_Type__c == 'Data Management'}" >Request Type - Tips and Requirements</apex:outputLink>   
+                           <apex:inputField value="{!objDS.Error_message__c}" rendered="{!objDS.Support_Area__c = 'Sales Ops' || objDS.Support_Area__c ='Tools/Systems Support'|| (objDS.Support_Area__c ='Play Support' && (objDS.Request_Type__c != 'PureBridge' && objDS.Request_Type__c != 'PureBridge Trial') )|| objDS.Support_Area__c ='Pre-Sales Support'}" style="width : 400px" styleClass="clsErrMsg"/>
+                           <!--<apex:inputField value="{!objDS.Resolution__c}" rendered="{!objDS.Support_Area__c = 'Sales Ops'}" />--> 
+                        <!-- Changes on 27 July 2017 End -->
+                                 
+                         <!--<apex:outputLabel ></apex:outputLabel>-->
+                         <apex:inputField value="{!objDS.Application__c}" rendered="{!objDS.Support_Area__c = 'Sales Ops'}" />     
+                       
+                        </apex:pageBlockSection>
+                        </apex:actionRegion>
+                        <!-- New Fields added by Navanetha-->
+                        <!-- <apex:outputPanel id="wrapper" rendered="{!objDS.Focus_Area__c =='Account'}"> --> 
+                        
+                         
+                        <apex:outputPanel id="wrapper">
+                            <apex:pageBlockSection id="SectionID1" rendered="{!objDS.Focus_Area__c =='Account' && objDS.Requested_Action__c == 'Inactivate Line of Business'}"> 
+                                 
+                                <apex:inputField value="{!objDS.Offering_Type__c}" required="true" id="reqAction1" styleClass="clsReqAct"> 
+                                 <apex:actionRegion id="area51" renderRegionOnly="false">
+                                 <apex:actionSupport event="onchange" reRender="wrapper1,SectionID2" />
+                                 </apex:actionRegion>
+                                </apex:inputField>
+                                <apex:inputField value="{!objDS.Trial_Evaluation__c}" required="true" />  
+                                 <apex:inputField value="{!objDS.Org_ID__c}" required="true" styleClass="clsWrap" />
+                                <apex:inputField value="{!objDS.End_User_Point_of_Contact__c}" /> 
+                                </apex:pageBlockSection>
+                        </apex:outputPanel>
+                        <apex:outputPanel id="wrapper1">
+                                <apex:pageBlockSection id="SectionID2" rendered="{!objDS.Focus_Area__c =='Account' && objDS.Requested_Action__c == 'Inactivate Line of Business' }"> 
+                              
+                                <apex:inputField value="{!objDS.Cloud_Deployment__c }"   />      
+                                
+                                <!--
+                                <apex:inputField value="{!objDS.Offering_Type__c}" required="true" /> 
+                                <apex:inputField value="{!objDS.Trial_Evaluation__c}" required="true" />  
+                                 <apex:inputField value="{!objDS.Org_ID__c}" required="true" styleClass="clsWrap" />                            
+                                                       
+                                <apex:inputField value="{!objDS.End_User_Point_of_Contact__c}" /> 
+                                <apex:inputField value="{!objDS.Cloud_Deployment__c }" required="true"/>                            
+                                -->
+                                <apex:inputField value="{!objDS.Primary_Churn_Reason__c}" required="true" styleClass="clsWrap" />                        
+                                
+                                <apex:inputField value="{!objDS.Notification_Date__c}" required="true" styleClass="clsWrap" />      
+                                <apex:inputField value="{!objDS.Secondary_Churn_Reason__c}" />                          
+                                <apex:inputField value="{!objDS.Official_Cancelation_Date__c}" required="true" styleClass="clsWrap" />                                           
+                                <apex:inputField value="{!objDS.Competitor_Replacing_Genesys__c}" />
+                            </apex:pageBlockSection>
+                        </apex:outputPanel>
+                        
+                       <!-- PageBlock section End --> 
+                    <apex:pageBlockSection columns="1" title="Request Description" rendered="{!(IsDsrExist==False && objDS.Request_Type__c != 'References' )}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Subject"/>
+                              <!--<apex:outputPanel layout="block" styleClass="requiredInput">
+                                <apex:outputPanel styleClass="requiredBlock"/>-->
+                                <apex:inputField value="{!objDS.Subject__c}" required="true" style="width : 400px"/>
+                            <!--</apex:outputPanel>-->
+                        </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Description"/>
+                            <!--<apex:outputPanel layout="block" styleClass="requiredInput">
+                                <apex:outputPanel styleClass="requiredBlock"/>-->
+                                <apex:inputField value="{!objDS.Description__c}" required="true" styleClass="clsDesc" />
+                                
+                            <!--</apex:outputPanel>-->
+                        </apex:pageBlockSectionItem>               
+                    </apex:pageBlockSection>
+                    
+                     <!-- Start : Below code for references added by aparna --> 
+                     <apex:pageBlockSection columns="1" title="Request Description" rendered="{!(IsDsrExist==False && objDS.Request_Type__c == 'References' )}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Name and title of prospect/customer involved in reference activity"/>
+                              <!--<apex:outputPanel layout="block" styleClass="requiredInput">
+                                <apex:outputPanel styleClass="requiredBlock"/>-->
+                                <apex:inputField value="{!objDS.Subject2__c}" required="true" style="width : 400px"/>
+                            <!--</apex:outputPanel>-->
+                        </apex:pageBlockSectionItem>
+                          
+                       
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Subject"/>
+                              <!--<apex:outputPanel layout="block" styleClass="requiredInput">
+                                <apex:outputPanel styleClass="requiredBlock"/>-->
+                                <apex:inputField value="{!objDS.Subject__c}" required="true" style="width : 400px"/>
+                            <!--</apex:outputPanel>-->
+                        </apex:pageBlockSectionItem>
+                          <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Questions or topics that will be covered "/>
+                            <!--<apex:outputPanel layout="block" styleClass="requiredInput">
+                                <apex:outputPanel styleClass="requiredBlock"/>-->
+                                <apex:inputField value="{!objDS.Description__c}"  required="true" styleClass="clsDesc" />
+                            <!--</apex:outputPanel>-->
+                        </apex:pageBlockSectionItem>   
+                      </apex:pageBlockSection>
+                    <!-- End : added by aparna -->
+                    
+                     <!-- Attachment Section Start -->
+             <apex:pageBlockSection id="pbsAttachment" title="Attachments" rendered="{!IsDsrExist==false}">
+               <apex:pageBlockSectionItem >
+                 <apex:outputLabel value="File & Attachment" />
+                 <apex:commandButton value="Upload File" onclick="return loadPopupBox('Deal Support');"/>
+               </apex:pageBlockSectionItem>
+             <apex:pageBlockSectionItem >
+                     <apex:pageBlock rendered="{!list_Attachment != null}">
+                       <table border="1" width="100%">
+                         <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                          <apex:repeat value="{!list_Attachment}" var="abp"> 
+                            <tr><td>
+                                 <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                               </td>
+                              <td>
+                              <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="return GetAttachmentId('{!abp.id}');"/>
+                              </td>
+                           </tr>
+                         </apex:repeat>
+                       </table>
+                   </apex:pageBlock>
+                 </apex:pageBlockSectionItem>
+                   
+             </apex:pageBlockSection>
+            <!-- Attachment Section End -->  
+                </apex:pageBlock>
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+        </apex:page>

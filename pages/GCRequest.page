@@ -1,0 +1,738 @@
+<apex:page sidebar="false" showHeader="true" standardController="GCR__c" extensions="GCRequestController" id="pg" action="{!createGCRequest}" applyHtmlTag="true" tabStyle="Account" >
+    
+    <head>
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        </head>
+        <body onload="setFocus();">
+            <style>
+            .activeTab {color: white; font-size:15px;background-image:none;background-color:#8a9ebe;font-weight:bold;}
+            .inactiveTab {color:white; font-size:13px;background-image:none;background-color:#8a9ebe;ont-weight:normal;}   
+            </style>
+            <!-- Added by JJ on 11/19/18 to stop opening calendar on page load -->
+            <Script>
+                function setFocusOnLoad() {}
+            </Script>
+
+            <script>
+                var newWin=null;
+                          function openUploadPage(gcrid,status)
+                          {
+                              var url='/apex/ContractFileUpload?gcrId=' + gcrid + '&status=' + status;
+                              newWin=window.open(url, 'Popup','height=400,width=500,left=100,top=100,resizable=no,scrollbars=yes,toolbar=no,status=no');
+                              if (window.focus) 
+                              {
+                                  newWin.focus();
+                              }
+                              
+                              return false;
+                          }
+                          
+                          function openApproveRejectPage(gcrid,processInstanceId)
+                          {
+                              var url='/apex/approveRejectPage?gcrId=' + gcrid + '&processInstanceId=' + processInstanceId;
+                              newWin=window.open(url, 'Popup','height=400,width=500,left=100,top=100,resizable=no,scrollbars=yes,toolbar=no,status=no');
+                              if (window.focus) 
+                              {
+                                  newWin.focus();
+                              }
+                              
+                              return false;
+                          }
+                          
+                          function openApproveReassignPage(gcrid,processInstanceId)
+                          {
+                              var url='/apex/approveReassignPage?gcrId=' + gcrid + '&processInstanceId=' + processInstanceId;
+                              newWin=window.open(url, 'Popup','height=400,width=500,left=100,top=100,resizable=no,scrollbars=yes,toolbar=no,status=no');
+                              if (window.focus) 
+                              {
+                                  newWin.focus();
+                              }
+                              
+                              return false;
+                          }
+                          
+                          
+                          function openSubmitApprovalContractFileUploadPage(gcrid)
+                          {
+                              var url='/apex/SubmitApprovalContractFileUploadPage?gcrId=' + gcrid;
+                              newWin=window.open(url, 'Popup','height=400,width=500,left=100,top=100,resizable=no,scrollbars=yes,toolbar=no,status=no');
+                              if (window.focus) 
+                              {
+                                  newWin.focus();
+                              }
+                              
+                              return false;
+                          }
+                          function openUploadAttachmentsMetaData(gcrid)
+                          {
+                              var url='/apex/UploadAttachmentsMetaData?gcrId=' + gcrid;
+                              newWin=window.open(url, 'Popup','height=400,width=500,left=100,top=100,resizable=no,scrollbars=yes,toolbar=no,status=no');
+                              if (window.focus) 
+                              {
+                                  newWin.focus();
+                              }
+                              
+                              return false;
+                          }
+                          
+                          function closeUploadPopup()
+                          {
+                              if (null!=newWin)
+                              {
+                                  newWin.close();
+                              }  
+                          }
+                          
+                          function showPopup() {
+                              document.getElementById('container').style.display = 'block';    
+                          }
+                          
+                          function hidePopup() {
+                              document.getElementById('container').style.display = 'none';    
+                          }
+                          function setRegion(){
+                              alert('hiii');
+                          }
+                          function showConPopup() {
+                              document.getElementById('containPop').style.display = 'block';    
+                          }
+                          
+                          function hideConPopup() {
+                              document.getElementById('containPop').style.display = 'none';    
+                          }
+                          
+                          </script>
+        
+        <style type="text/css">
+            .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+            }
+            .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+            }       
+        </style>
+        <apex:form id="frmAttorneyWorkload">
+            <apex:outputPanel id="popPanel" rendered="{!showAttorneyWorkload}">
+                <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:left;">              
+                        <apex:pageBlock title="Attorney Workload">
+                            <apex:pageBlockButtons location="top">
+                                <apex:commandButton value="Close" action="{!hideAttorneyWorkload}" reRender="frmAttorneyWorkload"/>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockTable value="{!attorneyDetailList}" var="eachItem">
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        User
+                                    </apex:facet>
+                                    {!eachItem.Name}
+                                </apex:column>
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Status
+                                    </apex:facet>
+                                    {!eachItem.status}
+                                </apex:column>
+                                <apex:column >
+                                    <apex:facet name="header">
+                                        Count
+                                    </apex:facet>
+                                    {!eachItem.count}
+                                </apex:column>                  
+                            </apex:pageBlockTable>
+                        </apex:pageBlock>               
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:form>
+        <!--     
+<apex:outputPanel id="showNdPop">
+<div id="containPop" class="container" >
+<div class="close-button" onclick="hideConPopup();">X</div>
+<div id="innerContainer" class="innerPopup">
+<apex:iframe src="/apex/showNda"/>
+</div>
+<apex:form >
+<div Class="radioDiv">
+<apex:commandButton value="Accept" action="{!showNDA}" immediate="true" onclick="hideConPopup();" reRender="" />
+</div>
+<div Class="radioDiv">
+<apex:selectRadio layout="lineDirection" value="{!ndaCon}">
+<apex:actionSupport action="{!testM}" status="addItem" event="onclick" reRender="">
+<apex:param name="selected1" value="{!ndaCon}"/>
+</apex:actionSupport>
+<apex:selectOption itemLabel="{!radioSelectLabel}" itemEscaped="false" itemValue="I Agree" />
+<apex:selectOption itemLabel="{!radioSelectLabel1}" itemEscaped="false" itemValue="I Disagree" />
+</apex:selectRadio>
+</div>
+</apex:form>
+</div>     
+</apex:outputPanel>
+-->
+        <!-- 
+<apex:sectionHeader subtitle="Genesys Contract Request"/>
+-->    
+        <chatter:feedWithFollowers entityId="{!selectedRecordId}"/> <br/>
+        <apex:outputPanel id="pnlNotification">
+            <apex:pageMessage summary="New action !" severity="info" strength="3" rendered="{!newAction}" />
+        </apex:outputPanel>
+        <apex:tabPanel switchType="client" selectedTab="{!ActiveTab}" id="GCR"
+                       tabClass="activeTab" inactiveTabClass="inactiveTab" value="{!ActiveTab}">                
+            <apex:tab label="Home" name="home" id="home">
+                <apex:form id="homeForm">  
+                    <apex:actionFunction name="resetNewActionAF" action="{!resetNewAction}" rerender="pnlNotification"/>                                      
+                    <apex:pageBlock title="Legal Request">                        
+                        <apex:pageBlockButtons >                             
+                            <apex:commandButton value="Create New" action="{!createNew}" rendered="{!isAdmin}" immediate="true" id="createNewButton"/> 
+                            <apex:commandButton value="Save Records" action="{!saveList}"  rendered="{!isAdmin}"  id="saveButton"/>  
+                            <apex:commandButton onclick="resetInlineEdit()" id="cancelButton" value="Cancel"  rendered="{!isAdmin}"  />
+                            <apex:selectList value="{!selectedView}" size="1" style="float:right;">
+                                <apex:selectOptions value="{!options}"/>
+                                <apex:actionSupport event="onchange" action="{!loadRecords}" reRender="pnlResult"/>
+                            </apex:selectList>
+                            <apex:outputPanel rendered="{!isAdmin}" style="float:right;">                       
+                                <!--<apex:outputLabel for="AllRequestCheckboxId" value="All" style="float:right;"/>-->
+                                All<apex:inputCheckbox value="{!allRequests}" label="All" id="AllRequestCheckboxId" style="float:right;">
+                                <apex:actionSupport event="onchange" action="{!loadRecords}" reRender="pnlResult"/>
+                                </apex:inputCheckbox>
+                            </apex:outputPanel>
+                        </apex:pageBlockButtons>
+                        
+                        <apex:outputPanel id="pnlResult" >
+                            <apex:pageBlockTable value="{!SObjectRecords}" var="item" rendered="{!showResult}">
+                                <apex:column headerValue="Legal Request Number">
+                                    <!--<apex:commandLink value="{!item.Name}" action="{!retrieveRecord}" immediate="true">-->
+                                    <apex:commandLink value="{!item.Name}" action="{!retrieveRecordTemp}" immediate="true">                                    
+                                        <apex:param name="first" value="{!item.id}" assignTo="{!selectedRecordId}"/>
+                                    </apex:commandLink>
+                                </apex:column>                                
+                                <apex:column headerValue="Request Type" > 
+                                    <apex:outputField value="{!item.Request_Type__c}">
+                                        <apex:inlineEditSupport showOnEdit="saveButton" hideOnEdit="createNewButton" event="ondblclick" resetFunction="resetInlineEdit"/>
+                                    </apex:outputField>
+                                </apex:column>   
+                                <!--                              
+<apex:column headerValue="Priority" > 
+<apex:outputField value="{!item.Priority__c}">
+<apex:inlineEditSupport showOnEdit="saveButton" hideOnEdit="createNewButton" event="ondblclick" resetFunction="resetInlineEdit"/>
+</apex:outputField>
+</apex:column>
+-->
+                                <apex:column value="{!item.Account__c}" /> 
+                                <apex:column value="{!item.Requestor_Name__c}" headerValue="Requestor" /> 
+                                <apex:column value="{!item.Attorney_Name__c}" headerValue="Assigned To"/>
+                                <apex:column headerValue="Status" > 
+                                    <apex:outputField value="{!item.Status__c}">
+                                        <apex:inlineEditSupport showOnEdit="saveButton" hideOnEdit="createNewButton" event="ondblclick" resetFunction="resetInlineEdit"/>
+                                    </apex:outputField>
+                                </apex:column>  
+                                
+                                <apex:column value="{!item.CreatedDate}" headerValue="Requested On" />                            
+                                <apex:column value="{!item.Contract_Due_Date__c}" headerValue="Contract Due Date" />
+                                <apex:column headerValue="New Update?">
+                                    <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/alert_icon.png')}"  rendered="{!item.New_Action__c}"/>
+                                </apex:column>
+                            </apex:pageBlockTable>
+                            
+                            <apex:panelGrid columns="7">
+                                <apex:actionRegion >
+                                    <apex:commandButton value="First" action="{!setRecords.first}" disabled="{!!setRecords.HasPrevious}" reRender="pnlResult"/>
+                                    <apex:commandButton value="Previous" action="{!setRecords.previous}" disabled="{!!setRecords.HasPrevious}" reRender="pnlResult"/>
+                                    <apex:commandButton value="Next" action="{!setRecords.next}" disabled="{!!setRecords.HasNext}" reRender="pnlResult"/>
+                                    <apex:commandButton value="Last" action="{!setRecords.last}" disabled="{!!setRecords.HasNext}" reRender="pnlResult"/>
+                                </apex:actionRegion>
+                            </apex:panelGrid>  
+                            
+                            <apex:pageMessage summary="There is no requests found." severity="information" strength="3" rendered="{!NOT(showResult)}" />
+                        </apex:outputPanel> 
+                    </apex:pageBlock>
+                </apex:form>
+            </apex:tab>
+            
+            <apex:tab label="Legal Request Details" name="gcrDetails" id="gcrDetails" style="font-size:13px;font-family:'Arial', sans-serif;" rendered="{!OR(showTabs,IF(selectedRecordId == NULL ,false,true))}">
+                <apex:form id="detailsForm">
+                    <apex:pageMessage severity="INFO" strength="2" rendered="{!record.id == null}" escape="false">
+                        <b>To attach a file please click on the "<span style="color:blue">Save and Submit</span>" button first and then upload a file using the "<span style="color:blue">Attach File</span>" button on the Notes and Attachments section below.</b>
+                    </apex:pageMessage>
+                    <apex:pageBlock id="pbdtls">
+                        <apex:pageMessages id="showmsg"></apex:pageMessages>
+                        <!--<chatter:feed entityId="{!selectedRecordId}"/>-->
+                        <!--<c:chatterfeed recId="{!selectedRecordId}"/>-->
+                        <apex:actionRegion >
+                            <apex:actionFunction name="vfChangeReqType" action="{!dummyMethod}" reRender="reqChange">
+                                <apex:param name="firstparam" value="" assignTo="{!reqType}"/>
+                            </apex:actionFunction>
+                            
+                            <apex:actionFunction name="vfChangeReqName" action="{!queryRequestorInfo}" reRender="pnl">
+                                <apex:param name="reqName" value="" assignTo="{!strRequestor}"/>
+                            </apex:actionFunction>
+                            
+                            <apex:actionFunction name="vfChangeAccName" action="{!setRegionAndRequestType}" reRender="pnl">
+                                <apex:param name="acccLegal" value="" assignTo="{!strAccountLegal}"/>
+                            </apex:actionFunction>
+                            
+                            <apex:actionFunction name="vfChangeConName" action="{!setContactDetails}" rerender="ref" >
+                                <apex:param name="contactName" value="" assignTo="{!strContact}"/>
+                            </apex:actionFunction>
+                            <apex:actionFunction name="getNdaButton" action="{!showNdaButton}">
+                                <apex:param name="curStatus" value="" assignTo="{!currentStatus}" />
+                            </apex:actionFunction>   
+                            
+                        </apex:actionRegion>
+                        
+                        <apex:outputPanel id="pnl">
+                            <apex:pageBlockSection id="reqType" title="Legal Request Details" rendered="{!OR(record.Status__c == gcrInitialStatus, isAdmin)}">
+                                <apex:outputField value="{!record.name}" />
+                                <apex:inputField value="{!record.Contract_Due_Date__c}"/>                                                                    
+                                <apex:inputField value="{!record.Request_Type__c}" onchange="vfChangeReqType(this.value);" required="true" id="lstRequestType">
+                                    <apex:actionSupport event="onchange" rerender="salesSection"/>   
+                                </apex:inputField>  
+                                <apex:inputField value="{!record.Contract_Type__c}" onchange="getNdaButton(this.value);" required="true" />                                    
+                                <!--<apex:inputField value="{!record.Requestor_Name__c}" id="reqName" required="true" onchange="vfChangeReqName(document.getElementById('pg::pnl:pbdtls:reqType:reqName_lkid').value);" rendered="{!isAdmin}"/> -->
+                                <apex:inputField value="{!record.Requestor_Name__c}" id="reqName"   />
+                                <apex:inputField value="{!record.Region__c}" rendered="{!isAdmin}"/>
+                                <apex:outputField value="{!record.Region__c}" rendered="{!NOT(isAdmin)}"/>
+                                <apex:inputField value="{!record.Attorney_Name__c}" rendered="{!isAdmin}"/> 
+                                <apex:outputField value="{!record.Attorney_Name__c}" rendered="{!NOT(isAdmin)}"/>                                                              
+                                <apex:inputField value="{!record.Status__c}"/>                                    
+                                
+                                <apex:inputField value="{!record.Platform_Type__c}"/>
+                                <apex:pageblocksectionitem >
+                                    <apex:outputlabel value="{!$ObjectType.GCR__c.fields.Offering_Type__c.Label}" for="offeringtype"/>                                
+                                    <apex:actionRegion >        
+                                        <apex:inputField value="{!record.Offering_Type__c}" required="{!record.Request_Type__c == 'Sales'}" id="offeringtype" >        
+                                            <apex:actionSupport event="onchange" rerender="salesSection"/>        
+                                        </apex:inputfield>        
+                                    </apex:actionRegion>           
+                                </apex:pageblocksectionitem>
+                             <!--  <apex:inputField required="true" value="{!record.Is_this_DSR_for_a_Ramp_Extension__c}"/>
+                                <apex:inputField value="{!record.Ramp_Extension_Reason__c}"/>   -->
+                                 <apex:pageblocksectionitem >
+                                 <apex:outputlabel value="{!$ObjectType.GCR__c.fields.Is_this_DSR_for_a_Ramp_Extension__c.Label}" for="offeringtype"/>
+                                <apex:actionRegion >   
+                                    <apex:inputField id="redflagtype" value="{!record.Is_this_DSR_for_a_Ramp_Extension__c}" required="true">
+                                        <apex:actionsupport event="onchange" rerender="Reminder"  />
+                                    </apex:inputField> 
+                                </apex:actionRegion>   
+                                </apex:pageblocksectionitem>                               
+                                <apex:outputpanel style="margin-left:10%;display:block;padding-left:2%;"  id="Reminder" >      
+                                  <apex:actionRegion >                                    <apex:pageBlockSection >
+                                            <apex:pageblocksectionitem >
+                                                                                
+                                       <apex:outputlabel style="white-space:nowrap;" value="{!$ObjectType.GCR__c.fields.Ramp_Extension_Reason__c.Label}" rendered="{!record.Is_this_DSR_for_a_Ramp_Extension__c == 'Yes'}" />
+                                        <apex:inputField required="true" value="{!record.Ramp_Extension_Reason__c}" rendered="{!record.Is_this_DSR_for_a_Ramp_Extension__c == 'Yes'}" />   
+                                         </apex:pageblocksectionitem>                                            
+                                </apex:pageBlockSection>
+                                      </apex:actionRegion>
+
+                                        </apex:outputpanel>
+                                        
+                                 
+                            
+                            </apex:pageBlockSection>
+                            
+                            <apex:pageBlockSection title="Partner Information" Id="AgreementTypeId" rendered="{!OR(record.Status__c == gcrInitialStatus, isAdmin)}">
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Partner Application" />
+                                    <apex:outputPanel >
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <apex:inputField value="{!record.Partner_Application__c}"  id="sLegal" required="false" />
+                                                </td>
+                                                <td>
+                                                    <a href="#" onclick="window.open('/{!record.Partner_Application__c}'); return false;"> [View] </a>
+                                                </td>
+                                            </tr>
+                                        </table>                            
+                                    </apex:outputPanel>                                   
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!record.Contract_Type__c == 'Partner Contract'}">
+                                    <apex:outputText value="Partner Agreement Type"/>    
+                                    <apex:actionRegion >
+                                        <apex:inputField value="{!record.Partner_Contract_Type__c}">
+                                            <apex:actionSupport event="onchange" reRender="AgreementTypeId"/>
+                                        </apex:inputField>
+                                    </apex:actionRegion>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!AND(record.Contract_Type__c == 'Partner Contract',NOT ( ISNULL ( record.Partner_Contract_Type__c) ),CONTAINS(record.Partner_Contract_Type__c,'Other'))}">                                   
+                                    <apex:outputText value="Partner Agreement Type (Other)"/>
+                                    <apex:inputField id="othercontTypeId" value="{!record.Partner_Contract_Type_Other__c}"/>
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+                            
+                            <apex:pageBlockSection id="reqTypeRO" title="Legal Request Details" rendered="{!AND(record.Status__c != gcrInitialStatus, !isAdmin)}">
+                                <apex:outputField value="{!record.name}" />
+                                <apex:outputField value="{!record.Contract_Due_Date__c}"/>                                                                   
+                                <apex:outputField value="{!record.Request_Type__c}" />
+                                <apex:outputField value="{!record.Contract_Type__c}"/>                                    
+                                <apex:outputField value="{!record.Requestor_Name__c}" />
+                                <apex:outputField value="{!record.Region__c}"/>                                    
+                                <apex:outputField value="{!record.Attorney_Name__c}"/> 
+                                <apex:outputField value="{!record.Status__c}"/>
+                                <apex:outputField value="{!record.Is_this_DSR_for_a_Ramp_Extension__c}"/>
+                               <apex:outputField value="{!record.Ramp_Extension_Reason__c}"/> 
+                                <!--<apex:outputField value="{!record.Partner_Contract_Type__c}"/> -->      
+                            </apex:pageBlockSection>
+                            
+                            <apex:pageBlockSection title="Partner Information" rendered="{!AND(record.Status__c != gcrInitialStatus, !isAdmin)}">
+                                <apex:outputField value="{!record.Partner_Application__c}"/>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputText value="Partner Agreement Type"/>
+                                    <apex:outputText value="{!record.Partner_Contract_Type__c}"/>
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem rendered="{!AND(NOT ( ISNULL ( record.Partner_Contract_Type__c) ),CONTAINS(record.Partner_Contract_Type__c,'Other'))}">                                   
+                                    <apex:outputText value="Partner Agreement Type (Other)"/>
+                                    <apex:outputText value="{!record.Partner_Contract_Type_Other__c}"/>
+                                </apex:pageBlockSectionItem>    
+                            </apex:pageBlockSection>
+                        </apex:outputPanel>
+                        
+                        <!--
+<apex:outputPanel id="ref">                             
+<apex:pageBlockSection id="reqInfo" columns="2" title="Request Information"> 
+<apex:outputText value="{!strCountry}" label="Requestor Country"/>
+<apex:outputText value="{0,date,dd'/'MM'/'yyyy hh:mm:ss}" label="Requested On">
+<apex:param value="{!strDateTime}" /> 
+</apex:outputText>                                  
+</apex:pageBlockSection>
+</apex:outputPanel>
+-->
+                        <apex:outputPanel id="reqChange" >
+                            <apex:actionRegion immediate="true"> 
+                                <apex:pageBlockSection id="salesSection" title="Sales" rendered="{!AND(OR(record.Request_Type__c == 'Sales',record.Request_Type__c == 'Partner'),OR(record.Status__c == gcrInitialStatus, isAdmin))}">
+                                    
+                                    <apex:pageBlockSectionItem id="SalesAccount">
+                                        <apex:outputLabel value="Account" />
+                                        <apex:outputPanel >
+                                            <table>
+                                                <tr>
+                                                    <td>
+                                                        <apex:inputField value="{!record.Account__c}"  id="sLegal" required="true" onchange="vfChangeAccName(document.getElementById('pg::firstForm:pbdtls:salesSection:sLegal_lkid').value)" />
+                                                    </td>
+                                                    <td>
+                                                        <a href="#" onclick="window.open('/{!record.Account__c}'); return false;"> [View] </a>
+                                                    </td>
+                                                </tr>
+                                            </table>                            
+                                        </apex:outputPanel>                                   
+                                    </apex:pageBlockSectionItem>
+                                    
+                                    
+                                    <apex:pageBlockSectionItem id="SalesContact">
+                                        <apex:outputLabel value="Customer Contact" />
+                                        <apex:inputField value="{!record.Contact__c}" id="reqCon" onchange="vfChangeConName(document.getElementById('pg::firstForm:pbdtls:reqInfo:reqCon_lkid').value);"/>                                  
+                                    </apex:pageBlockSectionItem>
+                                    <apex:pageBlockSectionItem id="SalesOpportunity" rendered="{!record.Request_Type__c != 'Partner'}">
+                                        <apex:outputLabel value="Opportunity" />
+                                        <apex:outputPanel >                                         
+                                            <table>
+                                                <tr>
+                                                    <td>
+                                                        <apex:inputField value="{!record.Opportunity__c}" required="true" id="OpportunityLookup"/>
+                                                    </td>
+                                                    <td>
+                                                        <a href="#" onclick="window.open('/{!record.Opportunity__c}'); return false;"> [View] </a>
+                                                    </td>
+                                                </tr>
+                                            </table>                                            
+                                        </apex:outputPanel>                                          
+                                    </apex:pageBlockSectionItem>
+                                    
+                                    <!--
+                                        Added condition for pureconnect 
+                                        And condition of contract type as new contract or amendment
+                                        Added required block div to resolve the Subscriptio type issue
+                                        by Ashish on request of Vivek regarding to Legal DSR
+                                    -->
+                                    <apex:pageBlockSectionItem id="SubscriptionSubtype" rendered="{!(record.Offering_Type__c == 'PureCloud' || record.Offering_Type__c == 'PureConnect' || record.Offering_Type__c == 'PureEngage') && record.Request_Type__c != 'Partner'}">
+                                        <apex:outputlabel value="{!$ObjectType.GCR__c.fields.Subscription_Sub_Type__c.Label}" for="SubscriptionSubtype" />                                
+                                        <apex:outputPanel >
+                                            <div class="requiredInput"> 
+                                                <div class="{!if(record.Contract_Type__c == 'New Contract' || record.Contract_Type__c == 'Amendment','requiredBlock','')}"></div>  
+                                                <apex:inputField value="{!record.Subscription_Sub_Type__c}"  id="SubscriptionSubtype1" >        
+                                                    <apex:actionSupport event="onchange" rerender="salesSection" />        
+                                                </apex:inputfield>           
+                                            </div>
+                                        </apex:outputPanel>   
+                                    </apex:pageBlockSectionItem> 
+                                    
+                                    <apex:pageBlockSectionItem rendered="{!record.Request_Type__c != 'Partner'}">
+                                        <apex:outputLabel value="License Amount" />
+                                        <apex:outputField value="{!record.License_Amount__c}" />
+                                    </apex:pageBlockSectionItem>  
+                                    
+                                    <!--
+                                        Added condition for pureconnect 
+                                        And condition of contract type as new contract or amendment
+                                        by Ashish on request of Vivek regarding to Legal DSR
+                                    -->
+                                    <apex:pageBlockSectionItem id="CCDBList" labelStyle="requiredInput" rendered="{!record.Request_Type__c != 'Partner' && (record.Contract_Type__c == 'New Contract' || record.Contract_Type__c == 'Amendment')}"> 
+                                        <apex:outputlabel value="{!$ObjectType.GCR__c.fields.CCDB_Subscription__c.Label}" for="CCDB" id="CCDBOutput" rendered="{!record.Subscription_Sub_Type__c != 'New Org & Subscription' && record.Subscription_Sub_Type__c != '' && (record.Offering_Type__c == 'PureCloud' || record.Offering_Type__c == 'PureConnect' || record.Offering_Type__c == 'PureEngage')}"/>                                
+                                        <apex:outputPanel >
+                                            <div class="requiredInput"> 
+                                                <div class="requiredBlock"></div>  
+                                                <apex:inputField value="{!record.CCDB_Subscription__c}" id="CCDB" rendered="{!record.Subscription_Sub_Type__c != 'New Org & Subscription' && record.Subscription_Sub_Type__c != '' && (record.Offering_Type__c == 'PureCloud' || record.Offering_Type__c == 'PureConnect' ||  record.Offering_Type__c == 'PureEngage')}" />        
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem> 
+                                    <apex:pageBlockSectionItem rendered="{!record.Request_Type__c != 'Partner'}" >
+                                        <apex:outputLabel value="Total Contract Value" />
+                                        <apex:outputField value="{!record.Total_Contract_Value__c}" />
+                                    </apex:pageBlockSectionItem> 
+                                </apex:pageBlockSection>
+                            </apex:actionRegion>       
+                            <apex:pageBlockSection id="salesSectionRO" title="Sales" rendered="{!AND(record.Request_Type__c == 'Sales', AND(record.Status__c != gcrInitialStatus, !isAdmin))}">
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Account" />
+                                    <apex:outputField value="{!record.Account__c}"/>                                                                                      
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Customer Contact" />                                    
+                                    <apex:outputField value="{!record.Contact__c}" />                                   
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Opportunity" />
+                                    <apex:outputField value="{!record.Opportunity__c}"/>                                     
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                </apex:pageBlockSectionItem>
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="License Amount" />
+                                    <apex:outputField value="{!record.License_Amount__c}" />
+                                </apex:pageBlockSectionItem>
+                                
+                                <!--
+                                    Added condition for pureconnect by Ashish on request of Vivek regarding to Legal DSR
+                                -->
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Subscription Sub Type" rendered="{!(record.Offering_Type__c == 'PureCloud' || record.Offering_Type__c == 'PureConnect' || record.Offering_Type__c == 'PureEngage')}"/>
+                                    <apex:outputField value="{!record.Subscription_Sub_Type__c}" rendered="{!(record.Offering_Type__c == 'PureCloud' || record.Offering_Type__c == 'PureConnect' || record.Offering_Type__c == 'PureEngage')}"/>
+                                </apex:pageBlockSectionItem>    
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Total Contract Value" />
+                                    <apex:outputField value="{!record.Total_Contract_Value__c}" />
+                                </apex:pageBlockSectionItem> 
+                                
+                                <!--
+                                    Added condition for pureconnect by Ashish on request of Vivek regarding to Legal DSR
+                                -->
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="CCDB/Subscription" rendered="{!record.Subscription_Sub_Type__c != 'New Org & Subscription' && record.Subscription_Sub_Type__c != '' && (record.Offering_Type__c == 'PureCloud' || record.Offering_Type__c == 'PureConnect' || record.Offering_Type__c == 'PureEngage')}"/>
+                                    <apex:outputField value="{!record.CCDB_Subscription__c}" rendered="{!record.Subscription_Sub_Type__c != 'New Org & Subscription' && record.Subscription_Sub_Type__c != '' && (record.Offering_Type__c == 'PureCloud' || record.Offering_Type__c == 'PureConnect' || record.Offering_Type__c == 'PureEngage')}"/>
+                                </apex:pageBlockSectionItem>  
+                            </apex:pageBlockSection>  
+                            
+                            <apex:pageBlockSection id="purchaseSection" title="Purchasing" rendered="{!AND(record.Request_Type__c == 'Purchasing', OR(record.Status__c == gcrInitialStatus, isAdmin))}">
+                                <apex:inputField value="{!record.PR_Number__c}"/>
+                                <apex:inputField value="{!record.PO_Amount__c}"/>    
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection id="purchaseSectionRO" title="Purchasing" rendered="{!AND(record.Request_Type__c == 'Purchasing', AND(record.Status__c != gcrInitialStatus, !isAdmin))}">
+                                <apex:outputField value="{!record.PR_Number__c}"/>
+                                <apex:outputField value="{!record.PO_Amount__c}"/>    
+                            </apex:pageBlockSection>                            
+                        </apex:outputPanel>
+                        <apex:outputPanel >
+                            <apex:pageBlockSection id="reqDesc" title="Request Description" columns="1" rendered="{!OR(record.Status__c == gcrInitialStatus, isAdmin)}">
+                                <apex:inputField value="{!record.Synopsis__c}" style="width:560px; height: 20px"/>  
+                                <apex:inputField value="{!record.Description__c}" style="width:560px; height: 200px" />
+                                <apex:inputField value="{!record.GCR_Content_Document_Detail__c }" label="Amendment"/> 
+                                
+                            </apex:pageBlockSection>
+                            <apex:pageBlockSection id="reqDescRO" title="Request Description" columns="1" rendered="{!AND(record.Status__c != gcrInitialStatus, !isAdmin)}">
+                                <apex:outputField value="{!record.Synopsis__c}" style="width:560px; height: 20px"/>  
+                                <apex:outputField value="{!record.Description__c}" style="width:560px; height: 200px" />  
+                                <apex:inputField value="{!record.GCR_Content_Document_Detail__c }" label="Amendment"/>
+                            </apex:pageBlockSection>
+                            
+                        </apex:outputPanel>
+                        
+                        <!--
+<apex:outputPanel >
+<apex:pageBlockSection id="applist" title="Approval History" columns="1" >
+<apex:pageBlockTable value="{!prosInsWrkItms}" var="item">
+<apex:column value="{!item.ProcessInstance.Status}"/>
+<apex:column value="{!item.Actor.Name}" headerValue="Assigned To"/>
+<apex:column value="{!item.Actor.Type}"/>
+<apex:column headerValue="Action">
+<apex:outputLink value="/{!item.id}/e?et=REASSIGN" target="blank">Reassign</apex:outputLink>
+&nbsp;|&nbsp;
+<apex:outputLink value="/p/process/ProcessInstanceWorkitemWizardStageManager?id={!item.id}" target="blank">Approve / Reject</apex:outputLink>
+</apex:column>
+</apex:pageBlockTable>    
+</apex:pageBlockSection>
+</apex:outputPanel>
+-->                         
+                        <apex:pageBlockButtons id="ndaButton" > 
+                            <!--apex:commandButton value="Create New" style="background:gray;font-size:13px; color:white;" action="{!createNew}" immediate="true"/-->
+                            <apex:commandButton value="Save" action="{!insertDCR}" rendered="{!AND(record.Status__c != gcrInitialStatus, isAdmin)}"/>                               
+                            <apex:commandButton value="Save & Submit" action="{!submitGCR}" rendered="{!(record.Status__c == gcrInitialStatus)}"/>                               
+                            <apex:commandButton value="Cancel" action="{!cancel}" immediate="true" rendered="{!OR(record.Status__c == gcrInitialStatus, isAdmin)}" />
+                            <!--apex:commandButton value="Execute Contract" style="background:gray;font-size:13px; color:white;"  onclick="openUploadPage('{!record.Id}','executed');return false;"  immediate="true" rendered="{!AND(isAdmin,NOT(ISNULL(record.Id)))}"/-->
+                            <!--apex:commandButton value="Submit for Approval" style="background:gray;font-size:13px; color:white;"  onclick="openUploadPage('{!record.Id}','Pending Approval');return false;"  immediate="true" rendered="{!AND(isAdmin,NOT(ISNULL(record.Id)))}"/>
+<apex:commandButton value="NDA Document" action="/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!selectedRecordId}"  immediate="true" rendered="{!AND(isAdmin,NOT(ISNULL(record.Id)))}"/-->
+                            
+                            <apex:commandButton value="Attorney Workload" action="{!showAttorneyWorkload}" reRender="frmAttorneyWorkload" rendered="{!AND(isAdmin,NOT(ISNULL(record.Id)))}"/>
+                            
+                            <apex:commandButton value="Standard Templates" rendered="{!AND(OR(record.Contract_Type__c == 'Standard NDA/MSLSA', record.Contract_Type__c == 'Self Service MSLA'), record.id != '')}" action="{!selfServiceNDA}" />
+                            <!--<apex:commandButton value="Attorney Workload" style="background:gray;font-size:13px; color:white;"  onclick="showPopup();"  immediate="true" rendered="{!isAdmin}"/>-->
+                            <!--apex:commandButton value="Submit for Approval" style="background:gray;font-size:13px; color:white;"  action="{!submitForApproval}" immediate="true" rendered="{!AND(isAdmin,NOT(ISNULL(record.Id)),record.Status__c != 'Pending Finance Approval')}"/-->
+                            <!-- 
+<apex:commandButton value="Submit for Approval" onclick="openSubmitApprovalContractFileUploadPage('{!record.Id}');return false;"  immediate="true" rendered="{!record.Status__c == '4-Approved By Legal'}"/>
+-->
+                        </apex:pageBlockButtons>
+                        
+                    </apex:pageBlock>
+                    
+                    <apex:pageBlock title="Upload Attachments" rendered="{!isAdmin}">
+                        <apex:pageBlockButtons location="top">
+                            <apex:commandButton action="{!moveToContracts}" value="Move To Contracts" rendered="{!isAdmin}"/>
+                        </apex:pageBlockButtons>                         
+                    </apex:pageBlock>
+                </apex:form> 
+                <apex:relatedList subject="{!GCR__c}" list="CombinedAttachments" /> 
+                <apex:form >
+                    <apex:actionRegion >
+                        <apex:actionFunction name="metadataClicked" action="{!metadataClicked}" reRender="metadata" immediate="true"/>
+                    </apex:actionRegion>
+                    <c:GenericHistoryComponent object="{!record}" recordsLimit="10"/>                       
+                </apex:form>
+            </apex:tab>                
+            <apex:tab label="Actions" name="Actions" id="actions" rendered="{!IF(selectedRecordId == NULL ,false,true)}" ontabenter="resetNewActionAF();">
+                <apex:form id="actionsForm">
+                    
+                    <apex:pageBlock title="Send Email">
+                        <apex:pageBlockButtons >
+                            <apex:commandButton action="{!send}" value="Send Email" />
+                            <a href="mailto:{!mailTo}&from={!$User.FirstName}{!$User.LastName}&cc={!cc};legalrequest@genesys.com&subject={!record.Name}%20&body=Link: https://genesys.my.salesforce.com/{!record.Id}%20" target="_top"> Send Email via Outlook </a>
+                        </apex:pageBlockButtons>
+                        <apex:pageBlockSection showHeader="false" columns="1" id="blocksendemail">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="From :" />
+                                <apex:outputLabel value="{!$User.FirstName} {!$User.LastName}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="To :" />
+                                <apex:outputLabel value="{!mailTo}" />                          
+                            </apex:pageBlockSectionItem>                        
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="CC :"/>
+                                <apex:inputText value="{!cc}" />
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >    
+                                <apex:outputLabel value="Subject : " for="Subject"/>    
+                                <apex:inputText value="{!subject}" id="Subject" maxlength="80"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >                        
+                                <apex:outputLabel value="Body : " for="Body"/>    
+                                <apex:inputTextarea value="{!body}" id="Body"  rows="10" cols="80"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >   
+                                <apex:outputLabel value="Attachment File : " for="emailAttachmentFile"/>
+                                <apex:inputFile value="{!emailAttachment.body}" filename="{!emailAttachment.name}" id="emailAttachmentFile" />
+                            </apex:pageBlockSectionItem>       
+                        </apex:pageBlockSection>
+                    </apex:pageBlock> 
+                    <apex:pageBlock id="pgblkNotes">
+                        <apex:pageBlockTable value="{!record.notes}" var="noteObj">
+                            <apex:column value="{!noteObj.title}"/>
+                            <apex:column value="{!noteObj.body}"/>
+                            <apex:column value="{!noteObj.createddate}"/>
+                            <apex:column headerValue="Action">
+                                <apex:outputLink value="/{!noteObj.id}" target="_blank">View</apex:outputLink>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlock>
+                </apex:form>
+            </apex:tab>
+            <!--
+<apex:tab label="Metadata" name="Metadata" id="metadata" rendered="{!AND(IF(selectedRecordId == NULL ,false,true),isAdmin)}">
+<apex:pageBlock >                        
+
+<apex:commandButton value="Upload Final Contract" onclick="openUploadAttachmentsMetaData('{!record.Id}');return false;"  immediate="true" />
+</apex:pageBlock>
+<apex:pageBlock >
+<apex:pageBlockSection showHeader="false" columns="1" id="metadatasection">
+<apex:repeat value="{!$ObjectType.GCR__c.fieldsets.Metadata_Fieldset}" var="fieldValue">
+<apex:Inputfield value="{!record[fieldValue]}"/>
+</apex:repeat>
+</apex:pageBlockSection>
+</apex:pageBlock>
+<apex:pageBlock >                        
+
+<apex:actionRegion >
+<apex:commandButton value="Complete Request" action="{!changeStatus}"/>
+
+<apex:pageBlockSection >
+<apex:inputCheckbox value="{!isComplete}" label="Complete"/>                                
+</apex:pageBlockSection>
+</apex:actionRegion>
+</apex:pageBlock>
+</apex:tab>
+-->
+            
+            
+            <!--<apex:tab label="Metadata" name="Metadata" id="metadata" rendered="{!AND(IF(selectedRecordId == NULL ,false,true),isAdmin)}" onclick="metadataClicked();" >-->
+            <apex:tab label="Contracts-Metadata" name="Metadata" id="metadata" rendered="{!AND(selectedRecordId != NULL, OR(isAdmin, record.Status__c <> '1'))}">                 
+                <iframe src="/apex/GCRContentDocumentDetails?accId={!record.Account__c}&hideHeader=true&embedded=true&gcrId={!selectedRecordId}&documentRecordId={!documentRecordId}" style="width:100%;height:1500px;" />
+            </apex:tab>
+            <!--
+<apex:tab label="Metadata2" name="Metadata2" id="metadata2" rendered="{!AND(IF(selectedRecordId == NULL ,false,true),isAdmin)}">
+<apex:include pageName="gcrcontentdocumentdetails">
+<apex:param name="accId" value="{!record.Account__c}"/>
+</apex:include>
+</apex:tab>
+
+<apex:tab label="History" name="History" id="history" rendered="{!IF(selectedRecordId == NULL ,false,true)}">
+
+</apex:tab>
+-->
+        </apex:tabPanel>
+        <!-- 
+<c:GCRVFEmailRelatedLists legalRequestId="{!record.id}" documentApprovalId="a7iq00000008Oq1AAE" />
+-->
+    </body>
+    <script>
+    function setFocus(){
+        var lstRequestType = document.getElementById('pg:detailsForm:pbdtls:reqType:lstRequestType');
+        if(lstRequestType != null)
+            lstRequestType.focus();     
+    }
+    
+    function showOtherValue(ele) {
+        //alert(ele.id);
+        var selectedOther = document.getElementById(ele.id+"_selected");
+        for (var i = 0; i < selectedOther.length; i++) {
+            alert(selectedOther[i]);
+        }
+        var otherValue = document.getElementById('pg:detailsForm:pbdtls:reqType:AgreementTypeId:othercontTypeId');
+        otherValue.parentNode.parentNode.style.display="none";
+        //otherValue.parentNode.previousSibling.style.display="none";
+    }
+    
+    function clearValues() {
+        return false;-->
+    }
+        </script>
+</apex:page>

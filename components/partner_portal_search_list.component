@@ -1,0 +1,117 @@
+<apex:component >
+  <style>
+    .maintable,.tabheader,.tabrow{
+    border:0px solid black;
+    border-collapse:collapse;
+    }
+    .tabheader{
+    padding:5px;
+    }  
+    .tabrow {
+    padding:5px;
+    }  
+    tr.dataRow {
+      background-color:white;
+    }
+    tr.dataRow:hover {
+      background-color: #e3f3ff;
+    }
+    body .pbBody table.list tr th, body .pbBody table.list tr td {
+    border: 0px solid #ededed;
+    color: #000;
+    }
+    table.list {
+        border: 0px solid #ededed;
+    }
+  </style>
+    <apex:attribute name="srchController" type="PartnerPortalSearchController" description="controller for content search" />
+    <apex:attribute name="page" type="String" assignTo="{!srchController.pageId}" required="false" default="Home Page" description="page identifier for search validations" />
+    
+    <apex:form id="dataTable">
+    <!-- Begin demonstration of content  -->
+    <apex:pageBlock >
+    <div class="filteredContentDisplay">
+    <apex:repeat var="toplevel" value="{!srchController.contentResults}" rendered="{!srchController.contentResults != null}">
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px" style="border:0px">        
+    <thead class="rich-table-thead">
+        <apex:variable var="tl" value="{!toplevel}" rendered="{!toplevel != 'DEFAULT'}">
+        <tr>
+        </tr>
+        </apex:variable>
+        
+        <apex:outputText value="<h1>{!toplevel}</h1>" escape="false" rendered="{!toplevel != 'DEFAULT'}" />  
+        <tr class="headerRow" style="height:30px;">
+            <th  class="headerRow" style="width:40%; ">        
+                <apex:commandLink title="Click to Sort by this column" value="Title {!IF(srchController.sortExp=='Title', IF(srchController.sortDir=='ASC','▲','▼'),'')}" action="{!srchController.sortByField}" reRender="dataTable"  style="text-decoration:underline;">
+                      <apex:param value="Title" name="srtColumn" />
+                      <apex:param value="{!IF(srchController.sortExp=='Title',   IF(srchController.sortDir=='ASC','DESC','ASC'),'DESC')}" name="srtDir"/> 
+                </apex:commandLink> 
+            </th>
+            <!--  <th  class="headerRow" style="width:10%;">Size</th> -->
+            <th  class="headerRow" style="width:10%;">
+                <apex:commandLink title="Click to Sort by this column" value="Author {!IF(srchController.sortExp=='Author', IF(srchController.sortDir=='ASC','▲','▼'),'')}" action="{!srchController.sortByField}" reRender="dataTable" style="text-decoration:underline;">
+                      <apex:param value="Author" name="srtColumn" />
+                      <apex:param value="{!IF(srchController.sortExp=='Author',   IF(srchController.sortDir=='ASC','DESC','ASC'),'DESC')}" name="srtDir"/> 
+                </apex:commandLink> 
+            </th>
+            <th  class="headerRow" style="width:13%;">
+                 <apex:commandLink title="Click to Sort by this column" value="Last Modified {!IF(srchController.sortExp=='Last Modified', IF(srchController.sortDir=='ASC','▲','▼'),'')}" action="{!srchController.sortByField}" reRender="dataTable" style="text-decoration:underline;">
+                      <apex:param value="Last Modified" name="srtColumn" />
+                      <apex:param value="{!IF(srchController.sortExp=='Last Modified',   IF(srchController.sortDir=='ASC','DESC','ASC'),'DESC')}" name="srtDir"/> 
+                </apex:commandLink> 
+            </th>
+            <th  class="headerRow" style="width:30%;">
+                Description 
+            </th>
+        </tr>
+        </thead>
+        <tr style="height:10px;"></tr>
+        <tbody>
+        <apex:repeat var="inner" value="{!srchController.contentResults[toplevel]}">      
+        <tr class="headerRow" height="30px">
+        <td colspan="5" class="innerheading" style="padding: 5px 5px 5px 5px;">
+        <h2><apex:outputText value="{!inner}"/></h2>        
+        </td>
+        </tr>
+        
+        <apex:repeat var="doc" value="{!srchController.contentResults[toplevel][inner]}">
+                <tr>  
+                <td>
+                <apex:outputLink value="/partner/sfc/#version/{!doc.docid}"> 
+             <!--   <a href="https://sbgenfull-genesyscommunity.cs11.force.com/partner/sfc/#version/{!doc.ContentDocumentId}">{!doc.title}</a> 
+                <apex:outputLink value="{!doc.url}">    -->
+                <apex:outputText value="{!doc.title}" /> 
+                </apex:outputLink> 
+                </td>
+            <!--    <td><apex:outputText value="{!doc.Size}" style="border: 0px"/></td>  -->
+                <td><apex:outputText value="{!doc.Author}" /></td>
+                <td><apex:outputText value="{!doc.LastModified}" /></td>
+                <td><apex:outputText value="{!doc.Description}" /></td>
+        </tr>
+        </apex:repeat>     
+        </apex:repeat>
+        </tbody>
+        </table>
+ 
+    </apex:repeat>
+    </div>
+   </apex:pageBlock>
+    </apex:form>
+    <!-- End demonstration of content -->
+    
+    <!-- Begin Debug Content REMOVE THIS 
+    <apex:outputText value="Content type filter is: {!srchController.contentTypeFilter}" 
+                  rendered="{!srchController.contentTypeFilter!=''}"/><br />
+    <apex:outputText value="Service filter is: {!srchController.serviceFilter}" 
+                  rendered="{!srchController.serviceFilter!=''}"/><br />
+    <apex:outputText value="Product filter is: {!srchController.productFilter}" 
+                  rendered="{!srchController.productFilter!=''}"/><br />
+    <apex:outputText value="Solution filter is: {!srchController.solutionFilter}" 
+                  rendered="{!srchController.solutionFilter!=''}"/><br />   
+    <apex:outputText value="Search string is: {!srchController.searchFilter}"
+                  rendered="{!srchController.searchFilter!=''}"/><br />
+    <apex:outputText value="{!srchController.workspaceInfo}"/><br />
+    <apex:outputText value="{!srchController.searchCondition}"/><br />
+    <apex:outputText value="{!srchController.pageId}" />
+    <!-- End Debug Content REMOVE THIS -->
+</apex:component>

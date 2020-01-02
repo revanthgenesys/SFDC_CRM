@@ -1,0 +1,804 @@
+<apex:page standardController="New_Solution_Design__c" extensions="NewSolutionDesignControllerClone1" title="Edit-{!nsdObj.Name}" sidebar="false" tabStyle="New_Solution_Design__c">
+    <apex:form id="formId">
+        <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <head>
+                <apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            </head>
+        </html>
+        <style>
+            .spinnerBg{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-color: #000;
+                opacity: 0.2;
+                z-index: 999999;
+            }
+            .spinner{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-image: url("/img/loading32.gif");
+                background-size: 16px;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-position: center;
+                z-index: 9999999;
+                opacity: 1;
+            }       
+        </style>
+        <apex:outputPanel rendered="{!isEditHide}">
+            <apex:pageblock >
+                <apex:commandLink action="{!backToView}" immediate="true" value="Back to View Records"/>
+                <br/><br/><br/><center><b>You cannot edit this record as it is Submit for Approval.</b></center>
+            </apex:pageblock>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!!isEditHide}">
+            <apex:pageBlock title="Solution Design Edit">
+                <apex:pageMessages id="pgMsjBlk" />
+                <apex:commandLink action="{!backToPage}" immediate="true" value="Back to Technical Design"/>
+                
+                <body>
+                    <apex:actionStatus id="spinnerStatus">
+                        <apex:facet name="start">
+                            <div class="spinnerBg" />
+                            <div class="spinner" ></div>
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <div style="text-align:center; margin: 10px 0;">
+                        <apex:commandButton value="Save" action="{!saveRecord}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small"/>&nbsp;&nbsp;&nbsp;&nbsp;
+                        <apex:commandButton value="Cancel" action="{!cancel}" immediate="true" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" status="spinnerStatus"/>&nbsp;&nbsp;&nbsp;&nbsp;
+                    </div>
+                    <apex:pageBlockSection title="Opportunity" id="wrap0" columns="1" collapsible="true">
+                        <apex:outputPanel >
+                            <table style="width:90%">
+                                <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>CAP Name : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                      <apex:inputField value="{!nsdObj.CAP_Name__c}"/>
+                                    </td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Owner : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                      <apex:outputField value="{!nsdObj.OwnerId}"/>
+                                    </td>
+                                    <td style="width:1%"></td>
+                                </tr>
+                                <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                    <!-- <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Architecture Diagram Snapshot : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    </td>-->
+                                      <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;">
+                                    <b>  <apex:outputText value=" {!if(designOffering == 'PureConnect Cloud','**Customer Architecture Diagram:','Customer Architecture Diagram:')}" /> </b></td>                                
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                      <!--  <apex:inputfile value="{!newAttachment.body}" filename="{!newAttachment.Name}" />
+                                        <apex:commandbutton value="Upload" action="{!uploadAttachment}"/>-->
+                                        
+                                        <apex:inputField value="{!nsdObj.Architecture_Diagram_URL__c}" required="{!nsdObj.Partial_Saving__c==false && designOffering == 'PureConnect Cloud' }" />
+                                    </td>
+                                </tr>    
+                                <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Design Offer/Platform :</b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:outputText value="{!designOffering}" />
+                                    </td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Account : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:outputField value="{!dsrObj.Account_ID__c}"/>
+                                    </td>
+                                </tr>
+                                <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> 
+                                   <!-- <apex:outputText value="Outbound Only :" rendered="{!designOffering == 'PureEngage Cloud'}"/> --></b></td>
+                                    <td style="width:1%"></td>
+                                   <td style="width:10%;text-align:left;vertical-align: middle;">
+                                    <!--<apex:inputField value="{!nsdObj.Outbound_Only__c}" rendered="{!designOffering == 'PureEngage Cloud'}">
+                                    <apex:actionSupport event="onclick" /></apex:inputField> --></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:outputField value="{!dsrObj .Opportunity_ID__c}"/>
+                                    </td>
+                                </tr>
+                                <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> 
+                                    <apex:outputText value="Sales Region :" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:inputField value="{!dsrObj .Opportunity_ID__r.Country_Region__c}" required="true" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/>
+                                    </td>   
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity Stage : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:outputField value="{!dsrObj .Opportunity_ID__r.stageName}"/>
+                                    </td>  
+                                </tr>
+                                <tr class="slds-hint-parent"  style="width: auto;height: 25px;">
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b><apex:outputText value="Legacy SolutionDesign Id : " rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><!--<apex:outputText value="{!dsrObj.id}" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/> --></td>
+                                    
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Opportunity Forecast Status : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj .Opportunity_ID__r.ForecastStatus__c}"/></td>
+                                </tr>
+                                <tr class="slds-hint-parent"  style="width: auto;"> 
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Type : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.Opportunity_ID__r.Type}"/></td>
+                                </tr>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b><apex:outputText value="Primary Design :" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;"> <apex:outputField value="{!dsrObj.Primary_Design_ID__r.IsPrimary__c}" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></td>
+                                <tr>
+                                </tr>
+                                <tr class="slds-hint-parent"  style="width: auto;">  
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b><apex:outputText value="Quick Review :" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/></b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;"><!--<apex:outputField value="{!dsrObj.id}" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}"/> --></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Annual Contract Value (ACV) : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputText value="{!dsrObj.Opportunity_ID__r.Annual_Contract_Value__c}"/></td>
+                                </tr><tr class="slds-hint-parent"  style="width: auto;">
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>                      
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Total Contract Value (TCV + PS) : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputText value="{!dsrObj.Opportunity_ID__r.TCV_PS__c}"/></td>
+                                </tr><tr class="slds-hint-parent"  style="width: auto;">  
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>**TAM Service Element : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:inputField required="{!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.TAM_Service_Element__c}"/></td>
+                                </tr><tr class="slds-hint-parent"  style="width: auto;">    
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Status : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!nsdObj.Status__c}"/></td>
+                                </tr>
+                            <!--    <tr class="slds-hint-parent"  style="width: auto;">    
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Approval/Rejection Date : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!nsdObj.Approved_Rejected_Date__c}"/></td>
+                                </tr> -->
+                                <tr class="slds-hint-parent"  style="width: auto;">    
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Approval/Rejection Reason : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.Rejected_Reason__c}"/></td>
+                                </tr>
+                                
+                                <tr class="slds-hint-parent"  style="width: auto;">    
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:1%"></td>
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Approved/Rejected Date: </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!nsdObj.Approved_Rejected_Date__c}"/></td>
+                                </tr>
+                                <tr class="slds-hint-parent"  style="width: 80%;">    
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b>Created Date : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.CreatedDate}"/></td>
+                                     <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;vertical-align: middle;"><b>Partial Saving : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="RoomNumber" style="width:10%;text-align:left;vertical-align: middle;">  <apex:actionRegion ><apex:inputField value="{!nsdObj.Partial_Saving__c}" id="reqAction" >
+                                        <apex:actionSupport event="onchange" reRender="wrap0,VSSection,wrapper2,wrapp1,tts,wrappartial,wrapperd,w1,w3,w4,s3,dialerPanel1,asrs,InteractionAnalyticsPanel,reqAction21,wrapper21,wrapper22" /> </apex:inputField></apex:actionRegion></td>
+                                                            
+                                </tr>
+                                <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>                               
+                                <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;">
+                                <b> <apex:outputText value="Conditionally Rejected :  " rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/></b> </td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="RoomNumber" style="width:10%;text-align:left;vertical-align: middle;">
+                                    <apex:inputField value="{!nsdObj.Conditionally_Rejected__c }" rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}" id="req" />
+                                 </td></tr>
+
+                                <tr class="slds-hint-parent"  style="width: auto;">    
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> <apex:outputText value="Short Summary of Customer Business Needs : " rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/></b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:inputfield value="{!nsdObj.Short_Summary_of_Customer_Business_Needs__c}" rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/>
+                                    </td>
+                                        </tr>
+                                    <tr class="slds-hint-parent" style="width: 80%;">  
+                                    <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;"><b> <apex:outputText value="Implementation Complexity : " rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}"/></b></td>
+                                    <td style="width:1%"></td>
+                                    <td style="width:10%;text-align:left;vertical-align: middle;">
+                                        <apex:inputField value="{!nsdObj.Implementation_Complexity__c}" rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}" />
+                                    </td>
+                                                                      
+                                
+                                 <td class="labelCol vfLabelColTextWrap" data-label="RoomNumber" style="width:10%;text-align:right;vertical-align: middle;"><b>Last Modified Date : </b></td>
+                                    <td style="width:1%"></td>
+                                    <td data-label="Monthlyrent" style="width:10%;text-align:left;vertical-align: middle;"><apex:outputField value="{!dsrObj.LastModifiedDate}"/></td>
+                           
+                                </tr></table>
+                      
+                           
+                                                                
+                    <!--<apex:pageBlockSection id="wrap1" columns="1" >
+                            <apex:inputField required="{!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.TAM_Service_Element__c}" />
+                                        </apex:pageBlockSection></apex:outputPanel></apex:pageBlockSection>  -->   
+                        </apex:outputPanel></apex:pageBlockSection>
+                    <br />
+                    <apex:pageBlockSection title="Standard Use cases" columns="1" collapsible="true">
+                        <apex:outputPanel >
+                            <table style="width:100%;">
+                                <tr>
+                                    <td>
+                                        <apex:outputPanel id="pnlAllActivity">   
+                                            <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color:#0070d2">
+                                                        <th style="">
+                                                            <b style="color: white;">Short Code</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Use Case Name</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Fit%</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Fit Category</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Short Change Description</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Detailed Change Description</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Version Used</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Notes</b>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody style="width:100%;table-layout: fixed;">
+                                                    <apex:repeat value="{!lstDsrUseCase}" var="vi">
+                                                        <tr class="slds-hint-parent" >
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.Fit__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.FitCategory__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.VersionUsed__c}</td>
+                                                            <td style="max-width:200px;white-space: inherit;">{!vi.Notes__c}</td>
+                                                        </tr>
+                                                    </apex:repeat>   
+                                                </tbody>
+                                            </table>
+                                        </apex:outputPanel> 
+                                    </td>
+                                </tr>            
+                            </table>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+                    <br />
+                    <apex:pageBlockSection title="Custom Use Cases - Interaction Flows" columns="1" collapsible="true">
+                        <apex:outputPanel >
+                            <table style="width:100%;">
+                                <tr>
+                                    <td>
+                                        <apex:outputPanel id="pnlAllActivity1">   
+                                            <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color:#0070d2">
+                                                        <th style="">
+                                                            <b style="color: white;">Short Code</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Use Case Name</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Short Description</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Detailed Description</b>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody style="width:100%;table-layout: fixed;">
+                                                    <apex:repeat value="{!lstDsrUseCaseInteraction}" var="vi">
+                                                        <tr class="slds-hint-parent" >
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                        </tr>
+                                                    </apex:repeat>   
+                                                </tbody>
+                                            </table>
+                                        </apex:outputPanel> 
+                                    </td>
+                                </tr>            
+                            </table>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection><br />
+                    
+                    <apex:pageBlockSection title="Custom IVR Flow" columns="1" collapsible="true">
+                        <apex:outputPanel >
+                            <table style="width:100%;">
+                                <tr>
+                                    <td>
+                                        <apex:outputPanel id="pnlAllActivity2">   
+                                            <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color:#0070d2">
+                                                        <th style="">
+                                                            <b style="color: white;">Short Code</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Use Case Name</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Short Description</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Detailed Description</b>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody style="width:100%;table-layout: fixed;">
+                                                    <apex:repeat value="{!lstDsrUseCaseIVR}" var="vi">
+                                                        <tr class="slds-hint-parent" >
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                        </tr>
+                                                    </apex:repeat>   
+                                                </tbody>
+                                            </table>
+                                        </apex:outputPanel> 
+                                    </td>
+                                </tr>            
+                            </table>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection><br />
+                    <apex:pageBlockSection title="Custom Use Cases - Other" columns="1" collapsible="true" rendered="{!designOffering == 'PureConnect Cloud'}">
+                        <apex:outputPanel >
+                            <table style="width:100%;">
+                                <tr>
+                                    <td>
+                                        <apex:outputPanel id="pnlAllActivity3">   
+                                            <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;border-collapse: collapse;">
+                                                <thead>
+                                                    <tr style="background-color:#0070d2">
+                                                        <th style="">
+                                                            <b style="color: white;">Short Code</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Use Case Name</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Short Description</b>
+                                                        </th>
+                                                        <th  style="">
+                                                            <b style="color: white;">Detailed Description</b>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody style="width:100%;table-layout: fixed;">
+                                                    <apex:repeat value="{!lstDsrUseCaseOther}" var="vi">
+                                                        <tr class="slds-hint-parent" >
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortCode__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.Name__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;">{!vi.ShortChangeDescription__c}</td>
+                                                            <td style="max-width:30px;white-space: inherit;"><apex:outputField value="{!vi.DetailedChangeDescription__c}"/></td>
+                                                        </tr>
+                                                    </apex:repeat>   
+                                                </tbody>
+                                            </table>
+                                        </apex:outputPanel> 
+                                    </td>
+                                </tr>            
+                            </table>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+                    <br />
+                     <!-- <apex:actionFunction name="reFreshAF" action="{!refresh}"/> -->
+                    <apex:pageBlockSection title="{!designOffering} Capabilities" id="VSSection" collapsible="false" rendered="{!designOffering == 'PureConnect Cloud'}">
+                        <apex:inputField required="{!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Product_Type__c}" />
+                        <apex:outputField value="{!nsdObj.CurrencyIsoCode}" />
+                        <apex:inputField value="{!nsdObj.CRM__c}" required="{!nsdObj.Partial_Saving__c==false}" />
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.WFM__c}" required="{!nsdObj.Partial_Saving__c==false}" />
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.DB_Data_Access__c}" required="{!nsdObj.Partial_Saving__c==false}" />
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.Dev_Server__c}" required="{!nsdObj.Partial_Saving__c==false}" />
+                        </apex:pageBlockSection>
+                        <apex:panelGrid />
+                        <apex:pageBlockSection columns="1" id="wrapp1" rendered="{!designOffering == 'PureConnect Cloud'}">
+                      <!--  <apex:inputField value="{!nsdObj.Voice_Storage__c}" required= "{!nsdObj.Partial_Saving__c==false}"
+ onchange="reFreshAF();"/> -->
+                          <apex:pageBlockSectionItem >
+                          <apex:outputLabel value="**Voice Storage" /> 
+                           <apex:actionRegion > 
+                             <apex:inputField value="{!nsdObj.Voice_Storage__c}" id="reqAction1" required="{!nsdObj.Partial_Saving__c==false}"
+ >
+                            <apex:actionSupport event="onchange" reRender="wrapper2" />
+                            </apex:inputField> </apex:actionRegion> 
+                            </apex:pageBlockSectionItem>
+                        
+                         
+                        <apex:pageBlockSection id="wrapper2" columns="1"  >
+                        <apex:pageBlockSectionItem >                    
+                        <apex:outputLabel value="**VS % calls recorded: [ ]%" /> <apex:inputField value="{!nsdObj.VS_calls_recorded__c}" required="{!nsdObj.Voice_Storage__c != 'None' && nsdObj.Voice_Storage__c != null && nsdObj.Partial_Saving__c==false }" /> 
+
+                        </apex:pageBlockSectionItem> 
+                        <apex:pageBlockSectionItem > 
+                        <apex:outputLabel value="**VS Est. storage size voice: [ ] GBs" /><apex:inputField value="{!nsdObj.VS_Est_storage_size_voice_GBs__c}" required="{!nsdObj.Voice_Storage__c != 'None' && nsdObj.Voice_Storage__c != null && nsdObj.Partial_Saving__c==false}" />  
+                        </apex:pageBlockSectionItem> 
+                        <apex:pageBlockSectionItem > 
+                         <apex:outputLabel value="**VS Retention for call recs: [ ] days" /> <apex:inputField value="{!nsdObj.VS_Retention_for_call_recs_days__c}" required="{!nsdObj.Voice_Storage__c != 'None' && nsdObj.Voice_Storage__c != null && nsdObj.Partial_Saving__c==false}" />
+                        </apex:pageBlockSectionItem>  
+                        </apex:pageBlockSection>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection columns="1" id="wrappartial" rendered="{!designOffering == 'PureConnect Cloud'}">
+                       <!-- <apex:inputField value="{!nsdObj.Screen_Storage__c}" required="true"  onchange="reFreshAF();"/> --> 
+                       
+                        <apex:pageBlockSectionItem >
+                          <apex:outputLabel value="**Screen Storage" /> 
+                           <apex:actionRegion > 
+                             <apex:inputField value="{!nsdObj.Screen_Storage__c}" id="reqAction2" required="{!nsdObj.Partial_Saving__c==false}"
+  >
+                            <apex:actionSupport event="onchange" reRender="wrapperd" />
+                            </apex:inputField> </apex:actionRegion> 
+                            </apex:pageBlockSectionItem>
+                        
+                         <apex:pageBlockSection id="wrapperd" columns="1"  >
+                        <apex:pageBlockSectionItem >  
+                        <apex:outputLabel value="**SS % calls recorded: [ ]%" /><apex:inputField value="{!nsdObj.SS_calls_recorded__c}" required="{!nsdObj.Screen_Storage__c != 'None' && nsdObj.Screen_Storage__c != null && nsdObj.Partial_Saving__c==false}"/> 
+   
+                        </apex:pageBlockSectionItem>                      
+                        <apex:pageBlockSectionItem > 
+                        <apex:outputLabel value="**SS Est. storage size screen: [] GB" /><apex:inputField value="{!nsdObj.SS_Est_storage_size_voice_GB__c}" required="{!nsdObj.Screen_Storage__c != 'None' && nsdObj.Screen_Storage__c != null && nsdObj.Partial_Saving__c==false}" />   
+                        </apex:pageBlockSectionItem>                      
+                        <apex:pageBlockSectionItem > 
+                        <apex:outputLabel value="**SS Retention for screen rcs: [] days" /><apex:inputField value="{!nsdObj.SS_Retention_for_call_recs_days__c}" required="{!nsdObj.Screen_Storage__c != 'None' && nsdObj.Screen_Storage__c != null && nsdObj.Partial_Saving__c==false}" />
+                                                </apex:pageBlockSectionItem> 
+                        </apex:pageBlockSection>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection id="w1">   
+                        <apex:pageBlockSectionItem >                       
+                        <apex:outputLabel value="**Short Summary of Customer Business Needs" rendered="{!designOffering == 'PureConnect Cloud'}" /><apex:inputField value="{!nsdObj.Short_Summary_of_Customer_Business_Needs__c}" rendered="{!designOffering == 'PureConnect Cloud'}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                        </apex:pageBlockSectionItem>   
+                        <apex:panelGrid />   
+                        <apex:pageBlockSectionItem >                    
+                        <apex:outputLabel value="**PureConnect Cloud Capabilities - Phase 1" rendered="{!designOffering == 'PureConnect Cloud'}" /> <apex:inputField value="{!nsdObj.PureConnect_Cloud_Capabilities_Phase_1__c}" rendered="{!designOffering == 'PureConnect Cloud'}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                       </apex:pageBlockSectionItem>  
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.PureConnect_Cloud_Capabilities_Phase_2__c}" rendered="{!designOffering == 'PureConnect Cloud'}" />
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.PureConnect_Cloud_Capabilities_Phase_3__c}" rendered="{!designOffering == 'PureConnect Cloud'}" />
+                        </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="{!designOffering} Capabilities" id="s3" collapsible="false" rendered="{!designOffering == 'PureEngage Cloud' && !nsdObj.Outbound_Only__c}">
+                      <apex:pageBlockSectionItem >
+                         <apex:outputLabel value="**PureEngage Cloud Capabilities - Phase 1" />                       
+                            <apex:inputField required="{!nsdObj.Partial_Saving__c==false}"   value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_1__c}"/>
+                            </apex:pageBlockSectionItem>
+                             <apex:panelGrid />
+                      
+                        <apex:inputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_2__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_3__c}"  required="{!nsdObj.Partial_Saving__c==false}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Outbound Solution Configuration" collapsible="false" rendered="{!designOffering == 'PureEngage Cloud' && !!nsdObj.Outbound_Only__c}">
+                        <apex:inputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_11__c}" required="true"/>
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_22__c}"/>
+                        <apex:panelGrid />
+                        <apex:inputField value="{!nsdObj.PureEngage_Cloud_Capabilities_Phase_33__c}"/>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection title="Customizations" collapsible="false" id="w3"> 
+                            <apex:inputField value="{!nsdObj.Customizations_Phase_1__c}" required="{!nsdObj.Partial_Saving__c==false}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                            <apex:inputField value="{!nsdObj.Customizations_Phase_11__c}"  rendered="{!designOffering == 'PureEngage Cloud'}"/>
+                            <apex:inputField value="{!nsdObj.Details_of_Customizations_Requested__c}"/>
+                            <apex:inputField value="{!nsdObj.Customizations_Phase_2__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                            <apex:inputField value="{!nsdObj.Customizations_Phase_22__c}" rendered="{!designOffering == 'PureEngage Cloud'}"/>
+                            <apex:inputField value="{!nsdObj.Details_of_Customization_Phase_2__c}"/>
+                            <apex:inputField value="{!nsdObj.Customizations_Phase_3__c}" rendered="{!designOffering == 'PureConnect Cloud'}"/>
+                            <apex:inputField value="{!nsdObj.Customizations_Phase_33__c}" rendered="{!designOffering == 'PureEngage Cloud'}"/>
+                            <apex:inputField value="{!nsdObj.Details_of_Customization_Phase_3__c}"/>
+                        </apex:pageBlockSection>
+                    <apex:outputPanel rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                        <apex:pageBlockSection title="Configurations" collapsible="false" id="w4">
+                            <apex:inputField value="{!nsdObj.CaaS_Region__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Total_Agents__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.PCI_Environment__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Total_Supervisors__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Deployment_Model__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Total_Workgroups_ACD_Queue__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Deploy_initially_with_IO_Internet_Voi__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Total_Workgroups_General_Non_ACD__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Redundancy_Model__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Total_Telephony_Trunks__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Network_MPLS_Service__c}" required="{!nsdObj.Partial_Saving__c==false}" />
+                            <apex:inputField value="{!nsdObj.Total_Customer_Sites__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Internet_Egress__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                            <apex:inputField value="{!nsdObj.Total_Business_Users__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                             <apex:inputField value="{!nsdObj.SSO__c}" required="{!nsdObj.Partial_Saving__c==false}"/>
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}">
+                       <apex:pageBlockSection title="Configurations" collapsible="false">
+                       <apex:pageBlockSectionItem >
+                         <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Total # Contact Center Agents" ,"Total # Contact Center Agents")}" />                       
+                            <apex:inputField value="{!nsdObj.Total_Contact_Center_Agents__c}"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField value="{!nsdObj.of_Post_Call_Surveys__c}"/>
+                            <apex:pageBlockSectionItem >
+                         <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Total # Enterprise Agents" ,"Total # Enterprise Agents")}" />                       
+                            <apex:inputField value="{!nsdObj.Total_Enterprise_Agents__c}"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField value="{!nsdObj.of_DTMF_Questions_in_Surveys__c}"/>
+<apex:pageBlockSectionItem >
+                          <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Total # Lines of Business"  ,"Total # Lines of Business"  )}"/>                       
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&& !nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Total_Lines_of_Business__c}"/>
+                              </apex:pageBlockSectionItem>
+                               <apex:inputField value="{!nsdObj.of_Free_Form_Questions_in_Surveys__c}"/>
+                               <apex:pageBlockSectionItem >
+ <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"# of Genesys Provided DIDs/TFNs","# of Genesys Provided DIDs/TFNs")}" />  
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.of_Genesys_Provided_DIDs_TFNs__c}"/>
+                            </apex:pageBlockSectionItem>   
+                            <apex:outputtext value=""/>
+                            <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Supported Languages in IVR – TTS"  ,"Supported Languages in IVR – TTS"  )}"/>                       
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Supported_Languages_in_IVR_TTS__c}"/>
+                        </apex:pageBlockSectionItem> 
+                        <apex:inputField label="# of Organizations/Business Units responsible for WFM" value="{!nsdObj.of_Organizations_Business_Units_respon__c}"/>
+                         <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Supported Languages in IVR – ASR"  ,"Supported Languages in IVR – ASR"  )}" />                       
+
+                           <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Supported_Languages_in_IVR_ASR__c}"/>
+                                                        </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Advanced/Geo Redundancy"  ,"Advanced/Geo Redundancy"  )}" />                       
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Advanced_Geo_Redundancy__c}"/>
+                                                        </apex:pageBlockSectionItem>
+                          <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Supported Languages to Analyze – Speech Analytics (GIA)"  ,"Supported Languages to Analyze – Speech Analytics (GIA)"  )}"/>                     
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}"  value="{!nsdObj.Supported_Languages_to_Analyze_Speech__c}"/>
+                                                        </apex:pageBlockSectionItem>
+                          <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"MPLS Connectivity with Customer Network(for Voice Only, Recording UI excluded as not supported)"  ,"MPLS Connectivity with Customer Network(for Voice Only, Recording UI excluded as not supported)"  )}"/>                       
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}"  value="{!nsdObj.MPLS_Connectivity_with_Customer_Network__c}"/>
+                                                        </apex:pageBlockSectionItem>
+                           <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Number of Business Units to Configure – Speech Analytics (GIA)"  ,"Number of Business Units to Configure – Speech Analytics (GIA)"  )}"/>                       
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}"  value="{!nsdObj.Number_of_Business_Units_to_Configure__c}"/>
+                                                       </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+<apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Provider of Inter-Region MPLS for Voice"  ,"Provider of Inter-Region MPLS for Voice"  )}" />                          
+<apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Provider_of_Inter_Region_MPLS_for_Voice__c}"/>
+ </apex:pageBlockSectionItem>
+<apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Specific KPI for Each Business Unit to Configure – Speech Analytics (GIA)"  ,"Specific KPI for Each Business Unit to Configure – Speech Analytics (GIA)"  )}"/> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Specific_KPI_for_Each_Business_Unit_to_C__c}"/>
+                             </apex:pageBlockSectionItem>
+<apex:pageBlockSectionItem >
+<apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"Specify Turnaround Time – Speech Analytics (GIA)"  ,"Specify Turnaround Time – Speech Analytics (GIA)"  )}"/> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Specify_Turnaround_Time_Speech_Analyti__c}"/>
+                            </apex:pageBlockSectionItem>
+<apex:pageBlockSectionItem >
+                      <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"# of Pulse Widgets"  ,"# of Pulse Widgets"  )}" /> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.of_Pulse_Widgets__c}"/>
+                                                       </apex:pageBlockSectionItem>
+ <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"# of Group Voicemail Mailboxes"  ,"# of Group Voicemail Mailboxes"  )}" /> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.of_Group_Voicemail_Mailboxes__c}"/>
+                                                        </apex:pageBlockSectionItem>
+<apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"# of Personal Voicemail Mailboxes"  ,"# of Personal Voicemail Mailboxes"  )}" /> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.of_Personal_Voicemail_Mailboxes__c}"/>
+                             </apex:pageBlockSectionItem>
+<apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"# Blended Agents"  ,"# Blended Agents"  )}" /> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Blended_Agents__c}"/>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!if(!nsdObj.Outbound_Only__c,"# Outbound Agents"  ,"# Outbound Agents"  )}" /> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Outbound_Agents__c}"/>
+                                                        </apex:pageBlockSectionItem>                        
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.SSO__c}"/>
+                                                  
+  </apex:pageBlockSection>
+                    </apex:outputPanel>                           
+
+                    
+                   <!-- <apex:outputPanel id="dialerPanel" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                        <apex:pageBlockSection title="Outbound Solution Configuration" collapsible="false" columns="1" id="dialerPanel1">
+                             
+                               <apex:pageBlockSectionItem>
+                            <apex:actionRegion>
+                            
+                            <apex:outputLabel   value="Dialer" />                            
+                            <apex:inputField value="{!nsdObj.Dialer__c}">
+                            <apex:actionSupport event="onchange" rerender="dialerPanel1"  />
+                            </apex:inputField>
+                            </apex:actionRegion>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Campaigns__c}"/>
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Client_Script__c}"/>
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Contact_List_Management__c}"/>
+                            
+                        </apex:pageBlockSection>
+                    </apex:outputPanel> -->
+                     <apex:pageBlockSection title="Outbound Solution Configuration" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}" collapsible="false" columns="1" id="dialerPanel1">
+                     
+                    <apex:actionRegion >
+                     <B> <apex:outputLabel value="Dialer" /></b>
+                       
+                    <apex:inputField value="{!nsdObj.Dialer__c} " rendered="{!nsdObj.Partial_Saving__c==false}"  id="reqAction" >
+                             <apex:actionSupport event="onchange" reRender="wrapper,wrapper1" />
+                    </apex:inputField> </apex:actionRegion>  </apex:pageBlockSection>
+                    <apex:actionRegion ><apex:outputPanel id="wrapper">
+                    <apex:pageBlockSection id="wrapper1" columns="1" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Campaigns__c}"/>
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Client_Script__c}"/>
+                            <apex:inputField required="{!nsdObj.Dialer__c}" value="{!nsdObj.Type_of_Contact_List_Management__c}"/>
+                    </apex:pageBlockSection>
+                        
+                    </apex:outputPanel> </apex:actionRegion>
+                    
+                    <!--
+                    <apex:outputPanel rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}">
+                        <apex:pageBlockSection title="Deal Clinic" collapsible="false" >
+                            <apex:inputField value="{!nsdObj.Problem_Statement__c}"/>
+                            <apex:inputField value="{!nsdObj.Customer_s_Goals__c}"/>
+                            <apex:inputField value="{!nsdObj.Compelling_Event__c}"/>
+                            <apex:inputField value="{!nsdObj.Pain_Points__c}"/>
+                            <apex:inputField value="{!nsdObj.Competitors__c}"/>
+                            <apex:inputField value="{!nsdObj.Current_Environment__c}"/>
+                            <apex:inputField value="{!nsdObj.Competition_Notes__c}"/>
+                            <apex:inputField value="{!nsdObj.Additional_Team_Members__c}"/>
+                            <apex:inputField value="{!nsdObj.Chain_of_Command__c}"/>
+                            <apex:inputField value="{!nsdObj.Discovery__c}"/>
+                            <apex:inputField value="{!nsdObj.Next_Steps__c}"/>    
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                    -->
+                    
+                    <apex:outputPanel rendered="{!if(designOffering == 'PureEngage Cloud',true,false)}">
+                        <apex:pageBlockSection title="CX Contact Configuration" collapsible="false" >
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" label="Number of Genesys provided Inbound phone numbers " value="{!nsdObj.Number_of_Genesys_provided_Inbound_phone__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.SMS_Delivery_Receipts__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Number_of_OB_calls_max_hour__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Number_of_Outbound_Agents__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Number_of_OB_calls_avg_hour__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" label="Number of Genesys provided agent dial-in phone numbers" value="{!nsdObj.Number_of_Genesys_provided_agent_dial_in__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Supported_languages__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Number_of_custom_agent_scripts__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Supported_Countries__c}"/>                     
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.of_Outbound_Campaigns__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Email_messaging_volume_max_per_hour__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.of_Outbound_Basic_Treatments__c}"/>
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" value="{!nsdObj.Number_of_SMS_max_per_hour__c}"/> 
+                            <apex:inputField required="{!nsdObj.Outbound_Only__c&&!nsdObj.Partial_Saving__c==false}" label="# of Outbound Lists Automatically Loaded via FTP" value="{!nsdObj.of_Outbound_Lists_Automatically_Loaded__c}"/>   
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                    <apex:pageBlockSection title="Interaction Analytics" rendered="{!if(designOffering == 'PureConnect Cloud',true,false)}" collapsible="false" columns="1" id="InteractionAnalyticsPanel">
+                     
+                    <apex:actionRegion >
+                     <B> <apex:outputLabel value="Interaction Analytics" /></b>
+                       
+                    <apex:inputField value="{!nsdObj.Interaction_Analytics__c} " rendered="{!nsdObj.Partial_Saving__c==false}"  id="reqAction21" >
+                             <apex:actionSupport event="onchange" reRender="wrapper21,wrapper22" />
+                    </apex:inputField> </apex:actionRegion>  </apex:pageBlockSection>
+                    <apex:actionRegion ><apex:outputPanel id="wrapper21">
+                    <apex:pageBlockSection id="wrapper22" columns="1" >
+                            <apex:inputField required="{!nsdObj.Interaction_Analytics__c}" value="{!nsdObj.Recording_Type__c}"/>
+                            <apex:inputField required="{!nsdObj.Interaction_Analytics__c}" value="{!nsdObj.Quality_Management__c}"/>
+                            <apex:pageBlockSectionItem >                    
+                        <apex:outputLabel value="Number of Interaction Analytics Recognizer Servers" /> <apex:inputField required="{!nsdObj.Interaction_Analytics__c}" value="{!nsdObj.of_Interaction_Analytics_Recognizer_Se__c}"/>  
+                        </apex:pageBlockSectionItem>                            
+                            <apex:inputField value="{!nsdObj.Calculator_attached__c}"/>             
+                        </apex:pageBlockSection></apex:outputPanel></apex:actionRegion>
+                    
+                  <apex:pageBlockSection title="ASR" collapsible="false" columns="1" id="asrs">
+                     
+                    <apex:actionRegion >
+                     <B> <apex:outputLabel value="Speech Recognition" /></b>
+                    <apex:inputField value="{!nsdObj.Speech_Recognition__c}" rendered="{!nsdObj.Partial_Saving__c==false}" id="reqAction" >
+                                <apex:actionSupport event="onchange" reRender="wrappers,wrappers12" />
+                    </apex:inputField> </apex:actionRegion>  </apex:pageBlockSection>
+                    <apex:actionRegion ><apex:outputPanel id="wrappers">
+                    <apex:pageBlockSection id="wrapper12" columns="1" >
+                            <apex:inputField required="{!nsdObj.Speech_Recognition__c}" value="{!nsdObj.ISR__c}"/>
+                            <apex:inputField required="{!nsdObj.Speech_Recognition__c}" value="{!nsdObj.Nuance_Recognizer__c}"/>
+                            <apex:inputField required="{!nsdObj.Speech_Recognition__c}" value="{!nsdObj.Intelligent_Automation_Nuance__c}"/>
+                    </apex:pageBlockSection>
+                    </apex:outputPanel> </apex:actionRegion>
+                    
+                    
+<apex:pageBlockSection title="TTS" collapsible="false" columns="1" id="tts">
+                     
+                    <apex:actionRegion >
+                     <B> <apex:outputLabel value="Text-to-Speech" /></b>
+                    <apex:inputField value="{!nsdObj.Text_to_Speech__c}" rendered="{!nsdObj.Partial_Saving__c==false}" id="reqAction" >
+                                <apex:actionSupport event="onchange" reRender="wrapperss,wrapper13" />
+                    </apex:inputField> </apex:actionRegion>  </apex:pageBlockSection>
+                    <apex:actionRegion ><apex:outputPanel id="wrapperss">
+                    <apex:pageBlockSection id="wrapper13" columns="1" >
+                            <apex:inputField required="{!nsdObj.Text_to_Speech__c}" value="{!nsdObj.iTTS__c}"/>
+                            <apex:inputField required="{!nsdObj.Text_to_Speech__c}" value="{!nsdObj.Nuance_Vocalizer__c}"/>                             
+                    </apex:pageBlockSection>
+                    </apex:outputPanel> </apex:actionRegion>
+                    
+                    <apex:pageBlockSection title="Telecom Requirements" collapsible="false" >
+                        <apex:inputCheckbox label="Is Genesys providing Telecom for any of the call legs?" value="{!nsdObj.Is_Genesys_providing_Telecom__c}"/>
+                        <apex:inputField value="{!nsdObj.Required_Phase__c}"/>
+                        <apex:inputField value="{!nsdObj.Type_Genesys_Telecom__c}"/>
+                        <apex:panelGrid />
+                        <apex:inputCheckbox label="Is Customer providing Telecom for any of the call legs?" value="{!nsdObj.Is_Customer_providing_Telecom__c}"/>
+                        <apex:inputField value="{!nsdObj.Required_Phase_Customer_Telecom__c}"/>
+                        <apex:inputField value="{!nsdObj.Type_Customer_Telecom__c}"/>
+                        <apex:panelGrid />
+                        <apex:inputCheckbox label="Does Customer want to put the data traffic (UIs, APIs, etc.) over the MPLS" value="{!nsdObj.Does_Customer_want_to_put_the_data_traff__c}"/>
+                        <apex:inputField value="{!nsdObj.Required_Phase_Customer_data_traffic__c}"/>
+                        <apex:inputCheckbox label="If using MPLS, will customer provide their own hardware for termination?" value="{!nsdObj.If_customer_provide_their_own_hardware__c}"/>
+                        <apex:inputField value="{!nsdObj.Required_Phase_MPLS__c}"/>
+                        <apex:inputField value="{!nsdObj.Type_Phase_MPLS__c}"/>  
+                        <apex:panelGrid />
+                        <apex:inputCheckbox label="Is VPN required for Application traffic?" value="{!nsdObj.Is_VPN_required_for_Agent_traffic__c}"/>
+                        <apex:inputField value="{!nsdObj.Required_Phase_Agent_traffic__c}"/>
+                        <!-- <apex:inputField value="{!nsdObj.Type_Agent_traffic__c}"/>  -->
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Projected Timelines" collapsible="false" >
+                        <apex:inputField value="{!nsdObj.PureEngage_Cloud_Submission_date__c}" label="{!designOffering} Submission Date"/> 
+                        <apex:inputField value="{!nsdObj.Contracts_signed_MSLA_Service_Order__c}"/> 
+                        <apex:inputField value="{!nsdObj.SOW_signed__c}"/> 
+                        <apex:inputField value="{!nsdObj.Customer_Project_Kickoff__c}"/> 
+                        <apex:inputField value="{!nsdObj.Discovery_Phase_Complete__c}"/> 
+                        <apex:inputField value="{!nsdObj.Design_Phase_Completed__c}"/> 
+                        <apex:inputField value="{!nsdObj.Customer_Project_Plan_Committed__c}"/> 
+                        <apex:inputField value="{!nsdObj.UAT_start_Phase_1__c}"/> 
+                        <apex:inputField value="{!nsdObj.Go_Live_Date_Phase_1__c}"/> 
+                        <apex:inputField value="{!nsdObj.Phase_2_Go_Live__c}"/> 
+                        <apex:inputField value="{!nsdObj.Phase_3_Go_Live__c}"/> 
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Solution Assumptions" collapsible="false" >
+                        <apex:inputField value="{!nsdObj.Design_Assumptions__c}"/>    
+                    </apex:pageBlockSection>
+                    <div style="text-align:center; margin: 10px 0;">
+                        <apex:commandButton value="Save" action="{!saveRecord}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" />&nbsp;&nbsp;&nbsp;&nbsp;
+                        <apex:commandButton value="Cancel" action="{!cancel}" immediate="true" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" status="spinnerStatus"/>                    
+                    </div> 
+                </body>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:actionFunction name="reqDialCheck" action="{!relaodDialerSection}"  />
+        <apex:actionFunction name="reqSSLoad" action="{!relaodStorageSection}" />
+        <apex:actionFunction name="reqVSLoad" action="{!relaodVoiceSection}"  />
+    </apex:form>
+</apex:page>

@@ -1,0 +1,166 @@
+<apex:component controller="LMSSummaryComponentController"  allowDML="true" id="cmp" >
+    <apex:attribute name="paramAccountId" description="End User Account Id" type="String" required="true" assignTo="{!endUserAccountId}"/>
+    <apex:attribute name="paramSoldToAccountIds" description="List of Sold To Account Ids" type="String[]" required="true"  assignTo="{!soldToAccountIds}"/>
+    <apex:attribute name="paramUserType" description="Logged in User Type" type="String" required="true" assignTo="{!userType}"/>
+  <!--  <apex:attribute name="paramFirstTimeLoaded" description="Logged in User Type" type="Boolean" required="true" assignTo="{!firstTimeLoaded}"/>-->
+
+    <script type="text/javascript">
+        function showHideKeys(divNumber) {
+            var PartKeysDiv = document.getElementById('PartKeys'+divNumber);
+            var plusDiv = document.getElementById('plus'+divNumber);
+            var minusDiv = document.getElementById('minus'+divNumber);
+            if (PartKeysDiv.style.display === "none") {
+                PartKeysDiv.style.display = "block";
+            } else {
+                PartKeysDiv.style.display = "none";
+            }
+            if (plusDiv.style.display === "none") {
+                plusDiv.style.display = "block";
+            } else {
+                plusDiv.style.display = "none";
+            }
+            if (minusDiv.style.display === "none") {
+                minusDiv.style.display = "block";
+            } else {
+                minusDiv.style.display = "none";
+            }
+        }
+    </script>
+    
+    <apex:form id="frm">
+        {!loadsummary}
+        <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+        <apex:outputPanel id="summaryDataPanel" >
+            <apex:pageBlock title="Summary">
+                <apex:outputPanel id="RefreshPanel">
+                    <apex:outputPanel rendered="{!PendingRefresh}">
+                        <p ALIGN="CENTER">
+                            <span style="color:red;font-size:150%;">
+                                Refresh is scheduled/ pending for this Account; please click 'Refresh Now' for updated information.
+                            </span>
+                            <apex:commandButton value="Refresh Now" action="{!refreshSnapshot}" reRender="summaryDataPanel" status="status"/>
+                        </p>
+                        <hr />
+                    </apex:outputPanel>                     
+                </apex:outputPanel>
+                <TABLE WIDTH="100%">
+                    <TR>
+                        <TD WIDTH="5%" style="white-space: nowrap">
+                            <b>Install Site:</b><br />
+                            <apex:selectList value="{!selectedInstallSite}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!installSites}"/>
+                                <apex:actionSupport event="onchange" action="{!loadLicenseSummaryData}" reRender="summaryDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>    
+                        <TD WIDTH="5%" style="white-space: nowrap">     
+                            <b>Product Category:</b><br />
+                            <apex:selectList value="{!selectedProductLine}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!ProductLines}"/>
+                                <apex:actionSupport event="onchange" action="{!loadLicenseSummaryData}" reRender="summaryDataPanel" status="status" />
+                            </apex:selectList>
+                        </TD>
+                         
+                        <TD WIDTH="5%" VALIGN="BOTTOM">
+                            <!--apex:commandButton value="Apply Filters" reRender="summaryDataPanel" status="status" /-->
+                            <apex:commandButton value="Clear Filters" action="{!clearFilters}" reRender="summaryDataPanel" status="status" />
+                        </TD>
+                        <TD ALIGN="RIGHT">
+                            <apex:outputPanel id="DataTableCount">
+                                Number of Total Results # <b>{!totalRecords}</b>
+                            </apex:outputPanel>
+                        </TD>
+                        <TD WIDTH="25px;" ALIGN="RIGHT">
+                            &nbsp;
+                        </TD>
+                    </TR>
+                </TABLE>
+                
+                <apex:variable var="count" value="{!1}"   />
+              
+                <table width="100%" class="list" border="0" cellpadding="0" cellspacing="0">
+                    <tr class="headerRow">
+                        <th width="40px" class="headerRow" scope="col">&nbsp;</th>
+                        <th class="headerRow" scope="col">Part Number</th>
+                        <th width="200px" class="headerRow" scope="col">Product Category</th>
+                        <th width="400px" class="headerRow" scope="col">Description</th>
+                        <th width="50px" class="headerRow" scope="col">Total</th>
+                        <th width="50px" class="headerRow" scope="col">Used</th>
+                        <th width="50px" class="headerRow" scope="col">Available</th>
+                    </tr>
+                    <apex:repeat value="{!licenseSummaryData}" var="record">
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                <div id="plus{!count}">
+                                    <apex:image value="{!$Resource.ArrowCollapse}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;" />
+                                </div>
+                                <div id="minus{!count}" style="display:none">
+                                    <apex:image value="{!$Resource.ArrowExpand}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;"/>
+                                </div>
+                            </td>
+                            <td class="dataCell">
+                                {!record.partNumber}
+                                <div id="PartKeys{!count}" style="display:none">
+                                    <TABLE BORDER="0" WIDTH="100%">
+                                        <apex:repeat value="{!record.partKeys}" var="partKey">
+                                            <TR><TD>&nbsp;&nbsp; {!partKey}</TD></TR>
+                                        </apex:repeat>
+                                    </TABLE>                                    
+                                </div>
+                                <apex:variable value="{!count+1}" var="count"/>
+                            </td>
+                            <td class="dataCell">{!record.category}</td>
+                            <td class="dataCell">{!record.description}</td>
+                            <td class="dataCell">{!record.total}</td>
+                            <td class="dataCell">{!record.currentUsed}</td>
+                            <td class="dataCell">{!record.available}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+                <!--
+                <apex:pageBlockTable value="{!licenseSummaryData}" var="record" id="DataTable">
+                    <apex:column headerValue=" " style="vertical-align:Top" width="40px">
+                        <div id="plus{!count}">
+                            <apex:image value="{!$Resource.ArrowCollapse}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;" />
+                        </div>
+                        <div id="minus{!count}" style="display:none">
+                            <apex:image value="{!$Resource.ArrowExpand}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;"/>
+                        </div>
+                    </apex:column>
+                    <apex:column headerValue="Part Number" style="vertical-align:Top">                    
+                        {!record.partNumber}
+                        <div id="PartKeys{!count}" style="display:none">
+                            <TABLE BORDER="0" WIDTH="100%">
+                                <apex:repeat value="{!record.partKeys}" var="partKey">
+                                    <TR><TD>&nbsp;&nbsp; {!partKey}</TD></TR>
+                                </apex:repeat>
+                            </TABLE>                                    
+                        </div>
+                        <apex:variable value="{!count+1}" var="count"/>
+                    </apex:column>
+                    <apex:column headerValue="Product Category" value="{!record.category}" style="vertical-align:Top" width="200px" />                    
+                    <apex:column headerValue="Description" value="{!record.description}" style="vertical-align:Top" width="400px"/>                    
+                    <apex:column headerValue="Total" value="{!record.total}" style="vertical-align:Top" width="50px"/>                    
+                    <apex:column headerValue="Used" value="{!record.currentUsed}" style="vertical-align:Top" width="50px"/>                    
+                    <apex:column headerValue="Available" value="{!record.available}" style="vertical-align:Top" width="50px" /> 
+                </apex:pageBlockTable>
+                -->
+                <apex:outputPanel id="NoRecordsPanel">
+                    <apex:pageMessage summary="No records to display." severity="Info" strength="2" rendered="totalRecords == 0}" />
+                </apex:outputPanel>
+            </apex:pageBlock>
+            
+        </apex:outputPanel>
+    </apex:form>
+</apex:component>

@@ -1,0 +1,380 @@
+<apex:page controller="DealSupportQueryController" tabstyle="Deal_Support__c" standardStylesheets="true" >
+        <style>
+
+               /* popup_box DIV-Styles  Start*/
+                #popup_box {
+                    display:none; /* Hide the DIV */
+                    position:fixed;  
+                    _position:absolute; /* hack for internet explorer 6 */  
+                    height:700px;
+                    width:600px;  
+                    background:#FFFFFF;  
+                    left: 300px;
+                    top: 50px;
+                    z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+                    margin-left: 15px;  
+                   
+                    /* additional features, can be omitted */
+                    border:2px solid #1797C0;      
+                    padding:15px;  
+                    font-size:15px;  
+                    -moz-box-shadow: 0 0 5px #ff0000;
+                    -webkit-box-shadow: 0 0 5px #ff0000;
+                    box-shadow: 0 0 5px #ff0000;
+                   
+                }
+                
+                #container {
+                    background: #d2d2d2; /*Sample*/
+                    width:100%;
+                    height:100%;
+                }
+                
+                a{ 
+                cursor: pointer; 
+                text-decoration:none; 
+                }
+                
+                /* This is for the positioning of the Close Link */
+                #popupBoxClose {
+                    font-size:20px;  
+                    line-height:15px;  
+                    right:5px;  
+                    top:5px;  
+                    position:absolute;  
+                    color:#6fa5e2;  
+                    font-weight:500;      
+                }
+                /* popup_box DIV-Styles  Close*/
+            </style> 
+        <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+          <script type="text/javascript">
+           var j$ = jQuery.noConflict();   
+             
+           j$(document).ready( function() {
+             var objRT = j$('.clsRequestType');
+             var objSA = j$('.clsSupportArea');
+             var objDataType = j$('.clsDataType');
+             hideRequestType(objSA);  
+             DisableControl(objRT);
+             DisableQuoteControl(objDataType);
+             OpportunityOnChange();
+             AccountOnChange();
+             //j$('.clsWrap').hide();
+             
+             j$(".clsBoxClose").click( function() {           
+                unloadPopupBox();
+             });
+             
+             
+           });
+           
+        function hideRequestType(obj)
+            { 
+            //var OfferType = '{!strOfferingType}'; 
+            //alert(OfferType);  
+            if(j$(obj).val() == 'Pricing'){  
+                //j$('.clsOfferingType').val(OfferType);  
+                //j$('[id$=ifOfferingType]').val(OfferType);         
+                j$('.opRequestType').hide(); 
+                }
+             else
+             {
+                 j$('.opRequestType').show();         
+               }
+              return false;    
+            }
+            function loadPopupBox(fType) 
+            {    
+              j$('[id$=hdnFileType]').val(fType);
+              
+              // To Load the Popupbox
+              j$('#popup_box').fadeIn("slow");
+              j$("#container").css({ // this is just for style
+                 "opacity": "0.3" 
+               }); 
+              return false;       
+            }      
+            
+           function GetAttachmentId(obj)       
+            {
+              j$('[id$=hdnFileId]').val(obj);
+              return true;
+            }
+            
+            function DisableControl(obj)
+            {
+               if(j$(obj).val() =='User Access')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',true);
+               } 
+               else if (j$(obj).val() == 'Data Management')
+                   {              
+                      
+                     j$('.clsQuoteId').attr('Disabled',false);  
+                     j$('.clsErrMsg').attr('Disabled',true);       
+                   }      
+               else if(j$(obj).val() == 'Opportunity/Quote Error')
+               {       
+                 j$('.clsQuoteId').attr('Disabled',false);
+                 j$('.clsErrMsg').attr('Disabled',false);
+               }
+                else if(j$(obj).val() == 'Partner Request')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',true);
+               }
+               else if(j$(obj).val() == 'Training')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',true);
+               }
+               else if(j$(obj).val() == 'General Inquiry')
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);
+                 j$('.clsErrMsg').attr('Disabled',false);
+               }
+             
+               else
+               {
+                 j$('.clsQuoteId').attr('Disabled',false);
+                 j$('.clsErrMsg').attr('Disabled',false);
+               }
+               return false;
+            }
+            function DisableQuoteControl(obj)
+            {
+               if(j$(obj).val() == 'Quote' || $(obj).val()=='Opportunity/Quote Error' || $(obj).val() == 'Account' || $(obj).val()=='Contact')
+               {
+                 j$('.clsQuoteId').attr('Disabled',false);         
+               }       
+               else
+               {
+                 j$('.clsQuoteId').attr('Disabled',true);        
+               }
+               return false;
+            }
+            function unloadPopupBox() 
+            {    
+             // TO Unload the Popupbox
+
+             j$('#popup_box').fadeOut("slow");
+             j$("#container").css({ // this is just for style       
+                "opacity": "1" 
+             });
+             return false;
+            }
+            function validation()
+            {
+              var objDesc = CKEDITOR.instances[jQuery(".clsDesc").attr("id")].getData();
+              alert(objDesc);
+              return false;
+            }
+            function AccountOnChange()
+            {
+              if(j$('.ifAccount').val()!='' && j$('.ifAccount').val()!=null) 
+                  { 
+                  j$('.ifOpportunity').val('');
+                  //j$('.ifOpportunity').attr('readonly',true);
+                  j$('.ifOpportunity').hide();
+                  }
+              else
+                  {
+                  //j$('.ifOpportunity').attr('readonly',false);
+                   j$('.ifOpportunity').show();
+                  }    
+              return false;
+            }
+             function OpportunityOnChange()
+            {
+            if(j$('.ifOpportunity').val()!='' && j$('.ifOpportunity').val()!=null)
+                {
+                  j$('.ifAccount').val('');
+                  //j$('.ifAccount').attr('readonly',true);
+                  j$('.ifAccount').hide();
+                 }
+             else
+                 {
+                 //j$('.ifAccount').attr('readonly',false);
+                 j$('.ifAccount').show();
+                 }    
+              return false;
+            }
+            
+            
+            /*function RequiredAction(ra)
+            {
+              if(j$(ra).val() == 'Inactivate Line of Business')
+              {
+                j$('.clsWrap').show();
+              }  
+              else  
+                j$('.clsWrap').hide();
+            }*/
+            jQuery(function() {
+        jQuery("[id='{!$Component.datepicker}']").datepicker();
+    });
+          </script>
+            <apex:sectionHeader title="Deal Support" subtitle="{!strRecordName}"/>
+            
+<!--<apex:pageMessage summary="Notification: Make Sure to Provide Bill to/Sold to/End user/ Ship to address /contact emails  details in the Description Section"   severity="warning"  strength="3" rendered="{!if(IsSave = True ,true,false)}"  />-->
+            <apex:form >
+            
+           <!-- {!objDS.PS_SMART_DSR__c}-->
+            
+               <!-- Hidden field to get the Select file type for Attachment -->
+                    <!-- Hidden field to get the Select file type for Attachment -->
+                   <apex:inputHidden value="{!FileDescType}" id="hdnFileType" />
+                   <apex:inputHidden value="{!sAttachmentId}" id="hdnFileId" />
+                    <div id="popup_box" style="height:200px;margin-top:200px;">   <!-- OUR PopupBox DIV-->
+                    <!--<APEX:PAGEMESSAGES />-->
+                   <apex:pageBlock id="pbLive">
+                   
+                      <div style="float:left;width:10px;color:black;"><a id="popupBoxClose" class="clsBoxClose" onclick="unloadPopupBox();">X</a></div>
+                        <table style="width:100%;margin-top:30px">
+                          <tr><td>                    
+                             <apex:outputPanel id="Panel" > 
+                                  <div id="upload" class="upload">
+                                    <table><tr>
+                                      <td><apex:inputFile id="fileToUpload" value="{!fileBody}" filename="{!fileName}" styleClass="input-file" /></td> 
+                                      <td><apex:actionRegion renderRegionOnly="false"><apex:commandButton value="Upload Attachment" action="{!uploadFile}" /></apex:actionRegion></td>
+                                      
+                                    </tr></table>
+                                  </div>   
+                             </apex:outputPanel> 
+                          </td></tr>
+                        </table>
+                      
+                    </apex:pageBlock> 
+                   </div><!-- Close PopupBox DIV-->  
+                 <!--</apex:form>-->
+        <!--<apex:form id="abc" >  -->       
+                <apex:inputText style="position:absolute;top:-500px;"/>
+                <apex:pageMessages id="msgs"/>
+                <apex:outputPanel rendered="{!NOT(IsSave)}" >
+                    <center>                
+                        <apex:commandButton value="Return To Deal Support" onclick="location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupport?objid={!IF(ISBLANK(objDS.Opportunity__c),objDS.Account__c,objDS.Opportunity__c)}';return false;"/>
+                        &nbsp;&nbsp;
+                        <apex:commandButton value="View Deal Support Request" onclick="location.href='/{!objDS.Id}';return false;" rendered="false"/>
+                    </center>
+                </apex:outputPanel>
+               
+                <apex:pageBlock id="mainBlock" rendered="{!IsSave}" >
+                    <apex:pageBlockButtons >                
+                        <apex:commandButton value="Submit" action="{!submit}" />
+                        <apex:commandButton value="Cancel" action="{!cancel}"  immediate="true"/>
+                    </apex:pageBlockButtons>
+                    
+                    <!-- PageBlock section stats for all -->
+                   <apex:actionRegion >
+                    <apex:pageBlockSection id="mainSection" columns="2" title="Request Details">                
+                        <apex:outputField value="{!objDS.Support_Area__c}" />
+                         <apex:pageBlockSectionItem >               
+                            <apex:outputLabel value="Status"/>
+                            <apex:outputLabel value="New" />                
+                         </apex:pageBlockSectionItem> 
+                         
+                        <apex:pageBlockSectionItem dataStyleClass="opRequestType" labelStyleClass="opRequestType" >                    
+                            <apex:outputLabel value="Request Type"/>  
+                            <apex:outputField value="{!objDS.Request_Type__c}" />                    
+                        </apex:pageBlockSectionItem>
+                        
+                        <apex:inputField value="{!objDS.Priority__c}" required="true" styleClass="clsPriority"/>                 
+                        <apex:outputField value="{!objDS.Requester__c}" />       
+                                            
+                        <apex:inputField value="{!objDS.Lead_Offer_Type__c}" required="true"/>
+                         
+                        <!--<apex:outputField value="{!objDS.Account__c}" styleClass="ifOpportunity" />-->
+                        <apex:inputField value="{!objDS.Account__c}" styleClass="ifOpportunity" />                       
+                        <!--<apex:inputField value="{!objDS.Quote_Expiry_Date__c}" rendered="{!if(objDS.Support_Area__c == 'Transactional Help' && objDS.Request_Type__c =='Create a Quote',true,false)}" type="date" showDatePicker="true" style="width:40%;" />     -->                    
+                         <apex:inputField value="{!objDS.Quote_Expiry_Date__c}" rendered="{!if(objDS.Support_Area__c == 'Transactional Help' && objDS.Request_Type__c =='Create a Quote',true,false)}" onfocus="DatePicker.pickDate(false, this, false);"   />                         
+                        <apex:outputLabel rendered="{!if(objDS.Request_Type__c =='Submit an Order',true,false)}"></apex:outputLabel>
+                        <apex:inputField value="{!objDS.Opportunity__c}" styleClass="ifOpportunity">
+                        <apex:actionSupport event="onclick" rerender="daySelectorBlock">
+                        </apex:actionSupport>
+                        </apex:inputField>
+                        <apex:inputField value="{!objDS.Payment_Terms__c}" required="true" rendered="{!if(objDS.Support_Area__c == 'Transactional Help' && objDS.Request_Type__c =='Submit an Order',true,false)}" />                       
+                        <apex:inputField value="{!objDS.Payment_Terms__c}" required="true" rendered="{!if(objDS.Support_Area__c == 'Transactional Help' && objDS.Request_Type__c =='Create a Quote',true,false)}" /> 
+                        
+                        <apex:inputField value="{!objDS.Customer_PO_Not_Required__c}" rendered="{!objDS.Request_Type__c ='Create a Quote'}"  />
+                        <apex:inputField value="{!objDS.Products_Desc__c}" style="width:95%;" rendered="{!objDS.Request_Type__c ='Create a Quote'}" />
+                        <apex:inputField value="{!objDS.Link_To_MSA_if_Custom__c}" style="width:95%;" rendered="{!objDS.Request_Type__c ='Create a Quote'}" />                        
+                        <apex:inputField value="{!objDS.Primary_Contact__c}" style="width:95%;"  styleClass="ifOpportunity"   />  
+                        <apex:inputField value="{!objDS.Ship_to_Contact_Email__c}" style="width:95%;" styleClass="ifOpportunity" rendered="{!objDS.Request_Type__c ='Submit an Order'}" />
+                         
+                        </apex:pageBlockSection>
+                        </apex:actionRegion>  
+                        <apex:outputPanel id="wrappersa">
+                        <apex:pageBlockSection id="daySelectorBlock"  >                        
+                        <apex:actionRegion >
+                        <apex:inputCheckbox value="{!createOpportunity}"    rendered="{!if((objDS.Support_Area__c == 'Transactional Help' && (objDS.Request_Type__c =='Create a Quote'||objDS.Request_Type__c =='Submit an Order')) && IsOppExist==false ,true,false)}" > 
+                               <B><font size="3">Create New Opportunity?</font></B> 
+                                <apex:actionSupport event="onchange" reRender="wrapper" />
+                        </apex:inputCheckbox>
+                        </apex:actionRegion>  
+                        </apex:pageBlockSection>
+                        </apex:outputPanel>
+                    
+                    <apex:outputPanel id="wrapper">
+                    <apex:pageBlockSection columns="2" title="Opportunity Details" rendered="{!createOpportunity}" >
+                        <apex:inputField value="{!dsrOpty.Name}" required="true"  />                        
+                       <!-- <apex:selectList size="1" label="Stage" id="StageName" required="true" >
+                            <apex:selectOptions value="{!selectOptions}"  ></apex:selectOptions>
+                        </apex:selectList> -->
+                        <apex:inputField value="{!dsrOpty.Stage__c}" required="true"   />  
+                        <apex:inputField value="{!dsrOpty.Close_Date__c}"  required="true"  />
+                        <!--<apex:inputField value="{!dsrOpty.Close_Date__c}" type="date" showDatePicker="true" style="width:40%;" required="true"  /> -->
+                        <apex:inputField value="{!dsrOpty.Sold_To_Country__c}" required="true"  />      
+                        <apex:inputField value="{!dsrOpty.Primary_Contact__c}" required="true" />  
+                        <apex:inputField value="{!dsrOpty.Opportunity_Source__c}" required="true"  /> 
+                        <apex:inputField value="{!dsrOpty.Direct_Indirect_Sale__c}" required="true"/  >
+                        <apex:inputField value="{!dsrOpty.BusinessPartner__c}" required="{!IF(dsrOpty.Direct_Indirect_Sale__c ='Indirect',true,false)}"/> 
+                        <apex:inputField value="{!dsrOpty.Opportunity_Currency__c}" required="true" />   
+                                                                              
+                    </apex:pageBlockSection>    
+                    </apex:outputPanel>
+                    
+                   <apex:pageBlockSection columns="1" title="Request Description">
+                  <!-- <apex:pageMessage summary="Notification: Add Products and other details in the Description Section"   severity="warning"  strength="3" rendered="{!if(IsSave = True ,true,false)}"  />-->
+                  <apex:pageMessage summary="Notification: Make Sure to Provide Bill to/Sold to/End user/ Ship to address /contact emails  details in the Description Section"   severity="warning"  strength="3" rendered="{!if(IsSave = True ,true,false)}"  />
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Subject"/>                              
+                                <apex:inputField value="{!objDS.Subject__c}" required="true" style="width : 400px"/>                           
+                        </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Description"/>                            
+                                <apex:inputField value="{!objDS.Description__c}" required="true" styleClass="clsDesc" />
+                        </apex:pageBlockSectionItem>               
+                    </apex:pageBlockSection> 
+                    
+                    
+                    
+             <!-- Attachment Section Start -->
+             <apex:pageBlockSection id="pbsAttachment" title="PO/ Signed PO Waiver Form/Signed Docusign">
+               <apex:pageBlockSectionItem >
+                 <apex:outputLabel value="File & Attachment" />
+                 <apex:commandButton value="Upload File" onclick="return loadPopupBox('Deal Support');"/>
+               </apex:pageBlockSectionItem>
+             <apex:pageBlockSectionItem >
+                     <apex:pageBlock rendered="{!list_Attachment != null}">
+                       <table border="1" width="100%">
+                         <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                          <apex:repeat value="{!list_Attachment}" var="abp"> 
+                            <tr><td>
+                                 <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                               </td>
+                              <td>
+                              <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="return GetAttachmentId('{!abp.id}');"/>
+                              </td>
+                           </tr>
+                         </apex:repeat>
+                       </table>
+                   </apex:pageBlock>
+                 </apex:pageBlockSectionItem>
+                   
+             </apex:pageBlockSection>
+            <!-- Attachment Section End -->  
+                </apex:pageBlock>
+            </apex:form>
+        </apex:page>

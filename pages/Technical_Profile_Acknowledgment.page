@@ -1,0 +1,67 @@
+<apex:page controller="TechnicalProfileAckController" id="pageId" cache="true" tabStyle="Technical_Profile__c" sidebar="false">
+<script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+<script type="text/javascript">    
+     var j$ = jQuery.noConflict();
+     function selectAllCheckboxes(obj,receivedInputID){
+            var inputCheckBox = document.getElementsByTagName("input");                  
+            for(var i=0; i<inputCheckBox.length; i++){          
+                if(inputCheckBox[i].id.indexOf(receivedInputID)!=-1){                                     
+                    inputCheckBox[i].checked = obj.checked;
+                }
+            }
+        }  
+        function chkSelection(){
+            
+            var isExist = false;   
+            var arrChK = j$('.clsSCCheckbox');                    
+            for(var i=0; i<arrChK.length; i++)
+            { 
+                if (j$(arrChK[i]).is(':checked') == false) 
+                {
+
+                  j$('.clsSelectAll').attr('checked',false);
+                  isExist = true;
+                }           
+            }
+
+           if(isExist==false)
+             j$('.clsSelectAll')[0].checked = true;
+        } 
+   </script>
+<apex:form id="formId">
+   <apex:outputPanel id="TechProfile" >
+   
+        <apex:pageBlock id="pbTechProfile" title="Technical Profile Acknowledgement" >  
+         <apex:pagemessages />              
+               <apex:pageBlockButtons rendered="{!hasTechprofile}">
+                <apex:commandButton action="{!Acknowledged}" value="Acknowledge" reRender="TechProfile" style="width:100px;" status="actionstatusTagInvoice"/>  
+            </apex:pageBlockButtons>                                       
+            <apex:pageBlockTable value="{!lst_wTechProfile}" var="pro" rendered="{!hasTechprofile}">
+                <apex:column headerValue="Technical Profile Name">
+                    <apex:outputLink value="/{!Pro.TechicalProfile.Id}">{!Pro.TechicalProfile.Name}</apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Account">
+                    <apex:outputLink value="/{!Pro.TechicalProfile.Account__c}" target="_blank">{!Pro.TechicalProfile.Account__r.Name}</apex:outputLink>                     
+                </apex:column>
+                <apex:column headerValue="Contact Center Type">
+                    <apex:outputField value="{!Pro.TechicalProfile.Contact_Center_Type__c}"/>
+                </apex:column>
+                <apex:column headerValue="Last Acknowledgement Date">
+                    <apex:outputField value="{!Pro.TechicalProfile.Technical_Profile_Acknowledgment_Date__c}"/>
+                </apex:column>
+                <apex:column headerValue="Validation Box">
+                    <apex:outputField value="{!Pro.TechicalProfile.Validation_Box__c}"/>
+                </apex:column>
+                 <apex:column headerValue="Select" width="45px;" >
+                     <apex:facet name="header">
+                        <apex:inputCheckbox onclick="selectAllCheckboxes(this,'inputId')" value="{!IsSelectAll}" styleClass="clsSelectAll"/>
+                     </apex:facet>                                                  
+                     <apex:inputCheckbox value="{!Pro.selected}" id="inputId" rendered="{!if(Pro.TechicalProfile.Validation_Box__c==null,false,true)}" onclick="chkSelection();" styleClass="clsSCCheckbox">
+                     </apex:inputCheckbox>
+                </apex:column>                                                   
+            </apex:pageBlockTable> 
+             
+        </apex:pageBlock>            
+      </apex:outputPanel>       
+  </apex:form>                                    
+</apex:page>

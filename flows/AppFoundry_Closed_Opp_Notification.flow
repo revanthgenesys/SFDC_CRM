@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <processMetadataValues>
+            <name>ActionCallType</name>
+            <value>
+                <stringValue>flow</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>flowSelection</name>
+            <value>
+                <stringValue>mapQuoteProduct</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>myRule_1_A1</name>
+        <label>Map 1 Quote Product</label>
+        <locationX>100</locationX>
+        <locationY>200</locationY>
+        <actionName>mapQuoteProduct</actionName>
+        <actionType>flow</actionType>
+        <inputParameters>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>String</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>OppId</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>maxOccurs</name>
+                <value>
+                    <numberValue>1.0</numberValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>objectType</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Reference</stringValue>
+                </value>
+            </processMetadataValues>
+            <name>OppId</name>
+            <value>
+                <elementReference>myVariable_current.X18_Digit_ID__c</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>String</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>PrimQuote</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>maxOccurs</name>
+                <value>
+                    <numberValue>1.0</numberValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>objectType</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Reference</stringValue>
+                </value>
+            </processMetadataValues>
+            <name>PrimQuote</name>
+            <value>
+                <elementReference>myVariable_current.Primary_Quote__c</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>0.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision</name>
+        <label>myDecision</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_1</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_1</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_1_A1</targetReference>
+            </connector>
+            <label>Primary Quote is created/changed</label>
+        </rules>
+    </decisions>
+    <description>Send an email to AppFoundry alias when specific criteria to closed opp is met</description>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>(
+(NOT(ISBLANK([Opportunity].Primary_Quote_Type__c))
+||
+ISCHANGED([Opportunity].Primary_Quote__c)
+))
+&amp;&amp;
+NOT
+(
+ISBLANK([Opportunity].Primary_Quote_Type__c) ||
+ISPICKVAL([Opportunity].StageName, &apos;6.Closed&apos;) ||
+ISPICKVAL([Opportunity].ForecastStatus__c, &apos;0.Booked&apos;) ||
+ISPICKVAL([Opportunity].ForecastStatus__c, &apos;6.Omitted&apos;) ||
+[Opportunity].Pipeline_Validation_Flag__c == false ||
+[Opportunity].AppFoundry_Notification_Sent__c == true ||
+(
+CONTAINS($Profile.Name,&quot;Updates&quot;) ||
+CONTAINS($Profile.Name,&quot;.com&quot;) ||
+CONTAINS($Profile.Name,&quot;MDM Admin&quot;) ||
+CONTAINS($Profile.Name,&quot;g360&quot;) ||
+CONTAINS($Profile.Name,&quot;API&quot;) ||
+CONTAINS($Profile.Name,&quot;User&quot;) ||
+CONTAINS($Profile.Name,&quot;Integration&quot;) ||
+CONTAINS($Profile.Name, &apos;System Admin&apos;) ||
+CONTAINS($Profile.Name, &apos;Data Admin&apos;)))
+
+
+</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_1</name>
+        <dataType>Boolean</dataType>
+        <expression>(
+(NOT(ISBLANK({!myVariable_current.Primary_Quote_Type__c}))
+||
+ISCHANGED({!myVariable_current.Primary_Quote__c})
+))
+&amp;&amp;
+NOT
+(
+ISBLANK({!myVariable_current.Primary_Quote_Type__c}) ||
+ISPICKVAL({!myVariable_current.StageName}, &apos;6.Closed&apos;) ||
+ISPICKVAL({!myVariable_current.ForecastStatus__c}, &apos;0.Booked&apos;) ||
+ISPICKVAL({!myVariable_current.ForecastStatus__c}, &apos;6.Omitted&apos;) ||
+{!myVariable_current.Pipeline_Validation_Flag__c} == false ||
+{!myVariable_current.AppFoundry_Notification_Sent__c} == true ||
+(
+CONTAINS({!$Profile.Name},&quot;Updates&quot;) ||
+CONTAINS({!$Profile.Name},&quot;.com&quot;) ||
+CONTAINS({!$Profile.Name},&quot;MDM Admin&quot;) ||
+CONTAINS({!$Profile.Name},&quot;g360&quot;) ||
+CONTAINS({!$Profile.Name},&quot;API&quot;) ||
+CONTAINS({!$Profile.Name},&quot;User&quot;) ||
+CONTAINS({!$Profile.Name},&quot;Integration&quot;) ||
+CONTAINS({!$Profile.Name}, &apos;System Admin&apos;) ||
+CONTAINS({!$Profile.Name}, &apos;Data Admin&apos;)))</expression>
+    </formulas>
+    <interviewLabel>AppFoundry_Closed_Opp_Notification-24_InterviewLabel</interviewLabel>
+    <label>AF - Closed Opp Notification Bln</label>
+    <processMetadataValues>
+        <name>ObjectType</name>
+        <value>
+            <stringValue>Opportunity</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>ObjectVariable</name>
+        <value>
+            <elementReference>myVariable_current</elementReference>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OldObjectVariable</name>
+        <value>
+            <elementReference>myVariable_old</elementReference>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>TriggerType</name>
+        <value>
+            <stringValue>onAllChanges</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Workflow</processType>
+    <startElementReference>myDecision</startElementReference>
+    <status>Active</status>
+    <variables>
+        <name>myVariable_current</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+        <objectType>Opportunity</objectType>
+    </variables>
+    <variables>
+        <name>myVariable_old</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Opportunity</objectType>
+    </variables>
+</Flow>

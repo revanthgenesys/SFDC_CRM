@@ -1,0 +1,238 @@
+<apex:page controller="GuManageNewContactsController" cache="false" >
+    <apex:includeScript value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/js/jquery-1.10.2.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/js/jquery-ui-1.10.4.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.min.css')}"/>
+     <script>
+        function DisableButton(recordNumber) {
+            var btn = document.getElementById("myPage:formId:PendingPageBlock:pendingTable:"+ recordNumber + ":createPageBlock:createButtons:CreateContactSubmit");
+            btn.disabled = true;
+            btn.className = "btnDisabled";
+        }
+        
+        function enableButton(recordNumber) {
+            var btn = document.getElementById("myPage:formId:PendingPageBlock:pendingTable:"+ recordNumber + ":createPageBlock:createButtons:CreateContactSubmit");
+            btn.disabled = false;
+            btn.className = "btn";  
+        }
+        
+        function DisableButtonForUpdate(recordNumber) {
+            alert(recordNumber);
+            var btn = document.getElementById("myPage:formId:PendingPageBlock:pendingTable:"+ recordNumber + ":updatePageBlock:updateButtons:updateContactSubmit");
+            btn.disabled = true;
+            btn.className = "btnDisabled";
+        }
+        
+        function enableButtonForUpdate(recordNumber) {
+            //alert(recordNumber);
+            var btn = document.getElementById("myPage:formId:PendingPageBlock:pendingTable:"+ recordNumber + ":updatePageBlock:updateButtons:updateContactSubmit");
+            btn.disabled = false;
+            btn.className = "btn";  
+        }
+    
+        var $j = jQuery.noConflict();
+        function closePopup(obj){
+            $j(getHtmlId(obj)).css({ 'display': "none" });
+        }
+        
+        function getHtmlId(componentId){
+        	//alert(componentId);
+            return '#'+componentId.replace(/(:|\.)/g, '\\\\$1');
+        }
+        
+        function showCreateNewContact(object,componentId){
+	        //alert(componentId);
+            $j(getHtmlId(object)).css({ 'display': "block" });
+           //alert('g');
+           var ele = document.getElementsByName(componentId);
+           //alert(ele);
+           for(var i=0;i<ele.length;i++)
+              ele[i].checked = false;
+    	}
+    </script>    
+	<style type="text/css">
+		.hidePanel {display:none}
+		.popupNewContact {
+        	border: 2px solid #c2c2c2; 
+            background-color: #FFFFFF;  
+            border-radius: 10px;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 800px;
+            margin-left: -310px;
+            top:200px;
+		}
+       .close-btn { 
+            border: 3px solid #CC0000;
+            position: relative;
+            padding: 1px 5px;
+            top: -20px;
+            background-color: #CC0000;
+            left: 795px;
+            border-radius: 3px;
+        }
+        .activeTab {font-size:13px;}
+        .inActiveTab {font-size:13px;}
+    </style>
+    <apex:form >
+            <apex:tabPanel switchType="server" value="{!selectedTab}" id="GuContactsTabPanel">
+                <apex:tab label="Pending Contacts" name="pendingContacts" id="pendingContacts">
+                    <apex:pageMessage summary="No GU New Contact records to display." severity="Info" strength="2" rendered="{!currentUnprocessedContacts.size == 0}" />
+                    <apex:pageBlock title="GU New Contacts (Pending)" id="PendingPageBlock" rendered="{!currentUnprocessedContacts.size > 0}">
+                        <apex:pageBlockButtons >
+                                <font size="1pt">
+                                    Records
+                                    &nbsp;<apex:outputLabel value="{!unproStartRecord}" />&nbsp;
+                                    to
+                                    &nbsp;<apex:outputLabel value="{!unproEndRecord}" />&nbsp;
+                                    of
+                                    &nbsp;<apex:outputLabel value="{!unproTotalRecords}" />
+                                    &nbsp;&nbsp; | &nbsp;&nbsp;
+                                </font>
+                                <font size="1pt">
+                                    Page
+                                    &nbsp;<apex:outputLabel value="{!unproPageNumber}"/>&nbsp;
+                                    of
+                                    &nbsp;<apex:outputLabel value="{!unproTotalPages}"/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                </font>
+							<apex:commandButton value="<< First" action="{!unproFirstBtnClick}" disabled="{!disableUnproFirst}" reRender="PendingPageBlock"/>
+                            <apex:commandButton value="< Previous" action="{!unproPreviousBtnClick}" disabled="{!disableUnproPrevious}" reRender="PendingPageBlock"/>
+							<apex:commandButton value="Next >" action="{!unproNextBtnClick}" disabled="{!disableUnproNext}" reRender="PendingPageBlock"/>
+							<apex:commandButton value="Last >>" action="{!unproLastBtnClick}" disabled="{!disableUnproLast}" reRender="PendingPageBlock"/>
+                            
+                        </apex:pageBlockButtons>
+                        <apex:pageBlockTable value="{!currentUnprocessedContacts}" var="g" rendered="{!currentUnprocessedContacts.size > 0}" id="pendingTable">
+                            <apex:column value="{!g.guContact.FirstName__c}"/>
+                            <apex:column value="{!g.guContact.LastName__c}"/>
+                            <apex:column value="{!g.guContact.Account__c}"/>
+                            <apex:column value="{!g.guContact.Email__c}"/>
+                            <apex:column value="{!g.guContact.GARN__c}"/>
+                            <apex:column headerValue="Matching Contact Found">
+                            	<apex:inputcheckbox value="{!g.isExistingContact}" disabled="true"/>
+                        	</apex:column>
+                            <apex:column value="{!g.guContact.Processed__c}"/>
+                            <apex:column value="{!g.guContact.ViewCentral_ID__c}"/>
+                        
+                            <apex:column headerValue="Create New Contact" id="createNewColumn">
+                                <apex:commandButton value="Create New Contact" disabled="{!g.isExistingContact}" onclick="showCreateNewContact('{!$Component.createNewContact}','CreateSelectRadio')" reRender="false"/>
+                           
+                                <apex:outputPanel id="createNewContact" layout="block" styleClass="hidePanel">
+                                    <apex:outputPanel styleClass="popupNewContact" layout="block" id="newContactPanel1">
+                                        <span class="close-btn"><a href="#" onclick="closePopup('{!$Component.createNewContact}')" >X</a></span>
+                                        <center><apex:outputLabel value="List of Matching Accounts" style="color:#CC0000;font-weight:bold;"></apex:outputLabel></center> <br/>                           
+                                        <apex:pageBlock id="createPageBlock">
+                                            <apex:actionStatus startText="(Please wait...)" stopText="" id="createCounterStatus" />
+                                            
+                                            <apex:pageBlockTable value="{!g.garnAccounts}" var="garnAcc" id="CreateContacttable1">
+                                                
+                                                <apex:column headerValue="Select Account">
+                                                    <input type="radio" name="CreateSelectRadio" id="radio">
+                                                        <apex:actionSupport event="onclick" action="{!getSelected}" reRender="CreateContactSubmit"  status="createCounterStatus"> 
+                                                            <apex:param name="selectedGU" value="{!g.guContact.Id}"/>
+                                                            <apex:param name="selectedAccount" value="{!garnAcc.Id}"/> 
+                                                        </apex:actionSupport>
+                                                    </input>
+                                                </apex:column>
+                                                
+                                                <apex:column headerValue="Account Name">
+                                                    <apex:outputLink value="/{!garnAcc.Id}">{!garnAcc.Name}</apex:outputLink>
+                                                </apex:column>
+                                                <apex:column value="{!garnAcc.SAP_Account_Code__c}"/>
+                                                <apex:column headerValue="Record Type" value="{!garnAcc.RecordType.Name}"/>
+                                                <apex:column value="{!garnAcc.Country__c}"/>
+                                                <apex:column value="{!garnAcc.Subsidary__c}"/>
+                                                <apex:column value="{!garnAcc.Type}"/>
+                                                <apex:column headerValue="Account Owner" value="{!garnAcc.Owner.Name}"/>
+                                                <apex:column value="{!garnAcc.Status__c}"/>
+                                            </apex:pageBlockTable>  
+                                        
+                                            <apex:pageBlockButtons id="createButtons" location="top" >
+                                                <apex:commandButton value="Submit" action="{!createContact}" id="CreateContactSubmit" disabled="{!selectedGURecordId == NULL}"/>
+                                                <apex:commandButton value="Back" action="{!back}"/>
+                                            </apex:pageBlockButtons>
+                                        </apex:pageBlock>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                        	</apex:column>
+                        	<apex:column headerValue="Update Existing Contact">
+	                            <apex:commandButton value="Update Existing Contact"  onclick="showCreateNewContact('{!$Component.updateExistingContact}','UpdateSelectRadio')" reRender="false" disabled="{!g.isExistingContact == false}"/>
+    	                        <apex:outputPanel id="updateExistingContact" layout="block" styleClass="hidePanel">
+                                <apex:outputPanel styleClass="popupNewContact" layout="block">
+                                    <span class="close-btn"><a href="#" onclick="closePopup('{!$Component.updateExistingContact}')" >X</a></span>
+                                    <center><apex:outputLabel value="List of Matching Contacts" style="color:#CC0000;font-weight:bold;"></apex:outputLabel></center> <br/>                           
+                                    <apex:pageBlock mode="" id="updatePageBlock">
+                                        <apex:actionStatus startText="(Please wait...)" stopText="" id="updateCounterStatus"/>
+                                        <apex:pageBlockTable value="{!g.existingContacts}" var="mc" id="updatePageBlockTable">
+                                            <apex:column headerValue="Select Contact">
+                                                <input type="radio" name="UpdateSelectRadio" id="radio">
+                                                <!--<apex:actionSupport event="onclick" action="{!getSelected}" reRender="false" onsubmit="DisableButtonForUpdate('{!g.recordNo}')" oncomplete="enableButtonForUpdate('{!g.recordNo}')" status="updateCounterStatus">-->
+                                                <apex:actionSupport event="onclick" action="{!getSelected}" reRender="updateContactSubmit" status="updateCounterStatus">
+                                                    <apex:param name="selectedGU" value="{!g.guContact.Id}"/>
+                                                    <apex:param name="selectedContact" value="{!mc.Id}"/>
+                                                </apex:actionSupport>
+                                                </input>
+                                            </apex:column>
+                                            <apex:column headerValue="First Name">
+                                                <apex:outputLink value="/{!mc.Id}">{!mc.FirstName}</apex:outputLink>
+                                            </apex:column>
+                                            <apex:column headerValue="Last Name" value="{!mc.LastName}"/>
+                                            <apex:column headerValue="Email" value="{!mc.email}"/>
+                                        	<apex:column headerValue="Status" value="{!mc.Status__c}"/>
+                                            <apex:column headerValue="Account Name" value="{!mc.Account.Name}"/>
+                                            <apex:column headerValue="Account GARN" value="{!mc.Account.SAP_Account_Code__c}"/>
+                                            <apex:column headerValue="Account Record Type" value="{!mc.Account.RecordType.Name}"/>
+                                        </apex:pageBlockTable>  
+                                        <apex:pageBlockButtons id="updateButtons" location="top">
+                                            <apex:commandButton value="Submit" action="{!updateContact}" id="updateContactSubmit" disabled="{!selectedGURecordId == NULL}"/>
+                                            <apex:commandButton value="Back" action="{!back}"/>
+                                        </apex:pageBlockButtons>
+                                    </apex:pageBlock>
+                                </apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:column>
+                    </apex:pageBlockTable>
+			        </apex:pageBlock>
+                </apex:tab>
+                <apex:tab label="Processed Contacts" name="processedContacts" id="processedContacts">
+                    <apex:pageMessage summary="No GU New Contact records to display." severity="Info" strength="2" rendered="{!currentProcessedContacts.size == 0}" />
+                    <apex:pageBlock title="GU New Contacts (Processed)" id="ProcessedPageBlock" rendered="{!currentProcessedContacts.size > 0}" >
+						<apex:pageBlockButtons >
+                                <font size="1pt">
+                                    Records
+                                    &nbsp;<apex:outputLabel value="{!proStartRecord}" />&nbsp;
+                                    to
+                                    &nbsp;<apex:outputLabel value="{!proEndRecord}" />&nbsp;
+                                    of
+                                    &nbsp;<apex:outputLabel value="{!proTotalRecords}" />
+                                    &nbsp;&nbsp; | &nbsp;&nbsp;
+                                </font>
+                                <font size="1pt">
+                                    Page
+                                    &nbsp;<apex:outputLabel value="{!proPageNumber}"/>&nbsp;
+                                    of
+                                    &nbsp;<apex:outputLabel value="{!proTotalPages}"/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                </font>
+							<apex:commandButton value="<< First" action="{!proFirstBtnClick}" disabled="{!disableProFirst}" reRender="ProcessedPageBlock"/>
+                            <apex:commandButton value="< Previous" action="{!proPreviousBtnClick}" disabled="{!disableProPrevious}" reRender="ProcessedPageBlock"/>
+							<apex:commandButton value="Next >" action="{!proNextBtnClick}" disabled="{!disableProNext}" reRender="ProcessedPageBlock"/>
+							<apex:commandButton value="Last >>" action="{!proLastBtnClick}" disabled="{!disableProLast}" reRender="ProcessedPageBlock"/>
+                            
+                        </apex:pageBlockButtons>
+
+                        <apex:pageBlockTable value="{!currentProcessedContacts}" var="p" >
+                            <apex:column value="{!p.FirstName__c}"/>
+                            <apex:column value="{!p.LastName__c}"/>
+                            <apex:column value="{!p.Account__c}"/>
+                            <apex:column value="{!p.Email__c}"/>
+                            <apex:column value="{!p.GARN__c}"/>
+                            <apex:column value="{!p.ViewCentral_ID__c}"/>
+                            <apex:column value="{!p.Processed__c}"/>
+                        </apex:pageBlockTable>
+			        </apex:pageBlock>
+                </apex:tab>
+            </apex:tabPanel>
+    </apex:form>
+</apex:page>

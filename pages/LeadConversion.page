@@ -1,0 +1,463 @@
+<apex:page standardController="lead" extensions="clsLeadConversion" tabStyle="Lead" title="Lead Conversion">
+<script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+  <script type="text/javascript">
+    var j$ = jQuery.noConflict();
+    
+    var isOpportunity = true;
+    
+    j$(document).ready(function(){
+      j$('.clsOpportunityChk').change(function(){
+         if(j$('.clsOpportunityChk').is(':checked') == true)
+            isOpportunity = false;
+         else
+            isOpportunity = true;   
+      });
+    });
+    
+    function CheckRequiredFields()
+    {
+       var objRetrn = true;
+       var sAlertMsg = 'Please select ';
+       var arrRequiredFields = new Array();
+       if(j$('.clsOpportunityChk').is(':checked') == false)
+       {
+         /*if(j$('.clsMobile').val() == '' || j$('.clsMobile').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Mobile No');
+         }
+         
+         if(j$('.clsPlatformType').val() == '' || j$('.clsPlatformType').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Platform Type');
+         }
+         if(j$('.clsOfferingType').val() == '' || j$('.clsOfferingType').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Offering Type');
+         }
+         */
+         if(j$('.clsLeadOffer').val() == '' || j$('.clsLeadOffer').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Lead Offer');
+         }
+          if(j$('.clscurrencycode').val() == '' || j$('.clscurrencycode').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Lead Currency');
+         }
+        /* if(j$('.clsOppSource').val() == '' || j$('.clsOppSource').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Opportunity Source');
+         }*/
+         if(j$('.clsOppType').val() == '' || j$('.clsOppType').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Opportunity Type');
+         }
+          if(j$('.clsDirectIndirectSale').val() == '' || j$('.clsDirectIndirectSale').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Direct/Indirect Sale');
+         }
+         
+         if(j$('.clsPrimSolutn').val() == '' || j$('.clsPrimSolutn').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Primary Solution');
+         }
+         if(j$('[id$=OppProducts]').val() == '' || j$('[id$=OppProducts]').val() == null)
+         {
+           objRetrn = false;
+           arrRequiredFields.push('Products');
+         }
+         
+         for(var i=0;i<arrRequiredFields.length;i++)
+         {
+           if(i == arrRequiredFields.length -1)
+             sAlertMsg += arrRequiredFields[i] + '.';
+           else
+            sAlertMsg += arrRequiredFields[i]+ ',';
+         }
+         if(objRetrn == false)
+           alert(sAlertMsg);
+       }
+       
+       
+       /* Opportunity validations*/
+      if(objRetrn == true)
+      { 
+       var arrSelectedPlatType =  j$('.clsPlatformType').val();
+        var IsContains = false;
+        var IsOnPremise = false;
+        var objRetrn = true;
+        
+        for(var i=0;i<arrSelectedPlatType.length;i++) 
+        {
+          if(arrSelectedPlatType[i] == 'On Premise')
+          {
+            
+            IsOnPremise = true;
+            var sOfferType = j$('.clsOfferingType').val();
+            if(sOfferType.indexOf('PureConnect') != -1 || sOfferType.indexOf('PureEngage') != -1 || sOfferType.indexOf('Subscription') != -1)
+              IsContains = true;
+          }
+        }
+        if(IsContains == false && IsOnPremise == true)
+        {
+          objRetrn = false;
+          alert('Please Select Only PureConnect or PureEngage or Subscription for Premise Platform.');
+        }
+      }
+       
+       
+       return objRetrn;
+    }
+    
+    
+  </script> 
+
+  <apex:form >
+  
+   <table style="margin-top:10px;">
+   <tr><td colspan="2"><apex:image value="/s.gif" styleClass="pageTitleIcon" title="Lead" alt="Lead" style="background-position:0 -1166px;width: 32px;height: 32px;margin-top: 5px;" />
+         <table>
+           <tr><td><b>Convert Lead</b></td></tr>
+           
+           <tr><td class="pageDescription" style="font-size: 1.8em;font-weight: normal;line-height: 1.1em;">
+                 {!leadConvert.FirstName} &nbsp; {!leadConvert.LastName}
+           </td></tr>
+         </table>
+   </td></tr>
+   <tr><td style="width:100%">
+        Leads can be converted to accounts, contacts, opportunities, and followup tasks.
+        You should only convert a lead once you have identified it as qualified.
+        After this lead has been converted, it can no longer be viewed or edited as a lead, but can be viewed in lead reports.
+    </td>
+    <td style="width:50%"></td>
+    </tr></table>
+
+    <apex:pageBlock >
+    <apex:pageBlockButtons >
+      <apex:commandButton value="Convert" action="{!convertLeadDtl}" onclick="return CheckRequiredFields();"/>
+      <apex:commandButton value="Cancel" action="/{!leadConvert.id}" />
+    </apex:pageBlockButtons>
+    <apex:pageMessages />
+     <apex:pageBlockSection title="Convert Lead" columns="1">
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Record Owner" />
+        <apex:inputField required="false" value="{!leadConvert.ownerid}" id="RecordOwner" />
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Send Email to the Owner" />
+         <apex:inputCheckbox value="{!sendOwnerEmail}"/>
+       </apex:pageblockSectionItem>
+       
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Account Name" />
+         <apex:outputPanel styleClass="requiredInput" id="block">
+                <div class="requiredBlock"></div>
+                <apex:selectList value="{!selectedAccount}" size="1" 
+                    multiselect="false" id="accountList">
+                    
+                    <apex:actionSupport event="onchange" 
+                        action="{!accountChanged}" 
+                        rerender="opportunityName, ViewLink"
+                         />     
+                    <apex:selectOptions value="{!accounts}"/>
+                    
+                </apex:selectList>
+                
+                <!--  Account lookup to add existing accounts to the picklist -->
+                <apex:inputField styleClass="hiddenInput" 
+                value="{!contactId.AccountId}" id="accountId" >
+                    
+                    <!-- When an account is looked up, it is added to the select list -->                            
+                    <apex:actionSupport event="onchange" 
+                        action="{!accountLookedUp}" 
+                        rerender="accountList, opportunityName, ViewLink"
+                         />
+                        
+                </apex:inputField>
+                
+                <!-- This is a link which shows a view of the selected account in a new pop up window -->                
+                <apex:commandLink id="ViewLink"  value="View"
+                    onclick="javascript:if ('{!selectedAccount}' != 'NEW' && '{!selectedAccount}' != 'NONE' ) {var newWindow = window.open('/{!selectedAccount}/p', 'accountview', 'top=40, left=40,scrollbars=yes, height=450, width=800');newwindow.focus();} else {alert('You can only view existing accounts.');}"
+                />
+                
+            </apex:outputPanel>
+       </apex:pageblockSectionItem>
+       <apex:pageBlockSectionItem />
+       
+       <!-- Opportunity section -->
+        <apex:pageBlockSectionItem id="oppSection" >
+          <apex:outputLabel value="" />
+          <apex:outputPanel id="oppPanelMain" >
+          
+              <apex:outputPanel layout="block" styleClass="requiredInput">
+                    <apex:outputPanel layout="block" />
+                     <!-- Checkbox indicating whether to create an Opportunity -->
+                     <apex:inputCheckbox value="{!doNotCreateOppty}" id="doNotCreateOppty" styleClass="clsOpportunityChk">
+                        <apex:actionSupport event="onchange" rerender="opportunityPanel"/>
+                     </apex:inputCheckbox>
+                         Do not create a new opportunity upon conversion.
+              </apex:outputPanel>
+              <br></br>
+              <apex:outputPanel id="oppPanel" >
+                <b> <apex:outputLabel value="Opportunity Details" for="opportunityName" /></b>
+              </apex:outputPanel>
+              <apex:outputPanel id="opportunityPanel" layout="block" style="width:850px;">
+                 <apex:outputPanel rendered="{!NOT(doNotCreateOppty)}" styleClass="requiredInput" id="block" >
+                    <div class="requiredBlock"></div>
+                    <!-- Opportunity Name -->
+                    <apex:pageblock >
+                     <apex:pageBlockSection columns="1">
+                        <apex:inputField required="false" value="{!opportunityID.Name}" id="opportunityName"/>
+                        <!--<apex:inputField required="false" value="{!leadConvert.mobilePhone}" id="mobile" styleClass="clsMobile"/>-->
+                        <apex:inputField required="false" value="{!leadConvert.Opportunity_Type__c}" id="OppType" styleClass="clsOppType"/>
+                        <apex:inputField required="false" value="{!leadConvert.Lead_Offer__c}" id="LeadOffer" styleClass="clsLeadOffer"/>
+                        <!--
+                        <apex:inputField required="false" value="{!leadConvert.Primary_Line_of_Business__c}" id="PlatformType" styleClass="clsPlatformType"/>
+                         <apex:inputField required="false" value="{!leadConvert.Lines_of_Businesses__c}" id="OfferingType" styleClass="clsOfferingType"/>
+                        <apex:inputField required="false" value="{!leadConvert.PricingType__c}" id="PricingType" styleClass="clsOppType"/>
+                        <apex:inputField required="false" value="{!leadConvert.Contractual_obligation__c}" id="Cont_obligation" styleClass="clsOppType"/>-->
+                       <!-- <apex:inputField required="false" value="{!leadConvert.Opportunity_Source__c}" id="OppSource" styleClass="clsOppSource"/>-->
+                        <apex:inputField required="false" value="{!leadConvert.currencyisocode}" id="currency" styleClass="clscurrencycode"/>                                         
+                        <apex:inputField required="false" value="{!leadConvert.Sold_To_Country__c}" id="SoldToCountry" />
+                        <apex:inputField required="false" value="{!leadConvert.Opportunity_Source__c}" id="OpportunitySource" />
+                        <apex:inputField value="{!leadConvert.Direct_Indirect_Sale__c}" id="DirectIndirectSale" styleClass="clsDirectIndirectSale"/>
+                        <apex:inputField required="false" value="{!leadConvert.Primary_Solution__c}" id="PrimarySolution" styleClass="clsPrimSolutn"/>
+                        <apex:inputField required="false" value="{!leadConvert.Products__c}" id="OppProducts" styleClass="clsOppProducts"/>
+                        <!-- <apex:inputField required="false" value="{!leadConvert.LeadDevelopmentRep__c}" id="LeadDevelopmentRep" styleClass="clsLeadDevelopmentRep"/>-->
+                         <apex:inputField required="false" value="{!leadConvert.Campaign_Source__c}" id="OppCampaign_Source" styleClass="clsCampaign_Source"/>
+                        
+                      </apex:pageBlockSection>  
+                    </apex:pageblock>
+                 </apex:outputPanel>
+                 <!--  This is only shown if the Do Not Create Opportunity is true -->    
+                 <apex:inputText disabled="true" rendered="{!doNotCreateOppty}"  value="{!opportunityID.Name}" id="opportunityNameDisabled"/>
+             </apex:outputPanel>  
+                  
+           </apex:outputPanel> 
+        </apex:pageBlockSectionItem>
+        
+       <!-- Converted Status -->
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Converted Status" for="leadStatus" />
+            <apex:outputPanel styleClass="requiredInput" layout="block">
+                <div class="requiredBlock"></div>
+                <apex:selectList id="LeadStatusList" size="1" 
+                    value="{!LeadToConvert.Status}" multiselect="false" required="true">
+                    <apex:selectOptions value="{!LeadStatusOption}"/>
+                </apex:selectList> 
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+       
+     </apex:pageBlockSection>
+     
+     
+     <apex:pageBlockSection title="Task Information" columns="2">
+       <!-- Task Subject -->
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Subject" for="taskSubject" />
+            <apex:outputPanel layout="block"><!--styleClass="requiredInput"-->
+                <!--<div class="requiredBlock"></div>-->
+                <apex:inputField id="taskSubject" value="{!taskId2.Subject}"  required="false"/>
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+        
+        <apex:pageblockSectionItem >
+         <!-- Task Due Date -->
+         <apex:outputLabel value="Due Date" />
+        <apex:inputField id="taskDueDate" value="{!taskId2.ActivityDate}" >
+           
+            <apex:actionSupport event="onchange"  action="{!dueDateChanged}" rerender="ReminderCalendar"/>
+        </apex:inputField>
+       </apex:pageblockSectionItem>
+
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Task EMG Id" />
+         <apex:inputField id="taskLegTaskEMG" value="{!taskId2.Legacy_Task_EMG_Id__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+        
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Event EMG Id" />
+         <apex:inputField id="taskLegEventEMG" value="{!taskId2.Legacy_Event_EMG_Id__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+        
+        
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy WhoId" />
+         <apex:inputField id="taskLegWhoId" value="{!taskId2.Legacy_WhoId__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+        
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy WhatId" />
+         <apex:inputField id="taskLegWhatId" value="{!taskId2.Legacy_WhatId__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+        
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy OwnerId" />
+         <apex:inputField id="taskLegOwnerId" value="{!taskId2.Legacy_OwnerId__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+        
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy AccountId" />
+         <apex:inputField id="taskLegAccountId" value="{!taskId2.Legacy_AccountId__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+        
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Recorded Comments" />
+         <apex:inputField id="taskLegRecComm" value="{!taskId2.Legacy_Recorded_Comments__c}"  required="false" />
+       </apex:pageblockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+        
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Sub Code" />
+         <apex:inputField id="taskLegSubCode" value="{!taskId2.Legacy_Sub_Code__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       <apex:pageBlockSectionItem >
+        </apex:pageBlockSectionItem>
+
+     </apex:pageBlockSection>
+     
+     
+     <apex:pageBlockSection title="Telesales / Telemarketing Tasks Information" columns="2">
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Activity Type" />
+         <apex:inputField id="taskActivityType" value="{!taskId2.Activity_Type__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Call Category" />
+         <apex:inputField id="taskCallCateg" value="{!taskId2.Call_Category__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Comments" />
+         <apex:inputField id="taskComments" value="{!taskId2.Description}"  required="false" style="width:500px;height:100px;"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Activity Category" />
+         <apex:inputField id="taskActCateg" value="{!taskId2.TypeOfTask__c}"  required="false"/>
+       </apex:pageblockSectionItem>
+     </apex:pageBlockSection>
+     
+     
+     <apex:pageBlockSection title="Additional Information">
+       <!-- Task Status -->
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Status" for="TaskStatusList" />
+            <apex:outputPanel styleClass="requiredInput" layout="block">
+                <div class="requiredBlock"></div>
+                <apex:selectList id="TaskStatusList" size="1" value="{!taskId2.Status}" multiselect="false" required="true">
+                    <apex:selectOptions value="{!TaskStatusOption}"/>
+                </apex:selectList>
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+       <!-- Task Priority -->
+        <apex:outputLabel value="" />        
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Priority" for="TaskPriorityList" />
+            <apex:outputPanel styleClass="requiredInput" layout="block">
+                <div class="requiredBlock"></div>
+                <apex:selectList id="TaskPriorityList" size="1" value="{!taskId2.Priority}" multiselect="false" required="true">
+                    <apex:selectOptions value="{!TaskPriorityOption}"/>
+                </apex:selectList>
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+     </apex:pageBlockSection>
+     
+     <apex:pageBlockSection title="Legacy Id" columns="2">
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Created By" />
+         <apex:inputField value="{!leadConvert.LegacyCreatedBy__c}"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Created Date" />
+         <apex:inputField value="{!leadConvert.LegacyCreatedDate__c}"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Last Modified By" />
+         <apex:inputField value="{!leadConvert.Legacy_Last_Modified_By__c}"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Last Modified Date" />
+         <apex:inputField value="{!leadConvert.Legacy_Last_Modified_Date__c}"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Activity Id" />
+         NA
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Source" />
+         <apex:inputField value="{!leadConvert.LeadSource}"/>
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Legacy Task Id" />
+         NA
+       </apex:pageblockSectionItem>
+       <apex:pageblockSectionItem >
+         <apex:outputLabel value="Task Record Type" />
+         <!--<apex:outputLabel id="taskRecType" value="{!taskId2.RecordTypeid}" />-->
+         <apex:outputLabel value="EMG - Task - Generic Record Type" />
+       </apex:pageblockSectionItem>
+     </apex:pageBlockSection>
+     
+    <!-- Task Reminder Section -->    
+    <apex:pageBlockSection id="ReminderBlockSection" title="Task Reminder" collapsible="no" columns="1">
+        <apex:pageBlockSectionItem id="ReminderBlockSectionItem">
+            
+            <!-- Task Reminder indicates whether a reminder should be set -->
+            <apex:outputLabel value="Reminder" for="isReminderSet" />
+            <apex:outputPanel id="reminderPanel" styleClass="ReminderPanelClass"  layout="block">
+            
+                <apex:inputField value="{!taskId2.IsReminderSet}" id="isReminderSet">
+                    <apex:actionSupport event="onchange"   rerender="reminderPanel"/>
+                </apex:inputField>
+                
+                <!-- Task Reminder Date (only shown if the Reminder is checked) -->  
+                <apex:inputField rendered="{!taskId2.IsReminderSet}" id="ReminderCalendar" 
+                    value="{!taskId2.ActivityDate}">   
+                                
+                    <apex:actionSupport event="onchange" 
+                        rerender="ReminderCalendar"/>
+                </apex:inputField>
+                
+                <!-- Task Reminder Date (only shown if the Reminder is unchecked) --> 
+               <apex:inputText rendered="{!NOT(taskId2.IsReminderSet)}" 
+                disabled="true" size="11" value="{!disabledActivityDate}" />
+                
+                <!-- Task Reminder Time -->                
+                <apex:selectList disabled="{!NOT(taskId2.IsReminderSet)}"  id="ReminderTimeList" size="1" value="{!reminderTime}" multiselect="false">
+                    <apex:selectOptions value="{!ReminderTimeOption}"/>
+                </apex:selectList>
+                
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+
+     
+    </apex:pageBlock>
+  </apex:form>
+</apex:page>

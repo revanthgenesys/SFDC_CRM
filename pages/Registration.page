@@ -1,0 +1,133 @@
+<apex:page controller="RegistrationController" showHeader="false" id="Registration">
+	<apex:pageMessages />
+	<script type="text/javascript">
+	function validate(){
+		var checkboxVal = document.getElementById('Registration:theform:detailsPblock:contactInfo:agreeTandC').checked;
+		return checkboxVal;
+	}
+	</script>
+	<apex:form id="theform">
+		<apex:pageBlock id="pblock" rendered="{!Not(isValidEmail)}">
+			<p>
+				You are about to request access to the Customer Care Website. 
+				<br /> <br /> Please enter your <b>corporate</b>  email address 
+				to check if you already have access. Please note that for the 
+				security reasons, your user profile must be associated with a 
+				valid corporate email address <b>at your current employer</b>. <br /> <br /> <br />
+				<apex:pageBlockSection >
+					<apex:inputText value="{!email}" label="Email Address"
+						maxlength="80" />
+				</apex:pageBlockSection>
+				<apex:pageBlockButtons location="bottom">
+					<apex:commandButton action="{!submit}" value="Submit" />
+				</apex:pageBlockButtons>
+			</p>
+		</apex:pageBlock>
+		<apex:pageBlock rendered="{!isValidEmail}" >
+			<p style="font-weight: bold; text-align: justify;">To request an
+				account, please provide the contact information below. You will be
+				emailed with login information within two business days, assuming
+				the successfull completion of your contact information review
+				designed to keep your company's data secure. The email address that
+				you submit must be unique (not a group or distribution list alias),
+				and should normally be your business email address at your employer,
+				as opposed to a personal email address.</p>
+		</apex:pageBlock>
+		<apex:pageBlock title="New Account Request" rendered="{!isValidEmail}" id="detailsPblock">
+			<apex:pageBlockSection title="Contact Info" id="contactInfo">
+				<apex:pageBlockSectionItem >
+					<apex:outputpanel >
+						<apex:selectList required="true" value="{!selectedSalutation}"
+							size="1">
+							<apex:selectOptions value="{!salutations}" />
+						</apex:selectList>
+						<apex:outputlabel >First Name</apex:outputlabel>
+					</apex:outputpanel>
+					<apex:outputpanel layout="block" styleClass="requiredInput">
+						<apex:outputpanel layout="block" styleClass="requiredBlock" />
+						<apex:inputText required="{isValidEmail}" value="{!firstName}" />
+					</apex:outputpanel>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem >
+					<apex:outputlabel >Last Name</apex:outputlabel>
+					<apex:outputpanel layout="block" styleClass="requiredInput">
+						<apex:outputpanel layout="block" styleClass="requiredBlock" />
+						<apex:inputText required="{isValidEmail}" value="{!lastName}" />
+					</apex:outputpanel>
+				</apex:pageBlockSectionItem>
+				<apex:PageBlockSectionItem >
+					<apex:outputlabel >Email</apex:outputlabel>
+					<apex:outputpanel layout="block" styleClass="requiredInput">
+						<apex:outputpanel layout="block" styleClass="requiredBlock" />
+						<apex:outputText value="{!email}" label="Email" />
+					</apex:outputpanel>
+				</apex:PageBlockSectionItem>
+				<apex:selectList required="true" value="{!selectedType}" size="1"
+					label="Case Reason">
+					<apex:selectOptions value="{!types}" />
+				</apex:selectList>
+				<apex:inputText value="{!alternateEmail}" label="Alternate Email" />
+				<apex:PageBlockSectionItem >
+					<apex:outputlabel >Company Name</apex:outputlabel>
+					<apex:outputpanel layout="block" styleClass="requiredInput">
+						<apex:outputpanel layout="block" styleClass="requiredBlock" />
+						<apex:inputText value="{!companyName}" />
+					</apex:outputpanel>
+				</apex:PageBlockSectionItem>
+				<apex:inputText value="{!addrLine1}" label="Address Line1" />
+				<apex:inputText value="{!addrLine2}" label="Address Line2" />
+				<apex:inputText value="{!city}" label="City" />
+				<apex:selectList required="true" value="{!selectedStateProvince}"
+					size="1" label="State/Province">
+					<apex:selectOptions value="{!stateProvince}" />
+				</apex:selectList>
+				<apex:PageBlockSectionItem >
+					<apex:outputlabel >Country</apex:outputlabel>
+					<apex:outputpanel layout="block" styleClass="requiredInput">
+						<apex:outputpanel layout="block" styleClass="requiredBlock" />
+						<apex:selectList required="true" value="{!selectedCountry}"
+							size="1">
+							<apex:selectOptions value="{!countries}" />
+						</apex:selectList>
+					</apex:outputpanel>
+				</apex:PageBlockSectionItem>
+				<apex:inputText value="{!zipPostalCode}" label="Zip/Postal Code" />
+				<apex:PageBlockSectionItem >
+					<apex:outputlabel >Business Phone</apex:outputlabel>
+					<apex:outputpanel layout="block" styleClass="requiredInput">
+						<apex:outputpanel layout="block" styleClass="requiredBlock" />
+						<apex:inputText value="{!businessPhone}" />
+					</apex:outputpanel>
+				</apex:PageBlockSectionItem>
+				<apex:inputText value="{!cellularPhone}" label="Cellular Phone" />
+				<apex:inputText value="{!privatePhone}" label="Private Phone" />
+				<apex:inputText value="{!pager}" label="Pager" />
+				<apex:inputText value="{!fax}" label="Fax" />
+				<apex:PageBlockSectionItem >
+					<apex:outputlabel >Preferred Contact Method</apex:outputlabel>
+					<apex:outputpanel layout="block" styleClass="requiredInput">
+						<apex:outputpanel layout="block" styleClass="requiredBlock" />
+						<apex:selectList value="{!selectedContactMethod}" size="1">
+							<apex:selectOptions value="{!prefContactMethod}" />
+						</apex:selectList>
+					</apex:outputpanel>
+				</apex:PageBlockSectionItem>
+				<apex:inputTextarea label="Notes" value="{!notes}" />
+				<apex:outputPanel >
+					<apex:inputCheckbox value="{!agreedTermsAndCond}" id="agreeTandC"/>
+					<apex:outputLink value="http://www.genesyslab.com/support/general-pages/terms-and-conditions.aspx">http://www.genesyslab.com/support/general-pages/terms-and-conditions.aspx)</apex:outputLink>
+					<br/>
+					<apex:outputLabel value="(Please print and retain acceptance of this authorization for your records)" />
+				</apex:outputPanel>
+				<apex:inputhidden />
+				<apex:outputLabel style="color: gray;"
+					value="Note: Your Email Address is where we will send you important product information." />
+			</apex:pageBlockSection>
+			<apex:pageBlockButtons >
+				<apex:commandButton action="{!save}" value="Submit" onclick="if (!validate()) {alert('Please read Terms and Conditions'); return false;}"/>
+				<apex:commandButton value="Cancel" action="{!cancel}" />
+			</apex:pageBlockButtons>
+		</apex:pageBlock>
+	</apex:form>
+
+</apex:page>

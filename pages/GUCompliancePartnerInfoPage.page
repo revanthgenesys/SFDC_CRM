@@ -1,0 +1,638 @@
+<apex:page controller="GUCompliancePartnerInfoController">
+    <head>
+        <link href='http://fonts.googleapis.com/css?family=Oswald:300' rel='stylesheet' type='text/css'/>
+        <link href='http://fonts.googleapis.com/css?family=Shadows+Into+Light+Two' rel='stylesheet' type='text/css'/>
+    </head>
+    <style>
+        .pbTitle {white-space: nowrap}
+        
+        table.gucrTable1 {
+            width: 300px;
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        table.gucrTable1 th {
+            background-color: #D8D8D8;
+            height: 60px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid black;
+            padding: 2px;
+            word-wrap: break-word;
+            white-space: pre-line;
+        }
+        table.gucrTable1 td {
+            border-width: 1px;
+            padding: 0px;
+            height: 20px;
+            vertical-align: middle;
+            text-align: center;
+            border-style: solid;
+            border: 1px solid black;
+            background-color: #ffffff;
+        } 
+        
+        table.gucrTable {
+            width: 100%;
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        table.gucrTable th {
+            background-color: #D8D8D8;
+            height: 60px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid black;
+            padding: 2px;
+            word-wrap: break-word;
+            white-space: pre-line;
+        }
+        table.gucrTable td {
+            border-width: 1px;
+            padding: 0px;
+            height: 20px;
+            vertical-align: middle;
+            text-align: center;
+            border-style: solid;
+            border: 1px solid black;
+            background-color: #ffffff;
+        } 
+        
+        table.gucrInnerTable {
+          border-collapse: collapse;
+        }
+        table.gucrInnerTable td, table th {
+          border: 1px solid black;
+        }
+        table.gucrInnerTable tr:first-child td {
+          border-top: 0;
+        }
+        table.gucrInnerTable tr:last-child td {
+          border-bottom: 0;
+        }
+        table.gucrInnerTable tr td:first-child,
+        table.gucrInnerTable tr th:first-child {
+          border-left: 0;
+        }
+        table.gucrInnerTable tr td:last-child,
+        table.gucrInnerTable tr th:last-child {
+          border-right: 0;
+        }
+        
+        .snote{
+        max-width:100%;
+        background-color:#fff;
+        -webkit-box-pack:center;
+        -webkit-box-align:center;
+        -moz-box-pack:center;
+        -moz-box-align:center;
+        margin: auto;
+        width: 35%;
+        padding: 10px;
+        }
+        
+        .snote h2,p{
+        font-size:80%;
+        font-weight:normal;
+        }
+        
+        .snote ul,li{
+        list-style:none;
+        }
+        
+        .snote ul{
+        overflow:hidden;
+        padding:3em;
+        }
+        
+        .snote ul li{
+        text-decoration:none;
+        color:#000;
+        background:#ffc;
+        display:block;
+        height:22em;
+        width:20em;
+        padding:0.8em;
+        -moz-box-shadow:5px 5px 7px rgba(33,33,33,1);
+        -webkit-box-shadow: 5px 5px 7px rgba(33,33,33,.7);
+        box-shadow: 5px 5px 7px rgba(33,33,33,.7);
+        -webkit-transform:scale(0.89);
+        -o-transform:scale(0.89);
+        -moz-transform: scale(0.89);
+        
+        }
+        
+        .snote ul li a:hover,.snote ul li a:focu
+        }
+        
+        .snote ul li{
+        margin:1em;
+        }
+        
+        .snote ul li h2{
+        font-size:160%;
+        font-weight:bold;
+        padding-bottom:0px;
+        //font-family:Oswald;
+        text-align:center;
+        color:#000;
+        }
+        
+        .snote ul li p{
+        //font-family:'Shadows Into Light Two',arial,sans-serif;
+        font-size:140%;
+        color:#000;
+        }
+    </style>
+    <apex:form id="frm">
+        <apex:outputPanel id="idDummyRefreshPanel">
+        </apex:outputPanel>
+        <apex:pageMessages />
+        <apex:pageBlock title="Compliance Metrics - {!pName} [Tier: {!pTier} | Business Size: {!pSize}]" rendered="{!IF(hasErrors, false, true)}">
+            <apex:pageBlockSection columns="2" id="partnerTypePanel">
+                <apex:outputPanel >
+                    Partner Category: &nbsp;&nbsp;
+                    <apex:selectList value="{!selectedPartnerCategory}" multiselect="false" size="1" >
+                        <apex:selectOptions value="{!partnerCategories}" />
+                        <!--  apex:actionSupport event="onchange" action="{!partnerTypeChanged}" reRender="CertificationsStatsPanel,CertificationDetailsPanel,newSpecializationPanel,idPartnerCategory,TrainingDetailsPanel" status="actionstatusTag"  / -->
+                        <apex:actionSupport event="onchange" action="{!partnerTypeChanged}" reRender="frm" status="actionstatusTag"  />
+                    </apex:selectList>
+                </apex:outputPanel>  
+                <apex:outputLink value="{!URLFOR($Resource.SpecializationDefinition)}" target="_blank" style="font-size:13px;color:blue;float:right;">See Specialization Definitions</apex:outputLink>
+            </apex:pageBlockSection>
+        </apex:pageBlock>   
+        
+        <apex:outputPanel id="CertificationsStatsPanel" rendered="{!IF(hasErrors, false, true)}">
+            <apex:pageBlock rendered="{!IF(selectedPartnerCategory != 'Please Select', true, false)}">
+                <apex:outputPanel >
+                    <TABLE BORDER="0">
+                        <TR>
+                            <TD WIDTH="70%" style="vertical-align: top">
+                                <TABLE class="gucrTable">
+                                    <apex:outputPanel rendered="true">
+                                        <TR>
+                                            <TD colSpan="6"  style="text-align: left; padding-left:1em;">
+                                                <B>
+                                                    Tier: {!pTier} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                    Category: {!selectedPartnerCategory} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+                                                    Size: {!pSize}
+                                                </B>
+                                            </TD>
+                                        </TR>
+                                    </apex:outputPanel>
+                                    <TR>
+                                        <TH WIDTH="40%">Certification Group</TH>
+                                        <TH  WIDTH="10%">C/T</TH>
+                                        <TH  WIDTH="10%">Requirements</TH>
+                                        <TH  WIDTH="10%">Done</TH>
+                                        <TH  WIDTH="10%">Gap</TH>
+                                    </TR>
+                                    <TR>
+                                        <TD style="text-align: left">Trained Sales People</TD>
+                                        <TD>T</TD>
+                                        <TD>{!trainingRequirement}</TD>
+                                        <TD>
+                                            <!--<apex:commandLink action="{!getTrainingDetails}" value="{!litmosTrainingDone}" reRender="CertificationDetailsPanel, TrainingDetailsPanel, newSpecializationPanel, idHelperInfo,currentSpecPanel">-->
+                                            <apex:commandLink action="{!getTrainingDetails}" value="{!trainingDone}" reRender="CertificationDetailsPanel, TrainingDetailsPanel, newSpecializationPanel, idHelperInfo,currentSpecPanel">
+                                                <apex:param name="showTrainingDetails" value="true" assignTo="{!showTrainingDetails}"/>
+                                            </apex:commandLink>
+                                        </TD>
+                                        <TD style="background-color : {!IF(trainingRequirement - trainingDone > 0, '#FA5858', '#ACFA58')}">
+                                            <b>{!IF(trainingRequirement - trainingDone > 0, trainingRequirement - trainingDone, 0 )}</b>
+                                        </TD>
+                                    </TR>                            
+                                    <apex:repeat value="{!data}" var="dataVar">
+                                        <TR>
+                                            <TD style="text-align: left">{!dataVar.groupName}</TD>
+                                            <TD>
+                                                <apex:outputPanel rendered="{!IF( dataVar.groupName != '# of Specializations' && dataVar.certifications.size > 0, true, false)}">
+                                                    <TABLE class="gucrInnerTable" WIDTH="100%">
+                                                        <apex:repeat value="{!dataVar.certifications}" var="certVar">
+                                                             <TR>
+                                                                 <TD>
+                                                                        {!certVar.type} 
+                                                                 </TD>
+                                                            </TR>   
+                                                        </apex:repeat>
+                                                    </TABLE>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!IF( dataVar.groupName == '# of Specializations', true, false)}">
+                                                    C/T
+                                                </apex:outputPanel>
+                                            </TD>
+                                            <TD>
+                                                {!dataVar.requirements}
+                                            </TD>
+                                            <TD>
+                                                <apex:outputPanel rendered="{!IF(dataVar.groupName != '# of Specializations' && dataVar.certifications.size > 0  , true, false)}">
+                                                    <TABLE class="gucrInnerTable" WIDTH="100%">
+                                                        <apex:repeat value="{!dataVar.certifications}" var="certVar">
+                                                             <TR>
+                                                                 <TD>
+                                                                     <apex:commandLink action="{!getCertificationDetails}" value="{!certVar.currentCount}" reRender="CertificationDetailsPanel, TrainingDetailsPanel, newSpecializationPanel, idHelperInfo,currentSpecPanel">
+                                                                         <apex:param name="certificationListTestCode" value="{!certVar.code}" assignTo="{!certificationListTestCode}"/>
+                                                                         <apex:param name="certificationListType" value="CURRENT" assignTo="{!certificationListType}"/>
+                                                                     </apex:commandLink>
+                                                                 </TD>
+                                                            </TR>   
+                                                        </apex:repeat>
+                                                    </TABLE>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!IF( dataVar.groupName == '# of Specializations', true, false)}">
+                                                    <apex:commandLink action="{!fetchcurrentSpecialization}" value="{!dataVar.certifications.size}" rendered="{!dataVar.certifications.size>0}" reRender="CertificationDetailsPanel, newSpecializationPanel, TrainingDetailsPanel, idHelperInfo,currentSpecPanel"/>
+                                                    <apex:outputText value="{!dataVar.certifications.size}" rendered="{!dataVar.certifications.size==0}"/>
+                                                </apex:outputPanel>
+                                            </TD>
+                                            <TD style="background-color : {!IF(dataVar.requirementsGap > 0, '#FA5858', '#ACFA58')}">
+                                                <b>{!dataVar.requirementsGap}</b>
+                                            </TD>
+                                        </TR>
+                                    </apex:repeat>
+                                </TABLE>
+                            </TD>
+                            <TD WIDTH="2%">&nbsp;</TD>
+                            <TD WIDTH="28%" style="vertical-align: top">
+                                <TABLE class="gucrTable">
+                                    <apex:outputPanel rendered="true">
+                                        <TR>
+                                            <TD colSpan="3"  style="text-align: left; padding-left:1em;">
+                                            </TD>
+                                        </TR>
+                                    </apex:outputPanel>
+                                    <TR>
+                                        <TH  WIDTH="34%">Has expired during past 3 month</TH>
+                                        <TH  WIDTH="33%">Will Expire Before 3 month</TH>
+                                        <TH  WIDTH="33%">Will Expire before the end of the year</TH>
+                                    </TR>
+                                    <TR>
+                                        <TD>0</TD>
+                                        <TD>0</TD>
+                                        <TD>0</TD>
+                                    </TR>                            
+                                    <apex:repeat value="{!data}" var="dataVar">
+                                        <apex:outputPanel rendered="{!dataVar.groupName != '# of Specializations'}">
+                                            <TR>
+                                                <TD>
+                                                    <apex:outputPanel rendered="{!IF(dataVar.certifications.size > 0, true, false)}">
+                                                        <TABLE class="gucrInnerTable" WIDTH="100%">
+                                                            <apex:repeat value="{!dataVar.certifications}" var="certVar">
+                                                                <TR>
+                                                                    <TD>
+                                                                        <apex:commandLink action="{!getCertificationDetails}" value="{!certVar.expiredInLast3Months}" reRender="CertificationDetailsPanel, TrainingDetailsPanel, newSpecializationPanel, idHelperInfo,currentSpecPanel">
+                                                                            <apex:param name="certificationListTestCode" value="{!certVar.code}" assignTo="{!certificationListTestCode}"/>
+                                                                            <apex:param name="certificationListType" value="PAST3MONTHS" assignTo="{!certificationListType}"/>
+                                                                        </apex:commandLink>
+                                                                    </TD>
+                                                                </TR>   
+                                                            </apex:repeat>
+                                                        </TABLE>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!IF(dataVar.certifications.size > 0, false, true)}">
+                                                        0
+                                                    </apex:outputPanel>
+                                                </TD>    
+                                                <TD>
+                                                    <apex:outputPanel rendered="{!IF(dataVar.certifications.size > 0, true, false)}">
+                                                        <TABLE class="gucrInnerTable" WIDTH="100%">
+                                                            <apex:repeat value="{!dataVar.certifications}" var="certVar">
+                                                                <TR>
+                                                                    <TD>
+                                                                        <apex:commandLink action="{!getCertificationDetails}" value="{!certVar.expiringInNext3Months}" reRender="CertificationDetailsPanel, TrainingDetailsPanel, newSpecializationPanel, idHelperInfo,currentSpecPanel">
+                                                                            <apex:param name="certificationListTestCode" value="{!certVar.code}" assignTo="{!certificationListTestCode}"/>
+                                                                            <apex:param name="certificationListType" value="NEXT3MONTHS" assignTo="{!certificationListType}"/>
+                                                                        </apex:commandLink>
+                                                                        
+                                                                    </TD>
+                                                                </TR>   
+                                                            </apex:repeat>
+                                                        </TABLE>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!IF(dataVar.certifications.size > 0, false, true)}">
+                                                        0
+                                                    </apex:outputPanel>
+                                                </TD>    
+                                                <TD>
+                                                    <apex:outputPanel rendered="{!IF(dataVar.certifications.size > 0, true, false)}">
+                                                        <TABLE class="gucrInnerTable" WIDTH="100%">
+                                                            <apex:repeat value="{!dataVar.certifications}" var="certVar">
+                                                                <TR>
+                                                                    <TD>
+                                                                        <apex:commandLink action="{!getCertificationDetails}" value="{!certVar.expiringBeforeEOY}" reRender="CertificationDetailsPanel, TrainingDetailsPanel, newSpecializationPanel, idHelperInfo,currentSpecPanel">
+                                                                            <apex:param name="certificationListTestCode" value="{!certVar.code}" assignTo="{!certificationListTestCode}"/>
+                                                                            <apex:param name="certificationListType" value="BEFOREEOY" assignTo="{!certificationListType}"/>
+                                                                        </apex:commandLink>
+                                                                    </TD>
+                                                                </TR>   
+                                                            </apex:repeat>
+                                                        </TABLE>
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!IF(dataVar.certifications.size > 0, false, true)}">
+                                                        0 
+                                                    </apex:outputPanel>
+                                                </TD>    
+                                            </TR>
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!dataVar.groupName == '# of Specializations'}">
+                                            <TR>
+                                                <TD>-</TD>
+                                                <TD>-</TD>
+                                                <TD>-</TD>
+                                            </TR>
+                                        </apex:outputPanel>
+                                    </apex:repeat>
+                                </TABLE>
+                            </TD>
+                        </TR>
+                    </TABLE>
+                </apex:outputPanel>
+                <apex:commandButton action="{!getNewSpecializationDetailsUI}" value="My Specializations" reRender="CertificationDetailsPanel, TrainingDetailsPanel, newSpecializationPanel, idHelperInfo,currentSpecPanel" status="actionstatusTag"/>
+            </apex:pageBlock>
+        </apex:outputPanel>   
+        <apex:outputPanel id="currentSpecPanel">
+            <apex:pageBlock rendered="{!currentSpecialization.size>0}" title="Current Specializations">
+                <TABLE class="gucrTable1">
+                    <TR>
+                        <TH style="text-align: left; padding-left:1em;"><h6>Specializations</h6></TH>
+                    </TR>
+                    <apex:repeat value="{!currentSpecialization}" var="curSpec">
+                        <TR>
+                            <TD style="text-align: left; padding-left:1em;">{!curSpec}</TD>
+                        </TR>
+                    </apex:repeat>
+                </TABLE>
+            </apex:pageBlock>
+        </apex:outputPanel>     
+        <apex:outputPanel id="newSpecializationPanel" >
+            <apex:pageBlock title="Specializations" rendered="{!blnShowNewSpecialization}">
+                <apex:outputPanel >
+                    <table>
+                        <tr>
+                            <td width="12.5%">
+                                <apex:outputPanel >
+                                    
+                                        Specialization Groups
+                                    <br/>
+                                    <!-- Panel Bar - Specializaion Group Start-->
+                                    <!--apex:panelBar switchType="client" style="background-color:#FFFFFF;" headerStyle="background-color:#FF4F1F;background-image:none;" >
+                                        <apex:repeat value="{!map_OfferingGroupSpec}" var="varOffer"> 
+                                            <apex:panelBarItem label="{!varOffer}" expanded="false">
+                                                <apex:repeat value="{!map_OfferingGroupSpec[varOffer]}" var="spec">
+                                                    <apex:inputCheckbox label="{!spec}" value="{!map_BlnSelectedSpec[spec]}" > 
+                                                        <apex:actionSupport event="onclick" action="{!changeSelection}"  reRender="idDummyRefreshPanel">
+                                                            <apex:param assignTo="{!strSelectedSpec}" name="strSelectedSpec" value="{!spec}"/>
+                                                        </apex:actionSupport>
+                                                    </apex:inputCheckbox>
+                                                    <apex:outputPanel rendered="{! spec != 'PureEngage - Core' }">
+                                                        {! spec }
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{! spec == 'PureEngage - Core' }">
+                                                        Core
+                                                    </apex:outputPanel><br/>
+                                                </apex:repeat>
+                                            </apex:panelBarItem>
+                                        </apex:repeat>
+                                    </apex:panelBar-->
+                                    
+                                    <!-- Panel Bar - Specializaion Group End-->
+                                    <!-- New Specialization Group Start -->
+                                    <apex:repeat value="{!map_OfferingGroupSpec}" var="varOffer"> 
+                                        <div style="background-color:#FF4F1F;background-image:none;color:white;">
+                                            <b><apex:outputText value="{!varOffer}" ></apex:outputText></b><br/>
+                                        </div>
+                                        <apex:repeat value="{!map_OfferingGroupSpec[varOffer]}" var="spec">
+                                            <apex:inputCheckbox label="{!spec}" value="{!map_BlnSelectedSpec[spec]}" style="margin-left:1em;"> 
+                                                <apex:actionSupport event="onclick" action="{!changeSelection}"  reRender="idDummyRefreshPanel">
+                                                    <apex:param assignTo="{!strSelectedSpec}" name="strSelectedSpec" value="{!spec}"/>
+                                                </apex:actionSupport>
+                                            </apex:inputCheckbox>
+                                            <apex:outputPanel rendered="{! spec != 'PureEngage - Core' }">
+                                                {! spec }
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{! spec == 'PureEngage - Core' }">
+                                                Core
+                                            </apex:outputPanel><br/>
+                                        </apex:repeat>
+                                    </apex:repeat>
+                                    <!-- New Specialization Group End -->
+                                    <div style="background-color:#FF4F1F;background-image:none;color:white;">
+                                        <b>Other</b><br/>
+                                    </div>
+                                    <apex:outputPanel >
+                                        <apex:inputCheckbox label="Speech Analytics" value="{!map_BlnSelectedSpec['Speech Analytics']}" style="margin-left:1em;">
+                                            <apex:actionSupport event="onclick" action="{!changeSelection}" status="actionstatusTag" reRender="idDummyRefreshPanel">
+                                                <apex:param assignTo="{!strSelectedSpec}" name="strSelectedSpec" value="Speech Analytics"/>
+                                            </apex:actionSupport>
+                                        </apex:inputCheckbox>
+                                        Speech Analytics
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                                <br/>
+                                <br/>
+                                <center><apex:commandButton action="{!getSelectedSepcsDetailsByUser}" value="Add New Specialization" reRender="specilizationDetailId, CertificationDetailsPanel, TrainingDetailsPanel,currentSpecPanel" status="actionstatusTag"/></center>
+                            </td>
+                            <td width="85.5%">
+                                <apex:outputPanel id="specilizationDetailId">
+                                    <apex:outputPanel rendered="{!blnShowHideSpecDetail}">
+                                        
+                                            <h6>Specialization Details</h6>
+                                        <br/>
+                                        <TABLE width="100%">
+                                            <TR>
+                                                <TD style="vertical-align: top;">
+                                                    <apex:outputPanel rendered="{!blnShowHideAddedSepDetail}">
+                                                        <TABLE class="gucrTable" >
+                                                            <TR >
+                                                                <TD colSpan="2"  style="text-align: left; padding-left:1em;" width="50%">
+                                                                    <apex:outputText rendered="{! blnShowSpecStr}">
+                                                                        <B>Specializations Added : </B>{!strSpecialAdded}
+                                                                    </apex:outputText>
+                                                                </TD>
+                                                                <TD width="50%" colSpan="3" >
+                                                                    <apex:outputText rendered="{! blnShowCurrentStr}">
+                                                                        <B>Current Specializations : </B> {!strCurrSpecial}
+                                                                    </apex:outputText>
+                                                                </TD>
+                                                            </TR>
+                                                            <TR>
+                                                                <TH  WIDTH="35%">Solutions Group</TH>
+                                                                <TH  WIDTH="20%">Certification/Training</TH>
+                                                                <TH  WIDTH="15%">Requirements</TH>
+                                                                <TH  WIDTH="15%">Completed</TH>
+                                                                <TH  WIDTH="15%">Gap</TH>
+                                                            </TR>
+                                                            <apex:repeat value="{!objAddSepcData}" var="dataVar">
+                                                                <TR>
+                                                                    <TD style="text-align: left">{!dataVar.groupName}</TD>
+                                                                    <TD>
+                                                                        <apex:outputPanel rendered="{! map_SGCertCode[dataVar.groupName] != NULL }">
+                                                                            <!--apex:outputPanel rendered="{!IF(map_SGCertCode[dataVar.groupName].size > 0, true, false)}"-->
+                                                                                <TABLE class="gucrInnerTable" WIDTH="100%">
+                                                                                    <apex:repeat value="{!map_SGCertCode[dataVar.groupName]}" var="certVar">
+                                                                                        <TR>
+                                                                                            <TD>
+                                                                                                {! map_CourseInfo[certVar]}
+                                                                                            </TD>
+                                                                                        </TR>   
+                                                                                    </apex:repeat>
+                                                                                </TABLE> 
+                                                                            <!--/apex:outputPanel-->
+                                                                        </apex:outputPanel>
+                                                                        <apex:outputPanel rendered="{!IF(dataVar.certifications.size > 0, false, true)}">
+                                                                            0
+                                                                        </apex:outputPanel>
+                                                                    </TD>
+                                                                    <TD>
+                                                                        {!dataVar.requirements}
+                                                                    </TD>
+                                                                    <TD>
+                                                                        <apex:outputPanel rendered="{!IF(dataVar.requirementsDone > 0, true, false)}">
+                                                                            <apex:commandLink action="{!getCertificationDetailsBySpecialization}" value="{!dataVar.requirementsDone}" reRender="CertificationDetailsPanel, TrainingDetailsPanel,currentSpecPanel">
+                                                                                <apex:param name="specializationName" value="{!dataVar.groupName}" assignTo="{!certificationListType}"/>
+                                                                            </apex:commandLink>
+                                                                        </apex:outputPanel>
+                                                                        <apex:outputPanel rendered="{!IF(dataVar.requirementsDone > 0, false, true)}">
+                                                                            0
+                                                                        </apex:outputPanel>
+                                                                    </TD>
+                                                                    <TD style="background-color : {!IF(dataVar.requirementsGap > 0, '#FA5858', '#ACFA58')}">
+                                                                        <b>{!dataVar.requirementsGap}</b>
+                                                                    </TD>
+                                                                </TR>
+                                                            </apex:repeat>
+                                                        </TABLE>
+                                                    </apex:outputPanel>
+                                                </TD>   
+                                            </TR>
+                                        </TABLE>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                    </table>
+                </apex:outputPanel>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:outputPanel id="CertificationDetailsPanel">
+            <apex:pageBlock title="Certification Details" rendered="{!(certificationListTestCode != '')}">
+                <apex:facet name="header">
+                    <table width="100%">
+                        <tr>
+                            <td align="left" class="pbTitle" width="75%"><h3>Certification Details [ {!certificationListTestCode} - {!certificationListTypeToDisplay}]</h3></td>
+                            <td align="right" width="25%">
+                                <b><a href="{!IF(isPartnerUser, '/partner','')}/apex/GUCompliancePartnerCertificationsExport?aid={!accountId}" target="_blank">Export All Active Certifications</a></b>
+                            </td>
+                        </tr>
+                    </table>
+                </apex:facet>
+                
+                <apex:pageBlockTable value="{!certificationList}" var="cert">
+                    <apex:column value="{!cert.Test_Name__c}"/>
+                    <apex:column value="{!cert.Genesys_Test_Code__c}"/>
+                    <apex:column headerValue="Contact Name" title="Name">
+                        {!cert.First_Name__c} {!cert.Last_Name__c}
+                    </apex:column>
+                    <apex:column value="{!cert.Email__c}"/>
+                    <apex:column value="{!cert.Test_Date__c}"/>
+                    <apex:column value="{!cert.Expiry_Date__c}"/>
+                </apex:pageBlockTable>
+            </apex:pageBlock> 
+        </apex:outputPanel>
+        <apex:outputPanel id="TrainingDetailsPanel">
+            <apex:pageBlock title="Training Details" rendered="{!showTrainingDetails}">
+                <apex:facet name="header">
+                    <table width="100%">
+                        <tr>
+                            <td align="left" class="pbTitle" width="75%"><h3>Training Details</h3></td>
+                            <td align="right" width="25%">
+                                <b><a href="{!IF(isPartnerUser, '/partner','')}/apex/GUCompliancePartnerTrainingsExport?aid={!accountId}" target="_blank">Export All Trainings</a></b>
+                            </td>
+                        </tr>
+                    </table>
+                </apex:facet>
+                <!--
+                <apex:outputPanel rendered="{!IF(trainingDone>100, true, false)}">
+                    <b>Note:</b> Only first 100 Training Records are listed below, Use "Export All Training" to download all trainings attended by this Partner.
+                    <br /><br />
+                </apex:outputPanel>    
+                
+                <apex:pageBlockTable value="{!trainingList}" var="training">
+                    <apex:column value="{!training.Course_Name__c}"/>
+                    <apex:column value="{!training.Course_Start_Date__c}"/>
+                    <apex:column value="{!training.Course_End_Date__c}"/>
+                    <apex:column headerValue="Contact Name" title="Name">
+                        {!training.First_Name__c} {!training.Last_Name__c}
+                    </apex:column>
+                    <apex:column value="{!training.Email__c}"/>
+                </apex:pageBlockTable>
+                -->
+                <apex:outputPanel rendered="{!IF(trainingDone>100, true, false)}">
+                    <b>Note:</b> Only first 100 Training Records are listed below, Use "Export All Training" to download all trainings attended by this Partner.
+                    <br /><br />
+                </apex:outputPanel>    
+                <apex:outputPanel rendered="{!showCourse}">
+                    <!--<apex:pageBlockTable value="{!litmosTrainingList}" var="training">
+                        <apex:column value="{!training.Litmos__ProgramID__r.name}"/>
+                        <apex:column value="{!training.Litmos__ProgramID__r.Litmos__LitmosID__c}" headerValue="Course Id"/>
+                        <apex:column value="{!training.Litmos__StartDate__c}" headerValue="Assigned Date"/>
+                        <apex:column value="{!training.Litmos__FinishDate__c}"/>
+                        <apex:column headerValue="Contact Name" title="Name">
+                            {!training.Litmos__ContactID__r.name} 
+                        </apex:column>
+                        <apex:column value="{!training.Litmos__ContactID__r.Email}" headerValue="Email"/>
+                    </apex:pageBlockTable>-->
+                    <apex:pageBlockTable value="{!trainingList}" var="training">
+                        <apex:column value="{!training.docebo_v3__Course__r.docebo_v3__Name__c}"/>
+                        <apex:column value="{!training.docebo_v3__Course__r.docebo_v3__CourseId__c}" headerValue="Course Id"/>
+                        <apex:column value="{!training.docebo_v3__EnrollmentStartDate__c}" headerValue="Enrollment Date"/>
+                        <apex:column value="{!training.docebo_v3__EnrollmentCompletionDate__c}" />
+                        <apex:column headerValue="Contact Name" title="Name">
+                            {!IF(ISNULL(training.docebo_v3__DoceboUser__r.docebo_v3__Contact__c),
+                                training.docebo_v3__DoceboUser__r.docebo_v3__User__r.Contact.Contact_Full_Name__c,
+                                training.docebo_v3__DoceboUser__r.docebo_v3__Contact__r.Contact_Full_Name__c)}
+                                <!--{!training.docebo_v3__DoceboUser__r.docebo_v3__Contact__r.Contact_Full_Name__c}-->
+                        </apex:column>
+                        <apex:column headerValue="Email">
+                                {!IF(ISNULL(training.docebo_v3__DoceboUser__r.docebo_v3__Contact__c),
+                                    training.docebo_v3__DoceboUser__r.docebo_v3__User__r.Contact.Email,
+                                    training.docebo_v3__DoceboUser__r.docebo_v3__Contact__r.Email)}
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:outputPanel>
+                <br />
+            </apex:pageBlock> 
+        </apex:outputPanel>
+        <apex:outputPanel id="idHelperInfo">
+            <apex:outputPanel rendered="{!objHelpInfo.is_Displaying__c && blnShowHelper && selectedPartnerCategory != 'Please Select'}" >
+                <!-- <div class="snote">
+                    <ul>
+                        <li>
+                            <h2>{!objHelpInfo.Header__c}</h2><hr />
+                            <p>You can <span style="color:red">add specializations</span> here to see what the requirements are. You can also click on the numbers under the gap section to take you straight to your courses/modules!</p>
+                            <p>
+                                NOTE: You can only add specializations that you have completed the pre-requisites for!
+                            </p>
+                        </li>
+                    </ul>
+                </div> -->
+            </apex:outputPanel>
+        </apex:outputPanel>
+        
+    </apex:form>
+    <apex:actionStatus id="actionstatusTag" stopText="" >
+        <apex:facet name="start">
+            <div>
+                <div class="popupBackground" />
+                <div class="PopupPanel">
+                    <table border="0" width="100%" height="100%">
+                        <tr>
+                            <td align="center"><b>Please Wait</b></td>
+                        </tr>
+                        <tr>
+                            <td align="center"><img src="{!$Resource.ProgressBarStatus}"/></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </apex:facet>
+    </apex:actionStatus>    
+</apex:page>

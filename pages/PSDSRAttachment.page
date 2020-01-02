@@ -1,0 +1,114 @@
+<apex:page id="pg" Controller="PSDSRDocumentController" showheader="false" sidebar="false">
+    <apex:form id="frm">
+        <div style="height:15px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    <apex:image value="/img/loading.gif"/>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>
+<!--            <apex:actionFunction name="deleteAF" action="{!deleteAtt}" reRender=""> -->
+            <apex:actionFunction name="deleteAF" action="{!deleteAtt}" immediate="true">
+                <apex:param name="selectedAttId" assignTo="{!selectedAttId}" value=""/>
+            </apex:actionFunction>
+        <apex:pageBlock title="PS DSR Documents" id="pgblk">
+            <apex:pageBlockButtons location="bottom" rendered="{!DSRParentFound}">
+                <apex:commandButton value="Save Document to DSR" action="{!save}" onclick="return validateAttachmentName();"/>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <apex:commandButton value="Complete Attachments and return to DSR" action="{!CompleteAttachments}" immediate="true" rendered="{!isFromCreateNewDSR}"/>
+            </apex:pageBlockButtons>
+            <apex:PageBlockSection id="ErrorMessages" rendered="{!DSRParentFound==false}">
+                <apex:pageBlockSectionItem >
+                    <tr>
+                        <td style="color:red;font-weight:bold;font-size:140%;">
+                            No DSR Parent record was available
+                        </td>
+                    </tr>
+                </apex:pageBlockSectionItem>
+            </apex:PageBlockSection>
+
+            <apex:pageBlockSection id="pbsAttachmentNotes" title="Attachment Notes">
+                <apex:pageBlockSectionItem >
+                    <tr><td colspan="2">For the PS SMART DSR, please attach the following documents as appropriate. This will lead to more efficient processing of the request by the receiving teams.<br/></td></tr>
+                    <tr><td colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;- PRT/POR (Cloud Only)<br/></td></tr>
+                    <tr><td colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;- SC Delivery Questionnaire (Formerly SC Toolkit)<br/></td></tr>
+                    <tr><td colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;- SC Design Questionnaire (SC Pre-Sales document)<br/></td></tr>
+                    <tr><td colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;- Architectural Document (Premise only)<br/></td></tr>
+                    <tr><td colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;- Custom Use Case Documentation (use case applications only)</td></tr>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+                
+            <apex:pageBlockSection columns="2" id="pgblkDSRDetails" rendered="{!DSRParentFound}" title="PS Deal Support Details">
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="PS Deal Support Record" />
+                    <apex:outputField value="{!docRecord.Deal_Support__c}" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="DSR Subject" />
+                    <apex:outputField value="{!dsrRec.Subject__c}" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="DSR Request Type" />
+                    <apex:outputField value="{!dsrRec.Request_Type__c}" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="DSR Project Application" />
+                    <apex:outputField value="{!dsrRec.PS_Project_Application__c}" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="DSR Deployment Type" />
+                    <apex:outputField value="{!dsrRec.Deployment_Type__c}" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                </apex:pageBlocksectionItem>
+            </apex:pageBlockSection>                
+            <apex:pageBlockSection columns="1" id="pgblkFileDetails" rendered="{!DSRParentFound}" title="Document Information">
+                <apex:pageBlocksectionItem id="pgblksectionItemType">
+                    <apex:outputLabel value="Document Type" />
+                    <apex:inputField id="txtType" value="{!docRecord.Doc_Type__c}" required="true" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem id="pgblksectionItemName">
+                    <apex:outputLabel value="Name" />
+                    <apex:inputField id="txtDocName" value="{!docRecord.Name}" style="width:400px;" required="true" />
+                </apex:pageBlocksectionItem>
+                <apex:pageBlocksectionItem >
+                    <apex:outputLabel value="Attachment" />
+                    <apex:inputFile value="{!att.body}" style="width:600px;" filename="{!att.name}"/>
+                </apex:pageBlocksectionItem>            
+            </apex:pageBlockSection>
+            <apex:pageMessages />
+            <apex:outputPanel rendered="{!customPage}">
+            <br/><br/>
+            </apex:outputPanel>
+            <apex:pageBlockSection columns="1" id="pgblkAttDetails">
+                <apex:outputLabel value="No record(s) found." rendered="{!NOT(showGrid)}" />
+                <apex:pageBlocktable value="{!documents}" var="eachDoc" rendered="{!showGrid}">
+                <!-- The following delete column needs to be resolved in an upcoming enhancement -->
+<!--                    <apex:column headerValue="Select">
+                        <apex:outputLink value="#" onclick="deleteAF('{!eachDoc.record.id}'); return false;"> Delete </apex:outputLink>
+                    </apex:column>-->
+                    <apex:column headerValue="DSR Document">
+                        <apex:outputLink value="/{!eachDoc.att.id}"> {!eachDoc.att.Name} </apex:outputLink>
+                    </apex:column>
+                    <apex:column headerValue="Document Type">
+                        {!eachDoc.record.Doc_Type__c}
+                    </apex:column>       
+                </apex:pageBlocktable>         
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <script>
+            function validateAttachmentName(){
+                if(document.getElementById('pg:frm:pgblk:pgblkDetails:pgblksectionItemType:txtType').value == ''){
+                    alert('Please select the Document Type first.');
+                    return false;
+                }
+                if(document.getElementById('pg:frm:pgblk:pgblkDetails:pgblksectionItemName:txtAccountName').value == ''){
+                    alert('Please enter attachment Name first.');
+                    return false;
+                }
+                return true;
+            }
+             
+        </script>        
+    </apex:form>
+</apex:page>

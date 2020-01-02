@@ -1,0 +1,74 @@
+<apex:page controller="PartnerRevenueDetailsController" readOnly="true" sidebar="false" showheader="false">
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="performance"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+    <apex:pageBlock title="{!IF(displayPostTE,'Bookings Details','Revenue Details')}" rendered="{!NOT(isSolutionMultiplier)}">
+        <table>
+            <tr>
+                    <td width="75px"><b>Year: </b>
+                    {!revenueYear}</td>
+                    <td width="75px"><b>Bookings Type(s): </b>
+                    {!IF(revenueType=='Total',allRevTp,IF(displayPostTE,revTpPostTE,revenueType))}</td>
+                    <td width="75px"><b>Offering Type: </b>
+                    {!offTp}</td><br/><br/>
+            </tr>
+        </table>
+            <apex:pageBlockTable value="{!revenueData}" var="revDetails" columns="4" rendered="{!revenueData.size > 0 && NOT(displayPostTE)}">
+                <apex:column value="{!revDetails.End_User_Name__c}" />
+                <apex:column value="{!revDetails.Product_Name__c}"/>
+                <apex:column value="{!revDetails.Quarter__c}"/>
+                <!--
+                <apex:column value="{!revDetails.CurrencyIsoCode} {!revDetails.Revenue_Amount__c}"/>
+                -->
+                <apex:column headerValue="Revenue Amount">
+                    <apex:outputText value="{!curcyCd} {0, number, ###,###,###,###,##0}">
+                        <apex:param value="{!revDetails.Revenue_Amount__c}" />
+                    </apex:outputText>
+                </apex:column>
+            </apex:pageBlockTable>
+
+            <apex:pageBlockTable value="{!optyList}" var="opDetails" columns="4" rendered="{!optyList.size > 0 && displayPostTE}">
+                <apex:column value="{!opDetails.Name}" />
+                <apex:column value="{!opDetails.account.name}"/>
+                <apex:column headerValue="Bookings">
+                    <apex:outputText value="{!curcyCd} {0, number, ###,###,###,###,##0}">
+                        <apex:param value="{!opDetails.ACV_Subscription_Only__c}" />
+                    </apex:outputText>
+                </apex:column>
+                <!--<apex:column value="{!opDetails.License_Equivalency__c}" />-->
+            </apex:pageBlockTable>
+
+            <apex:outputLabel style="font-weight:bold;color:red" rendered="{!revenueData.size == 0 && optyList.size == 0}">No data to display</apex:outputLabel>
+    </apex:pageBlock>
+    <apex:pageBlock title="Revenue Detail" rendered="{!isSolutionMultiplier}">
+            <apex:outputLabel value="Revenue Year:" style="font-weight:bold;"></apex:outputLabel>
+            <apex:outputLabel value="{!revenueYear}"></apex:outputLabel>&nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:pageBlockTable value="{!revenueData}" var="revDetails" columns="5" rendered="{!revenueData.size > 0}">
+                <apex:column value="{!revDetails.End_User_Name__c}" />
+                <apex:column value="{!revDetails.Product_Name__c}"/>
+                <apex:column value="{!revDetails.Quarter__c}"/>
+                <apex:column headerValue="Revenue Amount">
+                    <apex:outputText value="{!revDetails.CurrencyIsoCode} {0, number, ###,###,###,###,##0}">
+                        <apex:param value="{!revDetails.Revenue_Amount__c}" />
+                    </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Solution Multiplier">
+                    <apex:outputText value="{!revDetails.CurrencyIsoCode} {0, number, ###,###,###,###,##0}">
+                        <apex:param value="{!revDetails.Solutions_Multiplier__c}" />
+                    </apex:outputText>
+                </apex:column>
+            </apex:pageBlockTable>
+            <apex:outputLabel style="font-weight:bold;color:red" rendered="{!revenueData.size == 0}">No data to display</apex:outputLabel>
+    </apex:pageBlock>
+        </apex:define>
+    </apex:composition>
+</apex:page>

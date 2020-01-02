@@ -1,0 +1,200 @@
+<apex:page standardController="Opportunity" extensions="Ctrl_06_VF07_PrimaryBusinessPartner" >
+<style>
+.hideClass{
+    color: #015BA7;
+    display: inline;
+    font-size: 0.85em;
+    font-weight: normal;
+    text-decoration: none;
+}
+.searchFilterFields
+{
+    margin-bottom: 5px;
+}
+a
+{
+cursor: pointer !important;
+}
+</style>
+<apex:form id="myform">
+<script type="text/javascript">
+                    function noenter(e){
+                       if(window.event){
+                              key = window.event.keyCode; //IE
+                             // alert(key);     
+                        } else{
+                              key = e.which;     //firefox
+                        }
+                         if(key == 13) {
+                            var ele=document.getElementById('j_id0:myform:search');
+                                    ele.click();
+                              return false;
+                         } else{
+                              return true;
+                        }
+                    }
+</script>
+<apex:sectionHeader title="Opportunity" subtitle="{!Opportunity.Name}"/>
+
+    <apex:pageMessages />
+    
+    <apex:inputText value="{!OrderBY}" style="display:none" id="orderBy"/>
+    <apex:inputText value="{!isSearch}" style="display:none" id="isSearch"/>
+    <apex:inputText value="{!isSorting}" style="display:none" id="isSorting"/>
+    
+    <apex:inputHidden value="{!SelectedId}" id="ObjID"/>
+    <apex:actionFunction name="save" action="{!save}"/> 
+    
+        
+    <apex:outputText value="{!log}" id="log" style="display:none"/>
+    <div class="lookup">
+        <div class="pBody">
+            <label for="lksrch">Search</label>
+            &nbsp;&nbsp;
+            <apex:inputText id="lksrch" maxlength="80" size="20" value="{!searchtext}" onkeypress="return noenter(event);"/>
+            <apex:commandButton value=" Go! "  oncomplete="document.body.style.cursor='default';" rerender="log,chooseTemplateResult,orderBy,isSearch,isSorting" title="Go!" action="{!search}" id="search" onclick="mySearch();"/>
+            <div class="bDescription" style="margin-bottom: 0px; margin-top: 0px; font-size: 75%;">
+                You can use "*" as a wildcard next to other characters to improve your search results.
+                <br/>   
+                For example, "ad*" returns all records with a word in one of the searched fields that begins with "ad".</div>
+        </div>
+
+    </div>
+    
+    <br/>
+   <apex:pageBlock tabStyle="Account" title="Accounts [{!ssc.ResultSize}]" id="chooseTemplateResult">
+        <apex:pageBlockButtons >
+             <apex:commandButton action="{!cancel}" value="Cancel"/>
+        </apex:pageBlockButtons>
+        <apex:facet name="header">
+        <apex:outputpanel >
+            <div class="pbHeader">
+                <table border="0" cellpadding="0" cellspacing="0">
+                    <tbody>
+                        <tr>
+                            <td class="pbTitle">
+                            <img src="/s.gif" alt="" width="1" height="1" class="minWidth" title=""/>
+                            <img src="/s.gif" alt="" class="relatedListIcon" title=""/>
+                            <h3>
+                                <span class="searchFirstCell">
+                                Accounts [{!ssc.ResultSize}]
+                                <a href="" class="hideClass" id="showFiltersIdAccount" onclick="toggleDisplayWithDisplayType('field_name_Account',null,true);toggleDisplayWithDisplayType('hideFiltersIdAccount','inline');toggleDisplayWithDisplayType('showFiltersIdAccount','inline');return false;" style="display:none">Hide Filters</a>
+                                <a href="" class="hideClass" id="hideFiltersIdAccount" onclick="toggleDisplayWithDisplayType('field_name_Account',null,true);toggleDisplayWithDisplayType('hideFiltersIdAccount','inline');toggleDisplayWithDisplayType('showFiltersIdAccount','inline');return false;">Show Filters</a>
+                                </span>
+                            </h3>
+                            </td>
+                            <td class="pbButton">
+                                <apex:commandButton action="{!cancel}" value="Cancel"/>   
+                            </td>
+                            <td style="float:right">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                            <div class="searchFilterFieldsHolder searchFilterFieldsHolderFirst" id="field_name_Account" style="display: none; ">
+                                <table class="searchFilterFields">
+                                    <tr>
+                                        <td><label>Country</label></td>
+                                        <td nowrap="nowrap">
+                                            <apex:inputText value="{!Country}"/>
+                                            <a class="hideClass" onclick="this.parentNode.getElementsByTagName('input')[0].value='';document.getElementById('{!$Component.myform.search}').click();">Clear Filter</a>
+                                        </td>
+                                        <td class="rightCell">&nbsp;</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            </td>  
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+              
+        </apex:outputpanel>
+        </apex:facet>
+       <apex:outputPanel rendered="{!(1 >ssc.ResultSize)}" >       
+           No records were found based on your criteria
+       </apex:outputPanel>
+
+       <apex:outputPanel rendered="{!ssc.ResultSize >= 1}" >    
+           <apex:outputPanel rendered="{!ssc.ResultSize > ssc.PageSize}" >
+           <div class="relatedListsearchHeader"><div class="pSearchShowMore">
+                <apex:image styleClass="prevArrow" value="/img/search_prevarrow.gif" width="5" height="8" rendered="{!ssc.HasPrevious}"/>
+                <apex:commandLink styleClass="pShowMore" value="Previous Page" action="{!ssc.previous}" rendered="{!ssc.HasPrevious}" rerender="chooseTemplateResult" /> 
+                <apex:image styleClass="prevArrow" value="/img/search_prevarrow_disabled.gif" width="5" height="8" rendered="{!!ssc.HasPrevious}"/>
+                <apex:outputText styleClass="pShowLess noLink" value="Previous Page" rendered="{!!ssc.HasPrevious}"/> 
+                <span class="itemsRange">({!ssc.PageSize*ssc.PageNumber-ssc.PageSize+1}-{!ssc.PageSize*ssc.PageNumber-ssc.PageSize+accounts.size})</span>
+                <apex:commandLink styleClass="pShowMore" value="Next Page" action="{!ssc.next}" rendered="{!ssc.HasNext}" rerender="chooseTemplateResult" /> 
+                <apex:image styleClass="nextArrow" value="/img/search_nextarrow.gif" width="5" height="8" rendered="{!ssc.HasNext}"/>
+                <apex:outputText styleClass="pShowLess noLink" value="Next Page" rendered="{!!ssc.HasNext}"/> 
+                <apex:image styleClass="nextArrow" value="/img/search_nextarrow_disabled.gif" width="5" height="8" rendered="{!!ssc.HasNext}"/>
+           </div></div>
+            </apex:outputPanel>
+            
+           <apex:pageBlockTable value="{!accounts}" var="acc" >
+               <apex:column onclick="chooseID('{!acc.Id}');" width="40px;">
+                   <apex:facet name="header">Action</apex:facet>
+                   <a href="javascript:void(0);">Select</a>
+               </apex:column>
+             <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('Name')"><u>{!$ObjectType.Account.fields.Name.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.Name}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('AccountShortName__c')"><u>{!$ObjectType.Account.fields.AccountShortName__c.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.AccountShortName__c}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('ALUEGroup__c')"><u>{!$ObjectType.Account.fields.ALUEGroup__c.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.ALUEGroup__c}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('PartnerType__c')"><u>{!$ObjectType.Account.fields.PartnerType__c.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.PartnerType__c}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('Country__c')"><u>{!$ObjectType.Account.fields.Country__c.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.Country__c}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('Phone')"><u>Parent {!$ObjectType.Account.fields.Phone.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.Phone}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('AccreditationLevel__c')"><u>{!$ObjectType.Account.fields.AccreditationLevel__c.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.AccreditationLevel__c}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('Registered__c')"><u>{!$ObjectType.Account.fields.Registered__c.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.Registered__c}" />
+               </apex:column>
+               <apex:column >
+                   <apex:facet name="header"><span onclick="orderby('OwnerID')"><u>{!$ObjectType.User.fields.Alias.label}</u></span></apex:facet>
+                   <apex:outputField value="{!acc.Owner.Alias}" />
+               </apex:column>               
+         </apex:pageBlockTable>
+      </apex:outputPanel>
+   </apex:pageBlock>
+        
+</apex:form>
+<script>
+function orderby(obj)
+{
+    document.getElementById('{!$Component.myform.orderBy}').value=obj;
+    document.getElementById('{!$Component.myform.isSorting}').value=true;
+    document.getElementById('{!$Component.myform.search}').click();
+}
+function mySearch()
+{
+    document.body.style.cursor='wait';
+    document.getElementById('{!$Component.myform.isSearch}').value=true;
+}
+function chooseID(obj)
+{
+    document.getElementById('{!$Component.myform.ObjID}').value=obj;
+    save();
+
+}
+
+</script>
+
+</apex:page>

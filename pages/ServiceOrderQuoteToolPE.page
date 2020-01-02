@@ -1,0 +1,1242 @@
+<apex:page id="pg"  extensions="ServiceOrderQuoteToolController" title="Premier Edition Quote Tool" sidebar="false" standardController="BigMachines__Quote__c">
+    <style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }       
+        .tableRow{
+            font-size:9pt;
+        } 
+        .activeRow{
+            background-color:#FAF4A0;
+            font-weight:bold;
+        }
+        .totalRow{
+            font-weight:bold;
+        }
+        .errorRow{
+            background-color:#FF9999;
+        }
+        .disabled{
+            background-color:#F8F9F8;
+        }
+    </style>
+    <apex:outputPanel id="pnlJS">
+        <script>
+            function modalWin(productId, discount) {            
+                if (window.showModalDialog) {               
+                    window.showModalDialog('/apex/SOQuoteTool_TbPopup?id='+ productId + '&discount=' + discount,'name','dialogWidth:500px;dialogHeight:350px');
+                } else {
+                    var left = (screen.width / 2) - 250;
+                    var top = (screen.height / 2) - 175;                
+                    window.open('/apex/SOQuoteTool_TbPopup?id='+ productId + '&discount=' + discount,'name','height=350,width=500,toolbar=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,modal=yes,left='+left+',top='+top);
+                }
+            }
+        </script>
+        <!--<script>
+/*function sendContract(requestOnly){
+                if(requestOnly == false && ('{!legalRequestStatus}' == '9-Signed by Genesys' || '{!legalRequestStatus}' == '10-Completed')){
+                    var result = confirm('Legal Request is not completed for this quote.  Do you still want to send the Quote out to Customer?');
+                    if(!result){
+                        return;
+                    }
+                }                
+                if('{!quote.Custom_MSLSA__c}' == 'true' || requestOnly == true){
+                    window.open('/apex/QuoteGCRDetails?quoteId={!quote.Id}&oppId={!quote.BigMachines__Opportunity__c}&oppName={!quote.BigMachines__Opportunity__r.Name}&accId={!quote.End_User_ID__c}');
+                }
+                else{
+                    window.open('/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!quote.Id}&contactid={!quote.Contact__c}&accountid={!quote.End_User_ID__c}&opportunityid={!quote.BigMachines__Opportunity__c}&filter=ServiceOrder&filtertype=equals');
+                }
+            }*/
+        </script>-->
+    </apex:outputPanel>
+    <apex:form id="frm">
+        <apex:actionFunction name="saveAJAX" action="{!save}" reRender="pgblkRecFee,pgblkNonRecCharges,totals,pgMsg,jsPanel,quoteInfo,upfrontApprovalTab,btnLegalRequest" status="status"/>
+        <apex:pagemessages id="pgMsg"/>
+        <!--<apex:sectionHeader title="{!quote.Offering_Type__c}" subtitle="{!quote.Name}"/>-->
+        <apex:pageBlock title="{!quote.Offering_Type__c} Quote Tool" id="pgblk">
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!OR(AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved'),$Profile.Name=='General User Access Group SU')}"/>                
+                <apex:commandButton value="Clone" action="{!cloneQuote}" status="status"/>
+                <apex:commandButton value="Revise" action="{!recall}" status="status" disabled="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Rejected', quote.BigMachines__Status__c != 'Quote Approved')}"/>
+                <apex:commandButton value="Return to Opportunity" action="{!cancel}"/>
+                <apex:commandButton value="Submit For Approval" rendered="{!OR(quote.BigMachines__Status__c == 'Quote In Progress', quote.BigMachines__Status__c == 'Revision Pending')}" action="{!submitForApproval}" />
+                <apex:commandButton value="Submit Order" rendered="{!quote.BigMachines__Status__c == 'Quote Approved'}" action="{!submitOrderBtnHandler}" />
+                <apex:commandButton value="Send Contract" action="{!viewContract}" oncomplete="window.open('/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!quote.Id}&contactid={!quote.Contact__c}&accountid={!quote.End_User_ID__c}&opportunityid={!quote.BigMachines__Opportunity__c}&filter=ServiceOrder&filtertype=equals');"
+                                    rendered="{!(quote.BigMachines__Status__c == 'Quote Approved' || quote.BigMachines__Status__c == 'Order Submitted')}" />
+                <!--<apex:commandButton value="Send Contract" action="{!viewContract}" oncomplete="sendContract(false);" reRender="pnlJS"
+                                    rendered="{!(quote.BigMachines__Status__c == 'Quote Approved' || quote.BigMachines__Status__c == 'Order Submitted')}" />
+                <apex:commandButton id="btnLegalRequest" value="{!IF(quote.Legal_Contract_Request__c != NULL, 'Vew Legal Request', 'New Legal Request')}" onclick="sendContract(true); return false;" />-->
+            </apex:pageBlockButtons>
+            <apex:tabPanel switchType="client" selectedTab="quoteTab" id="theTabPanel">
+                <apex:tab label="Quote" name="quoteTab" id="quoteTab">
+                    <apex:pageBlockSection id="quoteInfo">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Quote Number" for="quoteNumber" />
+                            <apex:outputLink id="quoteNumber" value="/{!quote.id}" target="_blank"> {!quote.Quote_Number__c} </apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Opportunity" for="linkOpp" />
+                            <apex:outputLink id="linkOpp" value="/{!quote.BigMachines__Opportunity__c}" target="_blank"> {!quote.BigMachines__Opportunity__r.Name}                              
+                            </apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="End User" for="linkEndUser" />
+                            <apex:outputLink id="linkEndUser" value="/{!quote.End_User_ID__c}" target="_blank"> {!quote.End_User_ID__r.Name}                                
+                            </apex:outputLink>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Sold To" for="linkST" />
+                            <apex:outputLink id="linkST" value="/{!quote.Sold_To_Name__c}" target="_blank"> {!quote.Sold_To_Name__r.Name}                               
+                            </apex:outputLink>
+                        </apex:pageBlockSectionItem>                        
+                        <apex:repeat value="{!$ObjectType.BigMachines__Quote__c.FieldSets.Service_order_quote_header_fields}" var="f">                            
+                            <apex:inputField value="{!quote[f]}" rendered="{!AND(f.label == 'Minimum (Fees) Period', opp.Lines_of_Businesses__c  != 'Premier Edition Cloud', opp.Lines_of_Businesses__c != 'Self Service')}" />
+                            <apex:outputField value="{!quote[f]}" rendered="{!AND((f.label == 'Minimum (Fees) Period'), OR(opp.Lines_of_Businesses__c  == 'Premier Edition Cloud', opp.Lines_of_Businesses__c == 'Self Service'))}" />                          
+                            <apex:inputField value="{!quote[f]}" rendered="{!AND(f.required, f.label != 'Quote Number', f.label != 'Minimum (Fees) Period')}" />
+                            <apex:outputField value="{!quote[f]}" rendered="{!AND(NOT(f.required), f.label != 'Quote Number', f.label != 'Minimum (Fees) Period')}" />                            
+                        </apex:repeat>
+                        <apex:inputField value="{!quote.Treat_SO_as_PO__c}"/> 
+                        <apex:selectList value="{!quote.Run_Time_Calculations__c}" size="1" label="Calculation Mode">
+                            <apex:SelectOption itemLabel="Bulk Mode"  itemValue="false"/>
+                            <apex:SelectOption itemLabel="Line Level Mode"  itemValue="true"/>                          
+                        </apex:selectList>   
+                        <!--<apex:inputField value="{!quote.Custom_MSLSA__c}" />
+                        <apex:inputField value="{!quote.Legal_Contract_Request__c}" />                    
+                        -->
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Totals" rendered="{!blnIsHybridCustomer}">
+                        <apex:inputField label="Commited Monthly Recurring Revenue" value="{!quote.CMRR__c}" />
+                        <apex:inputField label="Annual Contract Value" value="{!quote.Annual_Contract_Value__c}" />
+                        <apex:inputField label="Total Contract Value" value="{!quote.Cloud_Total__c}" />  
+                        <apex:inputField label="Total Installation Charges" value="{!quote.Setup_Provisioning_Charges__c}" />
+                        <apex:inputField value="{!quote.Monthly_Contract_Value__c}" />                                                       
+                    </apex:pageBlockSection>
+                    <apex:outputPanel layout="none" rendered="{!NOT(blnIsHybridCustomer)}">
+                    <apex:pageBlockSection columns="1" title="Mass Update - Update Multiple line items">
+                        <apex:pageBlockTable value="{!headerRow}" var="eachRecord" >
+                            <apex:column headerValue="Quantity">
+                                <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" required="false"/>                                                             
+                            </apex:column>
+                            <apex:column headerValue="Discount">
+                                <apex:inputField value="{!eachRecord.record.Discount__c}" required="false"/>                              
+                            </apex:column>  
+                            <apex:column >
+                                <apex:commandButton value="Update Selected & Calculate" action="{!bulkUpdate}" status="status" reRender="pgblkRecFee,pgblkNonRecCharges"/>
+                            </apex:column>                    
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>                    
+                   
+                    <apex:pageBlock title="Recurring Fees" id="pgblkRecFee">
+                        <apex:outputText value="IVR" style="font-weight:bold;font-size:150%;color:#808080"/>
+                        <!-- Self-Service/IVR -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusSSIVR">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkSSIVR" title="Self-Service/IVR" rendered="{!blnShowSelfServiceIVR}">
+                            <apex:pageBlockTable value="{!list_SelfServiceIVR}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkSSIVR" status="statusSSIVR" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Self-Service/IVR" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkSSIVR" status="statusSSIVR" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Self-Service/IVR" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}','Self-Service/IVR');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Self-Service/IVR Options -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusSSIVROptions">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkSSIVROptions" title="Self-Service/IVR Options" rendered="{!blnShowSelfServiceIVROptions}">
+                            <apex:pageBlockTable value="{!list_SelfServiceIVROptions}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkSSIVROptions" status="statusSSIVROptions" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Self-Service/IVR Options" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkSSIVROptions" status="statusSSIVROptions" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Self-Service/IVR Options" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected), eachRecord.record.Product__c != 'Premier Call Recording (For Stand-Alone IVR)')}" required="false"/>
+                                    <apex:outputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!eachRecord.record.Product__c == 'Premier Call Recording (For Stand-Alone IVR)'}"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Self-Service/IVR Options');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Self-Service/IVR Integrations -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusSSIVRIntegrations">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkSSIVRIntegrations" title="Self-Service/IVR Integrations" rendered="{!blnShowSelfServiceIVRIntegrations}">
+                            <apex:pageBlockTable value="{!list_SelfServiceIVRIntegrations}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkSSIVRIntegrations" status="statusSSIVRIntegrations" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Self-Service/IVR Integrations" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkSSIVRIntegrations" status="statusSSIVRIntegrations" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Self-Service/IVR Integrations" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Self-Service/IVR Integrations');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Outbound Campaign Manager -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusOCM">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkOCM" title="Outbound Campaign Manager" rendered="{!blnShowOutboundCampaignManager}">
+                            <apex:pageBlockTable value="{!list_OutboundCampaignManager}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkOCM" status="statusOCM" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Outbound Campaign Manager" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkOCM" status="statusOCM" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Outbound Campaign Manager" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Outbound Campaign Manager');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <br/>
+                        <apex:outputText value="Agent Seats" style="font-weight:bold;font-size:150%;color:#808080"/>
+                        <!-- Per Seat Pricing -->         
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusPSP">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkPSP" title="Per Seat Pricing" rendered="{!blnShowPerSeatPricing}">
+                            <apex:pageBlockTable value="{!list_PerSeatPricing}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkPSP" status="statusPSP" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Per Seat Pricing" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkPSP" status="statusPSP" rendered="{!AND(eachRecord.index > -1,OR(eachRecord.hasDevcies, eachRecord.showAddSign))}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Per Seat Pricing" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Per Seat Pricing');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}"/>
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Inbound Seat Add-On Options -->         
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusInboundSeatAddOns">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkInboundSeatAddOns" title="Inbound Seat Add-On Options" rendered="{!blnShowInboundSeatAddOns}">
+                            <apex:pageBlockTable value="{!list_InboundSeatAddOns}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkInboundSeatAddOns" status="statusInboundSeatAddOns" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Inbound Seat Add-On Options" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkInboundSeatAddOns" status="statusInboundSeatAddOns" rendered="{!AND(eachRecord.index > -1,OR(eachRecord.hasDevcies, eachRecord.showAddSign))}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Inbound Seat Add-On Options" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Inbound Seat Add-On Options');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}"/>
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- End User End Points -->         
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusEndUserEndPoints">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkEndUserEndPoints" title="End User End Points" rendered="{!renderEndUserEndPoints}">
+                            <apex:pageBlockTable value="{!endUserEndPoints}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkEndUserEndPoints" status="statusEndUserEndPoints" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="End User End Points" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkEndUserEndPoints" status="statusEndUserEndPoints" rendered="{!AND(eachRecord.index > -1,OR(eachRecord.hasDevcies, eachRecord.showAddSign))}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="End User End Points" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'End User End Points');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}"/>
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Adapter Service Options -->         
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusASO">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkASO" title="Adapter Service Options" rendered="{!blnShowAdapterServiceOptions}">
+                            <apex:pageBlockTable value="{!list_AdapterServiceOptions}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkASO" status="statusASO" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Adapter Service Options" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkASO" status="statusASO" rendered="{!AND(eachRecord.index > -1,OR(eachRecord.hasDevcies, eachRecord.showAddSign))}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Adapter Service Options" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>                                  
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Adapter Service Options');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}"/>
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!--BluIP-->
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusBluIP">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkBluIP" title="Virtual PBX - Powered by BluIP" rendered="{!blnShowBluIP}">
+                            <apex:pageBlockTable value="{!list_BluIP}" var="eachRecord" rowClasses="tableRow" id="pgblktblBluIP">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}"/>                                     
+                                    <apex:facet name="header">
+                                        <apex:image url="{!$Resource.RefreshIcon}" title="Calculate" style="cursor:pointer;" onclick="doCalculationBluIP(0, 'BluIP');" width="15px" height="15px"/>
+                                    </apex:facet>                                   
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:image url="{!$Resource.PlusSign}" onclick="addRowBluIP('{!eachRecord.index}', 'BluIP');" rendered="{!AND(eachRecord.index > -1, eachRecord.hasDevcies)}" width="15px;" height="15px" style="cursor:pointer;"/>                                    
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}"  headerValue="Quantity (# of ports/minutes/users) or Yes/No">                            
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow)}" required="false" onchange="doCalculationJS('{!eachRecord.index}', 'BluIP');" />
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow)}" required="false" onchange="doCalculationJS('{!eachRecord.index}', 'BluIP');" />
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                        
+                                </apex:column>
+                                <apex:repeat value="{!$ObjectType.BigMachines__Quote_Product__c.FieldSets.Service_Order_BluIP}" var="f">
+                                    <apex:column headerValue="{!f.label}" styleClass="{!eachRecord.styleClass}">
+                                        <apex:outputPanel rendered="{!eachRecord.index > -1}">                              
+                                            <apex:outputPanel rendered="{!f.label != 'Product'}">
+                                                <apex:outputField value="{!eachRecord.record[f]}" rendered="{!NOT(f.required)}" />                                              
+                                                <apex:inputField value="{!eachRecord.record[f]}" rendered="{!f.required}" required="false" onchange="doCalculationJS('{!eachRecord.index}', 'BluIP');"/>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!f.label == 'Product'}">                                           
+                                                <apex:outputField value="{!eachRecord.record[f]}" rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                                <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                                    <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record[f]}</u> </span>
+                                                </apex:outputPanel>
+                                                &nbsp;&nbsp;
+                                                <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!AND(f.label == 'Product', eachRecord.detailRow)}"/>
+                                            </apex:outputPanel>  
+                                        </apex:outputPanel>                                        
+                                    </apex:column>                                    
+                                </apex:repeat>                                                                                              
+                            </apex:pageBlockTable>                 
+                        </apex:pageBlockSection>
+                        <!-- Genesys Customer Care --> 
+                        <apex:pageBlockSection columns="1" id="pgblkGCS" title="Genesys Customer Care" rendered="{!renderSupportSubscriptions}">
+                            <apex:pageBlockTable value="{!supportSubscriptions}" var="eachRecord" rowClasses="tableRow">          
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.detailRow}"/>                                    
+                                </apex:column> 
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Level Of Support">
+                                    <apex:selectList value="{!eachRecord.record.Level_Of_Support__c}" size="1" rendered="{!eachRecord.detailRow}">
+                                        <apex:SelectOptions value="{!supportOptionList}" />
+                                    </apex:selectList>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                </apex:column>                                 
+                                <apex:repeat value="{!$ObjectType.BigMachines__Quote_Product__c.FieldSets.Service_Order_Support}" var="f">
+                                    <apex:column headerValue="{!f.label}"  styleClass="{!eachRecord.styleClass}">
+                                        <apex:outputField value="{!eachRecord.record[f]}" rendered="{!AND(NOT(f.required), eachRecord.detailRow, f.label != 'Extended Price Per Month',f.label != 'Discount %')}" />
+                                        <apex:inputField value="{!eachRecord.record[f]}" rendered="{!AND(f.required, eachRecord.detailRow)}" required="false"/>
+                                        &nbsp;&nbsp;
+                                        <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!AND(f.label == 'Product', eachRecord.detailRow)}"/>
+                                        <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month" rendered="{!f.label == 'Extended Price Per Month'}">
+                                            <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                        </apex:outputText>
+                                    </apex:column>
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.detailRow)}">                                         
+                                        <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month" rendered="{!f.label == 'Extended Price Per Month'}">
+                                            <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                        </apex:outputText>                                           
+                                    </apex:outputPanel>
+                                </apex:repeat>                      
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <br/>
+                        <apex:outputText value="Telco" style="font-weight:bold;font-size:150%;color:#808080"/>
+                        <!-- Telecommunications Options -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusTelcoOpt">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkTelcoOpt" title="Telecommunications Options" rendered="{!blnShowTelcoOptions}">
+                            <apex:pageBlockTable value="{!list_TelcoOptions}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkTelcoOpt" status="statusTelcoOpt" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Telecommunications Options" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkTelcoOpt" status="statusTelcoOpt" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Telecommunications Options" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Telecommunications Options');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Connectivity Options -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusConOpt">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkConOpt" title="Connectivity Options" rendered="{!blnShowConnectivityOptions}">
+                            <apex:pageBlockTable value="{!list_ConnectivityOptions}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkConOpt" status="statusConOpt" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Connectivity Options" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkConOpt" status="statusConOpt" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Connectivity Options" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Connectivity Options');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
+                    
+                    <apex:pageBlock title="Non Recurring Fees" id="pgblkNonRecCharges">
+                        <!-- Implementation Charges -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusImplementationCharges">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkImplementationCharges" title="Implementation Charges" rendered="{!blnShowImplementationCharges}">
+                            <apex:pageBlockTable value="{!list_ImplementationCharges}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkImplementationCharges" status="statusImplementationCharges" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Implementation Charges" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkImplementationCharges" status="statusImplementationCharges" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Implementation Charges" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Implementation Charges');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Professional Services Implementation -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusPSImplementation">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkPSImplementation" title="Professional Services Implementation" rendered="{!renderPSImplementation}">
+                            <apex:pageBlockTable value="{!psImplementation}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkPSImplementation" status="statusPSImplementation" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Professional Services Implementation" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkPSImplementation" status="statusPSImplementation" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Professional Services Implementation" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Professional Services Implementation');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                        <!-- Genesys University Training -->                        
+                        <div style="height:5px;">
+                            <apex:actionStatus id="statusGUTraining">
+                                <apex:facet name="start">    
+                                    Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                                </apex:facet>                           
+                            </apex:actionStatus>
+                        </div>
+                        <apex:pageBlockSection columns="1" id="pgblkGUTraining" title="Genesys University Training" rendered="{!blnShowGUTraining}">
+                            <apex:pageBlockTable value="{!list_GUTraining}" var="eachRecord" rowClasses="tableRow">
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputCheckBox value="{!eachRecord.selected}" rendered="{!eachRecord.index > -1}" disabled="{!eachRecord.autoSelected}" />                                    
+                                    <apex:facet name="header">
+                                        <apex:commandlink action="{!doCalculation}" rerender="pgblkGUTraining" status="statusGUTraining" title="Calculate">
+                                            <apex:param value="0" name="index" assignTo="{!index}" />
+                                            <apex:param value="Genesys University Training" name="sectionType" assignTo="{!sectionType}" />
+                                            <apex:image url="{!$Resource.RefreshIcon}" width="15px" height="15px"/>    
+                                        </apex:commandlink>
+                                    </apex:facet>                                                                 
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}">
+                                    <apex:commandlink action="{!addMoreProduct}" rerender="pgblkGUTraining" status="statusGUTraining" rendered="{!AND(eachRecord.index > -1,eachRecord.showAddSign)}">
+                                        <apex:param value="{!eachRecord.index}" name="index" assignTo="{!index}" />
+                                        <apex:param value="Genesys University Training" name="sectionType" assignTo="{!sectionType}" />
+                                        <apex:image url="{!$Resource.PlusSign}" width="15px;" height="15px"/>
+                                    </apex:commandlink>
+                                </apex:column>
+                                <apex:column styleClass="{!eachRecord.styleClass}" headerValue="Quantity (# of ports/minutes/users) or Yes/No">                                 
+                                    <apex:inputField value="{!eachRecord.record.BigMachines__Quantity__c}" rendered="{!AND(eachRecord.productOption != 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:inputField value="{!eachRecord.record.Product_Option__c}" rendered="{!AND(eachRecord.productOption == 'Yes/No', eachRecord.detailRow, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:commandButton value="Save" onclick="saveAJAX(); return false;" rendered="{!AND(quote.BigMachines__Status__c != 'Quote Approval Pending',quote.BigMachines__Status__c != 'Quote Approved',NOT(eachRecord.detailRow))}"/>
+                                    <apex:image url="{!$Resource.ErrorIcon}" rendered="{!eachRecord.styleClass == 'errorRow'}" title="{!eachRecord.errorMsg}" width="15px;" height="15px" />                                                                           
+                                </apex:column>                   
+                                <apex:column headerValue="Product" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Product__c}" rendered="{!eachRecord.isProductNameEditable}" />
+                                    <apex:outputPanel rendered="{!NOT(eachRecord.isProductNameEditable)}">
+                                        <apex:outputField value="{!eachRecord.record.Product__c}"  rendered="{!NOT(eachRecord.showOrderAsLink)}" />
+                                        <apex:outputPanel rendered="{!eachRecord.showOrderAsLink}" >
+                                            <span onclick="modalWin('{!eachRecord.record.BigMachines__Product__c}', '{!eachRecord.record.Discount__c}')" style="cursor:pointer;"> <u>{!eachRecord.record.Product__c}</u> </span>
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    &nbsp;&nbsp;
+                                    <apex:image url="{!$Resource.HelpIcon}" width="15px;" height="15px" style="cursor:pointer;" title="{!eachRecord.productDescription}" rendered="{!eachRecord.detailRow}"/>
+                                </apex:column>             
+                                <apex:column headerValue="Devices/Services" styleClass="{!eachRecord.styleClass}">
+                                    <apex:selectList value="{!eachRecord.record.Device__c}" rendered="{!eachRecord.hasDevcies}" size="1"  onchange="doCalculationJS('{!eachRecord.index}', 'Genesys University Training');" style="width:150px" disabled="{!eachRecord.autoSelected}">
+                                        <apex:SelectOptions value="{!mapProductVsProductDevices[eachRecord.record.BigMachines__Product__c]}" />
+                                    </apex:selectList>
+                                </apex:column>             
+                                <apex:column headerValue="List Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.List_Price__c}" rendered="{!NOT(eachRecord.isListPriceEditable)}" />                                                                                   
+                                    <apex:inputField value="{!eachRecord.record.List_Price__c}" rendered="{!AND(eachRecord.isListPriceEditable, NOT(eachRecord.autoSelected))}" required="false"/>
+                                    <apex:outputText value="%" rendered="{!eachRecord.isListPriceInDiscount}"/>
+                                </apex:column>
+                                <apex:column headerValue="Metric" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputField value="{!eachRecord.record.Metric__c}" />
+                                </apex:column>
+                                <apex:column headerValue="Discount" styleClass="{!eachRecord.styleClass}">
+                                    <apex:inputField value="{!eachRecord.record.Discount__c}" rendered="{!AND(NOT(eachRecord.autoSelected), eachRecord.isDiscountable)}" required="false"/>
+                                </apex:column>
+                                <apex:column headerValue="Net Price" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Net Unit Price">
+                                        <apex:param value="{!eachRecord.record.Net_Unit_Price__c}"/>
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Extended Price Per Period" styleClass="{!eachRecord.styleClass}">
+                                    <apex:outputText value="{0, number, ###,##0.0000}" label="Extended Price Per Month">
+                                        <apex:param value="{!eachRecord.record.Extended_Price_Per_Month__c}" />
+                                    </apex:outputText>
+                                </apex:column>                                                                                                                                            
+                            </apex:pageBlockTable>                  
+                        </apex:pageBlockSection>
+                    </apex:pageBlock>
+                    
+                    <apex:pageBlockSection title="Totals" id="totals">
+                        <apex:outputField label="Professional Services" value="{!quote.CPS_Total__c}"/>
+                        <apex:outputField label="Non Recurring Fees" value="{!quote.Non_Recurring_Fees__c}"/>
+                        <apex:outputField label="Committed Monthly Recurring Revenue" value="{!quote.CMRR__c}"/>
+                        <apex:outputField label="Annual Contract Value" value="{!quote.Annual_Contract_Value__c}"/>
+                        <apex:outputField label="Total Contract Value" value="{!quote.Cloud_Total__c}"/>
+                        <apex:outputField value="{!quote.Monthly_Contract_Value__c}" />                                                       
+                    </apex:pageBlockSection>                
+                    
+                    </apex:outputPanel>
+                </apex:tab>
+                <apex:tab label="DAP Details" name="DAPFieldsTab" id="DAPFieldsTab">
+                    <apex:pageBlockSection columns="1">
+                        <apex:repeat value="{!$ObjectType.BigMachines__Quote__c.FieldSets.Service_Order_Quote_DAP_Fields}" var="f">
+                            <apex:inputField value="{!quote[f]}" rendered="{!f.required}" style="width:100%" />
+                            <apex:outputField value="{!quote[f]}" rendered="{!NOT(f.required)}" />                  
+                        </apex:repeat>
+                    </apex:pageBlockSection>                    
+                </apex:tab>
+                <apex:tab label="Special Offer/Legal Terms" name="specialOfferTab" id="specialOfferTab">
+                    <apex:pageBlockSection columns="1">
+                        <apex:repeat value="{!$ObjectType.BigMachines__Quote__c.FieldSets.Service_Order_Special_Offer_Tab_Fields}" var="f">
+                            <apex:inputField value="{!quote[f]}" rendered="{!f.required}" style="width:100%" />
+                            <apex:outputField value="{!quote[f]}" rendered="{!NOT(f.required)}" />                  
+                        </apex:repeat>
+                    </apex:pageBlockSection>                    
+                </apex:tab>
+                <apex:tab label="Upfront Approval" name="upfrontApprovalTab" id="upfrontApprovalTab">
+                    <apex:iframe src="/apex/cloud_upfront_approval?id={!quote.id}" scrolling="false" id="upfrontApproval"/>
+                </apex:tab>
+                <apex:tab label="Order Info" name="orderInfoTab" id="orderInfoTab">   
+                    <apex:pageBlockSection columns="2">
+                        <apex:inputField value="{!quote.Order_PO_Number__c}"/>
+                        <apex:inputField value="{!quote.Order_PO_Date__c}"/>
+                        <apex:inputField value="{!quote.Order_PO_Received_Date__c}"/>
+                    </apex:pageBlockSection>
+                </apex:tab>
+                <apex:tab label="Output Options" name="OutputOptionsTab" id="OutputOptionsTab" rendered="{!quote.BigMachines__Status__c == 'Quote Approved' || quote.BigMachines__Status__c == 'Order Submitted'}">   
+                    <apex:pageBlockSection columns="2">
+                        <apex:inputField value="{!quote.Hide_Discount__c}"/>
+                        <apex:inputField value="{!quote.Hide_Totals__c}"/>
+                        <apex:inputField value="{!quote.Proposal_Date__c}"/>
+                    </apex:pageBlockSection>                            
+                </apex:tab>
+        </apex:tabPanel>
+        </apex:pageBlock>       
+    </apex:form>
+    <!-- Billing Address Section -->
+    <apex:include pageName="OrderAddressCloud" rendered="{!NOT(ISBLANK(quote.id)) && 
+              (quote.BigMachines__Status__c == 'Quote Approved' || quote.BigMachines__Status__c == 'Order Submitted')}"/>
+    <apex:relatedList list="ProcessSteps" ></apex:relatedList>     
+    <div style="height:15px;">
+        <apex:actionStatus id="status">
+            <apex:facet name="start">    
+                <apex:outputPanel id="popPanel">
+                    <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                    <apex:outputPanel styleClass="custPopup" layout="block">
+                        <apex:outputPanel layout="block" style="text-align:center;">
+                            Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:facet>                           
+        </apex:actionStatus>
+    </div>
+    <script>
+        var button = document.getElementsByName('piSubmit');
+        if(button != null && button.length > 0)
+            button[0].style.display = 'none';
+    </script>
+</apex:page>

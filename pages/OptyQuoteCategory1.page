@@ -1,0 +1,38 @@
+<apex:page standardController="Opportunity" extensions="OptyQuoteHandler1" action="{!goToCloneQuoteIfOppIsDownUpGrade}">
+    <apex:sectionHeader subtitle="{!opty.Name}" title="Opportunity" /> 
+    <apex:pageMessages />
+    <apex:form id="theForm" >
+     <apex:actionFunction name="refreshPageBlock" rerender="thePageBlock" action="{!refresh}" />
+    <apex:pageBlock id="thePageBlock" >  
+        <apex:pageBlockSection title="Select Quote Category" collapsible="false" columns="1">
+            <apex:pageBlockSectionItem >                
+                <apex:outputLabel value="Quote Category" />   
+                <apex:inputField label="Quote Category" value="{!Opty.Quote_Category__c}" onchange="refreshPageBlock(); return false;"/>                
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem rendered="{!Opty.Quote_Category__c !='On Premise'}">
+                <apex:outputLabel value="Offerings Type"></apex:outputLabel>
+                <apex:inputField id="offerType" value="{!Opty.Lines_of_Businesses__c}" onchange="refreshPageBlock(); return false;"/>                
+            </apex:pageBlockSectionItem>
+            <!--<apex:pageBlockSectionItem rendered="{!OR(AND(opty.Type = 'New logo', opty.Quote_Category__c != 'Cloud', opty.Direct_Sales__c=FALSE), AND(opty.Quote_Category__c != 'Cloud', opty.Type != 'New logo'))}">-->
+            <apex:pageBlockSectionItem rendered="{!opty.Quote_Category__c ='On Premise'}" helpText="{!$ObjectType.BigMachines__Quote__c.fields.Quote_Opportunity_Type__c.inlineHelpText}">    
+                <apex:outputLabel value="Pricing" for="pricingOptions" />
+                <apex:selectList value="{!selectedPricingOption}" size="1" id="pricingOptions" >
+                    <apex:selectOptions value="{!pricingOptions}"/>
+                </apex:selectList>            
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem rendered="{!AND(OR(Opty.Lines_of_Businesses__c == 'Business Edition', Opty.Lines_of_Businesses__c == 'Enterprise Edition'), Opty.Quote_Category__c !='On Premise')}">
+                <apex:outputLabel value="Pricing Model"/>
+                <apex:selectList id="calculationType" value="{!selectedPricingModel}" size="1">
+                    <apex:selectOption itemValue="Enabled" itemLabel="Enabled"/>
+                    <apex:selectOption itemValue="Concurrent" itemLabel="Concurrent"/>
+                </apex:selectList>                  
+            </apex:pageBlockSectionItem> 
+       </apex:pageBlockSection>   
+       <apex:pageBlockButtons location="bottom" >
+           <apex:outputPanel id="myButtons"> 
+                <apex:commandButton action="{!retrieveQuoteCategory}" title="Submit" value="Submit"  />
+           </apex:outputPanel>   
+       </apex:pageBlockButtons>       
+    </apex:pageBlock>
+</apex:form>
+</apex:page>

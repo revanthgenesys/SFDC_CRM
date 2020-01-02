@@ -1,0 +1,351 @@
+<apex:page controller="DealSupportCommunication" sidebar="false" tabStyle="Deal_Support__c" showHeader="false">
+    <style>
+        /* popup_box DIV-Styles  Start*/
+
+        #popup_box {
+            display: none;
+            /* Hide the DIV */
+            position: fixed;
+            _position: absolute;
+            /* hack for internet explorer 6 */
+            height: 700px;
+            width: 600px;
+            background: #FFFFFF;
+            left: 300px;
+            top: 50px;
+            z-index: 100;
+            /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+            margin-left: 15px;
+
+            /* additional features, can be omitted */
+            border: 2px solid #1797C0;
+            padding: 15px;
+            font-size: 15px;
+            -moz-box-shadow: 0 0 5px #ff0000;
+            -webkit-box-shadow: 0 0 5px #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+        }
+
+        #container {
+            background: #d2d2d2;
+            /*Sample*/
+            width: 100%;
+            height: 100%;
+        }
+
+        a {
+            cursor: pointer;
+            text-decoration: none;
+        }
+        /* This is for the positioning of the Close Link */
+
+        #popupBoxClose {
+            font-size: 20px;
+            line-height: 15px;
+            right: 5px;
+            top: 5px;
+            position: absolute;
+            color: #6fa5e2;
+            font-weight: 500;
+        }
+        /* popup_box DIV-Styles  Close*/
+    </style>
+    <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+    <script type="text/javascript">
+        var j$ = jQuery.noConflict();
+
+
+        j$(document).ready(function() {
+
+            j$(".clsBoxClose").click(function() {
+                unloadPopupBox();
+            });
+        });
+
+        function loadPopupBox() {
+            // To Load the Popupbox
+            j$('#popup_box').fadeIn("slow");
+            j$("#container").css({ // this is just for style
+                "opacity": "0.3"
+            });
+            return false;
+        }
+
+        function unloadPopupBox() {
+            // TO Unload the Popupbox
+
+            j$('#popup_box').fadeOut("slow");
+            j$("#container").css({ // this is just for style       
+                "opacity": "1"
+            });
+            return false;
+        }
+
+        function GetAttachmentId(obj) {
+            j$('[id$=hdnFileId]').val(obj);
+            //return false;
+        }
+
+        function inputLimiter(e, allow) {
+            var AllowableCharacters = '';
+            if (allow == 'Numbers') {
+                AllowableCharacters = '1234567890';
+            }
+            var k = document.all ? parseInt(e.keyCode) : parseInt(e.which);
+            if (k != 13 && k != 8 && k != 0) {
+                if ((e.ctrlKey == false) && (e.altKey == false)) {
+                    return (AllowableCharacters.indexOf(String.fromCharCode(k)) != -1);
+                } else {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+
+        function inputLimiterWithDot(e, allow) {
+            var AllowableCharacters = '';
+            if (allow == 'Numbers') {
+                AllowableCharacters = '1234567890.';
+            }
+            var k = document.all ? parseInt(e.keyCode) : parseInt(e.which);
+            if (k != 13 && k != 8 && k != 0) {
+                if ((e.ctrlKey == false) && (e.altKey == false)) {
+                    return (AllowableCharacters.indexOf(String.fromCharCode(k)) != -1);
+                } else {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+
+        var arrAllCCIds = '';
+        var arrHdnUserIds = '';
+        var arrHdnContactIds = '';
+
+        function GetCcUser() {
+
+            var arrUsersName = new Array();
+            var arrUsersId = new Array();
+            //if(j$('[name*=lkold]').val()!='null')
+            if (j$('[id$=IdCc]').val() != '' && j$('[id$=IdCc]').val() != null && j$('[id$=IdCc]').val() != 'undefined') {
+                arrUsersName.push(j$('[name*=IdCc_lkold]').val().trim());
+                arrUsersId.push(j$('[name*=IdCc_lkid]').val().trim());
+                var allUsers = '';
+                for (var i = 0; i < arrUsersName.length; i++) {
+                    if (arrUsersName[i] != 'null')
+                        allUsers += (allUsers != '' ? ',' : '') + arrUsersName[i].trim();
+                }
+
+                arrAllCCIds += (arrAllCCIds != '' ? ',' : '') + allUsers;
+
+                j$('.clsListOfCC').val(arrAllCCIds);
+
+                arrHdnUserIds += (arrHdnUserIds != '' ? ',' : '') + arrUsersId;
+
+                j$('[id$=hdnUsersId]').val(arrHdnUserIds);
+                j$('[id$=IdCc]').val('');
+                j$('.clsCC').val('');
+
+            } else {
+                alert('Please select Cc User.');
+            }
+            return false;
+        }
+
+
+
+
+        function GetCcContact() {
+
+            var arrContactsName = new Array();
+            var arrContactsId = new Array();
+            if (j$('[id$=IdCcContact]').val() != '' && j$('[id$=IdCcContact]').val() != null && j$('[id$=IdCcContact]').val() != 'undefined') {
+                arrContactsName.push(j$('[name*=IdCcContact_lkold]').val().trim());
+                arrContactsId.push(j$('[name*=IdCcContact_lkid]').val().trim());
+                var allContacts = '';
+                for (var i = 0; i < arrContactsName.length; i++) {
+                    if (arrContactsName[i] != 'null')
+                        allContacts += (allContacts != '' ? ',' : '') + arrContactsName[i].trim();
+                }
+
+                arrAllCCIds += (arrAllCCIds != '' ? ',' : '') + allContacts;
+
+                j$('.clsListOfCC').val(arrAllCCIds);
+                arrHdnContactIds += (arrHdnContactIds != '' ? ',' : '') + arrContactsId;
+                j$('[id$=hdnContactsId]').val(arrHdnContactIds);
+                j$('[id$=IdCcContact]').val('');
+                j$('.clsCCContact').val('');
+
+            } else {
+                alert('Please select Cc Contact.');
+            }
+            return false;
+        }
+
+        function ClearUsers() {
+            //arrUsersName = [];
+            //arrUsersId = [];
+            //arrContactsName = [];
+            //arrContactsId = [];
+
+            //alert(j$('[id$=hdnUsersId]').val());
+            //alert(j$('[id$=hdnContactsId]').val());
+            j$('[id$=hdnUsersId]').val('');
+            j$('[id$=hdnContactsId]').val('');
+            j$('.clsListOfCC').val('');
+            arrAllCCIds = '';
+            return false;
+        }
+    </script>
+    <apex:form >
+        <apex:inputHidden id="hdnUsersId" value="{!sUsersIds}" />
+        <apex:inputHidden id="hdnContactsId" value="{!sContactsIds}" />
+        <div id="popup_box" style="height:200px;margin-top:200px;">
+            <!-- OUR PopupBox DIV-->
+            <!--<APEX:PAGEMESSAGES />-->
+            <apex:pageBlock id="pbLive">
+                <div style="float:left;width:10px;color:black;"><a id="popupBoxClose" class="clsBoxClose">X</a></div>
+                <table style="width:100%;margin-top:30px">
+                    <tr>
+                        <td>
+                            <apex:outputPanel id="Panel">
+                                <div id="upload" class="upload">
+                                    <table>
+                                        <tr>
+                                            <td>
+                                                <apex:inputFile id="fileToUpload" value="{!fileBody}" filename="{!fileName}" styleClass="input-file" />
+                                            </td>
+                                            <td>
+                                                <apex:commandButton value="Upload Attachment" action="{!uploadFile}" />
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </apex:outputPanel>
+                        </td>
+                    </tr>
+                </table>
+            </apex:pageBlock>
+        </div>
+        <!-- Close PopupBox DIV-->
+        <apex:pagemessages rendered="{!blnShowErrorMsg}" />
+        <apex:pageBlock >
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Attachment" onclick="return loadPopupBox();" />
+                <apex:commandButton value="Send Email" action="{!SendEmail}" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" title="AskSalesOps DSR - Communication" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="To">
+                    </apex:outputLabel>
+                    <apex:inputText value="{!sTo}" style="width : 400px" />
+                </apex:pageBlockSectionItem>
+                <!--  -->
+                <apex:pageBlockSectionItem rendered="{!NOT(IsPartnerUser)}" >
+                    <apex:pageBlockSection columns="2">
+                        <!-- Commented by Rsystems : Mail By Debaora -->
+                        <apex:pageBlockSectionItem dataStyle="width:100%">
+
+                            <apex:outputLabel value="Cc User">
+                            </apex:outputLabel>
+                            <apex:pageBlockSection columns="2">
+                                <apex:pageBlockSectionItem dataStyle="width:100%">
+                                    <apex:inputField id="IdCc" value="{!objUser.ownerid}" style="" required="false" styleClass="clsCC" />
+                                    <apex:commandButton value="Add to Cc List" onclick="return GetCcUser();" />
+                                </apex:pageBlockSectionItem>
+                            </apex:pageBlockSection>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                </apex:pageBlockSectionItem>
+                    <!--swastika-Start-->
+                    <!--
+           <apex:pageBlockSectionItem dataStyle="width:100%" rendered="{!(IsPartnerUser == false)}">
+                <apex:outputLabel value="Cc Contact">
+                </apex:outputLabel>
+              	<apex:pageBlockSection columns="2">
+               		<apex:pageBlockSectionItem >
+                		<apex:inputField id="IdCcContact" value="{!objUser.Cc_Contact__c}" style="width : 400px" required="false" styleClass="clsCC"/>
+                  		<apex:commandButton value="Add to Cc List" onclick="return GetCcContact();" />
+               		</apex:pageBlockSectionItem>   
+               	</apex:pageBlockSection> 
+			</apex:pageBlockSectionItem>
+            -->
+
+                    <!--swastika-End-->
+                    <!--<apex:pageBlockSectionItem dataStyle="width:100%">
+               <apex:outputLabel value="Cc Contact">
+               </apex:outputLabel>
+               
+             </apex:pageBlockSectionItem>
+             
+             
+             <apex:pageBlockSection columns="2">
+               <apex:pageBlockSectionItem >
+               <apex:inputField id="IdCcContact" value="{!objUser.Cc_Contact__c}" style="width : 400px" required="false" styleClass="clsCCContact"/>
+               <apex:commandButton value="Add to Cc List" onclick="return GetCcContact();" />
+               </apex:pageBlockSectionItem>
+             </apex:pageBlockSection> 
+             
+             <apex:pageBlockSectionItem />-->
+
+                    <!--
+            <apex:pageBlockSectionItem id="pbsCc" dataStyle="width:100%" rendered="{!(IsPartnerUser == false)}">
+               
+                <apex:outputLabel value="List of Cc">
+                </apex:outputLabel>
+              <apex:pageBlockSection columns="2">
+               <apex:pageBlockSectionItem >
+                <apex:inputText value="{!sCc}" style="width : 400px" styleClass="clsListOfCC" disabled="true"/>
+                 <apex:commandButton value="Clear Cc List" onclick="return ClearUsers();" />
+               </apex:pageBlockSectionItem>   
+               </apex:pageBlockSection> 
+             </apex:pageBlockSectionItem>
+            -->
+
+                    <apex:pageBlockSectionItem id="pbsCc"  rendered="{!NOT(IsPartnerUser)}" >
+                        <apex:outputLabel value="List of Cc" />
+						<apex:outputPanel >
+                            <apex:inputText value="{!sCc}" style="width : 400px" styleClass="clsListOfCC" disabled="true" />
+                            <apex:commandButton value="Clear Cc List" onclick="return ClearUsers();" />
+                        </apex:outputPanel>                        
+                    </apex:pageBlockSectionItem>           
+
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="From">
+                </apex:outputLabel>
+                <apex:inputText value="{!sFrom}" disabled="true" style="width : 400px" />
+            </apex:pageBlockSectionItem>
+            
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Subject">
+                </apex:outputLabel>
+                <apex:inputText value="{!sSubject}" style="width : 800px" />
+            </apex:pageBlockSectionItem>            
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Body">
+                </apex:outputLabel>
+                <apex:inputTextarea value="{!sBody}" style="width:300px;height:200px;" richText="true" />
+            </apex:pageBlockSectionItem>
+
+            <apex:pageBlockSectionItem rendered="{!list_Attachmnet.size >0}">
+                <apex:pageBlock >
+                    <table border="1" width="100%">
+                        <tr style="font-weight:800;">
+                            <td width="65%">File Name</td>
+                        </tr>
+                        <apex:repeat value="{!list_Attachmnet}" var="abp">
+                            <tr>
+                                <td>
+                                    <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br/><br/>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                    </table>
+                </apex:pageBlock>
+            </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

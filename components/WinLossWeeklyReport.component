@@ -1,0 +1,121 @@
+<apex:component controller="WillLossWeeklyReportController" access="global">
+    <div style="font-family:Calibri;font-size:14px;">
+          <b> <a href="https://genesys.my.salesforce.com/00OU0000001eNFq" target="_blank"> Weekly Win-Loss Report </a></b>
+           <br/><br/>
+ This report contains opportunities in all regions that were closed won (green) or lost (red) during the previous week – Sunday through Saturday – with a license amount greater than USD $25,000 or ACV amount greater than USD $5,000. No renewal, upgrade, downgrade or PPU usage opportunities are included in this report. 
+
+     </div>
+    <br/>
+    <table border="1" cellpadding="5" cellspacing="5" style="border-width:1px;font-family:Calibri;font-size:12px;border-color:70AAC6;border-collapse:collapse;width:100%;text-align:left;">
+        <tr style="background-color:#70AAC6;font-weight:bold;color:#ffffff;text-align:left;">
+            <th style="font-weight:bold;">
+                Owner Sub Region
+            </th>
+            <th style="font-weight:bold;">
+                Opportunity Owner
+            </th>
+            <th style="font-weight:bold;">
+                Account Name
+            </th>
+            <th style="font-weight:bold;">
+                Opportunity Name
+            </th>
+            <th style="font-weight:bold;">
+                Platform Type
+            </th>
+            <th style="font-weight:bold;">
+                Offering Type
+            </th>            
+            <th style="font-weight:bold;">
+                Primary Solution
+            </th>                        
+            <th style="font-weight:bold;">
+                Won/Lost Reason
+            </th>
+            <th style="font-weight:bold;">
+                Detail on Win/Loss Status
+            </th>
+            <th style="font-weight:bold;">
+                Primary Competitor
+            </th>
+            <th style="font-weight:bold;">
+                Type
+            </th>
+            <th style="font-weight:bold;">
+                Number of Agents
+            </th>
+           
+            <th style="font-weight:bold;">
+                License Amount USD
+            </th>
+           
+            <th style="font-weight:bold;">
+                Annual Contract Value USD
+            </th>                            
+        </tr>
+        <apex:repeat value="{!opps}" var="eachRecord">
+            <apex:outputPanel rendered="{!eachRecord.isHeaderRecord}" >
+                <tr style="background-color:#bc1030;color:#ffffff;">
+                    <td colspan="14">
+                        <b>{!eachRecord.headerName}</b>
+                    </td>
+                </tr>
+            </apex:outputPanel>
+           
+            <apex:outputPanel rendered="{!NOT(eachRecord.isHeaderRecord)}">
+                <tr style="background-color:{!If(eachRecord.record.Win_Loss_Status__c =='Won' ,'#D5F5E3','#fde8ec')}">
+                    <td>
+                        <apex:outputLink value="{!sfdcURL}/{!eachRecord.record.Country__c}"> {!eachRecord.record.xO__c} </apex:outputLink>
+                    </td>
+                    <td>
+                        <apex:outputLink value="{!sfdcURL}/{!eachRecord.record.OwnerId}"> {!eachRecord.record.Owner.Name} </apex:outputLink>
+                    </td>
+                    <td>
+                        <apex:outputLink value="{!sfdcURL}/{!eachRecord.record.AccountId}"> {!eachRecord.record.Account.Name} </apex:outputLink>
+                    </td>
+                    <td>
+                        <apex:outputLink value="{!sfdcURL}/{!eachRecord.record.id}"> {!eachRecord.record.Name} </apex:outputLink>
+                    </td>
+                    <td>
+                        {!eachRecord.record.Primary_Line_of_Business__c}
+                    </td>
+                    <td>
+                        {!eachRecord.record.Lines_of_Businesses__c}
+                    </td>                    
+                    
+                    <td>
+                        {!eachRecord.record.Primary_Solution__c}
+                    </td>                    
+                    <td>
+                        {!eachRecord.record.WonLostCancelledReason__c}
+                    </td>
+                    <td>
+                        {!eachRecord.record.Detail_on_Won_Lost_Reason__c}
+                    </td>
+                    
+                    <td>
+                        {!eachRecord.record.Competitor__c}
+                    </td>
+                    <td>
+                        {!eachRecord.record.Type}
+                    </td>
+                    <td>
+                        {!eachRecord.record.NumberofAgents__c}
+                    </td>
+                   
+                    <td style="text-align:right;">
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!eachRecord.licenseAmount}" />
+                        </apex:outputText>                  
+                    </td>
+                    
+                    <td style="text-align:right;">
+                        <apex:outputText value="{0, number, ###,##0.00}">
+                            <apex:param value="{!eachRecord.acv}" />
+                        </apex:outputText>                  
+                    </td>
+                </tr>
+            </apex:outputPanel>
+        </apex:repeat>
+    </table>
+</apex:component>

@@ -1,0 +1,63 @@
+<apex:page controller="WowRequestUserAccess" sidebar="false" tabStyle="Wow_Request_Form__c" action="{!searchWow}" >
+<apex:form >
+  <apex:pageBlock title="SC Engagement Requests List">
+    <apex:pageblockSection columns="2">
+    <apex:pageblocksectionItem >
+    <apex:pageblockSection columns="3">
+    <apex:outputLabel value="SC Engagement Name" /> 
+    <apex:inputText required="false" value="{!SC}"/>    
+    <apex:commandbutton value="Search" action="{!searchWow}"/>
+     </apex:pageblockSection>
+    </apex:pageblocksectionItem>
+    <apex:pageblocksectionItem ></apex:pageblocksectionItem>
+    
+    </apex:pageblockSection>  
+     <!--<div></div> -->
+  
+    <!--<apex:panelGrid columns="5" rendered="{!list_WowReq!= null}"> 
+        <apex:commandLink action="{!first}" rendered="{!hasPrevious}" >First</apex:commandLink> 
+        <apex:commandLink action="{!previous}" rendered="{!hasPrevious}" >Previous</apex:commandLink> 
+        <apex:commandLink action="{!next}" rendered="{!hasNext}" >Next</apex:commandLink> 
+        <apex:commandLink action="{!last}" rendered="{!hasNext}" >Last</apex:commandLink> 
+        <apex:outputText rendered="{!IF(hasNext == true || hasPrevious == true, true, false)}">Page - {!pageNumber} of {!TotalPages}</apex:outputText>
+    </apex:panelGrid> -->  
+ </apex:pageBlock>
+ <apex:pageBlock id="results" rendered="{! IF( list_WowReq!= null && list_WowReq.size >0, true, false)}" >
+ <apex:pageBlockTable value="{!list_WowReq}" var="g">     
+    <apex:column headerValue="SC Engagement Name">
+    <apex:outputLink target="_blank" value="{!sCustomURL}{!g.Opportunity_Id__c}">{!g.Name}</apex:outputLink> 
+   </apex:column>  
+    <apex:column headerValue="Opportunity Name">
+    <apex:outputLink target="_blank" value="{!BaseURL}/{!g.Opportunity_Id__c}">{!g.Opportunity_Id__r.Name}</apex:outputLink> 
+   </apex:column> 
+    <apex:column headerValue="Account Name">
+    <apex:outputLink target="_blank" value="{!BaseURL}/{!g.Opportunity_Id__r.Account.id}">{!g.Opportunity_Id__r.Account.Name}</apex:outputLink> 
+   </apex:column> 
+    <apex:column value="{!g.WoW_Status__c}" headerValue="SC Status"/> 
+    <apex:column value="{!g.AE__r.Name}" headerValue="AE"/>     
+    <apex:column value="{!g.Lead__r.Name}" headerValue="Leader"/> 
+    <apex:column value="{!g.CreatedBy.Name}" headerValue="Created By"/> 
+    <apex:column >    
+    <apex:facet name="header">Created Date</apex:facet>
+    <apex:OutputText value="{0,date,MM'/'dd'/'yyyy}">
+     <apex:param value="{!g.CreatedDate}" />
+    </apex:OutputText>
+    </apex:column>   
+    <apex:column value="{!g.LastModifiedBy.Name}" headerValue="Last Modified By"/> 
+    <apex:column >    
+    <apex:facet name="header">Last Modified Date</apex:facet>
+    <apex:OutputText value="{0,date,MM'/'dd'/'yyyy}">
+     <apex:param value="{!g.LastModifiedDate}" />
+    </apex:OutputText>
+    </apex:column>    
+ </apex:pageBlockTable>
+ <apex:pageBlockButtons >
+        <apex:commandButton action="{!FirstPage}" disabled="{!prev}" rerender="results"  value="First"></apex:commandButton> 
+        <apex:commandButton action="{!previous}" disabled="{!prev}" rerender="results" value="Previous"> </apex:commandButton> 
+        <apex:commandButton action="{!next}" disabled="{!nxt}" rerender="results" value="Next"> </apex:commandButton> 
+        <apex:commandButton action="{!lastPage}" disabled="{!nxt}" rerender="results" value="Last"> </apex:commandButton> 
+        <apex:outputText >Page - {!page} of {!totalPages}</apex:outputText>
+    </apex:pageBlockButtons>
+ </apex:pageBlock> 
+ </apex:form>
+</apex:page>

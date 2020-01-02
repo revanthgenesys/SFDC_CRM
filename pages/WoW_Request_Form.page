@@ -1,0 +1,4082 @@
+<apex:page controller="clsWowRequestData" tabStyle="Opportunity" sidebar="false">
+
+ 
+ <script>
+  //Added by JJ on 04/16/2018 to stop accessing the SCE1.0 other than System Administrator
+  function redirect(){
+            var ProfileName = "{!$Profile.Name}";
+            var BaseURL = "{!$Site.BaseUrl}";
+            
+            if(ProfileName != 'System Administrator')
+                 window.location.href=BaseURL+'/home/home.jsp'; 
+        }
+
+        
+        window.onload = window.setTimeout(redirect());
+ 
+ 
+ 
+ function setFocusOnLoad() {}</script>
+    <style>       
+       
+        
+       /* popup_box DIV-Styles  Start*/
+        #popup_box {
+            display:none; /* Hide the DIV */
+            position:fixed;  
+            _position:absolute; /* hack for internet explorer 6 */  
+            height:700px;
+            width:600px;  
+            background:#FFFFFF;  
+            left: 300px;
+            top: 50px;
+            z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+            margin-left: 15px;  
+           
+            /* additional features, can be omitted */
+            border:2px solid #1797C0;      
+            padding:15px;  
+            font-size:15px;  
+            -moz-box-shadow: 0 0 5px #ff0000;
+            -webkit-box-shadow: 0 0 5px #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+           
+        }
+        
+        #container {
+            background: #d2d2d2; /*Sample*/
+            width:100%;
+            height:100%;
+        }
+        
+        a{ 
+        cursor: pointer; 
+        text-decoration:none; 
+        }
+        
+        /* This is for the positioning of the Close Link */
+        #popupBoxClose {
+            font-size:20px;  
+            line-height:15px;  
+            right:5px;  
+            top:5px;  
+            position:absolute;  
+            color:#6fa5e2;  
+            font-weight:500;      
+        }
+        /* popup_box DIV-Styles  Close*/
+        /*to hide user type*/
+        .clsUser select{
+            visibility: hidden !important;
+            display: block !important;
+            }
+            div.tooltip {
+            width: 20px;
+            float: right;
+            display:inline;
+        }
+        .clsSolutionCon select{
+            visibility: hidden !important;
+            display: block !important;
+            }
+            div.tooltip {
+            width: 20px;
+            float: right;
+            display:inline;
+        }
+        
+        div.tooltip span {
+            display: none;
+            font-weight:normal;
+            text-align:left;
+            padding: 3px 5px;
+            margin-left: 8px;
+            width: 250px;
+        }
+        
+        div.tooltip:hover span {
+            display: inline;
+            position: absolute;
+            border: 1px solid #cccccc;
+            background: #FFC;
+            color: #000000;
+            z-index:10000;
+        }
+        .Mylinks
+        {
+            color:#000000;            
+        }
+        a:visited
+        {
+            color:Blue;           
+        }
+        .pbTitle {
+        white-space: nowrap;
+    }
+    </style> 
+  <script>
+    function colorPageBlock(pageblock, color) {
+    if (pageblock != null) pageblock.firstChild.style.cssText = "background-color: " + color + ";";
+    }
+  </script>
+  
+  <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+  <script type="text/javascript">
+   var j$ = jQuery.noConflict();
+    var sAssignTo;
+   var sWowType; 
+   var isVisionAttachExist = '{!blnIsVisionAttachment}';
+   var isDiscAttachExist = '{!blnIsDiscAttachment}';
+   var isDesignAttachExist = '{!blnIsDesignAttachment}';
+   var isFnUseCaseAttach = '{!blnIsFnUseCaseAttach}';
+   var isBluePrintAttach = '{!blnIsBluePrintAttach}';
+   var isDeliveryFinding = '{!blnIsDelivFindingAttach}';
+   var isVTListExst = '{!blnIsVTListExist}';
+   var isAssessment = '{!blnIsExistAssessmnt}';
+   var isDiscPlan = '{!blnIsDiscovPlan}';
+   var isDesign = '{!blnIsDesignPlan }';
+   var isDemo = '{!blnIsDesignPlan }';
+   //var isSCToolKit = '{!blnIsSCToolKit}';
+   //var isMaturityExist = '{!blnIsMaturity}';
+   var isServicesTransition = '{!blnIsServicesTransition}';
+   var isRFP = '{!blnIsRFP}';     
+   j$(document).ready( function() {
+    
+     sAssignTo = '{!sAssignTo}';
+     sWowType= '{!sWowStatus}';
+     var isVision = '{!blnIsVision}';
+     var isDiscovery = '{!blnIsDiscovery}';
+     var isDesign = '{!blnIsDesign}';
+     var isFnUsecase = '{!blnIsFnUseCase}';
+     var isArchi = '{!blnIsArchi}';
+     var isDemo = '{!blnIsDemo}';
+     
+     //alert(sAssignTo);      
+     //alert(sWowType);  
+    
+    if(sWowType == '')
+    {       
+        j$('.clsCloseBtn').attr('value', 'Submit');
+        j$('.clsSaveBtn').hide();
+        j$('.clsCloseBtn').show();
+        
+    }
+    else if(sWowType == 'Open and Not Assigned')
+    {
+        j$('.clsSaveBtn').show();
+        j$('.clsSaveBtn').attr('value', 'Save');
+        j$('.clsCloseBtn').attr('value', 'Submit');
+       
+    }
+    else if(sWowType == 'Open and Assigned')
+    {
+        j$('.clsSaveBtn').show();
+        j$('.clsSaveBtn').attr('value', 'Save');
+        j$('.clsCloseBtn').attr('value', 'Close DSR');
+        
+    }
+    else
+    {
+        j$('.clsSaveBtn').show();
+        j$('.clsSaveBtn').attr('value', 'Save');
+        j$('.clsCloseBtn').attr('value', 'Close DSR');
+       
+    }    
+     //j$('.clsCloseBtn').attr('value', 'Saaa');
+     //j$("[id$=mlktp]").hide();
+     j$('.clsIsSEOwner').attr('checked','true');
+
+     // When site loaded, load the Popupbox First
+     //loadPopupBox();
+
+     j$(".clsBoxClose").click( function() {           
+        unloadPopupBox();
+     });
+   
+     j$('#container').click( function() {
+        //unloadPopupBox();
+     });
+     
+     SelectOwner();
+     /*Check Status for Virtual Team*/
+     if('{!SelectedStatusType}' == 'Approve')
+     {
+       j$('.clsRejectedStatus').css('display','none');
+       VisibilityVirtualSection('Approve');
+     }
+     else
+       VisibilityVirtualSection('Reject');  
+       
+     /* check vision checkbox */  
+    
+     if(j$('.clsVisionActCHK').is(':checked') == true)
+        j$('.clsVision').css('display','block');
+     else
+        j$('.clsVision').css('display','none');
+      
+      
+      if(isVision == 'true')
+        j$('.clsVision_RO').css('display','block');
+      else
+        j$('.clsVision_RO').css('display','none');
+
+        
+     /* check Discovery checkbox */  
+    
+     if(j$('.clsDiscoveryActCHK').is(':checked') == true)
+        j$('.clsDiscoveryAct').css('display','block');
+      else
+        j$('.clsDiscoveryAct').css('display','none');
+        
+     if(isDiscovery == 'true')
+        j$('.clsDiscovery_RO').css('display','block');
+      else
+        j$('.clsDiscovery_RO').css('display','none');   
+        
+      /* check Design checkbox */  
+    
+     if(j$('.clsDesignActCHK').is(':checked') == true)
+        j$('.clsDesignAct').css('display','block');
+     else
+        j$('.clsDesignAct').css('display','none');
+     
+     if(j$('.clsServicesActCHK').is(':checked') == true)
+        j$('.clsServiceAct').css('display','block');
+     else
+        j$('.clsServiceAct').css('display','none');
+        
+     if(isServicesTransition  == 'true')
+        j$('.clsServiceAct_RO').css('display','block');
+     else
+        j$('.clsServiceAct_RO').css('display','none');
+           
+     if(isDesign == 'true')
+        j$('.clsDesign_RO').css('display','block');
+      else
+        j$('.clsDesign_RO').css('display','none'); 
+        
+     if(j$('.clsFnUseCaseCHK').is(':checked') == true)
+        j$('.clsFnUseCaseAct').css('display','block');
+     else
+        j$('.clsFnUseCaseAct').css('display','none');
+        
+     if(isFnUsecase == 'true')
+        j$('.clsFnUseCaseAct_RO').css('display','block');
+      else
+        j$('.clsFnUseCaseAct_RO').css('display','none');   
+     
+     if(j$('.clsArchitectCHK').is(':checked') == true)
+        j$('.clsArchitectAct').css('display','block');
+     else
+        j$('.clsArchitectAct').css('display','none'); 
+        
+     if(isArchi == 'true')
+        j$('.clsArchi_RO').css('display','block');
+      else
+        j$('.clsArchi_RO').css('display','none'); 
+                      
+     if(j$('.clsDemoPerform').is(':checked') == true)
+        j$('.clsDemoChk').css('display','block');
+     else
+        j$('.clsDemoChk').css('display','none');
+        
+     if(isDemo  == 'true')
+        j$('.clsDemoChk_RO').css('display','block');
+     else
+        j$('.clsDemoChk_RO').css('display','none');   
+     // To Stop double clicking submit button for File Upload
+        // j$(".clsMainForm").submit(function() {
+        //    j$('.clsUploadAttBtn').attr('display', 'none');
+            //return true;
+        //});     
+     /*j$(".clsVisionActivity").click(function() {
+        
+         //if(j$('.picklistArrowRight clsVisionActivity').val() != null)
+         // {
+         
+          alert(j$('.clsVisionActivity').val());
+          //alert(j$('.clsVisionActivity option:selected').options(1).val());
+         // }
+    }); */  
+     
+   });
+      
+    /*Select only one user as owner in Virtual Team*/  
+    function SelectOwner()
+    {
+      j$('.clsIsSEOwner').click(function() {
+        j$('.clsIsBCOwner').not('.clsIsSEOwner').removeAttr('checked');
+        
+      });
+      
+      j$('.clsIsBCOwner').click(function() {
+        j$('.clsIsSEOwner').not('.clsIsBCOwner').removeAttr('checked');
+        
+      });
+      
+      /*Check if no one is selected then select Solution Consultant*/
+      /*if(j$('.clsIsSEOwner').is(":checked") == false && j$('.clsIsBCOwner').is(":checked") == false)
+        {
+          j$('.clsIsSEOwner').attr('checked', true);
+        }*/
+    }
+    function messageAlertOnSave()
+    {
+    if(sWowType == 'Open and Not Assigned')
+        {
+            alert("To Approve or Reject DSR you must press Submit.");
+        }
+    }   
+    function CheckOwnerSelection()
+    {
+      var isRetrn = true;
+      
+      var objChildArraySE = j$('.clsSolutionCon').children('.lookupInput').children();
+      var objSE = j$(objChildArraySE[0]).val();
+      
+      var objChildArrayBC = j$('.clsBusinessCon').children('.lookupInput').children();
+      var objBC = j$(objChildArrayBC[0]).val();
+      
+    
+      if(sAssignTo == '' && j$('.clsHghLvlReq').val() != '')  
+        alert("SC Engagement Request has been submitted successfully.");
+      else if(sAssignTo == '' && j$('.clsHghLvlReq').val() == '')
+      {
+        alert('Please fill High Level Details of your Request.');
+        isRetrn = false;
+      }
+      
+         if(sAssignTo == 'Lead Assign' && sWowType == 'Open and Not Assigned')
+         {
+          var objType = j$(".clsSelectedStatus input[type='radio']:checked").val();
+          
+          //if(j$('.clsIsBCOwner').is(":checked") == true && objBC != ''  && objType == 'Approve' && objSE == '')
+          
+          if(objBC == ''  && objType == 'Approve' && objSE == '')
+          {
+            alert('Please select the user from Virtual Team.');
+            isRetrn = false;
+          }
+          else
+          {
+              /*if(j$('.clsIsSEOwner').is(":checked") == true && objSE == '' && objType == 'Approve')
+              {
+                alert('Please select Solution Consultant user in Virtual Team.');
+                isRetrn = false;
+              }
+              if(j$('.clsIsBCOwner').is(":checked") == true && objBC == ''  && objType == 'Approve')
+              {
+                alert('Please select Business Consultant user in Virtual Team.');
+                isRetrn = false;
+              } 
+              if(j$('.clsIsSEOwner').is(":checked") == false && j$('.clsIsBCOwner').is(":checked") == false && objType == 'Approve')
+              {
+                alert('Please select the owner in Virtual Team.');
+                isRetrn = false;
+              }*/
+          }
+         
+          
+          /*Check Rejected status*/
+          
+          if(objType == 'Reject' && j$('.clsRejected').val() == '')
+          {
+            alert('Please enter Rejected Status.');
+            isRetrn = false;
+          }
+           
+           if(isRetrn == true && objType != null)
+           {
+               var objConfirm = confirm("Do you want to "+ objType +" this SC Engagement Request");
+               if(objConfirm == false)
+                 isRetrn = false;
+           }
+          } 
+          
+         
+          if(isVTListExst == 'false' && sAssignTo == 'Lead Assign' && objType == 'Approve')
+          {
+            alert('Please assign users in Virtual Team.');
+            isRetrn = false;
+          }
+           if(isVTListExst == 'false' && sAssignTo == 'Virtual Team' && sWowType == 'Open and Assigned')        
+            {              
+                alert('Please assign users in Virtual Team.');
+                isRetrn = false;
+                  
+              } 
+          /*Check when Lead submit to AE*/
+              
+           if(sAssignTo == 'Lead Completed' && sWowType == 'SC Status Submitted for Completion')
+           {
+
+             /*if(j$('.clsWowStatus').val() != 'Completed')
+             {
+               alert('Please update the SC Engagement Status to Completed in order to Submit for completion.');
+               isRetrn = false;
+             }*/
+             if(j$('.clsWowStatus').val() == 'Completed' && (j$('.clsImpEng').val() == '' || j$('.clsLessonLrnd').val() == ''))
+             {
+               alert('Please update Engagement Feedback.');
+               isRetrn = false;
+             }
+             
+           }
+           
+           
+           
+           /*if(sAssignTo == 'Virtual Team')
+           {
+             if(j$('.clsWhoProvdDesign').val() == '')
+             {
+               alert('Please select who provides design.');
+               isRetrn = false;
+             }
+             if(j$('.clsDeployTopology').val() == '')
+             {
+               alert('Please select Deployment Topology.');
+               isRetrn = false;
+             }
+               
+           }*/
+           
+           
+       ////////////Save button functionlaity
+  
+       
+       /*if(j$('.clsKickOffDate').val() != '' && isDeliveryFinding == 'false' && sAssignTo == 'Virtual Team')
+       {
+         alert('Please attach Delivery Findings.');
+         isRetrn = false;
+       }*/
+       
+       if(j$('.clsVisionActCHK').is(':checked') == true)
+       {
+          /*if(j$('.clsVisionActivity').val() == null)
+          {
+            alert('Please fill Vision Activity.');
+            isRetrn = false;
+          }*/  
+          if(j$('.clsVisionStartDate').val() == null || j$('.clsVisionStartDate').val() == '') 
+          {
+            alert('Please fill Vision End Date.');
+            isRetrn = false;
+          } 
+         if(!CheckBlankRow('clsVisionActivityNew','clsVisionDate','Vision'))
+            isRetrn = false; 
+     
+         /*if(j$('.clsVisionActivity').val() != null)
+         {
+            var arrVisionAct = j$('.clsVisionActivity').val();
+            var isLinkExist = false;
+            var isVisionDocExist = true;
+            
+            var isVisionClipSelect = false;
+            var isVisionDocSelect = false;
+            
+            for(var j=0;j<arrVisionAct.length ; j++)    
+            {  
+                  if(arrVisionAct[j] == 'Vision Clip (Add Link)')
+                  {
+                      isVisionClipSelect = true;
+                      var arrLinks = j$('.clsVisionLinkInput');
+                      for(var i=0;i<arrLinks.length;i++)
+                      {
+                        if(j$(arrLinks[i]).val() != '')
+                          isLinkExist = true;
+                      }
+                  }
+              
+                  if(arrVisionAct[j] == 'Vision Document (CX Safari) (Attach Document)' || arrVisionAct[j] == 'Vision Presentation (Attach Document)')
+                  {
+                      isVisionDocSelect = true;
+                      if(isVisionAttachExist == 'false')
+                      {
+                        isVisionDocExist = false;
+                      } 
+                  }
+             } 
+             
+             
+             if(!isLinkExist && isVisionClipSelect )
+             {
+               alert('Please add Vision link.');
+               isRetrn = false;
+             }
+             if(!isVisionDocExist && isVisionDocSelect)
+             {
+               alert('Please attach Vision document.');
+               isRetrn = false;
+             }
+         }*/
+         
+       }
+
+
+       if(j$('.clsDiscoveryActCHK').is(':checked') == true)
+       {
+          /*if(j$('.clsTypeOfDiscovery').val() == null)
+          {
+            alert('Please select discovery activity.');
+            isRetrn = false;
+          }*/
+ 
+          if(j$('.clsDiscovStartDate').val() == null || j$('.clsDiscovStartDate').val() == '') 
+          {
+            alert('Please fill Discovery Start Date.');
+            isRetrn = false;
+          } 
+          
+          if(j$('.clsDiscovEndDate').val() == null || j$('.clsDiscovEndDate').val() == '') 
+          {
+            alert('Please fill Discovery End Date.');
+            isRetrn = false;
+          } 
+          if(!CheckBlankRow('clsDisActivity','clsDisDate','Discovery'))
+            isRetrn = false;            
+          if(isDiscAttachExist == 'false')
+          {
+            alert('Please attach Discovery finding.');
+            isRetrn = false;
+          }
+          //Phase III Changes: Added by Swastika on 01-Nov-2016 mandatory check attachment for Maturity and Benefits
+          //Phase IV Changes: Commented by Swastika on 09-Dec-2016 non mandatory check attachment for Maturity and Benefits
+          /* if(isMaturityExist == 'false') 
+          {
+            alert('Please attach Maturity and Benefits Model.');
+            isRetrn = false;
+          }*/
+          /*if(isDiscPlan == 'false')
+          {
+            alert('Please attach Discovery Plan.');
+            isRetrn = false;
+          }*/   
+          
+       }
+       //commented by Swastika on May-12-2017 as per request of Debora Lane
+       /*if(sAssignTo == 'Virtual Team' && j$('.clsDesignActCHK').is(':checked') == false)
+       {
+           alert('Please select Design Activities.');
+           isRetrn = false;
+       }*/
+       if(j$('.clsDesignActCHK').is(':checked') == true)
+       {
+         //Commented by Swastika Rajkhowa on 17-mar-2017 not needed any validation <start> 
+          /*if(j$('.clsDesignStartDate').val() == null || j$('.clsDesignStartDate').val() == '') 
+          {
+            alert('Please fill Design Start Date.');
+            isRetrn = false;
+          } 
+          
+          if(j$('.clsDesignEndDate').val() == null || j$('.clsDesignEndDate').val() == '') 
+          {
+            alert('Please fill Design End Date.');
+            isRetrn = false;
+          } 
+          
+          if(isDesignAttachExist == 'false')
+          {
+            alert('Please attach Design Findings.');
+            isRetrn = false;
+          }*/
+          //Commented by Swastika Rajkhowa on 17-mar-2017 not needed any validation <end> 
+          /*if(isDesign == 'false')
+          {
+            alert('Please attach Design Plan.');
+            isRetrn = false;
+          }*/
+          //Commented by Swastika Rajkhowa on 17-mar-2017 not needed any validation <start>
+          /* if(j$('.clsRFP').is(":checked") == true && isRFP == 'false')
+              {
+                alert('Please attach RFP.');
+                isRetrn = false;
+              } 
+          
+          if(isAssessment == 'false')
+          {
+            alert('Please fill Risk Assessment.');
+            isRetrn = false;
+          }
+          */
+          //check function use case
+          var isFnCase1 = true;
+          var arrLinks1 = j$('.clsFNUseCaseInput');
+          var arrAsIs1 = j$('.clsAsIsFnUseCase');
+          var arrDesc1 = j$('.clsDescFnUseCase');
+          if(j$('.clsFnUseCaseCHK').is(':checked') == true)
+          {
+              for(var i=0;i<arrLinks1.length;i++)
+              {
+                if(j$(arrLinks1[i]).val() == '')
+                  isFnCase1 = false;
+              }
+    
+    
+              if(!isFnCase1)
+              {
+               isRetrn = false;
+               alert('Please select functional use case.');
+              } 
+              for(var i=0;i<arrAsIs1.length;i++)
+              {                
+                 if(j$(arrLinks1[i]).val() != '' && j$(arrAsIs1[i]).val() == '')
+                 {
+                   isRetrn = false;
+                   alert('Please fill Fit % in Functional Use Case.');
+                 }
+              } 
+              for(var i=0;i<arrLinks1.length;i++)
+              {
+                // if(j$(arrLinks1[i]).val() != '' && j$(arrAsIs1[i]).is(':checked') == false && j$(arrDesc1[i]).val() == '')            
+                 if(j$(arrLinks1[i]).val() != '' && j$(arrAsIs1[i]).val() != '100' && j$(arrDesc1[i]).val() == '')
+                 {
+                   isRetrn = false;
+                   alert('Please fill short description of changes in Functional Use Case.');
+                 }
+              }
+          }
+         /*
+          if(j$('.clsIsCustUseCase').is(':checked') == true && isFnUseCaseAttach == 'false')
+          {
+            alert('Please attach custom use case.');
+            isRetrn = false;
+          }*/
+          //Commented by Swastika Rajkhowa on 17-mar-2017 not needed any validation <end>
+          /*if(isSCToolKit == 'false')
+          {
+            alert('Please attach SCToolkit.');
+            isRetrn = false;
+          }*/
+       //check blueprint
+         
+          var arrBluePrints_BP1 = j$('.clsArchBluePrntIn');
+          var arrAsIs_BP1 = j$('.clsAsIsBluePrint');
+          var arrDesc_BP1 = j$('.clsDescBluePrint');
+          var isBp1 = true;
+          if(j$('.clsArchitectCHK').is(':checked') == true)
+          {
+              for(var i=0;i<arrBluePrints_BP1.length;i++)
+              {
+                if(j$(arrBluePrints_BP1[i]).val() == '')
+                  isBp1 = false;
+              }
+    
+              if(!isBp1)
+              {
+               isRetrn = false;
+               alert('Please select Architecture Blueprint.');
+              } 
+              for(var i=0;i<arrAsIs_BP1.length;i++)
+                  {                
+                     if(j$(arrBluePrints_BP1[i]).val() != '' && j$(arrAsIs_BP1[i]).val() == '')
+                     {
+                       isRetrn = false;
+                       alert('Please fill Fit % in Architecture Blueprint.');
+                     }
+                  }  
+              for(var i=0;i<arrBluePrints_BP1.length;i++)
+              {
+                 //if(j$(arrBluePrints_BP1[i]).val() != '' && j$(arrAsIs_BP1[i]).is(':checked') == false && j$(arrDesc_BP1[i]).val() == '')
+                  if(j$(arrBluePrints_BP1[i]).val() != '' && j$(arrAsIs_BP1[i]).val() != '100' && j$(arrDesc_BP1[i]).val() == '')
+                 {
+                   isRetrn = false;
+                   alert('Please fill short description of changes in Architecture Blueprint.');
+                 }
+              }
+          }
+         //Commented by Swastika Rajkhowa on 17-mar-2017 not needed any validation <start> 
+         /*if(j$('.clsWhoProvdDesign').val() == '')
+         {
+           alert('Please select who provides design.');
+           isRetrn = false;
+         }
+         if(j$('.clsDeployTopology').val() == '')
+         {
+           alert('Please select Deployment Topology.');
+           isRetrn = false;
+         }*/
+         //Commented by Swastika Rajkhowa on 17-mar-2017 not needed any validation <end>
+         /*if(isBluePrintAttach == 'false')
+         {
+           alert('Please attach Architectural Blueprint.');
+           isRetrn = false;
+         }*/
+         
+        /*if(!CheckBlankRow('clsDemo','clsDemoDate','Demo'))
+            isRetrn = false;*/
+       }
+       else
+       {
+                 
+          //check function use case
+          var isFnCase = false;
+          var arrLinks = j$('.clsFNUseCaseInput');
+          var arrAsIs = j$('.clsAsIsFnUseCase');
+          var arrDesc = j$('.clsDescFnUseCase');
+          
+          for(var i=0;i<arrLinks.length;i++)
+          {
+            if(j$(arrLinks[i]).val() != '')
+              isFnCase = true;
+          }
+
+        if(isFnCase)
+        { 
+          for(var i=0;i<arrLinks.length;i++)
+          {
+             //if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).is(':checked') == false && j$(arrDesc[i]).val() == '')
+             if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).val() != '100' && j$(arrDesc[i]).val() == '')
+             {
+               isRetrn = false;
+               alert('Please fill short description of changes in Functional Use Case.');
+             }
+          }
+        }
+       //check blueprint
+ 
+          var arrBluePrints_BP = j$('.clsArchBluePrntIn');
+          var arrAsIs_BP = j$('.clsAsIsBluePrint');
+          var arrDesc_BP = j$('.clsDescBluePrint');
+          var isBp = false;
+          
+          for(var i=0;i<arrBluePrints_BP.length;i++)
+          {
+            if(j$(arrBluePrints_BP[i]).val() != '')
+              isBp = true;
+          }
+
+         if(isBp) 
+         {  
+          for(var i=0;i<arrBluePrints_BP.length;i++)
+          {
+             //if(j$(arrBluePrints_BP[i]).val() != '' && j$(arrAsIs_BP[i]).is(':checked') == false && j$(arrDesc_BP[i]).val() == '')
+             if(j$(arrBluePrints_BP[i]).val() != '' && j$(arrAsIs_BP[i]).val() != '100' && j$(arrDesc_BP[i]).val() == '')
+             {
+               isRetrn = false;
+               alert('Please fill short description of changes in Architecture Blueprint.');
+             }
+          }
+          
+             if(j$('.clsWhoProvdDesign').val() == '')
+             {
+               alert('Please select who provides design.');
+               isRetrn = false;
+             }
+             if(j$('.clsDeployTopology').val() == '')
+             {
+               alert('Please select Deployment Topology.');
+               isRetrn = false;
+             }
+         }
+       }
+       
+      /* if(j$('.clsIsCustUseCase').is(':checked') == true)
+       {
+          if(isFnUseCaseAttach == 'false')
+          {
+            alert('Please attach custom use case.');
+            isRetrn = false;
+          }  
+       }*/
+       if(j$('.clsIsCustArchi').is(':checked') == true)
+       {
+          if(isBluePrintAttach == 'false')
+          {
+            alert('Please attach custom architecture document.');
+            isRetrn = false;
+          }  
+       }
+       if(j$('.clsServicesActCHK').is(':checked') == true)
+       {
+         if(!CheckBlankRow('clsSTActivity','clsSTDate','Service Transition'))
+             isRetrn = false;
+       }
+      if(j$('.clsImpEng').val() == '' || j$('.clsLessonLrnd').val() == '')
+       {
+           alert('Please fill the Engagement Feedback section.');
+           isRetrn = false;
+       } 
+      if(isRetrn)
+      {
+        if(sAssignTo == 'Virtual Team') {               
+              if (confirm('Are you sure you want to close this DSR? Closing this DSR indicates that no future presales work is required on this opportunity.'))           
+               j$('.clsCloseBtn').hide(); 
+              else
+                isRetrn =false ;  
+           } 
+        else {
+           j$('.clsCloseBtn').hide();      
+             
+          }      
+      } 
+      return isRetrn ;
+    }  
+      
+    function loadPopupBox(fType) 
+    {    
+      // To Load the Popupbox
+      
+
+      j$('[id$=hdnFileType]').val(fType);
+      
+      
+      
+      //Check for SE Toolkit picklist and Blueprint selection 
+      if(fType == 'SCToolkit' && j$(".clsToolKit").val() == '')
+      {
+          //alert('Please select the Functional Use Case before attaching the SC Toolkit.');
+          //return false;
+      }
+      else if(fType == 'Architectural BluePrint' && j$(".clsBluePrint").val() == '')
+      {
+          alert('Please select the Architectural Blueprint type from the drop down menu before attaching the Architectural Blueprint.');
+          return false;
+      }
+      else
+      {
+         //if(fType == 'SCToolkit' && j$(".clsToolKit").val() != '')
+         //{
+         // j$('[id$=hdnFileType]').val(fType+':'+j$(".clsToolKit").val());
+         
+        // }
+       // if(fType == 'Architectural BluePrint' && j$(".clsBluePrint").val() != '')
+       // {
+        //  j$('[id$=hdnFileType]').val(fType+':'+j$(".clsBluePrint").val());
+          
+       // }
+        //if(fType == 'Delivery Findings')
+       // {
+        //  j$('[id$=hdnFileType]').val(fType);
+        //}
+        if(fType == 'SCToolkit' || fType == 'Architectural BluePrint' || fType == 'Delivery Findings' || fType == 'Custom Use Case'){
+          j$('[id$=hdnFileType]').val(fType);
+          }
+          j$('#popup_box').fadeIn("slow");
+          j$("#container").css({ // this is just for style
+             "opacity": "0.3" 
+           }); 
+      }
+      return false;       
+    } 
+    
+    function loadPopupBoxVision(fType,rownum) 
+    {    
+      // To Load the Popupbox
+      
+
+      j$('[id$=hdnFileType]').val(fType);
+      j$('[id$=hdnRowNum]').val(rownum);
+
+          j$('#popup_box').fadeIn("slow");
+          j$("#container").css({ // this is just for style
+             "opacity": "0.3" 
+           }); 
+
+      return false;       
+    } 
+    
+    function unloadPopupBox() 
+    {    
+     // TO Unload the Popupbox
+     //alert('test');
+     //alert($j(".cke_wysiwyg_frame").contents().find('.cke_editable cke_editable_themed cke_contents_ltr cke_show_borders').html());
+     j$('#popup_box').fadeOut("slow");
+     j$("#container").css({ // this is just for style       
+        "opacity": "1" 
+     });
+     return false;
+    }
+        
+    function SelectedStatusType(obj)
+    {
+      var oType = j$(obj).val();
+      
+      if(oType == 'Reject')
+      {
+        j$('.clsRejectedStatus').css('display','block');
+        VisibilityVirtualSection('Reject');
+        
+        afDeleteVTUsr();
+      }  
+      else
+      {
+        j$('.clsRejectedStatus').css('display','none');
+        VisibilityVirtualSection('Approve');
+      }  
+    }   
+    
+    function GetAttachmentId(obj)       
+    {
+      //alert(obj);
+      j$('[id$=hdnFileId]').val(obj);
+      //return false;
+    }
+    
+    function CheckVision(obj)
+    {
+      if(j$(obj).is(':checked') == true)
+      {
+        j$('.clsVision').css('display','block');
+      }
+      else
+        j$('.clsVision').css('display','none');
+    }    
+    function CheckDiscovery(obj)
+    {
+      if(j$(obj).is(':checked') == true)
+      {
+        j$('.clsDiscoveryAct').css('display','block');
+      }
+      else
+        j$('.clsDiscoveryAct').css('display','none');
+    }    
+    function CheckDesign(obj)
+    {
+      if(j$(obj).is(':checked') == true)
+      {
+        j$('.clsDesignAct').css('display','block');         
+      }
+      else
+        j$('.clsDesignAct').css('display','none');
+    }
+    function CheckServicesTransition(obj)
+    {
+      if(j$(obj).is(':checked') == true)
+      {        
+        if(isAssessment == 'false' && j$('.clsDesignActCHK').is(':checked') == true)
+          {
+            j$(obj).attr('checked', false);;
+            alert('Risk Assessment must be completed prior to Services Transition.');            
+            return false;
+          } 
+          j$('.clsServiceAct').css('display','block');
+          
+      }
+      else
+        j$('.clsServiceAct').css('display','none');
+
+    }
+    
+    function ValidationForSCVT() {
+    
+     var isExist = true;
+    
+     var arrUserList =j$('.clsSolutionCon');
+     var arrVTList =j$('.clsSolutionCon'); 
+    
+     //alert(j$('.clsSolutionCon').children('.lookupInput').children().val());
+      if(j$('.clsSolutionCon').children('.lookupInput').children().val() == '' || j$('.clsSolutionCon').children('[id*=lkid]').val()=='')
+       {
+         isExist= false;
+         alert('Please select Vitual team.');
+         return;
+       }
+       else if (j$('.clsSolutionConType').val()==''){
+         alert('Please select Type of Vitual team');
+         isExist= false;
+         return;
+     }
+     /*for(var i=0;i<arrUserList.length;i++)
+     {
+       if(j$(arrUserList[i]).children('.lookupInput').children().val() == '')
+       {
+         isExist= false;
+       }
+     }*/
+     
+     /* check duplicate user in virtual team list */
+     var VTUsersList = j$('[id$=hdnVirUsr]');//array of users
+     var selectUserVT = j$('.clsSolutionCon').children('[id*=lkid]').val();//single user
+     //alert(selectUserVT);
+     for(var i=0;i<VTUsersList.length;i++)
+     {
+       if(j$(VTUsersList[i]).val().trim().indexOf(selectUserVT.trim())>-1)
+       {
+         /* selected user alreday exist in the Virtual List*/
+         isExist= false;
+         alert('Selected user already present in the list.');
+         j$('.clsSolutionCon').children('.lookupInput').children().val('');
+         j$('.clsSolutionCon').children('[id*=lkid]').val('');
+         j$('.clsSolutionConType').val('');
+       }
+     }
+     
+     /*if(!isExist) 
+      alert('Please select Vitual team.');*/
+     
+              
+      return isExist;
+    }
+    function ValidationForBCVT() {
+        var isExist = true;
+         var arrUserList =j$('.clsBusinessCon'); 
+         for(var i=0;i<arrUserList.length;i++)
+         {
+           if(j$(arrUserList[i]).children('.lookupInput').children().val() == '')
+           {
+             isExist= false;
+           }
+         }
+     if(!isExist) 
+      alert('Please select Business Consultant.');
+      return isExist;
+    }
+    function ValidationForPSVT() {
+        var isExist = true;
+         var arrUserList =j$('.clsPSCon'); 
+         for(var i=0;i<arrUserList.length;i++)
+         {
+           if(j$(arrUserList[i]).children('.lookupInput').children().val() == '')
+           {
+             isExist= false;
+           }
+         }
+         if(!isExist) 
+          alert('Please select PS Consulting Sales Director.');
+          return isExist;
+    }
+    function ValidationForSLVT() {
+        var isExist = true;
+         var arrUserList =j$('.clsSolutionLead'); 
+         for(var i=0;i<arrUserList.length;i++)
+         {
+           if(j$(arrUserList[i]).children('.lookupInput').children().val() == '')
+           {
+             isExist= false;
+           }
+         }
+         if(!isExist) 
+          alert('Please select Solution Lead.');
+          return isExist;
+    }
+    
+    function checkMandatoryValues()
+    {
+       var isExist = true;
+
+       if(j$('.clsVisionActCHK').is(':checked') == true)
+       {
+          if(j$('.clsVisionActivity').val() == null)
+          {
+            alert('Please fill Vision Activity.');
+            isExist = false;
+          }  
+          if(j$('.clsVisionStartDate').val() == null || j$('.clsVisionStartDate').val() == '') 
+          {
+            alert('Please fill Vision End Date.');
+            isExist = false;
+          } 
+          
+          if(isVisionAttachExist == 'false')
+          {
+            alert('Please attach Vision document.');
+            isExist = false;
+          }   
+       }
+
+
+       if(j$('.clsDiscoveryActCHK').is(':checked') == true)
+       {
+ 
+          if(j$('.clsDiscovStartDate').val() == null || j$('.clsDiscovStartDate').val() == '') 
+          {
+            alert('Please fill Discovery Start Date.');
+            isExist = false;
+          } 
+          
+          if(j$('.clsDiscovEndDate').val() == null || j$('.clsDiscovEndDate').val() == '') 
+          {
+            alert('Please fill Discovery End Date.');
+            isExist = false;
+          } 
+          
+          if(isDiscAttachExist == 'false')
+          {
+            alert('Please attach Discovery document.');
+            isExist = false;
+          }   
+       }
+       
+       if(j$('.clsDesignActCHK').is(':checked') == true)
+       {
+ 
+          if(j$('.clsDesignStartDate').val() == null || j$('.clsDesignStartDate').val() == '') 
+          {
+            alert('Please fill Design Start Date.');
+            isExist = false;
+          } 
+          
+          if(j$('.clsDesignEndDate').val() == null || j$('.clsDesignEndDate').val() == '') 
+          {
+            alert('Please fill Design End Date.');
+            isExist = false;
+          } 
+          
+          if(isDesignAttachExist == 'false')
+          {
+            alert('Please attach Design document.');
+            isExist = false;
+          }   
+       }
+       
+       if(j$('.clsIsCustUseCase').is(':checked') == true)
+       {
+          if(isFnUseCaseAttach == 'false')
+          {
+            alert('Please attach custom use case.');
+            isExist = false;
+          }  
+       }
+       if(j$('.clsIsCustArchi').is(':checked') == true)
+       {
+          if(isBluePrintAttach == 'false')
+          {
+            alert('Please attach custom architecture document.');
+            isExist = false;
+          }  
+       }
+       
+       if(j$('.clsKickOffDate').val() != '' && isDeliveryFinding == 'false' && sAssignTo == 'Virtual Team')
+       {
+         alert('Please attach Delivery Questionnaire.');
+         isExist = false;
+       }
+       
+       //check function use case
+             
+          var arrLinks = j$('.clsFNUseCaseInput');
+          var arrAsIs = j$('.clsAsIsFnUseCase');
+          var arrDesc = j$('.clsDescFnUseCase');
+          var isFnCase = true;
+          
+          for(var i=0;i<arrLinks.length;i++)
+          {
+            if(j$(arrLinks[i]).val() == '')
+              isFnCase = false;
+          }
+          if(!isFnCase)
+          {
+           isExist = false;
+           alert('Please select functional use case.');
+          } 
+           
+          for(var i=0;i<arrLinks.length;i++)
+          {
+             //if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).is(':checked') == false && j$(arrDesc[i]).val() == '')
+             if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).val()!= '100' && j$(arrDesc[i]).val() == '')
+             {
+               isExist = false;
+               alert('Please fill short description of changes in Functional Use Case.');
+             }
+          }
+       
+       //check blueprint
+
+          var arrBluePrints_BP = j$('.clsArchBluePrntIn');
+          var arrAsIs_BP = j$('.clsAsIsBluePrint');
+          var arrDesc_BP = j$('.clsDescBluePrint');
+          var isBp = true;
+          
+          for(var i=0;i<arrBluePrints_BP.length;i++)
+          {
+            if(j$(arrBluePrints_BP[i]).val() == '')
+              isBp = false;
+          }
+
+          if(!isBp)
+          {
+           isExist = false;
+           alert('Please select Architecture Blueprint.');
+          }
+           
+          for(var i=0;i<arrBluePrints_BP.length;i++)
+          {
+             //if(j$(arrBluePrints_BP[i]).val() != '' && j$(arrAsIs_BP[i]).is(':checked') == false && j$(arrDesc_BP[i]).val() == '')
+             if(j$(arrBluePrints_BP[i]).val() != '' && j$(arrAsIs_BP[i]).val() != '100' && j$(arrDesc_BP[i]).val() == '')
+             {
+               isExist = false;
+               alert('Please fill short description of changes in Architecture Blueprint.');
+             }
+          }
+       
+       return isExist;
+    }
+     function selectAllCheckboxes(obj,receivedInputID){
+            var inputCheckBox = document.getElementsByTagName("input");                  
+            for(var i=0; i<inputCheckBox.length; i++){          
+                if(inputCheckBox[i].id.indexOf(receivedInputID)!=-1){                                     
+                    inputCheckBox[i].checked = obj.checked;
+                }
+            }
+        }  
+        function chkSelection(){
+            var isExist = false;   
+            var arrChK = j$('.clsSCCheckbox'); 
+                         
+            for(var i=0; i<arrChK.length; i++)
+            { 
+                if (j$(arrChK[i]).is(':checked') == false) 
+                {
+
+                  j$('.clsSelectAll').attr('checked',false);
+                  isExist = true;
+                }           
+            }
+
+           if(isExist==false)
+             j$('.clsSelectAll')[0].checked = true;
+        } 
+        
+        function CheckVisionLinkInput()
+        {
+          var isReturn = true;
+          var arrLinks = j$('.clsVisionLinkInput');
+          for(var i=0;i<arrLinks.length;i++)
+          {
+            if(j$(arrLinks[i]).val() == '')
+              isReturn = false;
+          }
+         /* //added by swastika on 14-oct-2016 to user can click on the add if he select 'Vision clip(add link)' in Vision activity <start>
+           var arrVisionAct = j$('.clsVisionActivity').val();           
+           var isVisionClipSelect = false;
+           if(arrVisionAct!=null)
+           {
+               for(var j=0;j<arrVisionAct.length ; j++)    
+                {  
+                      if(arrVisionAct[j] == 'Vision Clip (Add Link)')
+                      {
+                          isVisionClipSelect = true;                                          
+                      }
+                 }
+            }                                     
+           if(arrVisionAct==null || !isVisionClipSelect )
+             {
+               alert('Please select Vision Clip (Add Link) from Vision Activity.');
+               return false;
+             }*/
+          //added by swastika on 14-oct-2016 to user can click on the add if he select 'Vision clip(add link)' in Vision activity <end>
+          if(!isReturn)
+           alert('Please insert Vision link.');
+          return isReturn; 
+        }
+        
+        /*function CheckDiscovLinkInput()
+        {
+          var isReturn = true;
+          var arrLinks = j$('.clsDiscoLinkInput');
+          for(var i=0;i<arrLinks.length;i++)
+          {
+            if(j$(arrLinks[i]).val() == '')
+              isReturn = false;
+          }
+          if(!isReturn)
+           alert('Please insert Discovery link.');
+          return isReturn; 
+        }*/
+        
+        function CheckFnUseCaseInput()
+        {
+          var isReturn = true;
+          var arrLinks = j$('.clsFNUseCaseInput');
+          var arrAsIs = j$('.clsAsIsFnUseCase');
+          var arrDesc = j$('.clsDescFnUseCase');
+          
+          for(var i=0;i<arrLinks.length;i++)
+          {
+            if(j$(arrLinks[i]).val() == '')
+              isReturn = false;
+          }
+          if(isReturn == false)
+           alert('Please select functional use case.');
+           
+          for(var i=0;i<arrLinks.length;i++)
+          {
+              if(j$(arrAsIs[i]).val() == '100')
+                  j$(arrDesc[i]).val('');
+             //if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).is(':checked') == false && j$(arrDesc[i]).val() == '')
+             if(j$(arrLinks[i]).val() != '' && j$(arrAsIs[i]).val() != '100' && j$(arrDesc[i]).val() == '')
+             {
+               isReturn = false;
+               alert('Please fill short description of changes in Functional Use Case.');
+             }
+          }
+           
+          return isReturn; 
+        }
+        function CheckArchBluePrintInput()
+        {
+          var isRetrn = true;
+          /*var arrLinks = j$('.clsArchBluePrntIn');
+          for(var i=0;i<arrLinks.length;i++)
+          {
+            if(j$(arrLinks[i]).val() == '')
+              isReturn = false;
+          }
+          if(isReturn == false)
+           alert('Please select Architecture Blueprint.');*/
+           
+          var arrBluePrints_BP = j$('.clsArchBluePrntIn');
+          var arrAsIs_BP = j$('.clsAsIsBluePrint');
+          var arrDesc_BP = j$('.clsDescBluePrint');
+          
+          for(var i=0;i<arrBluePrints_BP.length;i++)
+          {
+            if(j$(arrBluePrints_BP[i]).val() == '')
+              isRetrn = false;
+          }
+
+          if(isRetrn == false)
+           alert('Please select Architecture Blueprint.');
+           
+          for(var i=0;i<arrBluePrints_BP.length;i++)
+          {
+             //if(j$(arrBluePrints_BP[i]).val() != '' && j$(arrAsIs_BP[i]).is(':checked') == false && j$(arrDesc_BP[i]).val() == '')
+             if(j$(arrBluePrints_BP[i]).val() != '' && j$(arrAsIs_BP[i]).val() != '100' && j$(arrDesc_BP[i]).val() == '')
+             {
+               isRetrn = false;
+               alert('Please fill short description of changes in Architecture Blueprint.');
+             }
+          }
+           
+           
+          return isRetrn; 
+        }
+        
+        function VisibilityVirtualSection(sType)
+        {
+          if(sType == 'Reject')
+          {
+            var objChildArraySE = j$('.clsSolutionCon').children('.lookupInput').children();
+            j$(objChildArraySE[2]).hide();
+            j$(objChildArraySE[0]).attr('disabled',true);
+            j$('.clsSolutionConType').attr('disabled',true);
+            j$(objChildArraySE[0]).val('');
+            j$('.clsSolutionConType').val('');
+            j$('[id$= btnAddVTUsers]').hide();
+          }
+          if(sType == 'Approve')
+          {
+            var objChildArraySE = j$('.clsSolutionCon').children('.lookupInput').children();
+            j$(objChildArraySE[2]).show();
+            j$(objChildArraySE[0]).attr('disabled',false);
+            j$('.clsSolutionConType').attr('disabled',false);
+            j$('[id$= btnAddVTUsers]').show();
+          }
+        }
+        
+        function CheckBlankRow(clsAct,clsDate,type)
+        {
+
+          var isReturn = true;
+          var arrAct = j$('.'+clsAct);
+  
+          for(var i=0;i<arrAct.length;i++)
+          {
+
+            if(j$(arrAct[i]).val() == '')
+              isReturn = false;
+          }
+          if(isReturn == false)
+           alert('Please select '+type+' activity.');
+ 
+          return isReturn; 
+        }
+        function CheckFnUseCase(obj)
+        {
+          if(j$(obj).is(':checked') == true)
+          {
+            j$('.clsFnUseCaseAct').css('display','block');         
+          }
+          else
+            j$('.clsFnUseCaseAct').css('display','none');
+        }
+     function checkDemo(obj)
+        {
+          if(j$(obj).is(':checked') == true)
+          {
+            j$('.clsDemoChk').css('display','block');         
+          }
+          else
+            j$('.clsDemoChk').css('display','none');
+        }   
+    function CheckArch(obj)
+    {
+      if(j$(obj).is(':checked') == true)
+      {
+        j$('.clsArchitectAct').css('display','block');         
+      }
+      else
+        j$('.clsArchitectAct').css('display','none');
+    }
+
+
+  </script>
+ <apex:form styleClass="clsMainForm"> 
+
+
+  <apex:pagemessages rendered="{!blnShowErrorMsg}" />
+  <apex:pagemessages rendered="{!blnErrorMsRequFld}" />
+    <!--<apex:actionFunction name="afFileDescription" action="{!FileDescription}" rerender="" status="FileType">
+     <apex:param name="x" value="" assignTo="{!FileDescType}"/>
+    </apex:actionFunction>-->
+    
+    <apex:actionFunction name="afDeleteVTUsr" action="{!DeleteVirtualUsers}"  status="FileType" >
+     
+    </apex:actionFunction>
+    
+    <apex:inputHidden value="{!sAttachmentId}" id="hdnFileId" />
+    
+    
+   <!-- Hidden field to get the Select file type for Attachment -->
+   <apex:inputHidden value="{!FileDescType}" id="hdnFileType" />
+   <apex:inputHidden value="{!RowNumber}" id="hdnRowNum" />
+    
+   <div id="popup_box" style="height:200px;margin-top:200px;">   <!-- OUR PopupBox DIV-->
+    <!--<APEX:PAGEMESSAGES />-->
+    <apex:pageBlock id="pbLive">
+      <div style="float:left;width:10px;color:black;"><a id="popupBoxClose" class="clsBoxClose">X</a></div>
+        <table style="width:100%;margin-top:30px">
+          <tr><td>
+            
+            <apex:outputPanel id="Panel"> 
+        
+          <div id="upload" class="upload">
+            <table><tr>
+              <td><apex:inputFile id="fileToUpload" value="{!fileBody}" filename="{!fileName}" styleClass="input-file"/></td> 
+              <td><apex:commandButton value="Upload Attachment" action="{!uploadFile}" styleClass="clsUploadAttBtn" onclick="j$(this).hide()" /></td>
+            </tr></table>
+          </div>   
+     </apex:outputPanel> 
+          </td></tr>
+        </table>
+    </apex:pageBlock>
+   </div><!-- Close PopupBox DIV-->
+  
+  
+  <!-- Wow Reuqest Form Start -->
+  <apex:pageblock id="block1" title="SC Engagement Request" rendered="{!blnMain}">  
+         <apex:pageBlockButtons >
+            <!--<apex:commandButton value="Save" action="{!SaveWowDetails}" disabled="{!btnSave}" onclick="return checkMandatoryValues()"/>-->
+            <apex:commandButton value="Save" action="{!SaveWowDetails}" disabled="{!btnSave}" onClick="return messageAlertOnSave();" styleClass="clsSaveBtn"/>
+            <apex:commandButton value="Close DSR"  action="{!SubmitWowDetails}" disabled="{!btnSubmit}" onClick="return CheckOwnerSelection();"  styleClass="clsCloseBtn"/>
+            <apex:commandButton value="Cancel" rendered="{!blnShowCancel}" onclick="window.location.href='/apex/DealSupportRequest?area=PreSales Support&oppId={!sOppId}&retURL=/apex/DealSupport?id={!sOppId}';return false;"/>
+         </apex:pageBlockButtons>
+    <apex:pageBlockSection id="pbsOpportunityDtl" title="Opportunity Details" columns="2">
+     <!--<script>colorPageBlock(document.getElementById("{!$Component.pbsOpportunityDtl}"), "green");</script>-->
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Opportunity Owner" />
+       <apex:outputText value="{!objWrapWow.AEName}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Opportunity Name" />
+       <!--<apex:outputText value="{!objWrapWow.OpportunityName}" />-->
+       <!--<apex:outputField value="{!objWowReqFrm.Opportunity_Id__c }"  />-->
+       <apex:outputlink value="/{!objWowReqFrm.Opportunity_Id__c}" target="_blank"><div id="mylink1" style="text-decoration: underline;">{!objWrapWow.OpportunityName}</div></apex:outputlink>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Stage DSR Created" />
+       <apex:outputText value="{!objWrapWow.Stage}" />
+     </apex:pageBlockSectionItem>     
+     <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="Total Amount" />
+       <apex:outputText value="{!objWrapWow.CurrencyCode}  {!objWrapWow.TotalAmount}" />
+     </apex:pageBlockSectionItem>-->
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Platform Type" />
+       <apex:outputText value="{!objWrapWow.PlatformType}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Current Opportunity Stage" />
+       <apex:outputText value="{!objWrapWow.OpportunityStage}" />
+     </apex:pageBlockSectionItem>
+     <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="ACV" />
+       <apex:outputText value="{!objWrapWow.CurrencyCode}  {!objOpportunity.Term_License__c}" />
+     </apex:pageBlockSectionItem>-->
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Account Name" />
+       <apex:outputText value="{!objWrapWow.CustomerName}" />
+     </apex:pageBlockSectionItem>
+    
+
+     <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="TCV" />
+       <apex:outputText value="{!objWrapWow.CurrencyCode}  {!objOpportunity.Term_License_Amount_TCV__c}" />
+     </apex:pageBlockSectionItem>-->
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Business Partner" />
+       <apex:outputText value="{!objOpportunity.BusinessPartner__r.Name}" />
+     </apex:pageBlockSectionItem>
+     
+    <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Industry" />
+       <apex:outputText value="{!objWrapWow.Industry}" />
+     </apex:pageBlockSectionItem>
+
+ 
+     <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="License Number" />
+       fffffffff
+     </apex:pageBlockSectionItem>-->
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Primary Solution Category" />
+       <apex:outputText value="{!objWrapWow.PrimarySolution}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Closed Date" />
+       <apex:outputText value="{!objWrapWow.ExpectedClosedDate}" />
+     </apex:pageBlockSectionItem>
+    <apex:pageBlockSectionItem >
+     <apex:outputLabel value="Technical Profile" />
+     <apex:outputlink value="/{!strTechProfileId}" target="_blank"><div id="mylink" style="text-decoration: underline;">URL</div></apex:outputlink>
+    </apex:pageBlockSectionItem>
+  
+    <apex:pageBlockSectionItem >
+     <apex:outputLabel value="SC Engagement Name" />
+     <apex:outputField value="{!objWowReqFrm.Name}" />
+    </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+     <apex:outputLabel value="Offering Type" />
+     <apex:outputText value="{!objWrapWow.OfferingType}" />
+    </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+     <apex:outputLabel value="Segment" />
+     <apex:outputText value="{!objWrapWow.Segment}" />
+    </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem rendered="{!VTSection}">
+     <apex:outputLabel value="SMART Opportunity" />
+     <apex:inputField value="{!objWowReqFrm.SMART_Opportunity__c}" />
+    </apex:pageBlockSectionItem> 
+    <apex:pageBlockSectionItem rendered="{!VTSection!=true}">
+     <apex:outputLabel value="SMART Opportunity" />
+     <apex:outputField value="{!objWowReqFrm.SMART_Opportunity__c}" />
+    </apex:pageBlockSectionItem> 
+    <apex:pageBlockSectionItem >
+     <apex:outputLabel value="Account Segmentation" />
+     <apex:outputText value="{!objWrapWow.AccSegment}" />
+    </apex:pageBlockSectionItem> 
+    <!--apex:pageBlockSectionItem rendered="{!If(VTSection||AESection||LeadSection ,true,false)}">
+     <apex:outputLabel value="Data Migration" />
+     <apex:inputField value="{!objWowReqFrm.Data_Migration__c}" />
+    </apex:pageBlockSectionItem> 
+    <apex:pageBlockSectionItem rendered="{!If(VTSection!=true && AESection!=true && LeadSection!=true ,true,false)}">
+     <apex:outputLabel value="Data Migration" />
+     <apex:OUTputField value="{!objWowReqFrm.Data_Migration__c}" />
+    </apex:pageBlockSectionItem> 
+    <apex:pageBlockSectionItem / -->  
+    <apex:pageBlockSectionItem >
+       <apex:pageBlockSection id="pbsOnPremiseAmt" title="On-Premise Opportunity Amounts" columns="1" collapsible="false">
+    </apex:pageBlockSection>
+    </apex:pageBlockSectionItem>
+
+    <apex:pageBlockSectionItem >
+       <apex:pageBlockSection id="pbsCloudAmt" title="Cloud Opportunity Amounts"  columns="1" collapsible="false">
+    </apex:pageBlockSection>
+   </apex:pageBlockSectionItem>
+
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Total Amount" />
+          <!--<apex:outputText value="{!objWrapWow.CurrencyCode}  {!objWrapWow.TotalAmount}" />-->
+          <apex:outputField value="{!objWowReqFrm.Total_Amount__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Bookings" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Annual_Contract_Value_new__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="License Amount" />
+          <apex:outputField value="{!objWowReqFrm.Opp_License_Amount__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Annual Contract Value" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Annual_Contract_Value__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Hardware (Business Edition -Premise)" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Hardware_Total__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Total Contract Value (TCV)" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Total_Annual_Contract_Value__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Professional Service Amount (RDP)" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Professional_Service_Amount_RDP__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Professional Services-Cloud" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Total_PS_Support__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Genesys Care Amount" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Genesys_Care_Amount__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Committed Monthly Recurring Rev (CMRR)" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Monthly_Commitment__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Term License Amount (ACV)" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Term_License__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Estimated Usage Agreements (EUA)" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Estimated_Usage_Agreements_EUA__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Term License Amount (TCV)" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Term_License_Amount_TCV__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Potential Pipeline" />
+          <apex:outputField value="{!objWowReqFrm.Opp_Potential_Pipeline__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="License Equivalency" />
+          <apex:outputField value="{!objWowReqFrm.Opp_License_Equivalency__c}" />
+         </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="pbsWowReqData" title="SC Engagement Data" rendered="{!AESection}">
+
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Expected Start Date" />
+       <apex:inputField value="{!objWowReqFrm.Expected_Discovery_Start__c}" required="true"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Key Business Objective" />
+       <!--<apex:outputText value="{!objWrapWow.PrimaryBusinessObjective }" />-->
+       <apex:inputField value="{!objWowReqFrm.Primary_Business_Objectives__c}" required="true" />
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="High Level Details of your Request" >
+       <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Detail the pre-sales activity being requested and the specific desired objective. Example activities - CX Safari, Vision Clip (Video Use case creation), CX Discovery (Service Design Journey Mapping), SC Contact Center Discovery (1day).                    </span>
+         </div>  
+        </apex:outputLabel> 
+
+        <apex:inputField value="{!objWowReqFrm.High_Level_Request_details__c}" required="true" style="width:400px;height:100px;" styleClass="clsHghLvlReq" />
+        
+       
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+
+    <apex:pageBlockSection id="pbsWowReqData_RO" title="SC Engagement Data" rendered="{!AESection_RO}">
+    
+     <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="Primary Business Objective" />
+       <apex:outputField value="{!objWowReqFrm.Primary_Business_Objectives__c}" />
+     </apex:pageBlockSectionItem>-->
+     
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Expected Start Date" />
+       <apex:outputField value="{!objWowReqFrm.Expected_Discovery_Start__c}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Key Business Objective" />
+       <!--<apex:outputLabel value="{!objOpportunity.Key_Business_Objective__c}" />-->
+       <apex:outputField value="{!objWowReqFrm.Primary_Business_Objectives__c}" />
+       <!--<apex:outputLabel value="{!objWrapWow.PrimaryBusinessObjective}" />-->
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="High Level Details of your Request" >
+       <div class="helpOrb tooltip" style="position:relative;left:10px">
+          <span>
+                       Detail the pre-sales activity being requested and the specific desired objective. Example activities - CX Safari, Vision Clip (Video Use case creation), CX Discovery (Service Design Journey Mapping), SC Contact Center Discovery (1day).                    </span>
+         </div>  
+        </apex:outputLabel> 
+
+
+       <apex:outputField value="{!objWowReqFrm.High_Level_Request_details__c}" />
+     </apex:pageBlockSectionItem>
+
+     <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="Business Partner" />
+       <apex:outputLabel value="{!objOpportunity.BusinessPartner__r.Name}" />
+     </apex:pageBlockSectionItem>-->
+    </apex:pageBlockSection>
+
+    <apex:pageBlockSection id="pbsWowSubRegionalLeader" title="Sub Regional Leaders">
+        <apex:pageBlockSectionItem >
+         <apex:pageBlockSection columns="1"  > 
+               <apex:pageBlockSectionItem >
+               <apex:outputLabel ></apex:outputLabel>
+                 <apex:pageBlockTable value="{!list_AssignedLeaders}" var="Leader" style="width:25%" >     
+                  <apex:column headerValue="Sub Regional Leaders">
+                     <apex:OutputField value="{!Leader.User_Name__c}"/>
+                  </apex:column>
+                  <apex:column headerValue="Region">
+                     <apex:OutputField value="{!Leader.Region__c}"/>
+                  </apex:column>
+                   <apex:column headerValue="Sub Region">
+                     <apex:OutputField value="{!Leader.SubRegion__c}"/>
+                  </apex:column> 
+                  <apex:column headerValue="Segment">
+                     <apex:OutputField value="{!Leader.Segment__c}"/>
+                  </apex:column> 
+                  <!--<apex:column headerValue="Offering Type">
+                     <apex:OutputField value="{!Leader.Offering_Type__c}"/>
+                  </apex:column> -->
+                 </apex:pageblockTable>
+                </apex:pageBlockSectionItem>
+           </apex:pageBlockSection>
+           </apex:pageBlockSectionItem> 
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="pbsWowReqStatus" title="SC Engagement Status" columns="1" rendered="{!StatusSection}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="SC Engagement Status" />
+       <apex:inputField value="{!objWowReqFrm.WoW_Status__c}" styleClass="clsWowStatus" />
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+
+    <apex:pageBlockSection id="pbsWowReqStatus_RO" title="SC Engagement Status" columns="1" rendered="{!StatusSection_RO}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="SC Engagement Status" />
+       <apex:outputField value="{!objWowReqFrm.WoW_Status__c}" />
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+    <!-- Virtual Team Start-->
+    <apex:pageBlockSection id="pbsAssignment" title="Virtual Team" columns="1" rendered="{!LeadSection}">
+  
+      <apex:pageBlockSectionItem >
+          <apex:pageBlockSection columns="3" rendered="{!LeadSection}" >
+           <apex:pageBlockSectionItem dataStyle="width:20px">
+           <apex:outputLabel value="Virtual User" />
+            <!--apex:outputLabel value="Solution Consultant" /-->
+            <!--apex:repeat value="{!list_VTSCList}" var="urSC"--> 
+            <apex:inputField value="{!objWowVT.Virtual_User__c}" required="false" styleClass="clsSolutionCon" style="margin-top: -14pt;"/>
+            <!--/apex:repeat-->
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem dataStyle="width:20px">
+           <apex:outputLabel value="Virtual User Type" />
+          <apex:inputField value="{!objWowVT.Virtual_User_type__c}" styleClass="clsSolutionConType"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem dataStyle="width:20px">
+             <apex:commandlink value="Add" action="{!GetVTUserList}" onclick="return ValidationForSCVT();" styleClass="btn" id="btnAddVTUsers">
+               <apex:param name="VirtualTeamType" value="Solution Consultant" assignTo="{!VirtualTeamType}"  /> 
+             </apex:commandlink>
+            </apex:pageBlockSectionItem> 
+         </apex:pageBlockSection> 
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="3" rendered="{!blnIsVTListExist}" >
+         <apex:pageBlockSectionItem dataStyle="clsPBSVTUsersList">
+              <apex:outputLabel ></apex:outputLabel>
+             <apex:pageBlockTable value="{!list_VTUserList}" var="VT" styleClass="clsVTList" rendered="{!list_VTUserList != null}">
+           
+                  <apex:column headerValue="Virtual User">
+                  <apex:inputHidden id="hdnVirUsr" value="{!VT.Virtual_User__c}" />
+                 <apex:OutputField value="{!VT.Virtual_User__c}"/>
+                 </apex:column>
+                 <apex:column headerValue="Virtual User Type">
+                 <apex:OutputField value="{!VT.Virtual_User_type__c}"/>
+                 </apex:column>
+                 <apex:column headerValue="Remove">
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveVTUser}" >
+                 <apex:param name="CurrentVT" value="{!VT.Virtual_User__c}" assignTo="{!CurrentVT}"  /> 
+                 <apex:param name="CurrentVTType" value="{!VT.Virtual_User_type__c}" assignTo="{!CurrentVTType}"  /> 
+                 </apex:commandLink>
+                 </apex:column>        
+             </apex:pageBlockTable>
+         </apex:pageBlockSectionItem>
+     </apex:pageBlockSection>
+     </apex:pageBlockSectionItem> 
+     <apex:pageBlockSectionItem rendered="{!blnLeadApproveReject }">
+      <apex:outputLabel value="" />
+      <apex:selectRadio value="{!SelectedStatusType}"  onclick="SelectedStatusType(this);"  styleClass="clsSelectedStatus">
+       <apex:selectOptions value="{!StatusTypes}">
+       </apex:selectOptions>
+      </apex:selectRadio>
+     </apex:pageBlockSectionItem>
+     <!--<apex:pageBlockSectionItem />-->
+     <apex:pageBlockSectionItem >
+     <apex:outputLabel value="" />
+      <apex:outputPanel styleClass="clsRejectedStatus">
+       <apex:outputLabel value="Rejected Status " />
+       <apex:inputField value="{!objWowReqFrm.Rejected_Status__c}" style="width:600px;height:30px" required="false"  styleClass="clsRejected"/>
+     </apex:outputPanel> 
+     </apex:pageBlockSectionItem>
+      <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="SC Wow Engagement Owner" />
+       <apex:inputField value="{!objWowReqFrm.IsSEOwner__c}" styleClass="clsIsSEOwner"/>
+     </apex:pageBlockSectionItem>-->
+     
+     <!--apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="2">
+       <apex:pageBlockSectionItem > 
+           <apex:outputLabel value="Business Consultant" />
+           <apex:repeat value="{!list_VTBCList}" var="urBC" > 
+            <apex:inputField value="{!urBC.Virtual_User__c}" required="false" styleClass="clsBusinessCon"/>
+            </apex:repeat>
+       </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+           <apex:commandlink value="Add" action="{!GetVTUserList}" onclick="return ValidationForBCVT();" styleClass="btn">
+            <apex:param name="VirtualTeamType" value="Business Consultant" assignTo="{!VirtualTeamType}"/> 
+           </apex:commandlink> 
+        </apex:pageBlockSectionItem>
+      </apex:pageBlockSection>
+     </apex:pageBlockSectionItem-->
+     <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="BC Wow Engagement Owner" />
+       <apex:inputField value="{!objWowReqFrm.IsBCOwner__c}" required="false" styleClass="clsIsBCOwner"/>
+     </apex:pageBlockSectionItem>-->
+     <!--apex:pageBlockSectionItem >
+      <apex:pageBlockSection columns="2">
+       <apex:pageBlockSectionItem > 
+           <apex:outputLabel value="PS Consulting Sales Director" />         
+           <apex:repeat value="{!list_VTPSList}" var="urPS" > 
+            <apex:inputField value="{!urPS.Virtual_User__c}" required="false" styleClass="clsPSCon"/>
+            </apex:repeat>
+      </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem >
+           <apex:commandlink value="Add" action="{!GetVTUserList}" onclick="return ValidationForPSVT();" styleClass="btn">
+           <apex:param name="VirtualTeamType" value="PS Consulting Sales Director" assignTo="{!VirtualTeamType}"/> 
+           </apex:commandlink>
+        </apex:pageBlockSectionItem>       
+     </apex:pageBlockSection>  
+     </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+      <apex:pageBlockSection columns="2">
+       <apex:pageBlockSectionItem > 
+           <apex:outputLabel value="Solution Lead" />          
+            <apex:repeat value="{!list_VTSLList}" var="urSL" > 
+            <apex:inputField value="{!urSL.Virtual_User__c}" required="false" styleClass="clsSolutionLead"/>
+            </apex:repeat>
+      </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem >
+           <apex:commandlink value="Add" action="{!GetVTUserList}" onclick="return ValidationForSLVT();" styleClass="btn">
+           <apex:param name="VirtualTeamType" value="Solution Lead" assignTo="{!VirtualTeamType}"/> 
+           </apex:commandlink>
+        </apex:pageBlockSectionItem>       
+     </apex:pageBlockSection>  
+     </apex:pageBlockSectionItem-->
+     
+      
+    </apex:pageBlockSection>
+  <!-- Virtual Team End-->
+    <apex:pageBlockSection id="pbsAssignment_RO" title="Virtual Team" columns="1" rendered="{!LeadSection_RO}">     
+          <apex:pageBlockSectionItem >
+         <apex:pageBlockSection columns="3" rendered="{!blnIsVTListExist}" >
+          <apex:pageBlockSectionItem >
+              <apex:pageBlockTable value="{!list_VTUserList}" var="VT" >           
+                  <apex:column headerValue="Virtual User">          
+                 <apex:OutputField value="{!VT.Virtual_User__c}"/>
+                 </apex:column>
+                 <apex:column headerValue="Virtual User Type">
+                 <apex:OutputField value="{!VT.Virtual_User_type__c}"/>
+                 </apex:column>
+             </apex:pageBlockTable>
+         </apex:pageBlockSectionItem> 
+        </apex:pageBlockSection>
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+    <!-- Vision Start-->
+    <apex:pageBlockSection id="pbsVision" title="Vision" columns="1" rendered="{!VTSection}">
+    <!-- <script>twistSection(document.getElementById('img_{!$Component.pbsVision}')); </script>-->
+      <apex:pageBlockSectionItem >
+        <apex:outputLabel value="Vision Stage Activities">
+            <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if you have performed Vision Activities for this opportunity.
+                    </span>
+                </div>  
+         </apex:outputLabel> 
+        <apex:inputfield value="{!objWowReqFrm.Vision_Stage_Activities__c}" styleclass="clsVisionActCHK" onclick="CheckVision(this);"/>
+      </apex:pageBlockSectionItem>
+      <!--<apex:pageBlockSectionItem>
+      <apex:pageBlockSection columns="1" rendered="true" collapsible="false" >
+     <apex:pageBlockSectionItem >     
+       <apex:outputLabel value="Vision End Date" styleClass="clsVision">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Enter the date when the last activity of the Vision Stage was finished.
+                    </span>
+                </div>  
+         </apex:outputLabel> 
+       <apex:inputfield value="{!objWowReqFrm.Vision_Start_Date__c}" styleClass="clsVision"/>
+      </apex:pageBlockSectionItem>
+      </apex:pageBlockSection>
+      </apex:pageBlockSectionItem>-->
+     <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsVision">
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false" >      
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Vision Start Date">
+           <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Enter the Vision Start Date.
+                    </span>
+                </div> 
+         </apex:outputLabel> 
+       <apex:inputfield value="{!objWowReqFrm.VisionStartDate__c}"/>
+      </apex:pageBlockSectionItem>
+      
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Vision End Date">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Enter the date when the last activity of the Vision Stage was finished.
+                    </span>
+                </div>  
+         </apex:outputLabel> 
+       <apex:inputfield value="{!objWowReqFrm.Vision_Start_Date__c}" styleClass="clsVisionStartDate"/>
+      </apex:pageBlockSectionItem>
+      </apex:pageBlockSection>
+      <!--<apex:pageBlockSectionItem dataStyle="width:100%">-->
+          <apex:pageBlockSection columns="2" >
+             <apex:pageBlockSectionItem rendered="{!list_WowVision!=null}"> 
+                <apex:pageBlockTable value="{!list_WowVision}" var="Vision" >
+                  <apex:column headerValue="Vision Activity">
+                        <apex:facet name="header">
+                            <apex:outputPanel layout="block" title="Select the Vision Activity for this opportunity.">                            
+                              Vision Activity
+                            </apex:outputPanel>
+                        </apex:facet>
+                            <apex:inputField value="{!Vision.Vision_Activity__c}" styleClass="clsVisionActivityNew"/>
+                  </apex:column>              
+              <apex:column headerValue="Date">
+                    <apex:facet name="header">
+                        <apex:outputPanel layout="block" title="If the use case could not be used As Is, please provide a short description of require changes.">
+                          Date
+                        </apex:outputPanel>
+                      </apex:facet>
+                    <apex:inputField value="{!Vision.Date__c}" styleClass="clsVisionDate"/>
+              </apex:column> 
+               <apex:column headerValue="Attachments">
+               
+               <apex:commandButton value="Attachment" onclick="return loadPopupBoxVision('Vision Activity','{!Vision.Row_Number__c}');">
+               <apex:param assignTo="{!RowNumber}" value="{!Vision.Row_Number__c}"/>
+               
+                <div class="helpOrb tooltip" style="right:inherit;">
+                            <span>
+                               Click button to upload a Vision Presentation
+                            </span>
+                 </div> 
+               </apex:commandButton> 
+                 <table border="1" width="100%">
+                 <tr ><td width="65%"><b><font face="Arial" size="small">File Name</font></b></td></tr>
+                 
+                <!-- Attachments --> 
+               <apex:repeat value="{!Vision.attachments}" var="Vis"> 
+                   <tr ><td> 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!Vis.id}"  target="_blank">{!Vis.Name}</a><br></br>
+                   </td>                 
+                     </tr>
+               </apex:repeat>
+                </table>     
+                </apex:column>
+              <apex:column >
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveVisionActivity}" >                
+                   <apex:param name="visionId" assignTo="{!VisionId}" value="{!Vision.Id}"/>
+                   <apex:param name="visionCurrent" assignTo="{!CurrentVision}" value="{!Vision.Row_Number__c}"/>               
+                 </apex:commandLink>
+              </apex:column>
+             </apex:pageBlockTable>
+             </apex:pageBlockSectionItem> 
+             <apex:pageBlockSectionItem >
+             <apex:commandbutton value="Add" action="{!AddVision}" onClick="return CheckBlankRow('clsVisionActivity','clsVisionDate','vision');">                 
+                <div class="helpOrb tooltip"  style="right:inherit;">
+                        <span>
+                        Click button to add another Vision activity.
+                        </span>
+                </div>
+            </apex:commandbutton>
+             </apex:pageBlockSectionItem>
+           </apex:pageBlockSection> 
+        <!--</apex:pageBlockSectionItem> --> 
+      <!-- <apex:outputLabel value="Vision Activity">
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Select the type of activitie(s) performed.
+                    </span>
+                </div>  
+         </apex:outputLabel> 
+       <apex:inputfield value="{!objWowReqFrm.Vision_Activity__c}" styleclass="clsVisionActivity" />
+      </apex:pageBlockSectionItem>-->
+      
+     <apex:pageBlockSectionItem />   
+     
+    <apex:pageBlockSection columns="2">
+     <apex:pageBlockSection columns="1"> 
+      <apex:pageBlockSectionItem >
+       <apex:commandButton value="Attach Document" onclick="return loadPopupBox('Vision Document');">
+        <div class="helpOrb tooltip" style="right:inherit;">
+                    <span>
+                       Click button to upload a Vision Presentation
+                    </span>
+         </div> 
+       </apex:commandButton> 
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="1">
+     <apex:pageBlock title="Attach Document" rendered="{!list_AttachVision != null}">
+       <table border="1" width="100%">
+       <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+       <apex:repeat value="{!list_AttachVision}" var="adp"> 
+       <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+       </td>
+          <td>
+            <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/>
+          </td>
+         </tr>
+       </apex:repeat>
+        </table>
+       </apex:pageBlock>
+       </apex:pageBlockSection>
+     </apex:pageBlockSectionItem>
+     </apex:pageBlockSection>
+     
+     <apex:pageBlockSection columns="1">
+       <apex:pageBlockSectionItem >
+         <apex:commandbutton value="Add Link" action="{!AddVisionLink}" onClick="return CheckVisionLinkInput();">
+        
+         <div class="helpOrb tooltip"  style="right:inherit;">
+            <span>
+               Click button to add the link to a Vision Clip.
+            </span>
+         </div> 
+        </apex:commandbutton>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:pageBlockTable value="{!list_WowVisionLinks}" var="bp">
+              <apex:column headerValue="Vision Link" title="Enter the link (URL) to the Vision Clip.">
+                 <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Enter the link (URL) to the Vision Clip">
+                      Vision Link
+                    </apex:outputPanel>
+                  </apex:facet>                
+                 <apex:inputField value="{!bp.Link_URL__c }" label="Vision Link" style="width:700px;" styleClass="clsVisionLinkInput"/>
+              </apex:column>
+            </apex:pageBlockTable>
+       </apex:pageBlockSectionItem>
+       
+     </apex:pageBlockSection>
+     
+   </apex:pageBlockSection>  
+     
+     <!--</apex:pageBlockSection>-->
+    </apex:outputPanel>
+    </apex:pageBlockSectionItem> 
+    </apex:pageBlockSection>  
+    
+  <!-- Vision End-->
+    
+     <!-- Vision Readonly Start-->
+    <apex:pageBlockSection id="pbsVision_RO" title="Vision" columns="1" rendered="{!VTSection_RO}">
+    
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Vision Stage Activities" >
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if you have performed Vision Activities for this opportunity.
+                    </span>
+                </div>  
+         </apex:outputLabel>
+       <apex:outputField value="{!objWowReqFrm.Vision_Stage_Activities__c}" styleclass="clsVisionActCHK_RO" />
+      </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsVision_RO">
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false">
+     <!-- <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Vision Activity">
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Select the type of activitie(s) performed.
+                    </span>
+                </div>  
+         </apex:outputLabel> 
+       <apex:outputLabel value="{!objWowReqFrm.Vision_Activity__c}"/>
+      </apex:pageBlockSectionItem>-->
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Vision Start Date">
+           <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Enter the Vision Start Date.
+                    </span>
+                </div> 
+         </apex:outputLabel> 
+       <apex:outputfield value="{!objWowReqFrm.VisionStartDate__c}"/>
+      </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Vision End Date">
+        <div class="helpOrb tooltip" style="right:inherit;">
+                    <span>
+                       Enter the date when the last activity of the Vision Stage was finished.
+                    </span>
+                </div>  
+         </apex:outputLabel> 
+       <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+         <apex:param value="{!objWowReqFrm.Vision_Start_Date__c}" /> 
+       </apex:outputText>
+       <!--<apex:outputLabel value="{!objWowReqFrm.Vision_Start_Date__c}"/>-->
+      </apex:pageBlockSectionItem>
+     </apex:pageBlockSection> 
+      <!--<apex:pageBlockSectionItem >-->
+          <apex:pageBlockSection columns="3">
+            <apex:pageBlockTable value="{!list_WowVision}" var="vision">
+              <apex:column headerValue="Vision Activity">
+                <apex:outputField value="{!vision.Vision_Activity__c}"/>
+              </apex:column>
+              <apex:column headerValue="Date">
+                <apex:outputField value="{!vision.Date__c}" />
+              </apex:column>
+              <apex:column headerValue="Attachments">
+                <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td></tr> 
+               <apex:repeat value="{!Vision.attachments}" var="Vis"> 
+                   <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!Vis.id}"  target="_blank">{!Vis.Name}</a><br></br>
+                   </td>                 
+                     </tr>
+               </apex:repeat>
+                </table>     
+              </apex:column>  
+             </apex:pageBlockTable> 
+           </apex:pageBlockSection> 
+       <!-- </apex:pageBlockSectionItem>-->
+      <apex:pageBlockSectionItem / >
+   <apex:pageBlockSection columns="2">
+     
+     <apex:pageBlockSectionItem >
+         <apex:pageBlockSection columns="1">
+         <apex:pageBlock title="Attach Document" rendered="{!list_AttachVision != null}">
+           <table border="1" width="100%">
+           <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+           <apex:repeat value="{!list_AttachVision}" var="adp"> 
+           <tr ><td > 
+             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+           </td>
+              
+             </tr>
+           </apex:repeat>
+            </table>
+           </apex:pageBlock>
+           </apex:pageBlockSection>
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+       <apex:pageBlockSection columns="1">
+       <apex:pageBlockSectionItem >
+         <apex:pageBlockTable value="{!list_WowVisionLinks}" var="bp">
+              <apex:column headerValue="Vision Link">
+        <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Enter the link (URL) to the Vision Clip">
+                      Vision Link
+                    </apex:outputPanel>
+                  </apex:facet>                
+                 <apex:outputField value="{!bp.Link_URL__c }" label="Vision Link"/>
+              </apex:column>
+            </apex:pageBlockTable>
+       </apex:pageBlockSectionItem>
+       
+     </apex:pageBlockSection>
+     </apex:pageBlockSectionItem>
+     
+     </apex:pageBlockSection>   
+     
+     <!--</apex:pageBlockSection>-->
+    </apex:outputPanel>
+    </apex:pageBlockSectionItem> 
+    </apex:pageBlockSection>  
+    
+  <!-- Vision ReadonlyEnd-->
+
+    
+    <apex:pageBlockSection id="pbsDiscovery" title="Discovery" columns="1" rendered="{!VTSection}">
+    <!--<script>twistSection(document.getElementById('img_{!$Component.pbsDiscovery}')); </script>-->
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Discovery Activities">
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if you performed Discovery Activities for this opportunity.
+                    </span>
+                </div>  
+        </apex:outputLabel> 
+       <apex:inputfield value="{!objWowReqFrm.Discovery_Activities__c}" styleclass="clsDiscoveryActCHK" onclick="CheckDiscovery(this);"/>
+      </apex:pageBlockSectionItem>   
+     <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsDiscoveryAct">
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false">
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Discovery Start Date">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       The date when you started to work on Discovery Activities.
+                    </span>
+         </div>  
+        </apex:outputLabel> 
+       <apex:inputField value="{!objWowReqFrm.Discovery_Start_Date__c}" required="false" styleClass="clsDiscovStartDate"/>
+     </apex:pageBlockSectionItem>     
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Discovery End Date">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       The date when you finished the last Discovery Activity.
+                    </span>
+         </div>  
+        </apex:outputLabel>
+       <apex:inputField value="{!objWowReqFrm.Discovery_End_Date__c}" required="false" styleClass="clsDiscovEndDate"/>
+     </apex:pageBlockSectionItem>
+     
+     
+      <apex:pageBlockSectionItem dataStyle="width:100%">
+          <apex:pageBlockSection columns="2">
+             <apex:pageBlockSectionItem rendered="{!list_WowDiscovery!=null}"  dataStyle="width:100%"> 
+                <apex:pageBlockTable value="{!list_WowDiscovery}" var="Discovery" >
+                  <apex:column headerValue="Discovery Activity">
+                        <apex:facet name="header">
+                            <apex:outputPanel layout="block" title="Select the Discovery Activity for this opportunity.">                            
+                              Discovery Activity
+                            </apex:outputPanel>
+                        </apex:facet>
+                            <apex:inputField value="{!Discovery.Discovery_Activity__c}" styleClass="clsDisActivity"/>
+                  </apex:column>              
+              <apex:column headerValue="Date">
+                    <apex:facet name="header">
+                        <apex:outputPanel layout="block" title="If the use case could not be used As Is, please provide a short description of require changes.">
+                          Date
+                        </apex:outputPanel>
+                      </apex:facet>
+                    <apex:inputField value="{!Discovery.Date__c}"  styleClass="clsDisDate"/>
+              </apex:column> 
+               <apex:column headerValue="Attachments">
+               
+               <apex:commandButton value="Attachment" onclick="return loadPopupBoxVision('Discovery Activity','{!Discovery.Row_Number__c}');">
+               <apex:param assignTo="{!RowNumber}" value="{!Discovery.Row_Number__c}"/>
+               
+                <div class="helpOrb tooltip" style="right:inherit;">
+                            <span>
+                               Click button to upload a Discovery Presentation
+                            </span>
+                 </div> 
+               </apex:commandButton> 
+                 <table border="1" width="100%">
+                 <tr><td width="65%"><b><font face="Arial" size="small">File Name</font></b></td></tr>
+                 
+                <!-- Attachments --> 
+               <apex:repeat value="{!Discovery.attachments}" var="Dis"> 
+                   <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!Dis.id}"  target="_blank">{!Dis.Name}</a><br></br>
+                   </td>                 
+                     </tr>
+               </apex:repeat>
+                </table>     
+                </apex:column>
+              <apex:column >
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveDiscoveryActivity}" > 
+                   <apex:param name="CurrentDiscovery" assignTo="{!CurrentDiscovery}" value="{!Discovery.Row_Number__c}"/>               
+                 </apex:commandLink>
+              </apex:column>
+             </apex:pageBlockTable>
+             </apex:pageBlockSectionItem> 
+             
+             <apex:pageBlockSectionItem >
+             <apex:commandbutton value="Add" action="{!AddDiscovery}" onClick="return CheckBlankRow('clsDisActivity','clsDisDate','Discovery');">                 
+                <div class="helpOrb tooltip"  style="right:inherit;">
+                        <span>
+                        Click button to add another Discovery activity.
+                        </span>
+                </div>
+            </apex:commandbutton>
+             </apex:pageBlockSectionItem>
+           </apex:pageBlockSection> 
+        </apex:pageBlockSectionItem>  
+       <apex:pageBlockSectionItem / >
+        </apex:pageblockSection>
+
+   <!--<apex:pageBlockSectionItem id="pbsiBTN"  dataStyle="width:100%">-->
+    <apex:pageblockSection columns="3">
+     <apex:pageblockSection columns="1">
+       <!--Discovery Plan Start-->
+        <apex:pageBlockSectionItem dataStyle="width:100%">
+          <apex:commandButton value="Attach Discovery Plan" onclick="return loadPopupBox('Discovery Plan');">
+        <div class="helpOrb tooltip"  style="right:inherit;">
+            <span>
+               Click button to upload the Discovery Plan Document.
+            </span>
+        </div>
+      </apex:commandButton>
+     </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem dataStyle="width:100%">
+     <apex:pageBlock title="Discovery Plan" rendered="{!list_AttachDiscoveryPlan != null}">
+       <table border="1" width="100%">
+       <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+       <apex:repeat value="{!list_AttachDiscoveryPlan}" var="adp"> 
+       <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+       </td>
+          <td>
+            <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/>
+          </td>
+         </tr>
+       </apex:repeat>
+        </table>
+       </apex:pageBlock>
+     </apex:pageBlockSectionItem>
+     
+       <!--Discovery Plan End-->
+      </apex:pageblockSection>  
+    <apex:pageblockSection columns="1"> 
+     <apex:pageBlockSectionItem >
+       <apex:commandButton value="Attach Discovery Findings" onclick="return loadPopupBox('Discovery Finding');">
+    <div class="helpOrb tooltip"  style="right:inherit;">
+            <span>
+               Press button to upload the Discovery Findings Documents.
+            </span>
+    </div>
+    </apex:commandButton>
+     </apex:pageBlockSectionItem>
+
+     <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="1">
+     <apex:pageBlock title="Discovery Findings" rendered="{!list_AttachDiscoveryFinding != null}">
+      <table border="1" width="100%">
+       <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+       <apex:repeat value="{!list_AttachDiscoveryFinding}" var="adf"> 
+       <tr><td> 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}"  target="_blank">{!adf.Name}</a><br></br>
+       </td>
+                 <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adf.id}');"/></td>
+
+       </tr>
+       </apex:repeat>
+       </table>
+       </apex:pageBlock>
+       </apex:pageBlockSection>
+       </apex:pageBlockSectionItem>
+        </apex:pageblockSection>
+      
+       <apex:pageblockSection columns="1">
+       <!--Discovery Plan Start-->
+        <apex:pageBlockSectionItem >
+          <apex:commandButton value="Attach Maturity and Benefits Model" onclick="return loadPopupBox('Maturity and Benefits Model');">
+        <div class="helpOrb tooltip"  style="right:inherit;">
+            <span>
+               Click button to upload the Maturity and Benefits Model Document.
+            </span>
+        </div>
+      </apex:commandButton>
+     </apex:pageBlockSectionItem>
+    
+        <apex:pageBlockSectionItem >
+     <apex:pageBlock title="Maturity and Benefits Model" rendered="{!list_AttachMaturity != null}">
+       <table border="1" width="100%">
+       <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+       <apex:repeat value="{!list_AttachMaturity}" var="adp"> 
+       <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+       </td>
+          <td>
+            <apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/>
+          </td>
+         </tr>
+       </apex:repeat>
+        </table>
+       </apex:pageBlock>
+     </apex:pageBlockSectionItem>
+     
+       <!--Discovery Plan End-->
+      </apex:pageblockSection> 
+    
+       <!--<apex:pageBlockSection columns="1">
+         <apex:pageBlockSectionItem >
+         <apex:commandbutton value="Add Link" action="{!AddDiscoveryLink}" onClick="return CheckDiscovLinkInput();">
+        </apex:commandbutton>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:pageBlockTable value="{!list_WowDiscoveryLinks}" var="bp">
+              <apex:column headerValue="Discovery Link">
+                 <apex:inputField value="{!bp.Link_URL__c }" label="Discovery Link" style="width:700px;" styleClass="clsDiscoLinkInput"/>
+              </apex:column>
+            </apex:pageBlockTable>
+       </apex:pageBlockSectionItem>
+       </apex:pageBlockSection>-->
+       
+     <!--</apex:pageblockSection> -->  
+     <!-- </apex:pageBlockSectionItem> -->
+       </apex:pageBlockSection>
+    </apex:outputPanel>
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+
+
+    <apex:pageBlockSection id="pbsDiscovery_RO" title="Discovery" columns="1" rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Discovery Activities">
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if you performed Discovery Activities for this opportunity.
+                    </span>
+                </div>  
+        </apex:outputLabel> 
+       <apex:outputField value="{!objWowReqFrm.Discovery_Activities__c}" styleclass="clsDiscoveryCHK_RO" />
+      </apex:pageBlockSectionItem>
+    
+    <apex:pageBlockSectionItem >
+   
+     <apex:outputPanel styleClass="clsDiscovery_RO">
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false">
+         <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Discovery Start Date" />
+       <apex:outputField value="{!objWowReqFrm.Discovery_Start_Date__c}"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Discovery End Date" />
+       <apex:outputField value="{!objWowReqFrm.Discovery_End_Date__c}" />
+     </apex:pageBlockSectionItem>
+     </apex:pageBlockSection>
+      <apex:pageBlockSection columns="1" rendered="true" collapsible="false">
+      <apex:pageBlockSectionItem >
+          <apex:pageBlockSection columns="3">
+            <apex:pageBlockTable value="{!list_WowDiscovery}" var="vision">
+              <apex:column headerValue="Discovery Activity">
+                <apex:outputField value="{!vision.Discovery_Activity__c}"/>
+              </apex:column>
+              <apex:column headerValue="Date">
+                <apex:outputField value="{!vision.Date__c}" />
+              </apex:column>
+              <apex:column headerValue="Attachments">
+                <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td></tr> 
+               <apex:repeat value="{!Vision.attachments}" var="Vis"> 
+                   <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!Vis.id}"  target="_blank">{!Vis.Name}</a><br></br>
+                   </td>                 
+                     </tr>
+               </apex:repeat>
+                </table>     
+              </apex:column>  
+             </apex:pageBlockTable> 
+           </apex:pageBlockSection> 
+        </apex:pageBlockSectionItem>
+      <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="Discovery Activity" />
+       <apex:outputField value="{!objWowReqFrm.Type_of_Discovery__c}"  />
+     </apex:pageBlockSectionItem>-->
+  
+     
+     <apex:pageBlockSectionItem >
+       <apex:pageBlockSection columns="3">
+          <apex:pageBlockSectionItem dataStyle="width:33%" labelStyle="width:33%" >                  
+                     <apex:pageBlock title="Discovery Plan" rendered="{!list_AttachDiscoveryPlan != null}">
+                       <table border="1" width="100%">
+                       <tr style="font-weight:800;"><td>File Name</td></tr> 
+                       <apex:repeat value="{!list_AttachDiscoveryPlan}" var="adp">
+                       <tr ><td width="100%"> 
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}" target="_blank">{!adp.Name}</a><br></br>
+                          </td>
+                          
+                         </tr>
+                       </apex:repeat>
+                        </table>
+                       </apex:pageBlock>                    
+               </apex:pageBlockSectionItem>
+           <apex:pageBlockSectionItem dataStyle="width:33%" labelStyle="width:33%" >
+             <apex:pageBlock title="Discovery Findings" rendered="{!list_AttachDiscoveryFinding != null}" >
+              <table border="1" width="100%">
+               <tr><td style="font-weight:800;">File Name</td></tr> 
+                   <apex:repeat value="{!list_AttachDiscoveryFinding}" var="adf"> 
+                   <tr><td> 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}" target="_blank">{!adf.Name} {!adf.Description}</a><br></br>
+                      </td>
+                     
+                     </tr>
+                   </apex:repeat>
+                </table>
+               </apex:pageBlock>              
+               </apex:pageBlockSectionItem>
+               <apex:pageBlockSectionItem dataStyle="width:33%" labelStyle="width:33%" >             
+             <apex:pageBlock title="Maturity and Benefits Model" rendered="{!list_AttachMaturity!= null}">             
+              <table border="1" width="100%">
+               <tr><td style="font-weight:800;">File Name</td></tr> 
+                   <apex:repeat value="{!list_AttachMaturity}" var="adf"> 
+                   <tr><td> 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}" target="_blank">{!adf.Name}</a><br></br>
+                      </td>
+                     
+                     </tr>
+                   </apex:repeat>
+                </table>
+               </apex:pageBlock>              
+               </apex:pageBlockSectionItem>
+               <!--<apex:pageBlockSection columns="1">
+                  <apex:pageBlockTable value="{!list_WowDiscoveryLinks}" var="bp">
+                   <apex:column headerValue="Discovery Link">
+                   <apex:outputField value="{!bp.Link_URL__c }" label="Discovery Link" style="width:700px;"/>
+                   </apex:column>
+                   </apex:pageBlockTable>
+               </apex:pageBlockSection>-->
+           </apex:pageBlockSection>    
+       </apex:pageBlockSectionItem>
+       
+    
+       
+     </apex:pageBlockSection>
+    </apex:outputPanel>
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+
+
+
+    
+    <apex:pageBlockSection id="pbsDesign" title="Design (all offers)" columns="1" rendered="{!VTSection}">
+    <!--<script>twistSection(document.getElementById('img_{!$Component.pbsDesign}')); </script>-->
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Design Activities">
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if you have performed Design Activities for this opportunity.
+                    </span>
+                </div>  
+       </apex:outputLabel> 
+       <apex:inputfield value="{!objWowReqFrm.Design_Activities__c}" styleclass="clsDesignActCHK" onclick="CheckDesign(this);"/>
+      </apex:pageBlockSectionItem>
+    
+     <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsDesignAct">
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false">
+      <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="Type of Design" />
+       <apex:inputField value="{!objWowReqFrm.Type_of_Design__c}"  />
+      </apex:pageBlockSectionItem>-->
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Design Start Date">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       The date when you started to work on Design Activities.
+                    </span>
+         </div>  
+       </apex:outputLabel> 
+       <apex:inputField value="{!objWowReqFrm.Design_Start_Date__c}" styleClass="clsDesignStartDate" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Design End Date">
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       The date when you finished the last Design Activity 
+                    </span>
+         </div>  
+       </apex:outputLabel> 
+       <apex:inputField value="{!objWowReqFrm.Design_End_Date__c}" styleClass="clsDesignEndDate"/>
+     </apex:pageBlockSectionItem>
+     
+    <apex:pageBlockSectionItem >
+     <apex:outputLabel value="Primary Quote" />
+     <apex:outputlink value="/{!strPrimaryQuoteId}" target="_blank"><div id="mylink" style="text-decoration: underline;">URL</div></apex:outputlink>
+    </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+     <!--<apex:pageBlockSectionItem >
+       <apex:commandButton value="Attach Design Plan" onclick="return loadPopupBox('Design Plan');"/>
+     </apex:pageBlockSectionItem>-->
+      <apex:pageblockSection columns="4">
+      <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%">
+      <apex:pageblockSection columns="1">
+           <apex:pageBlockSectionItem >
+                 <apex:commandButton value="Attach Design Plan" onclick="return loadPopupBox('Design Plan');">
+                    <div class="helpOrb tooltip"  style="right:inherit;">
+                            <span>
+                                Click button to upload the Design Plan Document.
+                            </span>
+                    </div>
+                </apex:commandButton>
+           </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >
+               
+                <apex:pageBlock title="Design Plan" rendered="{!list_AttachDesignPlan != null}">
+                <table border="1" width="100%">
+                <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                <apex:repeat value="{!list_AttachDesignPlan}" var="adp"> 
+                 <tr ><td > 
+                 <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                 </td>
+                  <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/></td>
+                  
+                 </tr>
+                </apex:repeat>
+                </table>
+                </apex:pageBlock>
+              
+            </apex:pageBlockSectionItem>
+        </apex:pageblockSection>
+       </apex:pageBlockSectionItem> 
+       <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%">
+     <apex:pageblockSection columns="1">
+         <apex:pageBlockSectionItem >
+             <apex:outputPanel >
+               <apex:commandButton value="Attach Design Findings" onclick="return loadPopupBox('Design Finding');">
+                   
+            </apex:commandButton>
+            <div class="helpOrb tooltip" align="left" style="right:inherit;">
+                    <span>
+                       Click button to upload the Design Findings Documents.
+                    </span>
+            </div>    
+             </apex:outputPanel>       
+         </apex:pageBlockSectionItem>
+     
+         <apex:pageBlockSectionItem >        
+         <apex:pageBlock title="Design Finding" rendered="{!list_AttachDesignFinding!= null}" >
+           <table border="1" width="100%">
+           <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+           <apex:repeat value="{!list_AttachDesignFinding}" var="adf"> 
+           <tr ><td > 
+             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}"  target="_blank">{!adf.Name}</a><br></br>
+            </td>
+              <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adf.id}');"/></td>
+              
+             </tr>
+           </apex:repeat>
+            </table>
+           </apex:pageBlock>          
+           </apex:pageBlockSectionItem>
+       </apex:pageblockSection>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%">
+       <apex:pageblockSection columns="1">
+         <apex:pageBlockSectionItem >
+             <apex:outputPanel >
+               <apex:commandButton value="Attach Benefits Calculation" onclick="return loadPopupBox('ROI Calculation');">
+                   
+            </apex:commandButton>
+            <div class="helpOrb tooltip" align="left" style="right:inherit;">
+                    <span>
+                       Click button to upload the Benefits Calculation Documents.
+                    </span>
+            </div>    
+             </apex:outputPanel>       
+         </apex:pageBlockSectionItem>
+     
+         <apex:pageBlockSectionItem >       
+         <apex:pageBlock title="Benefits Calculation" rendered="{!list_AttachROICalculation!= null}">
+           <table border="1" width="100%">
+           <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+           <apex:repeat value="{!list_AttachROICalculation}" var="adf"> 
+           <tr ><td > 
+             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}"  target="_blank">{!adf.Name}</a><br></br>
+            </td>
+              <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adf.id}');"/></td>
+              
+             </tr>
+           </apex:repeat>
+            </table>
+           </apex:pageBlock>           
+           </apex:pageBlockSectionItem>
+       </apex:pageblockSection>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%">
+       <apex:pageblockSection columns="1">
+         <apex:pageBlockSectionItem >
+             <apex:outputPanel >
+               <apex:commandButton value="Attach Bill of Materials" onclick="return loadPopupBox('Bill of Materials');">
+                   
+            </apex:commandButton>
+            <div class="helpOrb tooltip" align="left" style="right:inherit;">
+                    <span>
+                       Click button to upload the Bill of Materials Documents.
+                    </span>
+            </div>    
+             </apex:outputPanel>       
+         </apex:pageBlockSectionItem>
+     
+         <apex:pageBlockSectionItem >        
+         <apex:pageBlock title="Bill of Materials" rendered="{!list_AttachBillMaterial!= null}" >
+           <table border="1" width="100%">
+           <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+           <apex:repeat value="{!list_AttachBillMaterial}" var="adf"> 
+           <tr ><td > 
+             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}"  target="_blank">{!adf.Name}</a><br></br>
+            </td>
+              <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adf.id}');"/></td>              
+             </tr>
+           </apex:repeat>
+            </table>
+           </apex:pageBlock>          
+           </apex:pageBlockSectionItem>
+       </apex:pageblockSection>
+       </apex:pageBlockSectionItem>
+      
+       <!--Design Plan Start-->       
+    </apex:pageblockSection>
+     <apex:pageBlockSectionItem />
+       <!--Design Plan End-->
+     <!--RFP Design Start-->
+      <apex:pageBlockSection id="pbsRFP" title="RFP (all offers)" columns="1" rendered="{!VTSection}">
+      <!--<script>twistSection(document.getElementById('img_{!$Component.pbsRFP}')); </script>-->
+      <apex:pageBlockSectionItem >
+          <apex:outputLabel value="RFP">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if you have performed RFP for this opportunity.
+                    </span>
+                </div>  
+          </apex:outputLabel>            
+          <apex:inputField value="{!objWowReqFrm.RFP__c}" styleClass="clsRFP"/>
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem >
+         <apex:outputPanel styleClass="clsDesignAct">
+          <apex:pageBlockSection columns="2" rendered="true" collapsible="false">          
+          <apex:pageBlockSectionItem >
+           <apex:outputLabel value="RFP Received Date"/>
+            <apex:inputField value="{!objWowReqFrm.RFP_Received_Date__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="Short Description of RFP "/>
+            <apex:inputField value="{!objWowReqFrm.Short_Description_of_RFP__c}" style="width:300px;"/>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="RFP Due Date"/>
+            <apex:inputField value="{!objWowReqFrm.RFP_Due_date__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem / >
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="RFP Completed Date"/>
+            <apex:inputField value="{!objWowReqFrm.RFP_Completed_Date__c}" />
+         </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem />
+        <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%">
+      <apex:pageblockSection columns="1">
+           <apex:pageBlockSectionItem >
+                 <apex:commandButton value="Attach RFP" onclick="return loadPopupBox('RFP');">
+                    <div class="helpOrb tooltip"  style="right:inherit;">
+                            <span>
+                                Click button to upload the RFP Document.
+                            </span>
+                    </div>
+                </apex:commandButton>
+           </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem >               
+                <apex:pageBlock title="RFP" rendered="{!list_AttachRFP != null}">
+                <table border="1" width="100%">
+                <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                <apex:repeat value="{!list_AttachRFP}" var="adp"> 
+                 <tr ><td > 
+                 <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                 </td>
+                  <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/></td>
+                  
+                 </tr>
+                </apex:repeat>
+                </table>
+                </apex:pageBlock>              
+            </apex:pageBlockSectionItem>
+        </apex:pageblockSection>
+       </apex:pageBlockSectionItem> 
+      </apex:pageBlockSection>  
+      </apex:outputPanel>
+    </apex:pageBlockSectionItem>       
+      </apex:pageBlockSection>  
+      <!--RPF Design End--> 
+     
+     <!-- Functional Use Case Start -->
+         
+    <apex:pageBlockSection id="pbsAttachmentFnUseCase" title="Business Design – Functional Use-Cases (all offers)" columns="2" rendered="{!VTSection}">
+       <!--<script>twistSection(document.getElementById('img_{!$Component.pbsAttachmentFnUseCase}')); </script> -->
+      <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Use Case Summary" />
+            <apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=40816557" type="image/png" target="_blank">
+            <apex:image value="{!$Resource.Document}" width="30" height="30"/>
+            </apex:outputLink> 
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem />      
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Predefined Use Case">
+       </apex:outputLabel> 
+       <apex:inputfield value="{!objWowReqFrm.Is_Functional_Use_Case__c}" styleclass="clsFnUseCaseCHK" onclick="CheckFnUseCase(this);"/>
+      </apex:pageBlockSectionItem>
+      <apex:pageBlockSectionItem / >     
+      <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsFnUseCaseAct">
+      <apex:pageBlockSection columns="1" rendered="true" collapsible="false"> 
+         <apex:pageBlockSectionItem >
+          <apex:pageBlockSection columns="2" >
+             <apex:pageBlockSectionItem rendered="{!list_WowAttachmentsFnUseCase!=null}"> 
+             
+            
+            <apex:pageBlockTable value="{!list_WowAttachmentsFnUseCase}" var="fun" styleClass="clsFnUseCase">
+              <apex:column headerValue="Functional Use Case">
+        <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Select the standard functional use cases for this opportunity.">
+                      Functional Use Case
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!fun.Functional_Use_Case__c}" styleClass="clsFNUseCaseInput"/>
+              </apex:column>
+              <apex:column headerValue="Fit %">
+        <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Check if the functional use case is used without any change.">
+                     Fit % 
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!fun.Fit__c}" styleClass="clsAsIsFnUseCase" />
+              </apex:column>
+              <apex:column headerValue="Short description of changes">
+        <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="If the use case could not be used As Is, please provide a short description of require changes.">
+                      Short description of changes
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!fun.Description__c}" styleClass="clsDescFnUseCase" style="width:300px;height:50px;"/>
+              </apex:column> 
+              <apex:column >
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveFunctionalUseCase}" >
+                   <!--<apex:param name="rowIndex" assignTo="{!FnUseCaseRowNumber}" value="{!FnrowNumber}" />--> 
+                   <apex:param name="fncaseid" assignTo="{!FunUseCaseId}" value="{!fun.id}"/>
+                   <apex:param name="fncase" assignTo="{!CurrentFunUseCase}" value="{!fun.Row_Number__c}"/>               
+                 </apex:commandLink>
+              </apex:column> 
+               
+             </apex:pageBlockTable> 
+             </apex:pageBlockSectionItem> 
+             <apex:pageBlockSectionItem >
+             <apex:commandbutton value="Add" action="{!AddFunctionUseCase}" onClick="return CheckFnUseCaseInput();">
+        <div class="helpOrb tooltip"  style="right:inherit;">
+                <span>
+                Click button to add another functional use case.
+                </span>
+        </div>
+            </apex:commandbutton>
+             </apex:pageBlockSectionItem>
+           </apex:pageBlockSection> 
+        </apex:pageBlockSectionItem>    
+        
+       
+        <!-- Attach SC Toolkit Start-->
+         <!--<apex:pageBlockSection columns="1"> 
+  
+           <apex:pageBlockSectionItem dataStyle="width:20px">
+             <apex:commandButton value="Attach SC Toolkit" onclick="return loadPopupBox('SCToolkit');"/>
+           </apex:pageBlockSectionItem>
+                 
+           <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="3">
+                 <apex:pageBlock title="SC Toolkit" rendered="{!list_AttachSEToolkit != null}" >
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;width:100%"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                   <apex:repeat value="{!list_AttachSEToolkit}" var="ast"> 
+                    <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Description} ({!ast.Name})</a><br></br>
+                   </td>
+                             <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!ast.id}');"/></td>
+                     </tr>
+                   </apex:repeat>
+                    </table>
+                   </apex:pageBlock>
+                 </apex:pageBlockSection>
+              </apex:pageBlockSectionItem>
+
+           </apex:pageBlockSection>-->
+        <!-- Attach SC Toolkit End -->
+        
+        
+        <!-- Custom Use Case-->
+        
+       
+       </apex:pageBlockSection>
+       </apex:outputPanel>       
+       </apex:pageBlockSectionItem> 
+       <apex:pageBlockSectionItem /> 
+        
+       <apex:pageBlockSectionItem >
+        <!--<apex:pageBlockSection columns="2">         
+           <apex:pageBlockSectionItem >-->
+             <apex:outputLabel value="Custom Use Case ">
+       <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if a custom use case has been used.
+                    </span>
+                </div>  
+              </apex:outputLabel>  
+              <apex:inputField value="{!objWowReqFrm.Custom_Use_Case__c}" styleClass="clsIsCustUseCase"/>     
+           </apex:pageBlockSectionItem>  
+                  
+          <!-- <apex:pageBlockSectionItem dataStyle="width:20px">             
+              <apex:commandButton value="Attach Custom Functional Use Case" onclick="return loadPopupBox('Custom Use Case');">
+        <div class="helpOrb tooltip"  style="right:inherit;">
+                <span>
+                    Press button to upload custom use case description
+                </span>
+        </div>
+        </apex:commandButton>
+           </apex:pageBlockSectionItem> --> 
+           <!--</apex:pageBlockSection>         
+         </apex:pageBlockSectionItem>  -->
+            
+           <apex:pageBlockSectionItem >
+             <apex:pageBlockSection columns="1">
+                 <apex:pageBlockSectionItem dataStyle="width:20px">
+              <!--<apex:commandButton value="Attach SC Toolkit" onclick="return loadPopupBox('SCToolkit');"/>-->
+              <apex:commandButton value="Attach Custom Functional Use Case" onclick="return loadPopupBox('Custom Use Case');">
+                <div class="helpOrb tooltip"  style="right:inherit;">
+                        <span>
+                            Press button to upload custom use case description
+                        </span>
+                </div>
+              </apex:commandButton>
+           </apex:pageBlockSectionItem> 
+                 <apex:pageBlockSectionItem >
+                 <apex:pageBlock title="Custom Functional Use Case" rendered="{!list_AttachCustomUseCase!= null}" >
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;width:100%"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                   <apex:repeat value="{!list_AttachCustomUseCase}" var="ast"> 
+                    <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Description} ({!ast.Name})</a><br></br>
+                   </td>
+                             <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!ast.id}');"/></td>
+                     </tr>
+                   </apex:repeat>
+                    </table>
+                   </apex:pageBlock>
+                   </apex:pageBlockSectionItem>
+                 <!--</apex:pageBlockSection>-->
+                 </apex:pageBlockSection>
+              </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+     <!-- Functional Use case End -->
+     
+     <!-- Architectural Blueprint Start -->
+      <apex:pageBlockSection id="pbsAttachmentBluPrnt" title="Technical Design – PureEngage" columns="2" rendered="{!VTSection}">
+        <!--<script>twistSection(document.getElementById('img_{!$Component.pbsAttachmentBluPrnt}')); </script>--> 
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Who Provides Design?">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Select which party provided the architecture design for this opportunity and whether it was reviewed by Genesys.
+                    </span>
+                </div>  
+          </apex:outputLabel>            
+          <apex:inputField value="{!objWowReqFrm.Who_Provides_Design__c}" styleClass="clsWhoProvdDesign"/>
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem /> 
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Deployment Topology">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Select the general deployment topology used.
+                    </span>
+                </div>  
+          </apex:outputLabel> 
+          <apex:inputField value="{!objWowReqFrm.Deployment_Topology__c}" styleClass="clsDeployTopology"/>
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem /> 
+        <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Predefined Architecture"/>
+         <apex:inputfield value="{!objWowReqFrm.Predefined_Architecture__c}" styleclass="clsArchitectCHK" onclick="CheckArch(this);"/>
+      </apex:pageBlockSectionItem> 
+      <apex:pageBlockSectionItem / >
+      <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsArchitectAct">
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false">        
+        
+        
+        
+        <!--<apex:pageBlockSectionItem >
+          <apex:outputLabel value="In case of partner customer, are we aware of their design?" />
+          <apex:inputField value="{!objWowReqFrm.Partner_Customer_Aware_Design__c}"/>
+        </apex:pageBlockSectionItem>-->
+        <apex:pageBlockSectionItem />
+        <!--<apex:pageBlockSectionItem >            
+              <apex:pageBlockSection columns="2" showHeader="true" title="Please select architecture blueprints which have been used for the architecture design" collapsible="false">-->
+               <apex:pageBlockSectionItem > 
+                <apex:pageBlockTable value="{!list_WowAttachmentsBluePrint}" var="bp" styleClass="clsBluePrint_PBS">
+                  <apex:column headerValue="Architecture Blueprint">
+                    <apex:facet name="header">
+                            <apex:outputPanel layout="block" title="Select the standard architecture blueprints used for this opportunity">
+                            Architecture Blueprint
+                            </apex:outputPanel>
+                    </apex:facet>
+                     <apex:inputField value="{!bp.ArchitectureBlueprints__c}" label="Architecture Blueprint" styleClass="clsArchBluePrntIn"/>
+                  </apex:column>
+                  <apex:column headerValue="Fit %">
+                <apex:facet name="header">
+                            <apex:outputPanel layout="block" title="Check if the architecture blueprint is used without any change">
+                            Fit %
+                            </apex:outputPanel>
+                    </apex:facet>
+                     <apex:inputField value="{!bp.Fit__c}" label="As is" styleClass="clsAsIsBluePrint" />
+                  </apex:column>
+                  <apex:column headerValue="Short description of changes">
+                <apex:facet name="header">
+                            <apex:outputPanel layout="block" title="If blueprint cannot used As Is, please provide short description of require changes">
+                            Short description of changes
+                            </apex:outputPanel>
+                    </apex:facet>
+                     <apex:inputField value="{!bp.Description__c}" label="Short description of changes" styleClass="clsDescBluePrint" style="width:300px;height:50px;"/>
+                  </apex:column>
+                  <apex:column >
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveBluePrint}" >
+                   <apex:param name="pBluepid" assignTo="{!BpId}" value="{!bp.id}"/>
+                   <apex:param name="pBluepri" assignTo="{!CurrentBlePrint}" value="{!bp.Row_Number__c}"/>               
+                 </apex:commandLink>
+              </apex:column>
+                </apex:pageBlockTable>
+                <apex:commandbutton value="Add" action="{!AddBluePrint}" onClick="return CheckArchBluePrintInput();"/>
+              </apex:pageBlockSectionItem>  
+               <apex:pageBlockSectionItem > 
+                <!--<apex:commandbutton value="Add" action="{!AddBluePrint}" onClick="return CheckArchBluePrintInput();">
+            </apex:commandbutton>-->
+            </apex:pageBlockSectionItem>  
+              <!--</apex:pageBlockSection>
+        </apex:pageBlockSectionItem>--> 
+        </apex:pageBlockSection>  
+        </apex:outputPanel>
+        </apex:pageBlockSectionItem>    
+        <!--<apex:pageBlockSectionItem / >-->
+        <apex:pageBlockSectionItem />
+        
+        <apex:pageBlockSectionItem >
+          <!--<apex:pageBlockSection >
+           </apex:pageBlockSection>-->
+           <!--<apex:pageBlockSection columns="2" showHeader="true" title="Please indicate if a custom architecture has been created" collapsible="false" >
+              <apex:pageBlockSectionItem >-->
+                 <apex:outputlabel value="Custom Architecture"> 
+                 <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if a Custom Architecture has been used.
+                    </span>
+                </div>  
+                 </apex:outputlabel>
+                 <apex:inputField value="{!objWowReqFrm.Custom_Architecture__c}" styleClass="clsIsCustArchi"/>
+               </apex:pageBlockSectionItem>  
+               <apex:pageBlockSectionItem />  
+               
+                <apex:pageBlockSectionItem >
+                <apex:pageBlockSection columns="1">          
+                   <apex:pageBlockSectionItem >
+                      <apex:commandButton value="Attach Custom Architecture" onclick="return loadPopupBox('Architectural BluePrint');">
+                        <div class="helpOrb tooltip"  style="right:inherit;">
+                                <span>
+                                Press button to upload custom architecture
+                                </span>
+                        </div>
+                      </apex:commandButton> 
+                   </apex:pageBlockSectionItem>
+               
+            <!--</apex:pageBlockSection>
+          </apex:pageBlockSectionItem>-->
+            <apex:pageBlockSectionItem rendered="{!list_AttachArchiBluePrint != null}"  >
+            
+                <apex:pageBlock title="Custom Architecture" rendered="{!list_AttachArchiBluePrint != null}">
+                  <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                   <apex:repeat value="{!list_AttachArchiBluePrint}" var="abp"> 
+                     <tr><td>
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">Custom Architecture ({!abp.Name})</a><br></br>
+                           </td>
+                           <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>
+                        </tr>
+            
+                       </apex:repeat>
+                    </table>
+                </apex:pageBlock>
+            
+        </apex:pageBlockSectionItem>      
+               
+        </apex:pageBlockSection>
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem >
+      <apex:pageblockSection columns="1">
+           <apex:pageBlockSectionItem >
+                 <apex:commandButton value="Attach Proposed Sizing" onclick="return loadPopupBox('Proposed Sizing');">
+                    <div class="helpOrb tooltip"  style="right:inherit;">
+                            <span>
+                                Click button to upload the Proposed Sizing Document.
+                            </span>
+                    </div>
+                </apex:commandButton>
+           </apex:pageBlockSectionItem>           
+            <apex:pageBlockSectionItem >               
+                <apex:pageBlock title="Proposed Sizing" rendered="{!list_AttachProSizing!= null}">
+                <table border="1" width="100%">
+                <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                <apex:repeat value="{!list_AttachProSizing}" var="adp"> 
+                 <tr ><td > 
+                 <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}"  target="_blank">{!adp.Name}</a><br></br>
+                 </td>
+                  <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!adp.id}');"/></td>
+                  
+                 </tr>
+                </apex:repeat>
+                </table>
+                </apex:pageBlock>
+              
+            </apex:pageBlockSectionItem>
+        </apex:pageblockSection>
+         </apex:pageBlockSectionItem>      
+        </apex:pageblockSection>
+      
+     <apex:pageBlockSection id="pbsSolutionDesign" title="Technical Design – PureCloud/PureConnect" columns="2" rendered="{!VTSection}">        
+        <apex:pageBlockSectionItem > 
+        <apex:commandButton value="New" action="{!pageredirSolDesgn}"/>
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem / >
+        <apex:pageBlockSectionItem rendered="{!list_SolutionDesign.size>0}"> 
+            <apex:pageBlockTable value="{!list_SolutionDesign}" var="SDO">
+                  <apex:column headerValue="Solution Design Name">
+                   <apex:outputlink value="/{!SDO.id}" target="_blank"><div id="mylink" style="text-decoration: underline;">{!SDO.Name}</div></apex:outputlink>
+                  </apex:column>
+                  <apex:column headerValue="Product Type">
+                  <apex:outputField value="{!SDO.Product_Type__c}" label="Product Type" />
+                  </apex:column>
+                   <apex:column headerValue="Primary Design">
+                  <apex:outputField value="{!SDO.Primary_Design__c}" label="Primary Design" />
+                  </apex:column>
+             </apex:pageBlockTable>      
+        </apex:pageBlockSectionItem> 
+      </apex:pageBlockSection> 
+        
+    <apex:pageBlockSectionItem /> 
+     <!-- Architectural Blueprint End -->
+     <apex:pageBlockSection id="pbsAttachmentDemo" title="Demo (all offers)" columns="1" rendered="{!VTSection}">
+        <!--<script>twistSection(document.getElementById('img_{!$Component.pbsAttachmentDemo}')); </script>--> 
+        <apex:pageBlockSectionItem >
+        <apex:outputLabel value="Demo Performed"/>
+        <apex:inputField value="{!objWowReqFrm.Demo_Performed__c}" styleclass="clsDemoPerform" onclick="checkDemo(this);"/>
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem >
+         <apex:outputPanel styleClass="clsDemoChk">
+          <apex:pageBlockSection columns="2" rendered="true" collapsible="false">
+             <apex:pageBlockSectionItem rendered="{!list_WowAttachmentsDemo!=null}">            
+            <apex:pageBlockTable value="{!list_WowAttachmentsDemo}" var="Dem" >
+              <apex:column headerValue="Demo">
+                <apex:facet name="header">
+                            <apex:outputPanel layout="block" title="Select the standard Demo for this opportunity.">
+                              Activity
+                            </apex:outputPanel>
+                          </apex:facet>
+                        <apex:inputField value="{!Dem.Demo__c}" styleClass="clsDemo"/>
+                      </apex:column>
+                      <apex:column headerValue="Date">
+                <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Date the demo was performed.">
+                     Date 
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!Dem.Date__c}" styleClass="clsDemoDate"/>
+              </apex:column>
+              <apex:column headerValue="Additional notes">
+                <apex:facet name="header">
+                    <apex:outputPanel layout="block">
+                      Additional notes
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!Dem.Description__c}" style="width:300px;height:50px;"/>
+              </apex:column> 
+              <apex:column >
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveDemoActivity}" >                  
+                   <apex:param name="DemoId" assignTo="{!DemoId}" value="{!Dem.id}"/>
+                   <apex:param name="CurrentDemo" assignTo="{!CurrentDemo}" value="{!Dem.Row_Number__c}"/>               
+                 </apex:commandLink>
+              </apex:column>                
+             </apex:pageBlockTable> 
+             </apex:pageBlockSectionItem> 
+             <apex:pageBlockSectionItem >
+             <apex:commandbutton value="Add" action="{!AddDemo}" onClick="return CheckBlankRow('clsDemo','clsDemoDate','Demo');">
+            <div class="helpOrb tooltip"  style="right:inherit;">
+                    <span>
+                    Click button to add another Demo.
+                    </span>
+            </div>
+            </apex:commandbutton>
+             </apex:pageBlockSectionItem>
+           </apex:pageBlockSection> 
+           </apex:outputPanel>
+        </apex:pageBlockSectionItem> 
+        </apex:pageBlockSection> 
+     <!-- Risk Assignment Start -->
+      <apex:pageBlockSection id="pbsRiskAssessment" title="Risk Assessment" columns="2" rendered="{!VTSection}">
+      <!--<script>twistSection(document.getElementById('img_{!$Component.pbsRiskAssessment}')); </script>-->      
+      <apex:pageBlockSectionItem >
+      <a href="{!BaseURL}/apex/wowriskassessment?wowid={!objOpportunity.Id}&view={!sIsreadonly}" style="color:blue;">Click here to fill Risk Assessment for this SC Engagement Request</a>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem />
+      <apex:pageBlockSection columns="1" title="Form Details" rendered="{!objRiskAssessment.Id!= null}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="When Completed" />
+       <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+         <apex:param value="{!objRiskAssessment.CreatedDate}" />
+       </apex:outputText>  
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Who Completed" />
+       <apex:outputLabel value="{!objRiskAssessment.Owner.Name}" />
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Last Modified Date" />
+       <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+         <apex:param value="{!objRiskAssessment.LastModifiedDate}"/>
+       </apex:outputText>
+     </apex:pageBlockSectionItem>
+     <!--Added by Swastika On 24/12/2015 to add Risk Score-Start--> 
+     </apex:pageBlockSection>   
+         
+    <apex:pageBlockSection id="pbsRiskSummary" title="Summary"  columns="1" rendered="{!objRiskAssessment.Id!= null}" >      
+         <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Business Score" />
+            <apex:outputText value="{!objRiskAssessment.Business_Score_Value__c} ({!objRiskAssessment.Business_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Business_Score_Text__c ='Low', 'Green', IF(objRiskAssessment.Business_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Business_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Technology Score" />
+            <apex:outputText value="{!objRiskAssessment.Technology_Score_Value__c} ({!objRiskAssessment.Technology_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Technology_Score_Text__c='Low', 'Green', IF(objRiskAssessment.Technology_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Technology_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Deployment Score" />
+            <apex:outputText value="{!objRiskAssessment.Deployment_Score_Value__c} ({!objRiskAssessment.Deployment_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Deployment_Score_Text__c='Low', 'Green', IF(objRiskAssessment.Deployment_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Deployment_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Support Score" />
+            <apex:outputText value="{!objRiskAssessment.Support_Score_Value__c} ({!objRiskAssessment.Support_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Support_Score_Text__c='Low', 'Green', IF(objRiskAssessment.Support_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Support_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>     
+   </apex:pageBlockSection>
+    <!--Added by Swastika On 24/12/2015 to add Risk Score-End-->  
+    </apex:pageBlockSection>
+     <!-- Risk Assignment End -->
+     
+     <!-- </apex:pageBlockSection>-->
+    </apex:outputPanel>
+   
+     </apex:pageBlockSectionItem>
+     
+    </apex:pageBlockSection>
+
+
+    <apex:pageBlockSection id="pbsDesign_RO" title="Design (all offers)" columns="1" rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Design Activities" />
+       <apex:outputfield value="{!objWowReqFrm.Design_Activities__c}" styleclass="clsDesignActCHK_RO" />
+      </apex:pageBlockSectionItem>
+      
+      <apex:pageBlockSectionItem >
+     <apex:outputPanel styleClass="clsDesign_RO">
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false">
+      <!--<apex:pageBlockSectionItem >
+       <apex:outputLabel value="Type of Design" />
+       <apex:outputField value="{!objWowReqFrm.Type_of_Design__c}"  />
+     </apex:pageBlockSectionItem>-->
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Design Start Date" />
+       <apex:outputField value="{!objWowReqFrm.Design_Start_Date__c}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Design End Date" />
+       <apex:outputField value="{!objWowReqFrm.Design_End_Date__c}" />
+     </apex:pageBlockSectionItem>
+     
+      <apex:pageBlockSectionItem >
+     <apex:outputLabel value="Primary Quote" />    
+     <apex:outputlink value="/{!strPrimaryQuoteId}" target="_blank"><div id="mylink" style="text-decoration: underline;">URL</div></apex:outputlink>
+    </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+     <apex:pageBlockSectionItem >
+         <apex:pageBlockSection columns="4">
+                 <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%" >
+                      <apex:pageBlock title="Design Plan" rendered="{!list_AttachDesignPlan != null}">
+                           <table border="1" width="100%">
+                           <tr style="font-weight:800;"><td>File Name</td></tr> 
+                           <apex:repeat value="{!list_AttachDesignPlan}" var="adp"> 
+                            <tr ><td > 
+                             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}" target="_blank">{!adp.Name}</a><br></br>
+                              </td>
+                              
+                             </tr>
+                           </apex:repeat>
+                            </table>
+                       </apex:pageBlock>
+                  </apex:pageBlockSectionItem>  
+                  <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%" >
+                         <apex:pageBlock title="Design Finding" rendered="{!list_AttachDesignFinding != null}">
+                           <table border="1" width="100%">
+                           <tr style="font-weight:800;"><td>File Name</td></tr> 
+                           <apex:repeat value="{!list_AttachDesignFinding}" var="adf"> 
+                            <tr ><td > 
+                             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}" target="_blank">{!adf.Name}</a><br></br>
+                              </td>
+                              
+                             </tr>
+                           </apex:repeat>
+                           </table>
+                            </apex:pageBlock>
+                </apex:pageBlockSectionItem>   
+               <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%" >
+                         <apex:pageBlock title="Benefits Calculation" rendered="{!list_AttachROICalculation!= null}">
+                           <table border="1" width="100%">
+                           <tr style="font-weight:800;"><td>File Name</td></tr> 
+                           <apex:repeat value="{!list_AttachROICalculation}" var="adf"> 
+                            <tr ><td > 
+                             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}" target="_blank">{!adf.Name}</a><br></br>
+                              </td>
+                              
+                             </tr>
+                           </apex:repeat>
+                           </table>
+                            </apex:pageBlock>
+                </apex:pageBlockSectionItem>   
+                <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%" >
+                         <apex:pageBlock title="Bill of Materials" rendered="{!list_AttachBillMaterial!= null}">
+                           <table border="1" width="100%">
+                           <tr style="font-weight:800;"><td>File Name</td></tr> 
+                           <apex:repeat value="{!list_AttachBillMaterial}" var="adf"> 
+                            <tr ><td > 
+                             <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adf.id}" target="_blank">{!adf.Name}</a><br></br>
+                              </td>
+                              
+                             </tr>
+                           </apex:repeat>
+                           </table>
+                            </apex:pageBlock>
+                </apex:pageBlockSectionItem>                   
+            </apex:pageBlockSection>
+            
+       </apex:pageBlockSectionItem>
+       
+      <!--RFP Design Start-->
+      <apex:pageBlockSection id="pbsRFP_RO" title="RFP (all offers)" columns="1" rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+          <apex:outputLabel value="RFP">
+        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Check if you have performed RFP for this opportunity.
+                    </span>
+                </div>  
+          </apex:outputLabel>            
+          <apex:outputField value="{!objWowReqFrm.RFP__c}" />
+        </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem >
+         <apex:outputPanel >
+          <apex:pageBlockSection columns="2">          
+          <apex:pageBlockSectionItem >
+           <apex:outputLabel value="RFP Received Date"/>
+            <apex:outputField value="{!objWowReqFrm.RFP_Received_Date__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="Short Description of RFP "/>
+            <apex:outputField value="{!objWowReqFrm.Short_Description_of_RFP__c}" style="width:300px;"/>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="RFP Due Date"/>
+            <apex:outputField value="{!objWowReqFrm.RFP_Due_date__c}" />
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem / >
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="RFP Completed Date"/>
+            <apex:outputField value="{!objWowReqFrm.RFP_Completed_Date__c}" />
+         </apex:pageBlockSectionItem> 
+         <apex:pageBlockSectionItem />
+          <apex:pageBlockSectionItem dataStyle="width:25%" labelStyle="width:25%" >
+              <apex:pageBlock title="RFP" rendered="{!list_AttachRFP != null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td>File Name</td></tr> 
+                   <apex:repeat value="{!list_AttachRFP}" var="adp"> 
+                    <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}" target="_blank">{!adp.Name}</a><br></br>
+                      </td>                              
+                     </tr>
+                   </apex:repeat>
+                    </table>
+               </apex:pageBlock>
+         </apex:pageBlockSectionItem>  
+      </apex:pageBlockSection>  
+      </apex:outputPanel>
+    </apex:pageBlockSectionItem>       
+      </apex:pageBlockSection> 
+     
+      <!--RPF Design End--> 
+       
+       <!-- Functional Use case Start -->
+        <apex:pageblockSection id="pbsAttachmentFnUseCase_RO" title="Business Design – Functional Use-Cases (all offers)" columns="1"  rendered="{!VTSection_RO}">
+         <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Use Case Summary" />
+            <apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=40816557" type="image/png" target="_blank">
+            <apex:image value="{!$Resource.Document}" width="30" height="30"/>
+            </apex:outputLink> 
+        </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Predefined Use Case">
+           </apex:outputLabel> 
+           <apex:outputfield value="{!objWowReqFrm.Is_Functional_Use_Case__c}" styleclass="clsFnUseCaseCHK_RO" />
+          </apex:pageBlockSectionItem>
+          
+          <apex:pageBlockSectionItem >
+         <apex:outputPanel styleClass="clsFnUseCaseAct_RO">
+          <apex:pageBlockSection columns="1" rendered="true" collapsible="false">
+         
+        
+        <apex:pageBlockSectionItem >
+          <apex:pageBlockSection columns="3">
+            <apex:pageBlockTable value="{!list_WowAttachmentsFnUseCase}" var="fun" styleClass="clsFnUseCase">
+              <apex:column headerValue="Functional Use Case">
+                <apex:outputField value="{!fun.Functional_Use_Case__c}"/>
+              </apex:column>
+              <apex:column headerValue="Fit %">
+                <apex:outputField value="{!fun.Fit__c}" styleClass="clsAsIsFnUseCase" />
+              </apex:column>
+              <apex:column headerValue="Short description of changes">
+                <apex:outputField value="{!fun.Description__c}" styleClass="clsDescFnUseCase"/>
+              </apex:column>  
+             </apex:pageBlockTable> 
+           </apex:pageBlockSection> 
+        </apex:pageBlockSectionItem>    
+         </apex:pageBlockSection>
+         </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+         <!--<apex:pageBlockSection columns="2" >
+           <apex:pageBlockSectionItem >-->
+             <apex:outputLabel value="Custom Use Case" />
+              <apex:outputField value="{!objWowReqFrm.Custom_Use_Case__c}"/>
+           </apex:pageBlockSectionItem>
+           <apex:pageBlockSectionItem >
+             
+           </apex:pageBlockSectionItem>
+            
+           
+           
+           <!--<apex:pageBlockSectionItem >
+             
+                 <apex:pageBlock title="SC Toolkit" rendered="{!list_AttachSEToolkit!= null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                   <apex:repeat value="{!list_AttachSEToolkit}" var="ast"> 
+                    <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Description} ({!ast.Name})</a><br></br>
+                   </td>
+                             
+                     </tr>
+                   </apex:repeat>
+                    </table>
+                   </apex:pageBlock>
+                    
+            </apex:pageBlockSectionItem>-->
+            <apex:pageBlockSectionItem >
+            <apex:pageBlockSection columns="2" >
+           
+            <apex:pageBlockSectionItem >
+             
+                 <apex:pageBlock title="Custom Functional Use Case" rendered="{!list_AttachCustomUseCase!= null}">
+                   <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                   <apex:repeat value="{!list_AttachCustomUseCase}" var="ast"> 
+                    <tr ><td > 
+                     <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Description} ({!ast.Name})</a><br></br>
+                   </td>
+                             
+                     </tr>
+                   </apex:repeat>
+                    </table>
+                   </apex:pageBlock>
+                    
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection> 
+       </apex:pageBlockSectionItem>
+         
+        
+       
+    </apex:pageblockSection>
+       <!-- Functional Use case End -->
+       
+    <!-- Architectural Blueprints Start -->
+     <apex:pageblockSection id="pbsAttachmentBluPrnt_RO" title="Technical Design – PureEngage" columns="1"  rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Who Provides Design?" />
+          <apex:outputField value="{!objWowReqFrm.Who_Provides_Design__c}"/>
+        </apex:pageBlockSectionItem>  
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Deployment Topology" />
+          <apex:outputField value="{!objWowReqFrm.Deployment_Topology__c}"/>
+        </apex:pageBlockSectionItem>  
+        <apex:pageBlockSectionItem >
+          <apex:outputLabel value="Predefined Architecture"/>
+          <apex:outputfield value="{!objWowReqFrm.Predefined_Architecture__c}" styleclass="clsArchiCHK_RO" />
+        </apex:pageBlockSectionItem>
+          
+          <apex:pageBlockSectionItem >
+         <apex:outputPanel styleClass="clsArchi_RO">
+         <apex:pageBlockSection columns="2" rendered="true" collapsible="false">    
+                 
+        <!--<apex:pageBlockSectionItem >
+          <apex:outputLabel value="In case of partner customer, are we aware of their design?" />
+          <apex:outputField value="{!objWowReqFrm.Partner_Customer_Aware_Design__c}"/>
+        </apex:pageBlockSectionItem>-->
+        <apex:pageBlockSectionItem >
+          <!--<apex:pageBlockSection title="Please select architecture blueprints which have been used for the architecture design" columns="2"> -->           
+            <apex:pageBlockTable value="{!list_WowAttachmentsBluePrint}" var="bp" styleClass="clsBluePrint_PBS">
+              <apex:column headerValue="Architecture Blueprint">
+                 <apex:outputField value="{!bp.ArchitectureBlueprints__c}" label="Architecture Blueprint"/>
+              </apex:column>
+              <apex:column headerValue="Fit %">
+                 <apex:outputField value="{!bp.Fit__c}" label="Fit %" styleClass="clsAsIsBluePrint" />
+              </apex:column>
+              <apex:column headerValue="Short description of changes">
+                 <apex:outputField value="{!bp.Description__c}" label="Short description of changes" styleClass="clsDescBluePrint"/>
+              </apex:column>
+            </apex:pageBlockTable>
+         <!-- </apex:pageBlockSection>-->
+        </apex:pageBlockSectionItem>    
+        <apex:pageBlockSectionItem /> 
+        <apex:pageBlockSectionItem >
+             <apex:outputLabel value="Custom Architecture" />
+             <apex:outputField value="{!objWowReqFrm.Custom_Architecture__c}"/>
+
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem />
+       <apex:pageBlockSectionItem >
+                 <apex:pageBlock title="Custom Architecture" rendered="{!list_AttachArchiBluePrint != null}" >
+                  <table border="1" width="100%">
+                   <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                   <apex:repeat value="{!list_AttachArchiBluePrint}" var="abp"> 
+                     <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">Custom Architecture ({!abp.Name})</a><br></br>
+       </td> </tr>
+            
+                       </apex:repeat>
+                    </table>
+                   </apex:pageBlock>
+            </apex:pageBlockSectionItem>
+           <apex:pageBlockSectionItem >
+          <apex:pageBlock title="Proposed Sizing" rendered="{!list_AttachProSizing != null}">
+               <table border="1" width="100%">
+               <tr style="font-weight:800;"><td>File Name</td></tr> 
+               <apex:repeat value="{!list_AttachProSizing}" var="adp"> 
+                <tr ><td > 
+                 <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!adp.id}" target="_blank">{!adp.Name}</a><br></br>
+                  </td>
+                  
+                 </tr>
+               </apex:repeat>
+                </table>
+           </apex:pageBlock>
+      </apex:pageBlockSectionItem>      
+        </apex:pageBlockSection>
+         </apex:outputPanel>
+         </apex:pageBlockSectionItem> 
+         
+       <!-- <apex:pageBlockSectionItem >
+         <apex:pageBlockSection title="Please indicate if a custom architecture has been created" columns="2">-->        
+           
+           
+           <!--<apex:pageBlockSectionItem >
+              <apex:outputField value="{!objWowReqFrm.Custom_Architecture__c}"/>
+           </apex:pageBlockSectionItem>-->            
+           
+                    
+                     <!--</apex:pageBlockSection> 
+        </apex:pageBlockSectionItem>-->
+                    
+    </apex:pageblockSection>
+       <!-- Architectural Blueprints End -->
+      
+       <apex:pageBlockSection id="pbsSolutionDesign_RO" title="Technical Design – PureCloud/PureConnect" columns="2" rendered="{!VTSection_RO}">        
+        <apex:pageBlockSectionItem > 
+            <apex:pageBlockTable value="{!list_SolutionDesign}" var="SDO">
+                  <apex:column headerValue="Solution Design Name">
+                  <apex:outputlink value="/{!SDO.id}" target="_blank"><div id="mylink" style="text-decoration: underline;">{!SDO.Name}</div></apex:outputlink>
+                        </apex:column>
+                  <apex:column headerValue="Product Type">
+                  <apex:outputField value="{!SDO.Product_Type__c}" label="Product Type" />
+                  </apex:column>
+                   <apex:column headerValue="Primary Design">
+                  <apex:outputField value="{!SDO.Primary_Design__c}" label="Primary Design" />
+                  </apex:column>
+             </apex:pageBlockTable>      
+        </apex:pageBlockSectionItem> 
+      </apex:pageBlockSection> 
+ 
+       <apex:pageBlockSection id="pbsAttachmentDemo_RO" title="Demo (all offers)" columns="1" rendered="{!VTSection_RO}">
+       <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Demo Performed"/>
+            <apex:outputField value="{!objWowReqFrm.Demo_Performed__c}" />
+         </apex:pageBlockSectionItem> 
+        <apex:pageBlockSectionItem >
+         <apex:outputPanel styleClass="clsDemoChk_RO">
+          <apex:pageBlockSection columns="3">
+            <apex:pageBlockTable value="{!list_WowAttachmentsDemo}" var="Dem">
+              <apex:column headerValue="Activity">
+                <apex:outputField value="{!Dem.Demo__c}"/>
+              </apex:column>
+              <apex:column headerValue="Date">
+                <apex:outputField value="{!Dem.Date__c}" />
+              </apex:column>
+              <apex:column headerValue="Additional notes">
+                <apex:outputField value="{!Dem.Description__c}"/>
+              </apex:column>  
+             </apex:pageBlockTable> 
+           </apex:pageBlockSection> 
+           </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+       
+       <!-- Risk Assessment Start -->
+             <apex:pageBlockSection id="pbsRiskAssessment_RO" title="Risk Assessment (all offers)" columns="2" rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+      <a href="{!BaseURL}/apex/wowriskassessment?wowid={!objOpportunity.Id}&view={!sIsreadonly}" style="color:blue;">Risk Assessment Form</a>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem />
+      <apex:pageBlockSection columns="1" title="Form Details" rendered="{!objRiskAssessment.Id!= null}">
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="When Completed" />
+       <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+         <apex:param value="{!objRiskAssessment.CreatedDate}"/>
+       </apex:outputText>  
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Who Completed" />
+       <apex:outputLabel value="{!objRiskAssessment.Owner.Name}" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Last Modified Date" />
+       <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+         <apex:param value="{!objRiskAssessment.LastModifiedDate}"/>
+       </apex:outputText>
+     </apex:pageBlockSectionItem> 
+     </apex:pageBlockSection>
+     <!--Added by Swastika On 24/12/2015 to add Risk Score-Start-->    
+    <apex:pageBlockSection id="pbsRiskSummary_RO" title="Summary" columns="1" rendered="{!objRiskAssessment.Id!= null}">      
+         <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Business Score" />
+            <apex:outputText value="{!objRiskAssessment.Business_Score_Value__c} ({!objRiskAssessment.Business_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Business_Score_Text__c ='Low', 'Green', IF(objRiskAssessment.Business_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Business_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Technology Score" />
+            <apex:outputText value="{!objRiskAssessment.Technology_Score_Value__c} ({!objRiskAssessment.Technology_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Technology_Score_Text__c='Low', 'Green', IF(objRiskAssessment.Technology_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Technology_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Deployment Score" />
+            <apex:outputText value="{!objRiskAssessment.Deployment_Score_Value__c} ({!objRiskAssessment.Deployment_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Deployment_Score_Text__c='Low', 'Green', IF(objRiskAssessment.Deployment_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Deployment_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Support Score" />
+            <apex:outputText value="{!objRiskAssessment.Support_Score_Value__c} ({!objRiskAssessment.Support_Score_Text__c})" style="font-weight:800; color:{!IF(objRiskAssessment.Support_Score_Text__c='Low', 'Green', IF(objRiskAssessment.Support_Score_Text__c='Medium','#F7D358',IF(objRiskAssessment.Support_Score_Text__c='High','Red','Black')))};"/>
+         </apex:pageBlockSectionItem>     
+   </apex:pageBlockSection>
+    <!--Added by Swastika On 24/12/2015 to add Risk Score-End-->       
+ </apex:pageBlockSection> 
+       <!-- Risk Assessment End -->
+       
+       
+     <!--</apex:pageBlockSection>-->
+    </apex:outputPanel>
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+    <!--<apex:pageBlockSection id="pbsAttachment" title="Attachments" columns="2" rendered="{!VTSection}">
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Functional Use Case" />
+       <apex:inputField value="{!objWowReqFrm.FunctionalUseCase__c}" required="false" styleClass="clsToolKit"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Architectural Blueprints" />
+       <apex:inputField value="{!objWowReqFrm.ArchitectureBlueprints__c}" required="false" styleClass="clsBluePrint"/>
+     </apex:pageBlockSectionItem>
+     
+     <apex:pageBlockSectionItem >
+       <apex:commandButton value="Attach SC Toolkit" onclick="return loadPopupBox('SCToolkit');"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:commandButton value="Attach Architectural Blueprint" onclick="return loadPopupBox('Architectural BluePrint');"/>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+     <apex:pageBlock title="SC Toolkit" rendered="{!list_AttachSEToolkit!= null}">
+       <table border="1" width="100%">
+       <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+       <apex:repeat value="{!list_AttachSEToolkit}" var="ast"> 
+        <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Description} ({!ast.Name})</a><br></br>
+       </td>
+                 <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!ast.id}');"/></td>
+         </tr>
+       </apex:repeat>
+        </table>
+       </apex:pageBlock>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+     <apex:pageBlock title="Architectural Blueprint" rendered="{!list_AttachArchiBluePrint != null}">
+      <table border="1" width="100%">
+       <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+       <apex:repeat value="{!list_AttachArchiBluePrint}" var="abp"> 
+         <tr><td>
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+               </td>
+                         <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>
+         </tr>
+
+       </apex:repeat>
+        </table>
+       </apex:pageBlock>
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>-->
+    
+    
+
+    <!--<apex:pageBlockSection id="pbsAttachment_RO" title="Attachments" columns="2" rendered="{!VTSection_RO}">
+     <apex:pageBlockSectionItem >
+      <apex:pageBlock title="SC Toolkit" rendered="{!list_AttachSEToolkit != null}">
+       <table border="1" width="100%">
+       <tr style="font-weight:800;"><td>File Name</td></tr> 
+       <apex:repeat value="{!list_AttachSEToolkit}" var="ast"> 
+       <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}" target="_blank">{!ast.Description} ({!ast.Name})</a><br></br>
+        </td> 
+        
+        </tr>
+       </apex:repeat>
+        </table>
+       </apex:pageBlock>
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+     <apex:pageBlock title="Architectural Blueprint" rendered="{!list_AttachArchiBluePrint != null}">
+ <table border="1" width="100%">
+       <tr style="font-weight:800;"><td>File Name</td></tr> 
+       <apex:repeat value="{!list_AttachArchiBluePrint}" var="abp"> 
+        <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+       </td> </tr>
+       </apex:repeat>
+        </table>
+       </apex:pageBlock>
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>-->  
+    
+     <apex:pageBlockSection id="pbsKickOffDate" title="Services Transition" columns="1" rendered="{!VTSection}">
+     <!--<script>twistSection(document.getElementById('img_{!$Component.pbsKickOffDate}')); </script>-->
+        <apex:pageBlockSectionItem >
+           <apex:outputLabel value="Services Transition Activities">
+            <div class="helpOrb tooltip" style="position:relative;left:10px">
+                        <span>
+                           Check if you have performed Services Transition for SC Engagement.
+                        </span>
+                    </div>  
+           </apex:outputLabel> 
+           <apex:inputfield value="{!objWowReqFrm.PS_transition__c}" styleclass="clsServicesActCHK" onclick="CheckServicesTransition(this);"/>
+         </apex:pageBlockSectionItem>      
+      <!--<apex:pageBlockSectionItem />-->
+      <apex:pageBlockSectionItem >
+       <apex:outputPanel styleClass="clsServiceAct">
+        <apex:pageBlockSection columns="2" rendered="true" collapsible="false">
+           <apex:pageBlockSectionItem >
+               <apex:outputLabel value="Transition Start Date" >
+                        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                            <span>
+                               Enter the date of the internal Kick-Off with PS.
+                            </span>
+                        </div>  
+                </apex:outputLabel> 
+               <apex:inputField value="{!objWowReqFrm.Internal_Kick_Off_Date__c}" styleClass="clsKickOffDate" />
+         </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+               <apex:outputLabel value="Transition End Date" >
+                        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                            <span>
+                               Enter the Transition End Date.
+                            </span>
+                        </div>  
+                </apex:outputLabel> 
+               <apex:inputField value="{!objWowReqFrm.Transition_End_Date__c}" styleClass="clsTranEndDate" />
+         </apex:pageBlockSectionItem>
+        
+          <apex:pageBlockSectionItem >
+       <apex:pageBlockSection columns="2" >
+           <apex:pageBlockSectionItem rendered="{!list_WowAttachmentsServiceTran!=null}">            
+            <apex:pageBlockTable value="{!list_WowAttachmentsServiceTran}" var="ST" >
+              <apex:column headerValue="Activity">
+                <apex:facet name="header">
+                            <apex:outputPanel layout="block" title="Select the standard Activity for this opportunity.">
+                              Activity
+                            </apex:outputPanel>
+                          </apex:facet>
+                        <apex:inputField value="{!ST.Services_Transition__c}" styleClass="clsSTActivity"/>
+                      </apex:column>
+                      <apex:column headerValue="Date">
+                <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Date the Services Activity was performed.">
+                     Date 
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!ST.Date__c}" styleClass="clsSTDate"/>
+              </apex:column>
+              <apex:column headerValue="Additional Notes & Recording URLs">
+                <apex:facet name="header">
+                    <apex:outputPanel layout="block">
+                      Additional Notes and Recording URLs
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:inputField value="{!ST.Description__c}" style="width:300px;height:50px;"/>
+              </apex:column> 
+              <apex:column >
+                 <apex:commandLink value="Remove" styleClass="btn" action="{!RemoveServiceTranActivity}" >                  
+                   <apex:param name="ServTranId" assignTo="{!ServTranId}" value="{!ST.id}"/>
+                   <apex:param name="CurrentServTran" assignTo="{!CurrentServTran}" value="{!ST.Row_Number__c}"/>               
+                 </apex:commandLink>
+              </apex:column>                
+             </apex:pageBlockTable> 
+             </apex:pageBlockSectionItem> 
+             <apex:pageBlockSectionItem >
+             <apex:commandbutton value="Add" action="{!AddServiceTran}" onClick="return CheckBlankRow('clsSTActivity','clsSTDate','Service Transition');">
+            <div class="helpOrb tooltip"  style="right:inherit;">
+                    <span>
+                    Click button to add another Services Transition.
+                    </span>
+            </div>
+            </apex:commandbutton>
+             </apex:pageBlockSectionItem>
+           </apex:pageBlockSection>            
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem />
+                 <apex:pageBlockSectionItem >
+               <apex:outputLabel value="PS PM" >
+                        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                            <span>
+                               Enter the PS PM value.
+                            </span>
+                        </div>  
+                </apex:outputLabel> 
+               <apex:inputField value="{!objWowReqFrm.PS_PM__c}" styleClass="clsUser" style="margin-top: -14pt;"/>
+         </apex:pageBlockSectionItem> 
+          <!--<apex:pageBlockSectionItem >
+               <apex:outputLabel value="URL to recorded webinar" >
+                        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                            <span>
+                               Enter URL to recorded webinar of internal kickoff with PS.
+                            </span>
+                        </div>  
+                </apex:outputLabel> 
+               <apex:inputField value="{!objWowReqFrm.URL_Webnier__c}" style="width:400px"/>
+         </apex:pageBlockSectionItem>--> 
+         <apex:pageBlockSectionItem />
+         <apex:pageBlockSectionItem >
+          <apex:pageblockSection columns="1">
+              <apex:pageBlockSectionItem >   
+                   <apex:commandButton value="Attach Delivery Questionnaire" onclick="return loadPopupBox('Delivery Findings');">
+                    <div class="helpOrb tooltip"  style="right:inherit;">
+                            <span>
+                               Press here to attach the delivery Questionnaire documents 
+                            </span>
+                    </div>
+                 </apex:commandButton>
+             </apex:pageBlockSectionItem>
+             <apex:pageBlockSectionItem >
+                 <apex:pageBlockSection columns="3">
+                     <apex:pageBlock title="Delivery Questionnaire" rendered="{!list_AttachDeliveryFinding != null}">
+                       <table border="1" width="100%">
+                       <tr style="font-weight:800;"><td>File Name</td></tr> 
+                       <apex:repeat value="{!list_AttachDeliveryFinding}" var="ast"> 
+                                    <tr ><td > 
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Name}</a><br></br>
+                       </td>
+                                 <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!ast.id}');"/></td>
+                         </tr>
+                                   </apex:repeat>
+                       </table>
+                        </apex:pageBlock>
+                    </apex:pageBlockSection>
+            </apex:pageBlockSectionItem>
+        </apex:pageblockSection>
+        </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+      </apex:outputPanel>
+      </apex:pageBlockSectionItem> 
+    </apex:pageBlockSection>
+    
+     <apex:pageBlockSection id="pbsKickOffDate_RO" title="Services Transition" columns="1" rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Services Transition Activities" />
+       <apex:outputfield value="{!objWowReqFrm.PS_transition__c}" styleclass="clsServicesActCHK_RO" />
+      </apex:pageBlockSectionItem>
+      
+      <apex:pageBlockSectionItem >
+         <apex:outputPanel styleClass="clsServiceAct_RO">
+         <apex:pageBlockSectionItem rendered="{!list_WowAttachmentsServiceTran!=null}">   
+      <apex:pageBlockSection columns="2" rendered="true" collapsible="false">         
+    <apex:pageBlockTable value="{!list_WowAttachmentsServiceTran}" var="ST" >
+      <apex:column headerValue="Activity">
+        <apex:facet name="header">
+                    <apex:outputPanel layout="block" title="Select the standard Activity for this opportunity.">
+                      Activity
+                    </apex:outputPanel>
+                  </apex:facet>
+                <apex:outputField value="{!ST.Services_Transition__c}"/>
+              </apex:column>
+              <apex:column headerValue="Date">
+        <apex:facet name="header">
+            <apex:outputPanel layout="block" title="Date the demo was performed.">
+             Date 
+            </apex:outputPanel>
+          </apex:facet>
+        <apex:outputField value="{!ST.Date__c}"/>
+      </apex:column>
+      <apex:column headerValue="Additional Notes & Recording URLs">
+        <apex:facet name="header">
+            <apex:outputPanel layout="block">
+              Additional Notes and Recording URLs
+            </apex:outputPanel>
+          </apex:facet>
+        <apex:outputField value="{!ST.Description__c}" style="width:300px;height:50px;"/>
+      </apex:column>                           
+ </apex:pageBlockTable> 
+ </apex:pageBlockSection> 
+</apex:pageBlockSectionItem> 
+          <apex:pageBlockSection columns="1" rendered="true" collapsible="false">              
+              <apex:pageBlockSectionItem >
+               <apex:outputLabel value="Transition Start Date" />
+               <apex:outputField value="{!objWowReqFrm.Internal_Kick_Off_Date__c}" />
+             </apex:pageBlockSectionItem>
+             <apex:pageBlockSectionItem >
+               <apex:outputLabel value="Transition End Date"/>
+               <apex:outputField value="{!objWowReqFrm.Transition_End_Date__c}" styleClass="clsTranEndDate" />
+         </apex:pageBlockSectionItem>
+             
+             
+              <apex:pageBlockSectionItem >
+               <apex:outputLabel value="PS PM" >
+                        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                            <span>
+                               Enter the PS PM value.
+                            </span>
+                        </div>  
+                </apex:outputLabel> 
+               <apex:outputField value="{!objWowReqFrm.PS_PM__c}" />
+         </apex:pageBlockSectionItem> 
+          <!--<apex:pageBlockSectionItem >
+               <apex:outputLabel value="URL to recorded webinar" >
+                        <div class="helpOrb tooltip" style="position:relative;left:10px">
+                            <span>
+                               Enter URL to recorded webinar of internal kickoff with PS.
+                            </span>
+                        </div>  
+                </apex:outputLabel> 
+               <apex:outputField value="{!objWowReqFrm.URL_Webnier__c}" style="width:400px"/>
+         </apex:pageBlockSectionItem> -->
+        </apex:pageBlockSection> 
+       </apex:outputPanel> 
+       </apex:pageBlockSectionItem>
+     
+     
+     <apex:pageBlockSectionItem >
+     <apex:pageBlockSection columns="3">
+     <apex:pageBlock title="Delivery Questionnaire" rendered="{!list_AttachDeliveryFinding != null}">
+       <table border="1" width="100%">
+       <tr style="font-weight:800;"><td>File Name</td></tr> 
+       <apex:repeat value="{!list_AttachDeliveryFinding}" var="ast"> 
+                    <tr ><td > 
+         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!ast.id}"  target="_blank">{!ast.Name}</a><br></br>
+       </td>
+                 
+         </tr>
+        </apex:repeat>
+       </table>
+        </apex:pageBlock>
+        </apex:pageBlockSection>
+       </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    
+    <!--<apex:pageblocksection id="EngFeeback" title="Engagement Feedback" columns="1" rendered="{!EngFeedSection}">-->
+    <apex:pageblocksection id="EngFeeback" title="Engagement Feedback" columns="1" rendered="{!VTSection}">
+      <!-- <script>twistSection(document.getElementById('img_{!$Component.EngFeeback}')); </script> -->
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="What impact did your SC Engagement make on your deal?" >
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Please enter what impact your activities had on the deal
+            We already have help text here. 
+                    </span>
+          </div>  
+    </apex:outputLabel>
+       <apex:inputField value="{!objWowReqFrm.Impact_SC_Engagement__c}" styleClass="clsImpEng" style="width:50%;height:100px;" />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Lessons Learned/Feedback" >
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Please enter and lessons learned and feedback to the Center of Excellence
+                    </span>
+          </div>  
+    </apex:outputLabel>
+       <apex:inputField value="{!objWowReqFrm.Lessons_Learned_Feedback__c}" styleClass="clsLessonLrnd" style="width:50%;height:100px;"/>
+     </apex:pageBlockSectionItem>
+      
+     <apex:pageBlockSectionItem >
+     <apex:outputLabel />
+         <div style="color:red"><b>Example text input for minimum size of text fields:</b></div><br></br>
+        We used the SC methodology and tools to structure a holistic consultative approach to the needs Ralph Lauren identified in their RFP. By mapping our own actual customer journey through the Ralph Lauren website, 
+we created a CX Vision Video and did a live demo that showed the RL executive team what their future state looked like, powered by Genesys. This approach allowed us to understand Ralph Lauren’s
+business needs at a very detailed level, and provide them with a vision far beyond what they imagined. They were simply blown away.
+ </apex:pageBlockSectionItem>      
+    </apex:pageblocksection>
+    
+    <!--<apex:pageblocksection id="EngFeeback_RO" title="Engagement Feedback" columns="1" rendered="{!EngFeedSection_RO}">-->
+    <apex:pageblocksection id="EngFeeback_RO" title="Engagement Feedback" columns="1" rendered="{!VTSection_RO}">
+      <apex:pageBlockSectionItem >
+       <apex:outputLabel value="What impact did your SC Engagement make on your deal?" >
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Please enter what impact your activities had on the deal
+            We already have help text here. 
+                    </span>
+          </div>  
+    </apex:outputLabel>
+       <apex:outputField value="{!objWowReqFrm.Impact_SC_Engagement__c}"   />
+     </apex:pageBlockSectionItem>
+     <apex:pageBlockSectionItem >
+       <apex:outputLabel value="Lessons Learned/Feedback">
+    <div class="helpOrb tooltip" style="position:relative;left:10px">
+                    <span>
+                       Please enter and lessons learned and feedback to the Center of Excellence
+                    </span>
+          </div>  
+    </apex:outputLabel>    
+       <apex:outputField value="{!objWowReqFrm.Lessons_Learned_Feedback__c}" />
+     </apex:pageBlockSectionItem>     
+    </apex:pageblocksection>
+  </apex:pageblock>
+<apex:pageBlock rendered="{!list_WowHistory != null}" >
+<apex:pageBlockSection id="pbsWowHistory" title="SC Engagement History" columns="1" >
+     <apex:pageBlockSectionItem >
+      <apex:pageBlock >
+       <apex:pageBlockTable value="{!list_WowHistory}" var="wh">
+        <apex:column value="{!wh.Action__c}"/>
+        <apex:column value="{!wh.Attachment_Type__c}"/>
+        <apex:column value="{!wh.Attachment_Sub_Type__c}"/>
+        <apex:column value="{!wh.UserId__c}"/>
+        <apex:column value="{!wh.User_Type__c}" headerValue="SC Engagement User Type"/>
+        <apex:column value="{!wh.W_o_w_Stage__c}" headerValue="SC Engagement Stage"/>
+        <apex:column value="{!wh.WoW_Status_del__c }" headerValue="SC Engagement Engagement Status"/>
+        <apex:column value="{!wh.Date__c}"/>
+      </apex:pageBlockTable>
+     </apex:pageBlock> 
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+
+</apex:pageBlock>
+<!-- Wow Rejected History Section Start -->
+   <apex:pageBlock rendered="{!list_WowRejectHistryDtls != null}" >
+   
+    <apex:pageBlockSection id="pbsWowRejectedHistory" title="SC Engagement Rejected History" columns="1" >
+     <apex:pageBlockSectionItem >
+      <apex:pageBlock >
+       <apex:pageBlockTable value="{!list_WowRejectHistryDtls}" var="whr">
+        <apex:column value="{!whr.Action__c}"/>
+        <apex:column value="{!whr.WoW_Request_Id__r.Rejected_Status__c}"  headerValue="Rejected Reason"/>
+        <apex:column value="{!whr.UserId__c}"/>
+        <apex:column value="{!whr.User_Type__c}" headerValue="SC Engagement User Type"/>
+        <apex:column value="{!whr.W_o_w_Stage__c}" headerValue="SC Engagement Stage"/>
+        <apex:column value="{!whr.WoW_Status_del__c }" headerValue="SC Engagement Engagement Status"/>
+        <apex:column value="{!whr.Date__c}"/>
+      </apex:pageBlockTable>
+     </apex:pageBlock> 
+     </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+   </apex:pageBlock>
+  <!-- Wow Rejected History Section Close-->
+  </apex:form>
+</apex:page>

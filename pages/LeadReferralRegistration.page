@@ -1,0 +1,171 @@
+<apex:page id="pageId"  standardController="Lead_Referral_Registration__c" extensions="LeadReferralRegistration_Class" showHeader="false" sidebar="false">
+
+    <style>
+        .descField{
+        width: 450px;
+        height: 90px;
+        }
+        .snglValueField {
+        width: 180px; !important;
+        }
+        label{
+            font-weight: 600;
+        }
+    </style>
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="dealreg"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+
+            <!--<apex:sectionHeader title="New Lead Referral" subtitle="" rendered="{!NOT(isReadOnly)}" />-->
+            <h4 style="{!IF(NOT(isReadOnly),'display:block','display:none')}">New Lead Referral</h4><p/>
+            <!--<apex:sectionHeader title="Lead Referral Registration" subtitle="{!Lead_Referral_Registration__c.Name}" rendered="{!isReadOnly}" />-->
+            <h4 style="{!IF(isReadOnly,'display:block','display:none')}">Lead Referral Registration</h4><p/>
+            <apex:form id="formId">  
+                <apex:pageBlock id="pbid">
+                    <apex:pageMessages ></apex:pageMessages>
+                    <apex:pageBlockButtons >
+                        <apex:commandButton value="Save" action="{!saveleadReferralObj}" rendered="{!NOT(isReadOnly)}" /> 
+                        <apex:commandButton value="Cancel" action="{!cancelleadReferralObj}" immediate="true" rendered="{!NOT(isReadOnly)}" />
+                    </apex:pageBlockButtons>
+                    
+                    
+                    <!--  Lead Referral Information Starts from Here   -->
+                    <apex:pageBlockSection columns="2" id="pbsIs_opp" title="Lead Information" collapsible="false">       
+                        <apex:inputField label="Customer Company Name " value="{!Lead_Referral_Registration__c.Name}" required="true"  rendered="{!NOT(isReadOnly)}"/>
+                        <apex:outputField label="Customer Company Name " value="{!Lead_Referral_Registration__c.Name}"  rendered="{!isReadOnly}" />
+                        <apex:repeat value="{!$ObjectType.Lead_Referral_Registration__c.FieldSets.Partner_Portal_Lead_Ref_Information}" var="f"> 
+                            <apex:inputField value="{!Lead_Referral_Registration__c[f]}" required="{!if(f == 'Customer_Division_Group__c' || f== 'End_User_Account__c'|| f== 'Partner_Agent_Company__c'|| f== 'Partner_Agent_Name__c',false,true)}" rendered="{!NOT(isReadOnly) && !(f== 'End_User_Account__c')}"/>
+                            <apex:outputField value="{!Lead_Referral_Registration__c[f]}" rendered="{!isReadOnly && !(f== 'End_User_Account__c')}"/>
+                        </apex:repeat>    
+                    </apex:pageblocksection>  
+                    <!--  Partner Information Starts from Here   -->
+                    <apex:pageBlockSection columns="2" id="pbsIs_cnt" title="Partner Information" collapsible="false">  
+                        <apex:repeat value="{!$ObjectType.Lead_Referral_Registration__c.FieldSets.Partner_Portal_Lead_Ref_Partner_Informat}" var="f">  
+                            <apex:inputField value="{!Lead_Referral_Registration__c[f]}" required="{!if(f == 'Genesys_AE__c',false,true)}" rendered="{!NOT(isReadOnly)}" />  
+                            <apex:outputField value="{!Lead_Referral_Registration__c[f]}" rendered="{!isReadOnly}"/>
+                        </apex:repeat>     
+                    </apex:pageBlockSection>
+                    <!--  Opportunity Description Starts from Here   -->
+                    <apex:pageBlockSection columns="1" id="pbsIs_oppdesc" title="Lead Description" collapsible="false">  
+                        <apex:repeat value="{!$ObjectType.Lead_Referral_Registration__c.FieldSets.Partner_Portal_Lead_Description}" var="f" >  
+                            <apex:inputField value="{!Lead_Referral_Registration__c[f]}" styleClass="{!IF(f.type='textarea','descField','')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}" rendered="{!NOT(isReadOnly)}" />
+                            <apex:outputField value="{!Lead_Referral_Registration__c[f]}" label="{!mapFieldLabelVsHelpText[f.label]}" rendered="{!isReadOnly}"/>
+                        </apex:repeat>
+                        <apex:inputField value="{!Lead_Referral_Registration__c.Campaign_Source__c}" rendered="{!NOT(isReadOnly)}"/>
+                        <apex:outputField value="{!Lead_Referral_Registration__c.Campaign_Source__c}" rendered="{!isReadOnly}"/> 
+                        <apex:inputField value="{!Lead_Referral_Registration__c.Campaign_ID__c}" rendered="{!NOT(isReadOnly)}"/>
+                        <apex:outputField value="{!Lead_Referral_Registration__c.Campaign_ID__c}" rendered="{!isReadOnly}"/>
+                    </apex:pageBlockSection>
+                    <!-- Competitive Displacement opportunity Starts Here -->
+                    <apex:outputPanel id="competitivedisplacement" >  
+                        <apex:pageBlockSection columns="1">           
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Is this a competitive displacement opportunity for Genesys?" for="file"/>
+                                <apex:outputPanel >
+                                    <apex:actionRegion rendered="{!NOT(isReadOnly)}" >
+                                        <apex:inputField value="{!Lead_Referral_Registration__c.competitive_displacement_lead__c}" required="true">  
+                                            <apex:actionSupport event="onchange" reRender="competitivedisplacement" status="actStatusId">
+                                                <apex:actionStatus id="actStatusId" >
+                                                    <apex:facet name="start" >
+                                                        <img src="/img/loading.gif" />                    
+                                                    </apex:facet>
+                                                </apex:actionStatus>
+                                            </apex:actionsupport>
+                                        </apex:inputField> 
+                                    </apex:actionRegion>
+                                    <apex:outputField value="{!Lead_Referral_Registration__c.competitive_displacement_lead__c}"  rendered="{!isReadOnly}"/>
+                                </apex:outputPanel> 
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem rendered="{!Lead_Referral_Registration__c.competitive_displacement_lead__c =='Yes'}" >
+                                <apex:outputLabel value="IF yes, who, is the competitor in this account and what are they proposing" for="file" />
+                                <apex:outputPanel >
+                                    <apex:inputField value="{!Lead_Referral_Registration__c.If_Yes__c}" styleClass="descField"  label="IF yes, who, is the competitor in this account and what are they proposing" rendered="{!AND(NOT(isReadOnly),Lead_Referral_Registration__c.competitive_displacement_lead__c=='Yes')}" required="{!Lead_Referral_Registration__c.competitive_displacement_lead__c=='Yes'}" />
+                                    <apex:outputField value="{!Lead_Referral_Registration__c.If_Yes__c}" label="IF yes, who, is the competitor in this account and what are they proposing" rendered="{!AND(isReadOnly,Lead_Referral_Registration__c.competitive_displacement_lead__c=='Yes')}" />
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                    
+                    <apex:pageBlockSection columns="1">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Does this prospect currently own and use any existing Genesys Solution?" for="file" />
+                            <apex:outputPanel >      
+                                <apex:inputField value="{!Lead_Referral_Registration__c.Use_any_existing_Genesys_Solution__c}" rendered="{!NOT(isReadOnly)}" />
+                                <apex:outputField value="{!Lead_Referral_Registration__c.Use_any_existing_Genesys_Solution__c}" rendered="{!isReadOnly}" />          
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection columns="1">      
+                        <apex:outputPanel id="platform" >  
+                            <apex:pageBlockSection columns="1"> 
+                                <!--
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Platform Type" for="file"/>
+                                    <apex:outputPanel >
+                                        <apex:actionRegion rendered="{!NOT(isReadOnly)}">  
+                                            <apex:inputField value="{!Lead_Referral_Registration__c.Platform_Type__c}" required="true" styleClass="snglValueField">  
+                                                <apex:actionSupport event="onchange" reRender="platform" status="pltStatusId">
+                                                    <apex:actionStatus id="pltStatusId" >
+                                                        <apex:facet name="start" >
+                                                            <img src="/img/loading.gif" />                    
+                                                        </apex:facet>
+                                                    </apex:actionStatus>
+                                                </apex:actionsupport>
+                                            </apex:inputField> 
+                                        </apex:actionRegion>
+                                        <apex:outputField value="{!Lead_Referral_Registration__c.Platform_Type__c}" styleClass="snglValueField" rendered="{!isReadOnly}"/>
+                                    </apex:outputPanel> 
+                                </apex:pageBlockSectionItem>
+                                -->
+                                <apex:inputField value="{!Lead_Referral_Registration__c.Annual_Contract_Value_Amount__c}" label="Annual Contract Value Amount" styleClass="snglValueField" rendered="{!AND(NOT(isReadOnly), Lead_Referral_Registration__c.Platform_Type__c=='Cloud')}" required="{!Lead_Referral_Registration__c.Platform_Type__c=='Cloud'}"/>  
+                                <apex:outputField value="{!Lead_Referral_Registration__c.Annual_Contract_Value_Amount__c}" label="Annual Contract Value Amount" styleClass="snglValueField" rendered="{!AND((isReadOnly), Lead_Referral_Registration__c.Platform_Type__c=='Cloud')}"/>  
+                                
+                                <apex:inputField value="{!Lead_Referral_Registration__c.License_Amount__c}" label="License Amount" styleClass="snglValueField" rendered="{!AND(NOT(isReadOnly), Lead_Referral_Registration__c.Platform_Type__c=='On Premise')}" required="{!Lead_Referral_Registration__c.Platform_Type__c=='On Premise'}"/>        
+                                <apex:outputField value="{!Lead_Referral_Registration__c.License_Amount__c}" label="License Amount" styleClass="snglValueField" rendered="{!AND((isReadOnly), Lead_Referral_Registration__c.Platform_Type__c=='On Premise')}" />        
+                                <!--
+                                <apex:inputField value="{!Lead_Referral_Registration__c.Offerings_Type__c}" label="Offerings Type" rendered="{!NOT(isReadOnly)}" required="true" styleClass="snglValueField" />        
+                                <apex:outputField value="{!Lead_Referral_Registration__c.Offerings_Type__c}" label="Offerings Type" rendered="{!isReadOnly}" styleClass="snglValueField"/> 
+                                
+                                <apex:inputField value="{!Lead_Referral_Registration__c.Offering__c}" label="Offering Detail" rendered="{!NOT(isReadOnly)}" required="true" styleClass="snglValueField" />        
+                                <apex:outputField value="{!Lead_Referral_Registration__c.Offering__c}" label="Offering Detail" rendered="{!isReadOnly}" styleClass="snglValueField"/> 
+                                -->
+
+                                <apex:outputField value="{!Lead_Referral_Registration__c.Vendor_In_Place__c}" rendered="{!isReadOnly}" styleClass="snglValueField"/>
+                                <apex:inputField value="{!Lead_Referral_Registration__c.Vendor_In_Place__c}" rendered="{!NOT(isReadOnly)}" required="true" styleClass="snglValueField" />        
+
+                                <apex:inputField value="{!Lead_Referral_Registration__c.Lead_Offer__c}" rendered="{!NOT(isReadOnly)}" required="true" styleClass="snglValueField" />        
+                                <apex:outputField value="{!Lead_Referral_Registration__c.Lead_Offer__c}" rendered="{!isReadOnly}" styleClass="snglValueField"/>                                 
+                                
+                            </apex:pageBlockSection> 
+                        </apex:outputPanel> <!-- Platform Type --->
+                        
+                        <apex:pageBlockSection columns="1">
+                            
+                            <apex:inputField value="{!Lead_Referral_Registration__c.Number_of_Agents__c}" label="Number of Agents" styleClass="snglValueField" rendered="{!NOT(isReadOnly)}" required="true" />        
+                            <apex:outputField value="{!Lead_Referral_Registration__c.Number_of_Agents__c}" label="Number of Agents" styleClass="snglValueField" rendered="{!isReadOnly}" />
+                            
+                            <!--<apex:inputField value="{!Lead_Referral_Registration__c.Primary_Solution_Category__c}" label="Primary Solution" styleClass="snglValueField" rendered="{!NOT(isReadOnly)}" required="true" />
+                            <apex:outputLink value="{!URLFOR($Resource.PartnerSolutionCaregoryGuidelines)}" target="_blank" rendered="{!NOT(isReadOnly)}" style="margin-left:200px;" >Click here to see Solution Category Guidelines</apex:outputLink>-->                                                                      
+                            
+                            <!--<apex:outputField value="{!Lead_Referral_Registration__c.Primary_Solution_Category__c}" label="Primary Solution" styleClass="snglValueField" rendered="{!isReadOnly}" /> -->
+                            <apex:inputField value="{!Lead_Referral_Registration__c.What_is_the_Expected_Close_Date__c}" required="true" styleClass="snglValueField" rendered="{!NOT(isReadOnly)}" />  
+                            <apex:outputField value="{!Lead_Referral_Registration__c.What_is_the_Expected_Close_Date__c}" styleClass="snglValueField" rendered="{!isReadOnly}" />   
+                            <apex:outputField value="{!Lead_Referral_Registration__c.Percentage_Referral_Fee__c}" styleClass="snglValueField" rendered="{!IF((Lead_Referral_Registration__c.Status__c == 'Approved'), true, false)}" />   
+                        </apex:pageBlockSection> 
+                        
+                    </apex:pageBlockSection>
+                    
+                </apex:pageBlock>
+            </apex:form>  
+        </apex:define>
+    </apex:composition>
+</apex:page>

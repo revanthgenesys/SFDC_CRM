@@ -1,0 +1,66 @@
+<apex:page standardcontroller="Account" extensions="searchAccounts" >
+ <apex:outputPanel id="hiddenblock"> <apex:pagemessages /> </apex:outputPanel>
+<apex:sectionHeader title="Master Data Accounts" subtitle="Account Search"/>
+
+<script type='text/javascript'>
+    function noenter(ev)  {
+        if (window.event && window.event.keyCode == 13 || ev.which == 13) {
+            doSearchAF();
+            return false;
+         } else {
+              return true;
+         }
+     }
+</script>
+<apex:form >
+
+<apex:pageBlock >
+<apex:messages />
+<apex:pageblockSection columns="7">
+<apex:inputField value="{!a1.name}" required="false" onkeypress="return noenter(event);"/> 
+<apex:inputField value="{!a1.City__c}" onkeypress="return noenter(event);" />
+<apex:inputField value="{!a1.Country__c}" onkeypress="return noenter(event);"/>
+<!--<apex:inputField value="{!a1.Subsidary__c}"  onkeypress="return noenter(event);"/>  -->
+<apex:actionFunction name="doSearchAF" rerender="results,creater" status="searchStatus" action="{!dosearch}"/>
+<apex:commandbutton rerender="results,hiddenblock,creater" value="Search" status="searchStatus" action="{!dosearch}"/>
+<apex:outputPanel id="creater">
+<apex:commandbutton value="New" action="{!pageredir}" immediate="true" rendered="{!isShownButton}"/>
+</apex:outputPanel>
+<apex:pageBlockSectionItem />
+<apex:actionStatus id="searchStatus" startText="Searching..."/>
+<apex:pageBlockSectionItem />
+</apex:pageblockSection>
+</apex:pageBlock>
+
+
+<apex:pageBlock >
+
+<apex:pageblockSection columns="1" id="results">
+<apex:pageBlockTable value="{!accounts}" var="a">
+<!--<apex:column ><apex:facet name="header">Record in SFDC?</apex:facet><apex:outputText rendered="{!if(a.id==null,true,false)}"><b>No</b></apex:outputText><apex:outputText rendered="{!if(a.id==null,false,true)}"><b>Yes</b></apex:outputText></apex:column>-->
+<!--<apex:column value="{!a.Id}"><apex:facet name="header">SFDC Id</apex:facet> </apex:column>-->
+<apex:column ><apex:facet name="header">Name</apex:facet> <apex:outputLink value="/{!a.Id}" rendered="{!if(a.id!=null,true,false)}" >{!a.name}</apex:outputLink><apex:outputText rendered="{!if(a.id==null,true,false)}">{!a.name}</apex:outputText></apex:column>
+<apex:column value="{!a.subsidiary}"><apex:facet name="header">Subsidiary</apex:facet></apex:column> 
+<apex:column value="{!a.sapCode}"><apex:facet name="header">GARN Code</apex:facet></apex:column> 
+<apex:column value="{!a.street}"><apex:facet name="header">Street</apex:facet> </apex:column>
+<apex:column value="{!a.city}"><apex:facet name="header">City</apex:facet> </apex:column>
+<apex:column value="{!a.state}"><apex:facet name="header">State/Province</apex:facet> </apex:column>
+<apex:column value="{!a.zipCode}"><apex:facet name="header">Zip Code</apex:facet> </apex:column>
+<apex:column value="{!a.country}"><apex:facet name="header">Country</apex:facet> </apex:column>
+<apex:column value="{!a.RecordType}"><apex:facet name="header">RecordType</apex:facet> </apex:column>
+<apex:column value="{!a.Type}"><apex:facet name="header">Type</apex:facet> </apex:column>
+<apex:column value="{!a.status}"><apex:facet name="header">Status</apex:facet> </apex:column>
+
+
+<!--<apex:column value="{!a.OwnerName}"><apex:facet name="header">Owner Name</apex:facet> </apex:column>
+<apex:column value="{!a.ownerid}"><apex:facet name="header">Owner Name</apex:facet> </apex:column>-->
+<apex:column ><apex:facet name="header">Owner Name</apex:facet> <apex:outputLink value="/{!a.ownerid}" >{!a.OwnerName}</apex:outputLink></apex:column>
+<!--<apex:column ><apex:facet name="header"></apex:facet><apex:outputPanel rendered="{!if(a.id==null,true,false)}">
+<apex:commandButton value="Import" onClick="insertAccount('{!a.MDId}','{!a.Id}')" reRender="none"></apex:commandButton></apex:outputPanel></apex:column> -->
+</apex:pageBlockTable>
+</apex:pageblockSection>
+</apex:pageBlock>
+<apex:actionFunction name="insertAccount" action="{!insertAccount}"  reRender="none">
+<apex:param value="" name="MDId" /><apex:param value="" name="SalesforceId"/></apex:actionFunction>
+</apex:form>
+</apex:page>

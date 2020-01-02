@@ -1,0 +1,442 @@
+<apex:page StandardController="zqu__Quote__c" extensions="ZUsageEstimatorPDFController"
+           title="Quote Estimate" docType="html-5.0" renderAs="pdf"
+            showHeader="false" standardStylesheets="false">
+    
+    <apex:stylesheet value="{!URLFOR($Resource.estimatorPdf,'estimatorPdfLandscape.css')}"/>
+    
+        <div style="background-color: white; padding: 2px; border-top: 1px solid black; border-bottom: 3px solid black; border-left: 1px solid black; border-right: 3px solid black;">
+            <table id="headerTable">
+                <tr>
+                    <td valign='bottom' style="width:70%;">
+                        <h1>
+                            Estimate for: {!zqu__Quote__c.zqu__Account__r.Name}
+                        </h1>
+                        <table class="titleTable">
+                            <tr>
+                                <th width="50px">Date</th>
+                                <td>
+                                    <apex:outputtext value="{0, date, MMM dd, yyyy}">
+                                        <apex:param value="{!zqu__Quote__c.LastModifiedDate}" />
+                                    </apex:outputtext>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>
+                                    By
+                                </th>
+                                <td>
+                                    <apex:outputtext value="{!zqu__Quote__c.LastModifiedBy.Name}" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td class="imageColumn">
+                        <!--<apex:image value="{!$Resource.InInLogo}" />-->
+                        <apex:image value="/servlet/servlet.FileDownload?file={!usageCtrl.imgDocumentId}" />
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <apex:datatable id="OneTimeTable"
+                            value="{!usageCtrl.onetimeCharges}"
+                            var="c"
+                            rowclasses="even,odd"
+                            width="100%"
+                            title="One Time Fees"
+                            styleclass="dataTable"
+                            footerclass="ininFooter"
+                            headerclass="ininHeader"
+                            captionclass="tableCaption"
+                            rendered="{!usageCtrl.onetimeChargesSize > 0}">
+                <apex:facet name="caption">One Time Charges</apex:facet>
+                <apex:column styleclass="numberColumn" rendered="{!zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription'}">
+                    <apex:facet name="header">Charge Type</apex:facet>
+                    <apex:outputText value="{!usageCtrl.oneTimeCharges[c].GroupType}" />
+                </apex:column>
+                <apex:column width="30%">
+                    <apex:facet name="header">Part Name</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.oneTimeCharges[c].Name}" style="color:{!IF(usageCtrl.oneTimeCharges[c].GroupType == 'new', 'green', IF(usageCtrl.oneTimeCharges[c].GroupType == 'removed', 'red', 'black'))}" />
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.oneTimeCharges[c].QuoteCharge.zqu__ListPrice__c}" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Discount %</apex:facet>
+                    <apex:outputtext value="{0,number,###.00%}">
+                        <apex:param value="{!usageCtrl.oneTimeCharges[c].Discount / 100}" />
+                    </apex:outputtext>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Effective Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.oneTimeCharges[c].QuoteCharge.zqu__EffectivePrice__c}" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Quantity</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0}">
+                            <apex:param value="{!usageCtrl.oneTimeCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">UOM</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.oneTimeCharges[c].UOM}" />
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">One Time Charges Total:</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.oneTimeCharges[c].QuoteCharge.zqu__ListPrice__c * usageCtrl.oneTimeCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">
+                        <apex:outputpanel >
+                            <apex:outputtext value="{0, number, ###,##0.00}">
+                                <apex:param value="{!usageCtrl.TotalOneTime}" />
+                            </apex:outputtext>
+                        </apex:outputpanel>
+                    </apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.oneTimeCharges[c].QuoteCharge.zqu__EffectivePrice__c * usageCtrl.oneTimeCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+            </apex:datatable>
+            <br />
+            <apex:datatable id="ServicesTable" value="{!usageCtrl.servicesCharges}" var="c"
+                            rowclasses="even,odd" headerclass="ininHeader"
+                            width="100%" title="Services" captionclass="tableCaption" footerclass="ininFooter"
+                            styleclass="dataTable" rendered="{!usageCtrl.servicesChargesSize > 0}">
+                <apex:facet name="caption">Services</apex:facet>
+                <apex:column styleclass="numberColumn" rendered="{!zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription'}">
+                    <apex:facet name="header">Charge Type</apex:facet>
+                    <apex:outputText value="{!usageCtrl.servicesCharges[c].GroupType}" />
+                </apex:column>
+                <apex:column width="30%">
+                    <apex:facet name="header">Part Name</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.servicesCharges[c].QuoteCharge.Name}" style="color:{!IF(usageCtrl.servicesCharges[c].GroupType == 'new', 'green', IF(usageCtrl.servicesCharges[c].GroupType == 'removed', 'red', 'black'))}"/>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.servicesCharges[c].QuoteCharge.zqu__ListPrice__c}" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Discount %</apex:facet>
+                    <apex:outputtext value="{0,number,###.00%}">
+                        <apex:param value="{!usageCtrl.servicesCharges[c].QuoteCharge.Estimated_Discount__c / 100}" />
+                    </apex:outputtext>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Effective Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.servicesCharges[c].QuoteCharge.zqu__EffectivePrice__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Quantity</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0}">
+                            <apex:param value="{!usageCtrl.servicesCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">UOM</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.servicesCharges[c].QuoteCharge.zqu__UOM__c}" />
+                </apex:column>
+                <apex:column styleclass="centerColumn" width="50px">
+                    <apex:facet name="header">Period</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ##,##0}">
+                            <apex:param value="{!usageCtrl.servicesCharges[c].QuoteCharge.Estimated_Period__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">Services Charges Total:</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.servicesCharges[c].QuoteCharge.zqu__ListPrice__c * usageCtrl.servicesCharges[c].QuoteCharge.EstimatedQty__c * usageCtrl.servicesCharges[c].QuoteCharge.Estimated_Period__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">
+                        <apex:outputpanel >
+                            <apex:outputtext value="{0, number, ###,##0.00}">
+                                <apex:param value="{!usageCtrl.TotalServices}" />
+                            </apex:outputtext>
+                        </apex:outputpanel>
+                    </apex:facet>
+                    <apex:outputpanel styleclass="numberColumn">
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.servicesCharges[c].QuoteCharge.zqu__EffectivePrice__c * usageCtrl.servicesCharges[c].QuoteCharge.EstimatedQty__c * usageCtrl.servicesCharges[c].QuoteCharge.Estimated_Period__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+            </apex:datatable>
+
+            <br />
+            <apex:datatable id="PurecloudVoiceTable" value="{!usageCtrl.purecloudVoiceCharges}" var="c"
+                            rowclasses="even,odd" headerclass="ininHeader"
+                            width="100%" title="PureCloud Voice" captionclass="tableCaption" footerclass="ininFooter"
+                            styleclass="dataTable" rendered="{!usageCtrl.purecloudVoiceChargesSize > 0}">
+                <apex:facet name="caption">PureCloud Voice</apex:facet>
+                <apex:column styleclass="numberColumn" rendered="{!zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription'}">
+                    <apex:facet name="header">Charge Type</apex:facet>
+                    <apex:outputText value="{!usageCtrl.purecloudVoiceCharges[c].GroupType}" />
+                </apex:column>
+                <apex:column width="30%">
+                    <apex:facet name="header">Part Name</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.Name}" style="color:{!IF(usageCtrl.purecloudVoiceCharges[c].GroupType == 'new', 'green', IF(usageCtrl.purecloudVoiceCharges[c].GroupType == 'removed', 'red', 'black'))}"/>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.zqu__ListPrice__c}" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Discount %</apex:facet>
+                    <apex:outputtext value="{0,number,###.00%}">
+                        <apex:param value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.Estimated_Discount__c / 100}" />
+                    </apex:outputtext>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Effective Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.zqu__EffectivePrice__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Quantity</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0}">
+                            <apex:param value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">UOM</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.zqu__UOM__c}" />
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">Purecloud Voice Total:</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.zqu__ListPrice__c * usageCtrl.purecloudVoiceCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">
+                        <apex:outputpanel >
+                            <apex:outputtext value="{0, number, ###,##0.00}">
+                                <apex:param value="{!usageCtrl.TotalPurecloudVoiceUsage}" />
+                            </apex:outputtext>
+                        </apex:outputpanel>
+                    </apex:facet>
+                    <apex:outputpanel styleclass="numberColumn">
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.purecloudVoiceCharges[c].QuoteCharge.zqu__EffectivePrice__c * usageCtrl.purecloudVoiceCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+            </apex:datatable>
+            <br />
+            
+            <apex:datatable id="UsageTable"
+                            value="{!usageCtrl.usageAndRecurringHardwareCharges}"
+                            var="c"
+                            rowclasses="even,odd"
+                            headerclass="ininHeader"
+                            width="100%" title="Usage Fees"
+                            captionclass="tableCaption"
+                            footerclass="ininFooter"
+                            styleclass="dataTable" rendered="{!usageCtrl.usageAndRecurringHardwareChargesSize > 0}">
+                <apex:facet name="caption">Subscription Charges</apex:facet>
+                <apex:column styleclass="numberColumn" rendered="{!zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription'}">
+                    <apex:facet name="header">Charge Type</apex:facet>
+                    <apex:outputText value="{!usageCtrl.usageAndRecurringHardwareCharges[c].GroupType}" />
+                </apex:column>
+                <apex:column width="30%">
+                    <apex:facet name="header">Part Name</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.Name}" style="color:{!IF(usageCtrl.usageAndRecurringHardwareCharges[c].GroupType == 'new', 'green', IF(usageCtrl.usageAndRecurringHardwareCharges[c].GroupType == 'removed', 'red', 'black'))}"/>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ##,##0.00}">
+                            <apex:param value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.zqu__ListPrice__c}" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Discount %</apex:facet>
+                    <apex:outputtext value="{0,number,###.00%}">
+                        <apex:param value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.Estimated_Discount__c / 100}" />
+                    </apex:outputtext>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Effective Price ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.zqu__EffectivePrice__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">Quantity</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0}">
+                            <apex:param value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="centerColumn">
+                    <apex:facet name="header">UOM</apex:facet>
+                    <apex:outputtext value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.zqu__UOM__c}" />
+                </apex:column>
+                <apex:column styleclass="centerColumn" width="50px">
+                    <apex:facet name="header">Period</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ##,##0}">
+                            <apex:param value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.Estimated_Period__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">List Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.zqu__ListPrice__c * usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Total ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">Subscription Charges Total:</apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.zqu__EffectivePrice__c * usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.EstimatedQty__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column styleclass="numberColumn">
+                    <apex:facet name="header">Total Usage ({!zqu__Quote__c.zqu__Currency__c})</apex:facet>
+                    <apex:facet name="footer">
+                        <apex:outputpanel >
+                            <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                                <apex:param value="{!usageCtrl.TotalUsage}" />
+                            </apex:outputtext>
+                        </apex:outputpanel>
+                    </apex:facet>
+                    <apex:outputpanel >
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{!(usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.zqu__EffectivePrice__c * usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.EstimatedQty__c) * usageCtrl.usageAndRecurringHardwareCharges[c].QuoteCharge.Estimated_Period__c }" />
+                        </apex:outputtext>
+                    </apex:outputpanel>
+                </apex:column>
+            </apex:datatable>
+            <br />
+            <h2>Totals</h2>
+            <table class="totalTable">
+                <tr>
+                    <th class="ininFooter">
+                        Total One-time fees:
+                    </th>
+                    <td>
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.TotalOneTimeAll}" />
+                        </apex:outputtext>&nbsp;({!zqu__Quote__c.zqu__Currency__c})
+                    </td>
+                </tr>
+                <tr>
+                    <th class="ininFooter">
+                        Total Estimated Monthly fees:
+                    </th>
+                    <td>
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.TotalMonthly}" />
+                        </apex:outputtext>&nbsp;({!zqu__Quote__c.zqu__Currency__c})
+                    </td>
+                </tr>
+                <tr>
+                    <th class="ininFooter">
+                        Annual Commitment Subscription Discount:
+                    </th>
+                    <td>
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{!zqu__Quote__c.zqu__Previewed_Discount__c}" />
+                        </apex:outputtext>&nbsp;({!zqu__Quote__c.zqu__Currency__c})
+                    </td>
+                </tr>
+                <tr>
+                    <th class="ininFooter">
+                        Total Estimated Contract Cost:
+                    </th>
+                    <td>
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{!usageCtrl.TotalUsage + usageCtrl.TotalServices + usageCtrl.TotalOneTime + usageCtrl.TotalRecurringHardwareOneTime + usageCtrl.TotalPurecloudVoiceUsage + IF(ISBLANK(zqu__Quote__c.zqu__Previewed_Discount__c), 0, zqu__Quote__c.zqu__Previewed_Discount__c)}" />
+                        </apex:outputtext>&nbsp;({!zqu__Quote__c.zqu__Currency__c})
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <!--<h2>Annual Pre Pay Option</h2>
+            <table class="totalTable">
+                <tr>
+                    <th class="ininFooter">
+                        Year 1 Cost:
+                    </th>
+                    <td>
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{! (usageCtrl.TotalAnnualizedUsage) + (usageCtrl.TotalServices + usageCtrl.TotalOneTime) + usageCtrl.TotalAnnualizedRecurringHardware}" />
+                        </apex:outputtext>&nbsp;({!zqu__Quote__c.zqu__Currency__c})
+                    </td>
+                </tr>
+                <tr>
+                    <th class="ininFooter">
+                        Annual Subscription Cost:
+                    </th>
+                    <td>
+                        <apex:outputtext styleclass="numberColumn" value="{0, number, ###,##0.00}">
+                            <apex:param value="{! usageCtrl.TotalAnnualizedUsage}" />
+                        </apex:outputtext>&nbsp;({!zqu__Quote__c.zqu__Currency__c})
+                    </td>
+                </tr>
+            </table>-->
+        </div>
+        <apex:outputText value="{!zqu__Quote__c.zqu__SubscriptionType__c}" rendered="false" />
+        <apex:outputText value="{!zqu__Quote__c.zqu__Currency__c}" rendered="false" />
+        <apex:outputText value="{!zqu__Quote__c.Annual_PrePay__c}" rendered="false" />
+        <apex:outputText value="{!zqu__Quote__c.zqu__InitialTerm__c}" rendered="false" />
+</apex:page>

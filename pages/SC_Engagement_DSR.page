@@ -1,0 +1,1201 @@
+<apex:page sidebar="false" extensions="SCEngagementDSRCtlr" standardController="DSR_SCEngagement__c" action="{!invokeDSRPage}"><!-- @Amit 05/21/2018: Added Action attribute on page tag-->
+    <apex:form >
+    <apex:pageMessages id="msgs"/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>   
+        <link rel="stylesheet" href="/resources/demos/style.css"/>  
+        <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <head>
+                <apex:stylesheet value="{!URLFOR($Resource.SLDS, 'assets/styles/salesforce-lightning-design-system-vf.css')}" />
+            </head>
+        </html>
+        <Script>
+    function setFocusOnLoad() {}
+    </Script>
+        <script>
+          var j$ = jQuery.noConflict();
+            j$(document).ready(function(){
+                debugger;
+                showFeedback();
+                j$('.dateFormat').hide();
+                var isNew = '{!isCreate}';
+                var isSR = '{!isSubRegional}';
+                var isVT = '{!isVirtualUser}';
+                var isAE = '{!isAEUser}';
+                var isAdmin = '{!isAdminUser}';
+                var status = '{!dsrEngagement.SC_Engagement_Status__c}';
+                var isRead = '{!isReadOnly}';
+                //j$('.feedbackSec').hide();
+                j$('.rejectionBox').hide();
+                j$('.rejectionBoxRead').hide();
+                
+                var chkread = j$(".clsSelectedStatusRead input[type='radio']:checked").val();
+                if(chkread == 'Reject'){
+                    j$('.rejectionBoxRead').show();
+                }else if(chkread == 'Approve'){
+                    j$('.rejectionBoxRead').hide();
+                }
+                
+                //Priyank added below lines to showe the Smart flag field mandatiory if the smart flag value is No.Added on 31/10/2018
+                if(j$('[id$=idSmartOpp] option:selected').val()=='No'){
+                    j$('[id$=picVal]').css("border-left", "2px solid red");
+                }
+                
+                /*var chk= j$('.box:checked').length;
+                if(chk == '1'){
+                    j$('.feedbackSec').show();
+                }else{
+                    j$('.feedbackSec').hide();
+                }*/
+                
+                if(isNew == 'false'){
+                    j$('.VRTeam').hide();
+                    j$('.linkPanel').hide();
+                }
+                
+                if(isSR == 'true' && status == 'Open and Not Assigned'){
+                    j$('.linkPanel').hide();
+                }
+                if( (isVT == 'true' && isSR == 'false' && isAdmin == 'false') || status == 'Completed' || status == 'Submitted for Completion' || isRead == 'true'){
+                    j$('.SRBtn').hide();
+                    //j$('.VTBtn').hide();
+                    j$('.VTRemove').hide();
+                    j$('.SRRemove').hide();
+                }else{
+                    j$('.SRBtn').show();
+                    j$('.VTBtn').show();
+                    j$('.VTRemove').show();
+                    j$('.SRRemove').show();
+                }
+                
+                /* VT should be able to add VT memebers */
+                if(isVT == 'true' && status == 'Open and Assigned '){
+                  j$('.VTBtn').show();
+                 
+                }
+                //VT Add button opened for AE as well as per discussion with Ben on 02/09/18
+                //if(status == 'Completed' || status == 'Submitted for Completion' || isAE == 'true'){
+                if(status == 'Completed' || status == 'Submitted for Completion' || isRead == 'true'){
+                  j$('.VTBtn').hide();
+                }
+                
+                //Check status to change the color
+                if(status == 'Completed' || isRead == 'true')
+                {
+                  j$('.clsStatusTD').css('color','red');
+                }
+                if(status == 'Submitted for Completion')
+                {
+                  j$('.clsStatusTD').css('color','orange');
+                }
+                if(status == 'Open and Assigned')
+                {
+                  j$('.clsStatusTD').css('color','green');
+                  //j$('.clsSubmitBTN').attr('value','Submit for Approval');
+                }
+            });
+            
+            function showFeedback(){
+                debugger;
+                
+                var chk= j$('.box:checked').length;
+                if(chk == '1'){
+                    j$('.feedbackSec').show();
+                }else{
+                    j$('.feedbackSec').hide();
+                }
+            }
+            var ApproveStatus;
+            function showRejection(){
+                debugger;
+                
+                var chk= j$(".clsSelectedStatus input[type='radio']:checked").val();
+                ApproveStatus = chk;
+                if(chk == 'Reject'){
+                    j$('.rejectionBox').show();
+                }else if(chk == 'Approve'){
+                    j$('.rejectionBox').hide();
+                }
+            }
+            
+            function Confirmation(stat){
+               
+               /**************** hide button after click to avoid to create duplicate record ****************/
+               if(stat == 'Open and Not Assigned' && (ApproveStatus == '' || ApproveStatus == null))
+               {
+                 j$('.clsSubmitBTN').css('display', 'none');
+               }
+                           
+               var isRetrn = true;
+               var objConfirm;
+               
+               if(ApproveStatus == 'Approve')
+                 objConfirm = confirm("Do you want to Approve this SC Engagement Request?");
+               if(ApproveStatus == 'Reject')
+                 objConfirm = confirm("Do you want to Reject this SC Engagement?");  
+                 
+               if(objConfirm == false)
+                 isRetrn = false;
+                 
+               return isRetrn;
+               
+            }
+            
+            // Priyank added below function to check the first SC.Priyank added on 30/10/2018.
+            function selectCheckbox(){
+                if(j$('[id$=virtualTeamSelect] option:selected').val() == 'Solution Consultant' || j$('[id$=virtualTeamSelect1] option:selected').val() == 'Solution Consultant'){
+                    try{
+                        j$('.checkedPanel').each(function(){
+                            var ele = j$(this).find('.checkImg');
+                            if(j$(this).find('.checkImg').attr('src') == '/img/checkbox_checked.gif' && j$(ele).parent().parent().prev().text() == 'Solution Consultant'){
+                               throw new Error('yy');
+                            }
+                        });
+                        j$('[id$=virtualTeamCheckbox]').attr('checked', 'checked');
+                        j$('[id$=virtualTeamCheckbox1]').attr('checked', 'checked');
+                    }catch(e){
+                         console.log('gg');
+                    }
+                }
+            }
+            // Smart opportunity on change picklist value.Priyank added on 31/10/2018.
+            function selectPicklist(){
+                if(j$('[id$=idSmartOpp] option:selected').val()=='No'){
+                    j$('[id$=picVal]').css("border-left", "2px solid red");
+                    if(j$('[id$=picVal]').val() == ''){
+                        var div = document.getElementById("errorMsg1");
+                        div.innerHTML = "Please Enter Smart Flag Explanation";
+                    }
+                }else{
+                    j$('[id$=picVal]').css("border-left", "");
+                    var div = document.getElementById("errorMsg1");
+                    div.innerHTML = ""
+                }
+            }
+            // Onclick of save button below script will run.Priyank added on 31/10/2018. 
+            function checkSmartFlagExplanation(){
+                if(j$('[id$=picVal]').val() == '' && j$('[id$=idSmartOpp] option:selected').val()=='No'){
+                    var div = document.getElementById("errorMsg1");
+                    div.innerHTML = "Please Enter Smart Flag Explanation";
+                }else{
+                    //Calling action function below.
+                    saveMethod();
+                    return true;
+                }
+            }
+            // Priyank code ended.
+            
+            function testauto(){
+                var a = '';
+                j$(".autoSearchDSR").autocomplete({
+                    source: function(request, response) {
+                        //Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.SCEngagementDSRCtlr.autoSearchDsrList}',request.term,function(result, event){
+                        SCEngagementDSRCtlr.autoSearchDsrList(request.term,function(result, event){
+                            if (event.status)
+                            {
+                                //alert(JSON.stringify(result));
+                                response(result);
+                            }
+                            else
+                            {
+                                alert(event.message);
+                            }
+                            });
+                    },
+                    select:function(event,ui){
+                      a = ui.item.label;
+                      j$('.autoSearchDSR').val(ui.item.label);
+                      return false;
+                    }
+                });
+            }
+            
+        </script>
+        <style type="text/css">
+            .custPopup{
+                background-color: white;
+                border-width: 2px;
+                border-style: outset;
+                z-index: 9999;
+                left: 50%;
+                padding:10px;
+                position: absolute;
+                /* These are the 3 css properties you will need to change so the popup 
+                displays in the center of the screen. First set the width. Then set 
+                margin-left to negative half of what the width is. You can add 
+                the height property for a fixed size pop up if you want.*/
+                //width: 500px;
+                margin-left: -250px;
+                top:100px;
+                border-color: #0070d2;
+                border-radius: 15px;
+            }
+            .popupBackground{
+                background-color:black;
+                opacity: 0.20;
+                filter: alpha(opacity = 20);
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                z-index: 9998;
+            }
+            .messageTable{
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .message .messageText h4 { 
+                display: none;
+            } 
+            .errorM3 .msgIcon, .errorMedium {
+                background-image:
+                background-position: 0 0;
+                width: 0;
+                height: 0;
+            }
+            .message .messageText {
+                color: red;
+                text-align: center;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            .spinnerBg{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-color: #000;
+                opacity: 0.2;
+                z-index: 999999;
+            }
+            .spinner{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                background-image: url("/img/loading32.gif");
+                background-size: 16px;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-position: center;
+                z-index: 9999999;
+                opacity: 1;
+            }
+            
+            .slds hr {
+                display: block;
+                margin: 32px 0;
+                border-top: 2px solid #006fd2;
+                height: 1px;
+                clear: both;
+            }
+            .ui-autocomplete{
+                position:relative;
+                z-index:9999999;
+                width: 160px !important;
+            }
+            
+        </style>
+        <style>
+          <!-- Style to change color of Approve/Reject radio button -->
+            .clsSelectedStatus td, .clsSelectedStatusinput, .clsSelectedStatus label{
+              width: 29%; font-size : 14px;     
+              display:inline-block; margin: 0 auto;   
+            }   
+            .clsSelectedStatus td:nth-child(1) {width:29%; font-size:1rem; background-color: green; padding:.8rem 0 .8rem 0; color:white; border-radius:1.5rem; margin: 0 .5rem 0 .5rem; }
+            .clsSelectedStatus td:nth-child(2) {width:29%; font-size:1rem; background-color: red; padding:.8rem 1rem .8rem 1rem; color:white; border-radius:1.5rem; margin: 0 .5rem 0 .5rem;  }
+        </style>
+        <body>
+              <!--Priyank added below action function 31/10/2018-->
+             <apex:actionFunction name="saveMethod" action="{!SaveSCE}" status="spinnerStatus"/>
+              <apex:actionStatus id="spinnerStatus">
+             
+                <apex:facet name="start">
+                    <div class="spinnerBg" />
+                    <div class="spinner" ></div>
+                </apex:facet>
+            </apex:actionStatus>
+            <apex:outputPanel rendered="{!!isDuplicate  && OppId != null}">
+            <div class="slds"> 
+                <div class="slds-card">
+                    <div class="slds-page-header" role="banner" style="background:">
+                        <div class="slds-grid">
+                            <div class="slds-media__body">
+                                <h1 style="font-weight: 600;font-size: large; color:#0076d5">SC Engagement DSR :  &nbsp;&nbsp;{!dsrEngagement.Name}</h1>
+                            </div>
+                            <apex:outputPanel id="pnlButtons" rendered="{!!isReadOnly}">
+                                <div class="slds-col slds-no-flex slds-grid slds-align-top">
+                                    <div class="slds-button" role="group">
+                                        <!-- Added By Ashish (11/21/18), to add the copy DSR Functionality -->
+                                        <apex:commandButton value="Copy DSR" action="{!showCopyDSRPopup}" reRender="copyDSRId" rendered="{!dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && isVirtualUser}" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" status="spinnerStatus"/>&nbsp;&nbsp;
+                                        <apex:commandButton value="Copy DSR" rendered="{!(!isVirtualUser || dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned')}" disabled="true" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" status="spinnerStatus" />&nbsp;&nbsp;
+                                        <!--Priyank added onclick in below code-->
+                                        <apex:commandButton value="Save" onclick="checkSmartFlagExplanation();return false;" rendered="{!dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned'}"  style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" status="spinnerStatus"/>&nbsp;&nbsp;
+                                        <apex:commandButton value="{!if(clswrapper.scStatus == 'Open and Assigned','Submit for Approval','Submit')}" onclick="return Confirmation('{!clswrapper.scStatus}');" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small clsSubmitBTN" action="{!submitDetails}" disabled="{!dsrEngagement.Smart_Opportunity_Intent_Use__c == null && clswrapper.scStatus == 'Open and Assigned'}" rendered="{!clswrapper.scStatus != 'Completed' && clswrapper.scStatus != 'Submitted for Completion'}" status="spinnerStatus"/> &nbsp;&nbsp;
+                                        <apex:commandButton value="Close DSR" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!CloseDSR}" rendered="{!clswrapper.scStatus = 'Submitted for Completion' &&  (isSubRegional || isAdminUser)}" status="spinnerStatus"/> &nbsp;&nbsp;
+                                        <apex:commandButton value="History" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!OpenHistory}" rendered="{!isCreate}" status="spinnerStatus"/>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+                <div class="myapp">
+                    <div class="slds-grid slds-m-top--large" >
+                        <div style="width:100%;">
+                            <div class="slds-card"  >
+                                <header class="slds-card__header slds-grid">
+                                    <div class="slds-col slds-media slds-media--center">
+                                        <div class="slds-media__figure">
+                                            <h3 class="slds-text-heading--small"><b></b></h3>
+                                        </div>
+                                        <div class="slds-media__body" style="text-align: -webkit-center;">
+                                           <div style="width:60%;">
+                                                <apex:pageMessages />
+                                           </div>
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="slds-col slds-no-flex">
+                           
+                                    </div>
+                                </header>
+                                <div class="slds-card__body" style="text-align:-webkit-center;">
+                                    <div style="width:95%;">
+                                    <!-- AE Panel Start -->
+                                   
+                                        <table >
+                                            <!--<apex:outputPanel rendered="{!(clswrapper.scStatus != 'Open and Not Assigned' && NOT(isAEUser))||(isSubRegional || isVirtualUser) }">-->
+                                            <apex:outputPanel rendered="{!dsrEngagement.id != null}">
+                                                <tr class="slds-hint-parent"  style="width: 90%;height: 30px;">
+                                                    <td class="" style="width:15%;text-align:left;"><b >SC Engagement Status :</b></td>
+                                                    <td class="clsStatusTD"  style="width:18%;text-align:left;font-weight: bold;">
+                                                        {!clswrapper.scStatus} &nbsp;&nbsp;
+                                                        <b><u><apex:commandLink value="Reopen" action="{!reOpen}" rendered="{!(clswrapper.scStatus == 'Completed' || clswrapper.scStatus == 'Submitted for Completion') && NOT(isVirtualUser) &&  (isSubRegional || isAdminUser || isAEUser)}" /></u></b>
+                                                    </td>
+                                                    <td style="width:15%"> </td>
+                                                    <td class="" style="width:15%;text-align:left;"></td>
+                                                    <td class=""  style="width:18%;text-align:left;"></td>
+                                                </tr>
+                                            </apex:outputPanel>
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b >Account Name :</b></td>
+                                                <td class=""  style=""> <div class="slds-truncate" ><a href="/{!clswrapper.accntId}" target="_blank">{!clswrapper.AccountName}</a></div></td>
+                                                <td style="width:15%"> </td>
+                                                <td class="" style=""><b>Opportunity : </b></td>
+                                                <td class=""  style=""><div class="slds-truncate" ><a href="/{!clswrapper.OppId}" target="_blank">{!clswrapper.OpportunityName}</a></div></td>
+                                            </tr>
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b >Industry :</b></td>
+                                                <td class=""  style="">{!clswrapper.Industry}</td>
+                                                <td style="width:15%"> </td>
+                                                <td class="" style=""><b>Expected Close : </b></td>
+                                                <td class=""  style=""><apex:outputText value="{0,date,MM/dd/yyyy}"> <apex:param value="{!clswrapper.ExpectedClosedDate}" /> </apex:outputText></td>
+                                            </tr>
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b >Technical Profile :</b></td>
+                                                <td class=""  style=""> <a href="/{!clswrapper.technicalLinkId}" target="_blank">{!clswrapper.technicalLink}</a></td>
+                                                <td style="width:15%"> </td>
+                                                <td class="" style=""><b>Opportunity Current Stage :</b></td>
+                                                <td class=""  style="">{!clswrapper.currentStage}</td>
+                                            </tr>
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b >Account Segment :</b></td>
+                                                <td class=""  style="">{!clswrapper.AccSegment}</td>
+                                                <td style="width:15%"> </td>
+                                                <!--<td class="" style=""><b>Opportunity Offering Type : </b></td>
+                                                <td class=""  style="">{!clswrapper.OfferingType}</td>-->
+                                                
+                                                <td class="" style=""><b>Opportunity Lead Platform : </b></td>
+                                                <td class=""  style="">{!clswrapper.LeadOffer}</td>
+                                            </tr>
+                                            <tr>
+                                                 <td style="width:15%"> </td><td style="width:15%"> </td><td style="width:15%"> </td>
+                                                <!--<td class="" style=""><b>Opportunity Platform Type :</b></td>
+                                                <td class=""  style="">{!clswrapper.PlatformType}</td>-->
+                                            </tr>
+                                            
+                                            <!--  @Strat: Changes on 5/11 as requested by Debora -->
+                                            <apex:outputPanel rendered="{!(dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' || dsrEngagement.SC_Engagement_Status__c == null) && !isReadOnly}">
+                                           
+                                                <tr>
+                                                     <td style="width:15%"> </td><td style="width:15%"> </td><td style="width:15%"> </td>
+                                                    <td class="" style=""><b>Pre-Sales Priority :</b></td>
+                                                    <td class=""  style="">
+                                                        <apex:inputField value="{!dsrEngagement.Pre_Sales_Priority__c}"  style="width:30%;"  />
+                                                    </td>
+                                                </tr>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!(dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned' && dsrEngagement.SC_Engagement_Status__c != null) || isReadOnly}">
+                                                <tr>
+                                                     <td style="width:15%"> </td><td style="width:15%"> </td><td style="width:15%"> </td>
+                                                    <td class="" style=""><b>Pre-Sales Priority :</b></td>
+                                                    <td class=""  style="">{!dsrEngagement.Pre_Sales_Priority__c}</td>
+                                                </tr>
+                                            </apex:outputPanel>
+                                            <!--  @End: Changes on 5/11 as requested by Debora -->
+                                            
+                                            <!--  
+                                                @Strat: Changes on 12/13/2018 as requested by Debora
+                                                @Author: Ashish Goyal
+                                            -->
+                                            <apex:outputPanel rendered="{!(dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' || dsrEngagement.SC_Engagement_Status__c == null) && !isReadOnly && ( isSC || isSubRegional)}">
+                                                <tr>
+                                                    <td style="width:15%"> </td><td style="width:15%"> </td><td style="width:15%"> </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width:15%"><b>Pre-Sales Involvement :</b></td>
+                                                    <td style="width:15%"><apex:inputField value="{!dsrEngagement.Pre_Sales_Involvement__c}" /></td>
+                                                    <td style="width:15%"> </td>
+                                                    <td class="" style=""></td>
+                                                    <td class=""  style=""></td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width:15%"> </td><td style="width:15%"> </td><td style="width:15%"> </td>
+                                                </tr>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!(dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned' && dsrEngagement.SC_Engagement_Status__c != null) || isReadOnly}">
+                                                <tr>
+                                                    <td style="width:15%"> </td><td style="width:15%"> </td><td style="width:15%"> </td>
+                                                </tr>
+                                                <tr>
+                                                     <td style="width:15%"><b>Pre-Sales Involvement :</b></td>
+                                                     <td style="width:15%">{!dsrEngagement.Pre_Sales_Involvement__c}</td>
+                                                     <td style="width:15%"> </td>
+                                                    <td class="" style=""></td>
+                                                    <td class=""  style=""></td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="width:15%"> </td><td style="width:15%"> </td><td style="width:15%"> </td>
+                                                </tr>
+                                            </apex:outputPanel>
+                                            <td style="width:15%"> </td>
+                                            <tr>
+                                                 
+                                                 <td style="width:15%"><b>Country :</b></td>
+                                                 <td style="width:15%">{!dsrEngagement.Opportunity_ID__r.Sold_To_Country__r.Name}</td>
+                                                 <td style="width:15%"> </td>
+                                                <td class="" style=""><b>Indirect/Direct Sale :</b></td>
+                                                <td class=""  style="">{!dsrEngagement.Opportunity_ID__r.Direct_Indirect_Sale__c}</td>
+                                            </tr>
+                                            
+                                            <!--  @End: Changes on 12/13/2018 as requested by Debora -->
+                                          
+                                           <apex:outputPanel rendered="{!(dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && isVirtualUser && strSmartOpp == null) || (dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && (isSubRegional || isAdminUser || isSalesCOE))}">
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b style="color:red;">Smart Opportunity :</b></td>
+                                                <td class=""  style="">
+                                                  <!-- Priyank added Onchange in below Tag 31/10/2018. --> 
+                                                  <apex:selectList value="{!strSmartOpp}" onchange="selectPicklist();return false;" style="width:50%;"  size="1" id="idSmartOpp" styleClass="slds-input">
+                                                    <apex:selectOptions value="{!clswrapper.optionListSmartOpp}"/>
+                                                  </apex:selectList>
+                                                                                                   
+                                                  &nbsp;
+                                                  <div style="color:red;">Please select smart opportunity type and click Save Button.</div>
+                                                </td>
+                                                <!-- Added by Priyank as disussed with JJ. --> 
+                                                   <td>
+                                                       <apex:outputPanel rendered="{!(dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && isVirtualUser && strSmartOpp == null) || (dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && (isSubRegional || isAdminUser || isSalesCOE))}">
+                                                           <td class="" style=""><b style="color:red;">Smart Flag Explanation:&nbsp;</b></td>
+                                                           <td class=""  style="">
+                                                               <!-- Priyank added id in below tag on 31/10/2018 -->
+                                                               <apex:inputField id="picVal" value="{!dsrEngagement.Smart_Flag_Explanation__c}" style="width:100%;height:40px;" styleClass="slds-input"/>
+                                                               <!-- Priyank added below div to show error message on 31/10/2018. -->
+                                                               <div id="errorMsg1" style="width:100%;color:red;"></div>
+                                                           </td>
+                                                        </apex:outputPanel> 
+                                                        <apex:outputPanel rendered="{!(strSmartOpp != null && dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && isVirtualUser) ||  (strSmartOpp != null && dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned')}">
+                                                           <td class="" style=""><b style="color:red;">Smart Flag Explanation :</b></td>
+                                                           <td class=""  style="">{!dsrEngagement.Smart_Flag_Explanation__c}</td>
+                                                        </apex:outputPanel>
+                                                   </td> 
+                                                   <!--Ended by Priyank --> 
+                                                <!--<td class=""  style="">
+                                                    <apex:inputCheckbox value="{!clswrapper.SmartOpportunity}" rendered="{!dsrEngagement.Id == null}"/>
+                                                    <apex:outputPanel rendered="{!dsrEngagement.Id != null}">
+                                                        <apex:outputPanel rendered="{!clswrapper.SmartOpportunity}">
+                                                            <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                        </apex:outputPanel>
+                                                        <apex:outputPanel rendered="{!!clswrapper.SmartOpportunity}">
+                                                            <img src="/img/checkbox_unchecked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                        </apex:outputPanel>
+                                                    </apex:outputPanel>
+                                                    &nbsp; Intent to use SMART</td>-->
+                                               
+                                               </tr>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!(strSmartOpp != null && dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && isVirtualUser) ||  (strSmartOpp != null && dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned')}">
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b style="color:red;">Smart Opportunity :</b></td>
+                                                <td class=""  style="">{!strSmartOpp}</td>
+                                                 
+                                               </tr>
+                                            </apex:outputPanel>
+                                           
+                                            <!--
+                                            <apex:outputPanel rendered="{!dsrEngagement.SC_Engagement_Status__c == 'Submitted for Completion' || dsrEngagement.SC_Engagement_Status__c == 'Completed' || isReadOnly || (dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && isSubRegional)}">
+                                              <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b style="color:red;">Smart Opportunity :</b></td>
+                                                <td class=""  style="">
+                                                  {!strSmartOpp}
+                                                </td>
+                                              </tr>  
+                                            </apex:outputPanel>
+                                            -->
+                                            <apex:outputPanel rendered="{!dsrEngagement.id != null}">
+                                            <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                <td class="" style=""><b style="">Opportunity Stage When DSR Created :</b></td>
+                                                <td class=""  style="">
+                                                  <apex:outputfield value="{!dsrEngagement.Stage_When_DSR_Created__c}"/>
+                                                  <!--{!clswrapper.currentStage}-->
+                                                </td>
+                                                <td style="width:15%"> </td>
+                                                <td class="" style=""><b><apex:outputPanel rendered="{!dsrEngagement.Is_ReOpen__c}">Is Reopen :</apex:outputPanel></b></td>
+                                                <td class=""  style="">
+                                                    <apex:outputPanel rendered="{!dsrEngagement.Is_ReOpen__c}">
+                                                        <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                            </apex:outputPanel>
+                                            
+                                            <!--
+                                                Added By Ashish, On Request of Debbie (10/31/2018)
+                                                Added new section 'On Hold'.
+                                            -->
+                                            
+                                            <apex:outputPanel rendered="{!dsrEngagement.SC_Engagement_Status__c == 'Open and Assigned' && !isReadOnly}">
+                                                <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                    <td class="" style=""><b style="">On Hold :</b></td>
+                                                    <td class=""  style=""><apex:inputField value="{!dsrEngagement.On_Hold__c}" /></td>                                                 
+                                               </tr>
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned' || isReadOnly}">
+                                                <tr class="slds-hint-parent"  style="width: auto;height: 30px;">
+                                                    <td class="" style=""><b style="">On Hold :</b></td>
+                                                    <td class=""  style=""><apex:outputField value="{!dsrEngagement.On_Hold__c}" /></td>                                                 
+                                               </tr>
+                                            </apex:outputPanel>
+                                    </table>
+                                    <!-- Priyank added below table for Next step -->
+                                    <table>
+                                        <apex:outputPanel >
+                                            <tr class="slds-hint-parent"  style="width: 100%;height: 30px;">
+                                                <td class="" style="width: 10rem;"><b style="">Next Step : </b></td>
+                                                <td>
+                                                    <apex:outputPanel rendered="{!clswrapper.scStatus == 'Open and Assigned' && !isReadOnly}">
+                                                        <apex:inputTextarea value="{!dsrEngagement.Next_Step__c}" style="width:100%;height:101px;border-radius: 8px;border: 2px solid #5786e0;"/> 
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!(clswrapper.scStatus == 'Completed' || clswrapper.scStatus == 'Submitted for Completion') || isReadOnly}">
+                                                        <apex:outputField value="{!dsrEngagement.Next_Step__c}" style="width:100%;height:101px;"/>
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:outputPanel>
+                                    </table>
+                                    <!-- Priyank code end. -->
+                                <!-- AE Panel End -->
+                                <!-- Leader Panel Start -->
+                                    <apex:outputPanel id="regionalPanel" styleClass="regionalPanel"><hr/>
+                                        <div style="width:60%;">
+                                         <apex:pageMessages id="msgVT" rendered="{!blnMsg}" />
+                                      </div>
+                                         <div >
+                                            <table>
+                                                <tr style="height: 45px;">
+                                                    <td style="width:60%:">
+                                                        <table style="width:100%;" >
+                                                            <tr>
+                                                                <td >
+                                                                    <b style="font-size: medium;">Sub Regional Leaders</b>
+                                                                </td>
+                                                                <td style="text-align: -webkit-right;">
+                                                                    <div class="SRBtn">
+                                                                        <apex:commandButton value="Add" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small SR" action="{!showSubRegionalLeaders}" rerender="subRegionalLeaders" status="spinnerStatus"/>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                    <td style="width:10%">
+                                                        &nbsp;
+                                                    </td>
+                                                    <td style="width:30%">
+                                                        <table class="VRTeam" style="width:90%;" >
+                                                            <tr>
+                                                                <td>
+                                                                    <b style="font-size: medium;">Virtual Team</b>
+                                                                </td>
+                                                                <td style="text-align: -webkit-right;">
+                                                                    <div class="VTBtn">
+                                                                        <apex:commandButton value="Add" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small SR" action="{!showVirtualTeam}" rerender="virtualTeam" status="spinnerStatus"/>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                  <!--<div class="clsLeaders">-->
+                                                    <td style="width:40%;">    
+                                                        <div class="SubRegionalLeaders" style="height: 250px;overflow-y: auto;">
+                                                            <apex:outputPanel id="leaderId">
+                                                                <table class="slds-table slds-table--bordered" style="width:100%;border: 2px solid #0070d2;" >
+                                                                    <thead>
+                                                                        <tr style="background-color:#0070d2;">
+                                                                            <th style="">
+                                                                                <b style="color: white;">Leader Name</b>
+                                                                            </th>
+                                                                            <th  style="">
+                                                                                <b style="color: white;">Region</b>
+                                                                            </th>
+                                                                            <th  style="">
+                                                                                <b style="color: white;">Sub Region</b>
+                                                                            </th>
+                                                                            <th  style="">
+                                                                               <b style="color: white;">Segment</b>
+                                                                            </th>
+                                                                            <th  style="">
+                                                                                <b style="color: white;">Is Admin</b>
+                                                                            </th>
+                                                                            <th  class="SRRemove">
+                                                                                <!--  Strat: Changes on 5/11 as requested by Debora -->
+                                                                                <b style="color: white;">Action</b>
+                                                                                <!--  End: Changes on 5/11 as requested by Debora -->
+                                                                            </th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <apex:repeat value="{!lstclsWrapperSubRegionalLeaders}" var="leaders">
+                                                                            <tr class="slds-hint-parent"  style="width: auto;">
+                                                                                <td style="width:20%;">{!leaders.leaderName} </td>
+                                                                                <td style="width:20%;">{!leaders.region}</td>
+                                                                                <td style="width:20%;">{!leaders.subregion} </td>
+                                                                                <td style="width:20%;">{!leaders.segment}</td>
+                                                                                <td class="" style="width:20%;">
+                                                                                    <apex:outputPanel rendered="{!leaders.isadmin}">
+                                                                                        <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                                                    </apex:outputPanel>
+                                                                                    <apex:outputPanel rendered="{!!leaders.isadmin}">
+                                                                                        <img src="/img/checkbox_unchecked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                                                    </apex:outputPanel>
+                                                                                </td>
+                                                                                <td style="width:20%;" class="SRRemove">
+                                                                                    <div >
+                                                                                        <apex:commandLink value="Remove" action="{!removeLeader}" rerender="subRegionalLeaders, leaderId" status="spinnerStatus">
+                                                                                            <apex:param name="uId" assignTo="{!uIdSubRegion}" value="{!leaders.key}"/ >
+                                                                                        </apex:commandLink> 
+                                                                                    </div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </apex:repeat>
+                                                                    </tbody>
+                                                                </table>
+                                                            </apex:outputPanel>
+                                                        </div>
+                                                     </td>  
+                                                   <!--</div> -->
+                                                    <td style="width:10%">
+                                                        &nbsp;
+                                                    </td>
+                                                    
+                                                    <td style="vertical-align: top;width:33%"> 
+                                                        <div class="VRTeam" style="height: 250px;overflow-y: auto;">
+                                                            <apex:outputPanel id="vtId">
+                                                             
+                                                                <table class="slds-table slds-table--bordered" style="width:90%;border: 2px solid #0070d2;" >
+                                                                    <thead>
+                                                                        <tr style="background-color:#0070d2;">
+                                                                            <th  style="">
+                                                                               <b style="color: white;"> Virtual User</b>
+                                                                            </th>
+                                                                            <th  style="">
+                                                                               <b style="color: white;"> Virtual User Type</b>
+                                                                            </th>
+                                                                           <!-- <th  style="">
+                                                                               <b style="color: white;"> Notes</b>
+                                                                            </th>-->
+                                                                            <th  style="">
+                                                                               <b style="color: white;"> Is Primary</b>
+                                                                            </th>
+                                                                           
+                                                                            <th  class="VTRemove" style="{!IF((clswrapper.scStatus == 'Open and Not Assigned' || clswrapper.scStatus == 'Open and Assigned') && (isAdminUser || isSubRegional),'display:block;margin-top:-1px','display:none;')}">
+                                                                               <b style="color: white;"> Action</b>
+                                                                            </th>
+                                                                           
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                    
+                                                                        <apex:repeat value="{!lstclsWrappervirtualTeam}" var="virtualTeam">
+                                                                        <!-- Added checkedPanel in class ---- Priyank. -->
+                                                                            <tr class="slds-hint-parent checkedPanel"  style="width: auto;">
+                                                                                <td style="width:20%;">{!virtualTeam.virtualuser} </td>
+                                                                                <td style="width:30%;">{!virtualTeam.virtualUserType}</td>
+                                                                                <!--<td style="width:20%;">{!virtualTeam.notes} </td>-->
+                                                                                <td style="width:10%;">
+                                                                                    <apex:outputPanel rendered="{!virtualTeam.isPrimary}">
+                                                                                        <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                                                    </apex:outputPanel>
+                                                                                    <apex:outputPanel rendered="{!!virtualTeam.isPrimary}">
+                                                                                        <img src="/img/checkbox_unchecked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                                                    </apex:outputPanel>
+                                                                                </td>
+                                                                                
+                                                                                <td  class="VTRemove" style="{!IF((clswrapper.scStatus == 'Open and Not Assigned' || clswrapper.scStatus == 'Open and Assigned') && (isAdminUser || isSubRegional),'display:block;width:20%;','display:none;')}">
+                                                                                    <div >
+                                                                                        <apex:commandLink value="Edit" action="{!showVirtualTeamEdit}" rerender="virtualTeamEdit, regionalPanel" status="spinnerStatus">
+                                                                                            <apex:param name="uIdVirtual" assignTo="{!uIdVirtual}" value="{!virtualTeam.virtualuser}"/ >
+                                                                                        </apex:commandLink> &nbsp;|&nbsp;
+                                                                                        <apex:commandLink value="Remove" action="{!removeVirtualTeam}" rerender="virtualTeam, regionalPanel,msgVT" status="spinnerStatus">
+                                                                                            <apex:param name="uIdVirtual" assignTo="{!uIdVirtual}" value="{!virtualTeam.userid}"/ >
+                                                                                        </apex:commandLink>
+                                                                                    </div>
+                                                                                </td>
+                                                                                
+                                                                            </tr>
+                                                                        </apex:repeat>
+                                                                    </tbody>
+                                                                </table>
+                                                             </apex:outputPanel>
+                                                        </div>
+                                                    </td>      
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </apex:outputPanel>
+                                    
+                                
+                                <!-- Leader Panel End -->
+                                    
+                                <!-- Link Panel Start -->
+                                    <apex:outputPanel id="requestDetails"  styleClass="requestDetails" >
+                                        <hr/>
+                                        <table style="width:90%;">
+                                            <tr class="slds-hint-parent"  style="height: 30px;">
+                                                <td style="width:15%;text-align:right;vertical-align: top;"><b >Expected Start Date:</b></td>
+                                                <td style="width:2%"> </td>
+                                                <td style="width:25%;text-align:left;vertical-align: top;"> 
+                                                    <apex:inputField value="{!dsrEngagement.Expected_Start_Date__c}" styleClass="slds-input" style="width: 40%;border-left: 2px solid red;" rendered="{!sceid == null}"/>
+                                                    <apex:outputfield value="{!dsrEngagement.Expected_Start_Date__c}" rendered="{!sceid != null}"/>
+                                                </td>
+                                                <td style="width:15%;text-align:right;vertical-align: top;"><b >High Level Details of Your Request : </b></td>
+                                                <td style="width:2%"> </td>
+                                                <td style="width:25%;text-align:left;"> 
+                                                    <apex:inputField value="{!dsrEngagement.High_Level_Details_of_Your_Request__c}" styleClass="" style="border-left: 2px solid red;width:100%;height:101px;border-radius: 8px;" rendered="{!sceid == null}"/>
+                                                    <apex:outputfield value="{!dsrEngagement.High_Level_Details_of_Your_Request__c}" rendered="{!sceid != null}"/>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </apex:outputpanel>
+                                    
+                                    <apex:outputPanel id="approveSections"  styleClass="approveSections" rendered="{!dsrEngagement.SC_Engagement_Status__c == 'Open and Not Assigned'  && !isVirtualUser && ( isAdminalsoAE || isSubRegional)}">
+                                        <hr/>
+                                        <table style="width:90%;">
+                                            <tr class="slds-hint-parent"  style="height: 30px;">
+                                                <td style="width:15%;text-align:right;vertical-align: top;"><b >Approve/Reject</b></td>
+                                                <td style="width:2%"> </td>
+                                                <td style="width:25%;text-align:left;vertical-align: top;"> 
+                                                    <apex:selectRadio value="{!SelectedStatusType}" styleClass="clsSelectedStatus" onclick="showRejection();">
+                                                        <apex:selectOptions value="{!StatusTypes}"/>
+                                                    </apex:selectRadio>
+                                                </td>
+                                                <td style="width:15%;text-align:right;vertical-align: top;"><b> <div class="rejectionBox"> Rejection Reason </div></b></td>
+                                                <td style="width:2%"> </td>
+                                                <td style="width:25%;text-align:left;"> 
+                                                    <div class="rejectionBox"> 
+                                                        <apex:inputField value="{!dsrEngagement.Rejected_Reason__c}" styleClass="slds-input" style="border-left: 2px solid red;"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </apex:outputpanel>
+                                    
+                                    <!--<apex:outputPanel id="approveSectionsRead"  styleClass="approveSectionsRead" rendered="{!clswrapper.scStatus  != 'Open and Not Assigned' && dsrEngagement.SC_Engagement_Status__c != 'Open and Not Assigned' && !isVirtualUser}">-->
+                                    <apex:outputPanel id="approveSectionsRead"  styleClass="approveSectionsRead" rendered="{!(clswrapper.scStatus  != 'Open and Not Assigned' && dsrEngagement.SC_Engagement_Status__c != 'Open and Not Assigned' && !isVirtualUser) && dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned'}">
+                                        <hr/>
+                                        <table style="width:90%;">
+                                            <tr class="slds-hint-parent"  style="height: 30px;">
+                                                <td style="width:15%;text-align:right;vertical-align: top;"><b >Approve/Reject</b></td>
+                                                <td style="width:2%"> </td>
+                                                <td style="width:25%;text-align:left;vertical-align: top;"> 
+                                                    <apex:selectRadio value="{!SelectedStatusType}"  styleClass="clsSelectedStatusRead" disabled="true">
+                                                        <apex:selectOptions value="{!StatusTypes}"/>
+                                                    </apex:selectRadio>
+                                                </td>
+                                                <td style="width:15%;text-align:right;vertical-align: top;"><b> <div class="rejectionBoxRead"> Rejection Reason </div></b></td>
+                                                <td style="width:2%"> </td>
+                                                <td style="width:25%;text-align:left;"> 
+                                                    <div class="rejectionBoxRead"> 
+                                                        <apex:outputField value="{!dsrEngagement.Rejected_Reason__c}" styleClass="slds-input" style="border-left: 2px solid red;"/>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </apex:outputpanel>
+                                    
+                                    <apex:outputPanel id="engagementPanel"  styleClass="engagementPanel" rendered="{!isVirtualUser && clswrapper.scStatus == 'Open and Assigned'}">
+                                    
+                                    <!--<apex:outputPanel id="engagementPanel"  styleClass="engagementPanel" rendered="{!(isVirtualUser  || isAdminUser) && dsrEngagement.SC_Engagement_Status__c = 'Submitted for Completion'}">-->
+                                        <hr/>
+                                        <div style="text-align:start;">
+                                            <b style="font-size: medium;color: black;">
+                                                Add Engagement Feedback &nbsp;&nbsp;
+                                                <apex:inputfield value="{!dsrEngagement.Is_Engagement_Feedback__c}" onClick="showFeedback();" styleClass="box"/>
+                                            </b>
+                                        </div>
+                                    
+                                        <br/>
+                                        <div class="feedbackSec">
+                                            <table style="width:90%;">
+                                                <tr class="slds-hint-parent"  style="height: 30px;">
+                                                    <td style="width:15%;text-align:right;vertical-align: top;"><b >What impact did your SC Engagement make on your deal? :</b></td>
+                                                    <td style="width:2%"> </td>
+                                                    <td style="width:25%;text-align:left;"> <apex:inputField value="{!dsrEngagement.Impact_on_Deal__c}" styleClass="slds-input" style="border-left: 2px solid red;"/></td>
+                                                    <td style="width:15%;text-align:right;vertical-align: top;"><b >Lessons Learned / Feedback :</b></td>
+                                                    <td style="width:2%"> </td>
+                                                    <td style="width:25%;text-align:left;"> <apex:inputField value="{!dsrEngagement.Lessons_Learned_Feedback__c}" styleClass="slds-input" style="border-left: 2px solid red;"/></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </apex:outputpanel>
+                                    
+                                    <!--<apex:outputPanel id="engagementPanelRead"  styleClass="engagementPanelRead" rendered="{!clswrapper.scStatus != 'Open and Not Assigned' && dsrEngagement.SC_Engagement_Status__c != 'Open and Assigned'}">-->
+                                    <!--<apex:outputPanel id="engagementPanelRead"  styleClass="engagementPanelRead" rendered="{!clswrapper.scStatus != 'Open and Not Assigned' && clswrapper.scStatus != 'Open and Assigned' && clswrapper.scStatus != 'Submitted for Completion'}">-->
+                                    <apex:outputPanel id="engagementPanelRead"  styleClass="engagementPanelRead" rendered="{!clswrapper.scStatus != 'Open and Not Assigned' && clswrapper.scStatus != 'Open and Assigned' }">
+                                        <hr/>
+                                        <!--<div>
+                                            <b style="font-size: medium;color: black;">
+                                                Add Engagement Feedback &nbsp;&nbsp;
+                                                <apex:outputPanel rendered="{!dsrEngagement.Is_Engagement_Feedback__c}">
+                                                    <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!!dsrEngagement.Is_Engagement_Feedback__c}">
+                                                    <img src="/img/checkbox_unchecked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked" />
+                                                </apex:outputPanel>
+                                            </b>
+                                        </div>-->
+                                    
+                                        <br/>
+                                        <apex:outputPanel >
+                                            <table style="width:90%;">
+                                                <tr class="slds-hint-parent"  style="height: 30px;">
+                                                    <td style="width:15%;text-align:right;vertical-align: top;"><b >What impact did your SC Engagement make on your deal? :</b></td>
+                                                    <td style="width:2%"> </td>
+                                                    <td style="width:25%;text-align:left;"> <apex:outputfield value="{!dsrEngagement.Impact_on_Deal__c}" styleClass="slds-input" style="border-left: 2px solid red;"/></td>
+                                                    <td style="width:15%;text-align:right;vertical-align: top;"><b >Lessons Learned / Feedback :</b></td>
+                                                    <td style="width:2%"> </td>
+                                                    <td style="width:25%;text-align:left;"> <apex:outputfield value="{!dsrEngagement.Lessons_Learned_Feedback__c}" styleClass="slds-input" style="border-left: 2px solid red;"/></td>
+                                                </tr>
+                                            </table>
+                                        </apex:outputPanel>
+                                    </apex:outputpanel>
+                                    
+       
+                                    <apex:outputPanel id="linkPanel"  styleClass="linkPanel" rendered="{!clswrapper.scStatus != 'Open and Not Assigned'}">
+                                        
+                                        <hr/>
+                                        <table>
+                                            <tr class="slds-hint-parent" >
+                                                <td style="width:20%;text-align:Center;">
+                                                    <apex:commandbutton value="Vision" rerender="dummy" disabled="{!dsrEngagement.Smart_Opportunity_Intent_Use__c == null}"  styleClass="slds-button slds-button--brand slds-button--large" style="line-height: 50px;font-size: 150%;padding-left: 35px;padding-right: 35px;font-weight: bolder;" action="{!openVision}" />
+                                                </td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <apex:commandbutton value="Discovery" rerender="dummy" disabled="{!dsrEngagement.Smart_Opportunity_Intent_Use__c == null}" styleClass="slds-button slds-button--brand slds-button--large" style="line-height: 50px;font-size: 150%;padding-left: 35px;padding-right: 35px;font-weight: bolder;" action="{!openDiscovery}"/>
+                                                </td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <apex:commandbutton value="Design" rerender="dummy" disabled="{!dsrEngagement.Smart_Opportunity_Intent_Use__c == null}"  styleClass="slds-button slds-button--brand slds-button--large" style="line-height: 50px;font-size: 150%;padding-left: 35px;padding-right: 35px;font-weight: bolder;" action="{!OpenDesign}"/> 
+                                                </td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <apex:commandbutton value="Deliver" rerender="dummy" disabled="{!dsrEngagement.Smart_Opportunity_Intent_Use__c == null}" styleClass="slds-button slds-button--brand slds-button--large" style="line-height: 50px;font-size: 150%;padding-left: 35px;padding-right: 35px;font-weight: bolder;" action="{!OpenDeliver}"/>
+                                                </td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <apex:commandbutton value="Overview"  rerender="dummy" disabled="{!dsrEngagement.Smart_Opportunity_Intent_Use__c == null}" styleClass="slds-button slds-button--brand slds-button--large" style="line-height: 50px;font-size: 150%;padding-left: 35px;padding-right: 35px;font-weight: bolder;" action="{!OpenSolutionOverview}"/> 
+                                                </td>
+                                            </tr>
+                                            
+                                            <tr class="slds-hint-parent" style="height:60px;">
+                                                <td style="width:20%;text-align:Center;">
+                                                    <b style="{!IF((dsrEngagement.VisionActivityCount__c == 0),'font-size: large;color: red;','font-size: large;color: green;')}">{!dsrEngagement.VisionActivityCount__c}</b>&nbsp;&nbsp;
+                                                    <b style="font-size: medium;">Vision Activities</b>
+                                                </td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <b style="{!IF((dsrEngagement.DiscoveryCount__c == 0),'font-size: large;color: red;','font-size: large;color: green;')}">{!dsrEngagement.DiscoveryCount__c}</b>&nbsp;&nbsp;
+                                                    <b style="font-size: medium;">Discovery Activities</b></td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <b style="{!IF((dsrEngagement.DesignCount__c == 0),'font-size: large;color: red;','font-size: large;color: green;')}">{!dsrEngagement.DesignCount__c}</b>&nbsp;&nbsp;
+                                                    <b style="font-size: medium;"># of Designs</b></td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <b style="{!IF((dsrEngagement.DeliveryCount__c == 0),'font-size: large;color: red;','font-size: large;color: green;')}">{!dsrEngagement.DeliveryCount__c}</b>&nbsp;&nbsp;
+                                                    <b style="font-size: medium;">Delivery Activities</b></td>
+                                                <td style="width:20%;text-align:Center;">
+                                                    <b style="font-size: medium;">Solution Overview</b>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </apex:outputPanel>
+                                
+                                <!-- Link Panel Start End-->
+                                
+                                <!-- Sub Regional Leader Popup Start-->
+                                
+                                    <apex:outputPanel id="subRegionalLeaders">
+                                        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displaySubRegionalLeader}"/>
+                                        <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displaySubRegionalLeader}" style="margin-left:-18%; top: 20%;">
+                                            <div style="text-align: -webkit-center;">
+                                                <div style="width:50%;">
+                                                    <b style="font-size: larger;">Add Sub Regional Leader's</b><br/>
+                                                </div>
+                                            </div>
+                                            <div style="height: 250px;overflow-y: auto;">
+                                                <table class="slds-table slds-table--bordered"  style="border-collapse: collapse;">
+                                                    <thead >
+                                                        <tr style="background-color:#0070d2;">
+                                                            <th style="width:10%;">
+                                                                <b style="color: white;">Select</b>
+                                                            </th>
+                                                            <th style="width:15%;">
+                                                                <b style="color: white;">Leader Name</b>
+                                                            </th>
+                                                            <th  style="width:15%;">
+                                                                <b style="color: white;">Region</b>
+                                                            </th>
+                                                            <th  style="width:15%;">
+                                                                <b style="color: white;">Sub Region</b>
+                                                            </th>
+                                                            <th  style="width:15%;">
+                                                               <b style="color: white;">Segment</b>
+                                                            </th>
+                                                            <th  style="width:15%;">
+                                                               <b style="color: white;">Admin</b>
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody >
+                                                        <apex:repeat value="{!lstclsWrapperSubRegionalLeadersall}" var="leaders">
+                                                            <tr >
+                                                                <td class="" style=""><apex:inputCheckbox value="{!leaders.addRemove}"/> </td>
+                                                                <td class="" style="">{!leaders.leaderName} </td>
+                                                                <td class="" style="">{!leaders.region}</td>
+                                                                <td class="" style="">{!leaders.subregion} </td>
+                                                                <td class="" style="">{!leaders.segment}</td>
+                                                                <td class="" style="">
+                                                                    <apex:outputPanel rendered="{!leaders.isadmin}">
+                                                                        <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked"/>
+                                                                    </apex:outputPanel>
+                                                                </td>
+                                                            </tr>
+                                                        </apex:repeat>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <br/>
+                                            <div style="text-align: -webkit-center;">
+                                                <apex:commandButton value="Add" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeSubregionalLeaders}" rerender="subRegionalLeaders, leaderId " status="spinnerStatus"/> &nbsp;&nbsp;
+                                                <apex:commandButton value="Cancel" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeSubregionalLeadersCancel}" rerender="subRegionalLeaders, leaderId" status="spinnerStatus"/>
+                                            </div>
+                                         </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    
+                                <!-- Sub Regional Leader Popup End-->
+                                
+                                <!-- Virtual Team Popup Start-->
+                                
+                                    <apex:outputPanel id="virtualTeam">
+                                        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayVirtualTeam}"/>
+                                        <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displayVirtualTeam}" style="margin-left:-25%; top: 30%;">
+                                            <div style="text-align: -webkit-center;"> 
+                                                <div style="width:50%;">
+                                                    <b style="font-size: larger;">Add Virtual Team Member's</b><br/>
+                                                </div>
+                                                <div style="width:50%;">
+                                                    <apex:pageMessages id="errorMsg" /><br/>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                           <b>Select Leader :</b>  
+                                                        </td>
+                                                        <td>
+                                                           <apex:inputField value="{!dsrVirtualTeam.Virtual_Team_Member_Name__c}"/>
+                                                        </td>
+                                                        <td>
+                                                           &nbsp;&nbsp;
+                                                        </td>
+                                                        <td>
+                                                           <b>User Type :</b>  
+                                                        </td>
+                                                        <td>
+                                                           <!-- priyank added id below ----->
+                                                           <apex:inputField id="virtualTeamSelect" styleClass="slds-input" value="{!dsrVirtualTeam.Virtual_User_type__c}" onchange="selectCheckbox();return false;"/> 
+                                                        </td>
+                                                        <td>
+                                                          &nbsp;&nbsp;
+                                                        </td>
+                                                        <td>
+                                                           <b>Is Primary:</b> &nbsp; 
+                                                        </td>
+                                                        <td>
+                                                         <!-- priyank added id below ----->
+                                                          &nbsp; <apex:inputField id="virtualTeamCheckbox" styleClass="slds-checkbox" value="{!dsrVirtualTeam.IsPrimary__c}"/> 
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div> <br/>
+                                            <div style="text-align: -webkit-center;">
+                                                <apex:commandButton value="Add" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeVirtualTeam}" rerender="virtualTeam, regionalPanel,errorMsg, vtId,msgVT,pnlVTRemov" status="spinnerStatus"/> &nbsp;&nbsp;
+                                                <apex:commandButton value="Cancel" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeVirtualTeamCancel}" rerender="virtualTeam, regionalPanel,errorMsg, vtId,msgVT" status="spinnerStatus"/>
+                                            </div>
+                                         </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    
+                                <!-- Virtual Team Popup End-->
+                                <!-- Virtual Team EDIT Popup Start-->
+                                
+                                    <apex:outputPanel id="virtualTeamEdit">
+                                        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayVirtualTeamEdit}"/>
+                                        <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displayVirtualTeamEdit}" style="margin-left:-25%; top: 30%;">
+                                            <div style="text-align: -webkit-center;"> 
+                                                <div style="width:50%;">
+                                                    <b style="font-size: larger;">Edit Virtual Team Member</b><br/>
+                                                </div>
+                                                <div style="width:50%;">
+                                                    <apex:pageMessages id="emsg" /><br/>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                           <b>Select Leader :</b>  
+                                                        </td>
+                                                        <td>
+                                                           <apex:inputField value="{!dsrVirtualTeamEdit.Virtual_Team_Member_Name__c}" styleClass="customLookup"/>
+                                                        </td>
+                                                        <td>
+                                                           &nbsp;&nbsp;
+                                                        </td>
+                                                        <td>
+                                                           <b>User Type :</b>  
+                                                        </td>
+                                                        <td>
+                                                            <!--Priyank added id and onchange attribute in below tag 8 Nov 2018 -->
+                                                           <apex:inputField id="virtualTeamSelect1" styleClass="slds-input" value="{!dsrVirtualTeamEdit.Virtual_User_type__c}" onchange="selectCheckbox();return false;"/> 
+                                                        </td>
+                                                        <td>
+                                                          &nbsp;&nbsp;
+                                                        </td>
+                                                        <td>
+                                                           <b>Is Primary:</b> &nbsp; 
+                                                        </td>
+                                                        <td>
+                                                        <!--Priyank added id attribute in below tag 8 Nov 2018 -->
+                                                          &nbsp; <apex:inputField id="virtualTeamCheckbox1"  styleClass="slds-checkbox" value="{!dsrVirtualTeamEdit.IsPrimary__c}"/> 
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div> <br/>
+                                            <div style="text-align: -webkit-center;">
+                                                <apex:commandButton value="Add" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeVirtualTeamEdit}" rerender="virtualTeamEdit, regionalPanel,emsg, vtId" status="spinnerStatus"/> &nbsp;&nbsp;
+                                                <apex:commandButton value="Cancel" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!closeVirtualTeamEditCancel}" rerender="virtualTeamEdit, regionalPanel,emsg, vtId" status="spinnerStatus"/>
+                                            </div>
+                                         </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    
+                                <!-- Virtual Team Popup End-->
+                                
+                                <!-- 
+                                    Added By Ashish (11/21/19)
+                                    Copy DSR Popup Start                                
+                                -->
+                                
+                                    <apex:outputPanel id="copyDSRId">
+                                    
+                                        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayCopyDSRPopUP}"/>
+                                        <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!displayCopyDSRPopUP}" style="margin-left:-18%; top: 6%; width: 28% !important;">
+                                            <div style="text-align: -webkit-center;"> 
+                                                <div style="width:50%;">
+                                                    <b style="font-size: larger;">Select DSR you Want to Copy into this DSR</b><br/>
+                                                </div>
+                                                <div style="width:100%;">
+                                                    <apex:pageMessages id="errorMsgCopy" /><br/>
+                                                </div>
+                                            </div>
+                                            <div style="height: 250px;overflow-y: auto;">
+                                                <table>
+                                                    <tr>
+                                                        <td style="padding: 2px; color:#414a4c;"><b>Enter DSR #:</b>                                                            
+                                                        </td>
+                                                        <td style="padding: 2px; color:#414a4c;"><apex:inputText value="{!copyDSRObj.dsrName}" styleClass="autoSearchDSR">
+                                                            
+                                                        </apex:inputText>
+                                                        <script>
+                                                                testauto();
+                                                                j$('.autoSearchDSR').attr('autocomplete', 'on');
+                                                            </script>
+                                                        </td>
+                                                    </tr>
+                                                    
+                                                    <tr><td colspan="2">&nbsp;</td></tr>
+                                                    <tr>
+                                                        <td style="padding: 2px; color:#414a4c;"><b>Select Attachments:</b></td>
+                                                        <td style="padding: 2px; color:#414a4c;"><apex:inputCheckbox value="{!copyDSRObj.isVision}" />&nbsp;&nbsp;Vision</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 2px; color:#414a4c;">&nbsp;</td>
+                                                        <td style="padding: 2px; color:#414a4c;"><apex:inputCheckbox value="{!copyDSRObj.isDiscovery}" />&nbsp;&nbsp;Discovery</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 2px; color:#414a4c;">&nbsp;</td>
+                                                        <td style="padding: 2px; color:#414a4c;"><apex:inputCheckbox value="{!copyDSRObj.isDelivery}" />&nbsp;&nbsp;Delivery</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 2px; color:#414a4c;">&nbsp;</td>
+                                                        <td style="padding: 2px; color:#414a4c;">
+                                                            <apex:inputCheckbox value="{!copyDSRObj.isPrimaryDesign}" onchange="renderDesign(); return false;" />&nbsp;&nbsp;Primary Design&nbsp;
+                                                            &nbsp;&nbsp;<apex:inputCheckbox value="{!copyDSRObj.isAllDesign}" onchange="renderDesign(); return false;" />&nbsp;&nbsp;All Design
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 2px; color:#414a4c;">&nbsp;</td>
+                                                        <td style="padding: 2px; color:#414a4c;">
+                                                            <apex:inputCheckbox value="{!copyDSRObj.isBusiness}" disabled="{!!copyDSRObj.enableDesign}" />&nbsp;&nbsp;Business Attachments
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 2px; color:#414a4c;">&nbsp;</td>
+                                                        <td style="padding: 2px; color:#414a4c;">
+                                                            <apex:inputCheckbox value="{!copyDSRObj.isTechnical}" disabled="{!!copyDSRObj.enableDesign}"/>&nbsp;&nbsp;Technical Attachments
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                            <br/>
+                                            <div style="text-align: -webkit-center;">
+                                                <apex:commandButton value="Copy Attachments" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!copyDSRFromDSR}" rerender="copyDSRId, linkPanel" status="spinnerStatus"/> &nbsp;&nbsp;
+                                                <apex:commandButton value="Cancel" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small" action="{!cancelCopyDSRPopup}" rerender="copyDSRId, linkPanel" status="spinnerStatus"/>
+                                            </div>
+                                         </apex:outputPanel>
+                                    </apex:outputPanel>
+                                <!-- Copy DSR Popup End-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>   
+        </apex:outputPanel> 
+        <apex:outputPanel rendered="{!isDuplicate}">
+        <div style="width:90%;">
+            <apex:pageMessages id="ErrormsgDuplicate" /><br/>
+            <apex:commandLink action="/{!OppId}" value="Back to Opportunity." id="theCommandLink"/>
+
+        </div>
+        </apex:outputPanel> 
+        </body>
+        <apex:actionFunction name="renderDesign" action="{!enableDesignCopy}" reRender="copyDSRId" status="spinnerStatus"/>
+    </apex:form>
+</apex:page>

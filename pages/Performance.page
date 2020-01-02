@@ -1,0 +1,711 @@
+<!--
+    * Modification Log:
+    ____________________________________________________________________
+    Harish, 03/07/2017 - Added chartlabel to Revenue(millions) axis in revenue dashboard.
+    Harish, 03/13/2017 - Added chartlabel to Revenue(millions) axis in rebate dashboard.
+    Mukunthan Koothan, 02/02/2018 - Added PureCloud Dashboard
+    ____________________________________________________________________
+-->
+<apex:page controller="PerformanceGraphController" id="pg" readOnly="true" sidebar="false" showheader="false">
+
+    <apex:includeScript value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/js/jquery-1.10.2.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/js/jquery-ui-1.10.4.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.jQueryLatest,'/jquery-ui-1.10.4/css/ui-lightness/jquery-ui-1.10.4.min.css')}"/>
+      
+      <script>
+        function RebateTerms(recordId){
+            window.open("/partner/apex/Partner_Rebate_Terms?viewonly=true&id="+recordId+""); 
+        }
+
+        function RebateAwardLetter(rebateYear){
+            window.open("/partner/apex/RebateAwardLetter?ry="+rebateYear+"&lu={!$User.Id}&lua={!currentUserAccountId}"); 
+        }
+
+        function RebateRequest(rebateYear){
+            window.location.href = "/partner/apex/RebateRequest?ry="+rebateYear+"&lu={!$User.Id}&lua={!currentUserAccountId}"; 
+        }
+
+        function RebateStatement(rebateYear){
+            window.location.href = "/partner/apex/RebateStatement?ry="+rebateYear+"&lu={!$User.Id}&lua={!currentUserAccountId}"; 
+        }
+    
+        function RevenueDetails(revenueYear, revenueType, offeringType,curcyCod){
+            window.open("/partner/apex/PartnerRevenueDetails?ry="+revenueYear+"&rt="+revenueType+"&ot="+offeringType+"&lu={!$User.Id}&lua={!currentUserAccountId}&ccd="+curcyCod); 
+        }
+        
+        function pureCloudRevDetails(selectedYr,recTpId,curcyCd){
+            window.open("/partner/apex/PartnerACVDetails?syr="+selectedYr+"&curcyCd="+curcyCd+"&recTp="+recTpId+"&uAccId={!currentUserAccountId}");
+        }
+        
+        function SolutionMultiplierDetails(revenueYear){
+            window.open("/partner/apex/PartnerRevenueDetails?ry="+revenueYear+"&rt=License&sm=true&lu={!$User.Id}&lua={!currentUserAccountId}"); 
+        }
+    
+        function CasesClosedByDefaultDetails(accountId, period){
+            window.open("/partner/apex/CasesClosedByDefaultDetails?aId="+accountId+"&period="+period); 
+        }
+    
+        var $j = jQuery.noConflict();
+        function show(path){
+            if($j(getHtmlId(path)).is(":visible")){
+                $j(getHtmlId(path)).css({ 'display': "none" });
+            }
+            else{
+                $j(getHtmlId(path)).css({ 'display': "block" });
+            } 
+        }
+        function showRevenue(){
+            //show('pg:fm:revenueDashboard:panel');
+        }
+        function showRebate(){
+            //show('pg:fm:rebateDashboard:rebatePanel');  
+        }
+        function showKPI1(){
+            //show('pg:fm:KPI1Dashboard:kpi1Panel');  
+        }  
+        function showKPI2(){
+            //show('pg:fm:KPI2Dashboard:kpi2Panel');  
+        } 
+        function revDetPopup(obj){
+            $j(getHtmlId(obj)).css({ 'display': "block" });
+        }
+        
+        function closePopup(obj){
+            $j(getHtmlId(obj)).css({ 'display': "none" });
+        } 
+        
+        function kpi2Popup(object){
+            $j(getHtmlId(object)).css({ 'display': "block" });
+        } 
+
+        function getHtmlId(componentId){
+            return '#'+componentId.replace(/(:|\.)/g, '\\\\$1');
+        }
+        
+        function RevenueDashboardToolTipRenderer(klass, item){
+            var yField = item.yField;
+            var label;
+            if(yField == 'grandTotal')
+                label = 'Actual';
+            else if(yField == 'MLB')
+                label = 'MLB';
+            else if(yField == 'ruleActual')
+                label = '50% Rule Actual';
+            else if(yField == 'ruleTarget')
+                label = '50% Rule Target';
+            else 
+                label = '';
+            var value = item.storeItem.get(yField);
+            this.setTitle(label + ": " + value.format());
+        }
+        
+        function RevenueDashboardToolTipRenderer1(klass, item){
+            var yField = item.yField;
+            var label;
+            if(yField == 'grandTotal')
+                label = 'Actuals';
+            else if(yField == 'MLB')
+                label = 'PureEngage/PureConnect Target';
+            else if(yField == 'ruleActual')
+                label = 'PureEngage';
+            else if(yField == 'ruleTarget')
+                label = 'PureConnect';
+            else 
+                label = '';
+            var value = item.storeItem.get(yField);
+            this.setTitle(label + ": " + value.format());
+        }
+        
+        function RevenueDashboardBarLabel(item){
+            //this.label.renderer(item);
+        }
+        
+        function pureCloudDashboardToolTip(klass, item) {
+            var yField = item.yField;
+            var label = yField == 'annualVal' ? 'Actual' : 'Minimum'
+            var value = item.storeItem.get(yField == 'annualVal' ? 'annualVal' : 'tierMinimum');
+            this.setTitle(label + ': ' + value.format())
+        }
+        
+        function RebateDashboardToolTipRenderer(klass, item){
+            var yField = item.yField;
+            var label;
+            if(yField == 'totalTargetRebate')
+                label = 'Target Rebate';
+            else if(yField == 'totalActualRebateForGraph')
+                label = 'Target Performance';
+            else if(yField == 'totalEarnedRebate')
+                label = 'Earned Rebate';
+            else 
+                label = '';
+            var value = item.storeItem.get(yField);
+            this.setTitle(label + ": " + value.format());
+        }
+        Number.prototype.format = function(n, x) {
+            var re = '\\d(?=(\\d{' + (x || 3) + '})+' + (n > 0 ? '\\.' : '$') + ')';
+            return this.toFixed(Math.max(0, ~~n)).replace(new RegExp(re, 'g'), '$&,');
+        }    
+    
+        
+        function showNPS() {
+            show('pg:PartnerPortalTemplate:fm:NPSDashboard:NPSPanel');
+        }
+        
+        function startVideo(w,h) {
+            var left = (screen.width/2)-(w/2);
+            var top = (screen.height/2)-(h/2);
+            window.open ('https://www.youtube.com/embed/n01qgMRNttA', '_blank', 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+        }
+    
+        // Added by Harish, 03/07/2017 - to add comma in between the salary column.
+        function addComma(label){
+            return (label.format()+"");
+        }
+        Number.prototype.format = function(n, x) {
+            var re = '\\d(?=(\\d{' + (x || 3) + '})+' + (n > 0 ? '\\.' : '$') + ')';
+            return this.toFixed(Math.max(0, ~~n)).replace(new RegExp(re, 'g'), '$&,');
+        }; 
+    </script>
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="performance"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        <apex:define name="body">
+            <apex:form id="fm">
+            
+                <apex:pageBlock title="{!IF(displayPreTwentyEighteen,'Revenue Dashboard','PureEngage and PureConnect Dashboard')}" id="revenueDashboard" rendered="{!RevenueChart.size>0 && isDesignatedContact==true}">
+                   <apex:commandLink value="Tutorial Video" onclick="startVideo(900,600)" style="font-size:14px;color:blue;float:right;"/> 
+                    <table align="center">
+                        <tr>
+                            <td align="right">
+                                <apex:outputLabel value="{!IF(displayPreTwentyEighteen,'Revenue Year : ','Booking Year : ')}" rendered="{!selectedRevenueYear != null}">
+                                    <apex:selectList value="{!selectedRevenueYear}" multiselect="false" size="1" >
+                                        <apex:selectOptions value="{!RevenueYears}"></apex:selectOptions>
+                                        <apex:actionSupport event="onchange" reRender="revenueDashboard" status="counterStatus"/>
+                                    </apex:selectList>
+                                </apex:outputLabel>
+                            </td>
+                            <td>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <apex:actionStatus id="counterStatus" >
+                                    <apex:facet name="start" >
+                                        <img src="/img/loading.gif" />  
+                                        <span>Refreshing...</span>                  
+                                    </apex:facet>
+                                </apex:actionStatus>   
+                            </td>
+                        </tr> 
+                    </table>
+                        <apex:panelGrid style="{!IF(NOT(displayPreTwentyEighteen), 'display:none','display:block')}" columns="1">
+                            <apex:chart width="700" height="350" data="{!RevenueChart}" id="theChart">
+                                <apex:legend position="right"/>    
+                                <apex:axis type="Numeric" position="left"  grid="true" fields="grandTotal,MLB" steps="4" dashSize="0" 
+                                    title="Revenue(millions)" minimum="0">
+                                    <apex:chartLabel rendererFn="addComma"/>
+                                </apex:axis>   
+                                <apex:axis type="Category" position="bottom" fields="type" title="YTD Revenue" dashSize="0" >
+                                    <apex:chartLabel display="middle" rotate="90"/>
+                                </apex:axis>
+                                <apex:barSeries title="MLB,Actual,50% Rule Target,50% Rule Actual"  orientation="vertical" axis="left" xField="type" yField="MLB,grandTotal,ruleTarget,ruleActual" 
+                                    groupGutter="10" xPadding="30" colorSet="blue,#CC0000,#77aaff,#ff77aa">
+                                    <apex:chartTips height="20" width="200" rendererFn="RevenueDashboardToolTipRenderer"/>
+                                </apex:barSeries>
+                            </apex:chart>
+                        </apex:panelGrid>
+                        <apex:panelGrid style="{!IF(NOT(displayPreTwentyEighteen),'display:block','display:none')}" columns="1">
+                            <apex:chart width="800" height="400" data="{!RevenueChart}" id="theChart2019">
+                                <apex:legend position="right"/>    
+                                <apex:axis type="Numeric" position="left"  grid="true" fields="grandTotal,MLB" steps="4" dashSize="0" 
+                                    title="Bookings(millions)" minimum="0">
+                                    <apex:chartLabel rendererFn="addComma"/>
+                                </apex:axis>   
+                                <apex:axis type="Category" position="bottom" fields="type" title="YTD Bookings" dashSize="0" >
+                                    <apex:chartLabel display="middle" rotate="90"/>
+                                </apex:axis>
+                                <apex:barSeries title="PureEngage/PureConnect Target,Actuals,PureConnect,PureEngage"  orientation="vertical" axis="left" xField="type" yField="MLB,grandTotal,ruleTarget,ruleActual" 
+                                    groupGutter="10" xPadding="30" colorSet="blue,red,#800000,#808000,gold">
+                                    <apex:chartTips height="20" width="270" rendererFn="RevenueDashboardToolTipRenderer1"/>
+                                </apex:barSeries>
+                            </apex:chart>
+                        </apex:panelGrid>
+                    
+                    <apex:pageBlockSection title="Partner Revenue (Numbers may not be final)" columns="2" collapsible="false" rendered="{!displayPreTwentyEighteen}">
+                        <apex:outputText value="MLB" styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold" style="text-align:left">
+                            <apex:param value="{!RevenueChart[0].MLB}"/>
+                        </apex:outputText>
+                        <apex:outputText value="Actual" styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold">
+                            <apex:param value="{!RevenueChart[0].grandTotal}"/>
+                        </apex:outputText>
+                        <apex:outputText value="50% Rule Target" styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold">
+                            <apex:param value="{!RevenueChart[0].ruleTarget}"/>
+                        </apex:outputText>
+                        <apex:outputText value="50% Rule Actual " styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold">
+                            <apex:param value="{!RevenueChart[0].ruleActual}"/>
+                        </apex:outputText>
+                    </apex:pageBlockSection>
+                    <!--post 2018-->
+                    <apex:pageBlockSection title="Partner Bookings (Numbers may not be final)" columns="2" collapsible="false" rendered="{!NOT(displayPreTwentyEighteen)}">
+                        <apex:outputText value="PureEngage and PureConnect Target" styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold" style="text-align:left">
+                            <apex:param value="{!RevenueChart[0].MLB}"/>
+                        </apex:outputText>
+                        <apex:outputText value="PureEngage and PureConnect Actual" styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold">
+                            <apex:param value="{!RevenueChart[0].grandTotal}"/>
+                        </apex:outputText>
+                        <apex:outputText value="PureCloud Target" styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold">
+                            <apex:param value="{!RevenueChart[0].pCldTarget}"/>
+                        </apex:outputText>
+                        <apex:outputText value="PureCloud Actual" styleClass="fontBold"/>
+                        <apex:outputText value="{!RevenueChart[0].currencyCd} {0,number,###,###,###,###}" styleClass="fontBold">
+                            <apex:param value="{!RevenueChart[0].pureCloud}"/>
+                        </apex:outputText>                                                                                       
+                    </apex:pageBlockSection>
+                    
+                    <apex:pageBlockSection columns="1" rendered="{!displayPreTwentyEighteen}">
+                        <apex:pageBlockTable value="{!Revenue}" var="rev">
+                            <apex:column headerValue="Revenue Type" value="{!rev.revenueType}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}"/>
+                            <apex:column headerValue="PureEngage">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','pureEngage','{!rev.currencyCode}'); return false;" rendered="{!rev.pureEngage!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.pureEngage}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.pureEngage==0}"/>
+                            </apex:column>
+                            <apex:column headerValue="PureConnect">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','pureConnect','{!rev.currencyCode}'); return false;" rendered="{!rev.pureConnect!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.pureConnect}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.pureConnect==0}"/>
+                            </apex:column>
+                            <apex:column headerValue="PureCloud">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','pureCloud','{!rev.currencyCode}'); return false;" rendered="{!rev.pureCloud!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.pureCloud}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.pureCloud==0}"/>
+                            </apex:column>
+                            <apex:column headerValue="Total">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','revwisetotal','{!rev.currencyCode}'); return false;" rendered="{!rev.revTpWiseTot!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.revTpWiseTot}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.revTpWiseTot==0}"/>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                    <!-- Post 2018 -->
+                    <apex:pageBlockSection columns="1" rendered="{!NOT(displayPreTwentyEighteen)}">
+                        <apex:pageBlockTable value="{!Revenue}" var="rev">
+                            <apex:column headerValue="Bookings Type" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                <apex:outputText value="{!IF(rev.revenueType=='Revenue - Cloud','Booking - Cloud',IF(rev.revenueType=='Total','Total','Booking - License'))}"/>
+                            </apex:column>
+                            <apex:column headerValue="PureEngage">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','pureEngage','{!rev.currencyCode}'); return false;" rendered="{!rev.pureEngage!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.pureEngage}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.pureEngage==0}"/>
+                            </apex:column>
+                            <apex:column headerValue="PureConnect">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','pureConnect','{!rev.currencyCode}'); return false;" rendered="{!rev.pureConnect!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.pureConnect}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.pureConnect==0}"/>
+                            </apex:column>
+                            <apex:column headerValue="PureCloud">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','pureCloud','{!rev.currencyCode}'); return false;" rendered="{!rev.pureCloud!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.pureCloud}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.pureCloud==0}"/>
+                            </apex:column>
+                            <apex:column headerValue="Total">
+                                <apex:commandLink onclick="RevenueDetails('{!selectedRevenueYear}', '{!rev.revenueType}','revwisetotal','{!rev.currencyCode}'); return false;" rendered="{!rev.revTpWiseTot!=0}" reRender="false" >
+                                    <apex:outputText value="{!rev.currencyCode} {0,number,###,###,###,###}" style="font-weight:{!IF(rev.revenueType=='Total','700','normal')}">
+                                        <apex:param value="{!rev.revTpWiseTot}"/>
+                                    </apex:outputText>
+                                </apex:commandLink>
+                                <apex:outputText value="-" rendered="{!rev.revTpWiseTot==0}"/>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="Bookings Dashboard" rendered="{!RevenueChart.size==0 && isDesignatedContact==true}">
+                    <apex:outputText >No revenue records to display.</apex:outputText>
+                </apex:pageBlock>
+                 
+
+                <apex:pageBlock title="PureCloud Incremental Bookings Dashboard" id="pureCloudDashboard" rendered="{!PureCloudChart.size>0 && isDesignatedContact==true && isPCYearlyBookingReqDataEmpty==false && isPureCloudOffering==true}">
+                    <table align="center">
+                        <tr>
+                            <td align="right">
+                                <apex:outputLabel value="Booking Year : " rendered="{!selectedFiscalYear != null}">
+                                    <apex:selectList value="{!selectedFiscalYear}" multiselect="false" size="1" >
+                                        <apex:selectOptions value="{!FiscalYears}"></apex:selectOptions>
+                                        <apex:actionSupport event="onchange" reRender="pureCloudDashboard" status="pcStatus"/>
+                                    </apex:selectList>
+                                </apex:outputLabel>
+                            </td>
+                            <td>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <apex:actionStatus id="pcStatus" >
+                                    <apex:facet name="start" >
+                                        <img src="/img/loading.gif" />  
+                                        <span>Refreshing...</span>                  
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </td>
+                        </tr> 
+                    </table>
+                    <apex:panelGrid >
+                        <apex:chart width="450" height="350" data="{!PureCloudChart}" id="thePCChart">
+                            <apex:legend position="right"/>    
+                            <apex:axis type="Numeric" position="left"  grid="true" fields="annualVal,tierMinimum" steps="4" dashSize="0" 
+                                title="Amount" minimum="0">
+                                <apex:chartLabel rendererFn="addComma"/>
+                            </apex:axis>   
+                            <apex:axis type="Category" position="bottom" title="YTD Incremental Bookings" dashSize="0" fields="tier">
+                                <apex:chartLabel display="middle" rotate="90"/>
+                            </apex:axis>
+                            <apex:barSeries title="Annual Contract Value,Tier Minimum"  orientation="vertical" axis="left" xField="tier" yField="annualVal,tierMinimum" 
+                                groupGutter="5" xPadding="30" colorSet="#228B22,#FFA500">
+                                <apex:chartTips height="20" width="120" rendererFn="pureCloudDashboardToolTip"/>
+                            </apex:barSeries>
+                        </apex:chart>
+                    </apex:panelGrid>
+                    
+                    <apex:pageBlockSection title="Partner YTD Incremental Bookings" columns="2" >
+                        <apex:repeat value="{!PureCloudChart}" var="pcList" id="pcRep">
+                            <apex:commandLink onclick="pureCloudRevDetails('{!selectedFiscalYear}', '{!renewalRecTpId}','{!pcList.currencyCode}'); return false;">
+                                <apex:outputText value="Actual" styleClass="fontBold"/>
+                            </apex:commandLink>
+                            <apex:outputText styleClass="fontColorGreen fontBold" value="{!pcList.currencyCode} {0,number,###,###,###,###}">
+                               <apex:param value="{!pcList.annualVal}" />
+                            </apex:outputText>
+                            <apex:outputText value="Tier Minimum" styleClass="fontBold"/>
+                            <apex:outputText styleClass="fontColorOrange fontBold" value="{!pcList.currencyCode} {0,number,###,###,###,###}">
+                                <apex:param value="{!pcList.tierMinimum}" />
+                            </apex:outputText>
+                        </apex:repeat>
+                    </apex:pageBlockSection>
+                </apex:pageBlock>
+
+                <apex:pageBlock title="PureCloud Incremental Booking Dashboard" rendered="{!pureCloudOptyList.size>0 && isDesignatedContact==true && isPCYearlyBookingReqDataEmpty==true && PureCloudChart.size==0}">
+                    <apex:outputText >PureCloud Tier Minimum Data Not Available</apex:outputText>
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="PureCloud Incremental Booking Dashboard" rendered="{!pureCloudOptyList.size==0 && PureCloudChart.size==0 && isPureCloudOffering==true}">
+                    <apex:outputText >PureCloud Booking and Tier Minimum Data Not Available</apex:outputText>
+                </apex:pageBlock>
+                 
+                  
+                  <apex:pageBlock title="Rebate Dashboard" id="rebateDashboard" rendered="{!NOT(ISNULL(rebate)) && isDesignatedContact==true}">
+                    <table align="center">
+                        <tr>
+                            <td align="right">
+                                <apex:outputLabel value="Rebate Year : " rendered="{!selectedRebateYear != null}" >
+                                    <apex:selectList value="{!selectedRebateYear}" multiselect="false" size="1" >
+                                        <apex:selectOptions value="{!RebateYears}"></apex:selectOptions>
+                                        <apex:actionSupport event="onchange" reRender="rebateDashboard" status="counterRebateStatus"/>
+                                    </apex:selectList>
+                                </apex:outputLabel>
+                            </td>
+                            <td>&nbsp;
+                                <!-- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<apex:commandLink value="Details" onclick="showRebate()" reRender="false"/> -->
+                            </td>
+                        </tr> 
+                        <tr><td>
+                            <apex:actionStatus id="counterRebateStatus" >
+                                <apex:facet name="start" >
+                                    <img src="/img/loading.gif" />  
+                                    <span>Refreshing...</span>                  
+                                </apex:facet>
+                            </apex:actionStatus>     
+                        </td></tr>
+                    </table>
+                    <apex:panelGrid >
+                        <apex:chart width="700" height="400" data="{!rebate}">    
+                            <apex:legend position="right"/>
+                            <apex:axis type="Numeric" position="left"  grid="true" fields="totalTargetRebate,totalActualRebateForGraph,totalEarnedRebate" steps="5" 
+                                dashSize="0" title="Rebate(millions)">
+                                <apex:chartLabel rendererFn="addComma"/>
+                            </apex:axis>   
+                            <apex:axis type="Category" position="bottom" fields="type" dashSize="0"/>
+                            <apex:barSeries title="Target Rebate,Target Performance,Earned Rebate" orientation="vertical" axis="left" xField="type" groupGutter="0"
+                                yField="totalTargetRebate,totalActualRebateForGraph,totalEarnedRebate" xPadding="70" colorSet="blue,#CC0000,green" >
+                                <apex:chartTips height="20" width="200" rendererFn="RebateDashboardToolTipRenderer" />
+                            </apex:barSeries>
+                        </apex:chart>
+                         <!--Added by Navaneetha on 17-10-19-->
+                       In 2019 to streamline the rebate process, if a Partner was awarded a rebate total of less than 40K it was issued to the Partner as a credit directly and can be utilized against any invoice with Genesys. Steps to do this were outlined in the award letter sent to you. Please disregard the old process if this applies. If you were issued an award totaling more than 40K than please continue with the traditional process. Thank you!
+                            <br/><br/>
+-The Genesys Partner Network Program Team-
+                       <!--Ended by Navaneetha on 17-10-19-->
+                    </apex:panelGrid>
+                    <!-- <apex:outputPanel id="rebatePanel" styleClass="hidePanel">  -->
+                    <apex:outputPanel id="rebatePanel">
+                        <apex:pageBlockSection title="Partner Rebate Target" columns="1" rendered="{!rebate[0].publishTargetRebate}">
+                            <apex:outputPanel dir="CENTER">
+                                <apex:commandButton value="View Terms" onclick="RebateTerms('{!rebate[0].recordId}'); return false;" rendered="{!IF(rebate[0].earnedRebateExpired, false, true)}"/> 
+                            </apex:outputPanel> 
+                            <apex:pageBlockTable value="{!rebate[0]}" var="rebate[0]" width="100%">              
+                                <apex:column headerValue="Start Date" >
+                                <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                                    <apex:param value="{!rebate[0].startDate}" /> 
+                                </apex:outputText>  
+                                </apex:column>
+                                <apex:column headerValue="End Date" >
+                                    <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                                    <apex:param value="{!rebate[0].endDate}" /> 
+                                </apex:outputText>  
+                                </apex:column>
+                                <!--
+                                <apex:column headerValue="Genesys Care Amount" value="{!rebate[0].currencyCode} {!rebate[0].totalTargetRebate}"/>
+                                <apex:column headerValue="License Amount" value="{!rebate[0].currencyCode} {!rebate[1].totalTargetRebate}"/>
+                                <apex:column headerValue="SaaS Amount" value="{!rebate[0].currencyCode} {!rebate[2].totalTargetRebate}"/>
+                                -->
+                                <apex:column headerValue="Genesys Care Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0}">
+                                        <apex:param value="{!rebate[0].totalTargetRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="License Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0}">
+                                        <apex:param value="{!rebate[1].totalTargetRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="SaaS Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0}">
+                                        <apex:param value="{!rebate[2].totalTargetRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                
+                            </apex:pageBlockTable>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection title="Partner Target Performance (Numbers may not be final)" columns="1" >
+                            <apex:pageBlockTable value="{!rebate[0]}" var="rebate[0]" width="100%"> 
+                                <!--
+                                <apex:column headerValue="Start Date" >
+                                    <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                                    <apex:param value="{!rebate[0].startDate}" /> 
+                                </apex:outputText>  
+                                </apex:column>
+                                <apex:column headerValue="End Date" >
+                                    <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                                    <apex:param value="{!rebate[0].endDate}" /> 
+                                </apex:outputText>  
+                                </apex:column>
+                                -->
+                                <!--
+                                <apex:column headerValue="Genesys Care Amount" value="{!rebate[0].currencyCode} {!rebate[0].totalActualRebate}"/>
+                                <apex:column headerValue="License Amount" value="{!rebate[0].currencyCode} {!rebate[1].totalActualRebate}"/>
+                                <apex:column headerValue="SaaS Amount" value="{!rebate[0].currencyCode} {!rebate[2].totalActualRebate}"/>
+                                -->
+                                <apex:column headerValue="Genesys Care Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0}">
+                                        <apex:param value="{!rebate[0].totalActualRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="License Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0}">
+                                        <apex:param value="{!rebate[1].totalActualRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="Solution Multiplier" >
+                                    <apex:commandLink onclick="SolutionMultiplierDetails('{!selectedRebateYear}'); return false;" reRender="false" >
+                                        <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0}">
+                                            <apex:param value="{!rebate[1].solutionMultiplier}" />
+                                        </apex:outputText>
+                                    </apex:commandLink>
+                                </apex:column>                            
+                                <apex:column headerValue="SaaS Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0}">
+                                        <apex:param value="{!rebate[2].totalActualRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                            </apex:pageBlockTable>
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection title="Partner Earned Rebate" columns="1" rendered="{!rebate[0].publishEarnedRebate}">
+                            
+                            <apex:outputPanel dir="CENTER">
+                                <apex:commandButton value="Rebate Request" onclick="RebateRequest('{!selectedRebateYear}'); return false;" rendered="{!IF(rebate[0].earnedRebateExpired, false, true)}"/> 
+                                <apex:commandButton value="Rebate Award Letter" onclick="RebateAwardLetter('{!selectedRebateYear}'); return false;" /> 
+                                <apex:commandButton value="Rebate Statement" onclick="RebateStatement('{!selectedRebateYear}'); return false;" /> 
+                            </apex:outputPanel> 
+                            <apex:pageBlockTable value="{!rebate[0]}" var="rebate[0]" width="100%">              
+                                <apex:column headerValue="Start Date" >
+                                    01/01/{!VALUE(selectedRebateYear)+1}
+                                </apex:column>
+                                <apex:column headerValue="End Date" >
+                                    12/31/{!VALUE(selectedRebateYear)+1}
+                                </apex:column>
+                                <!--
+                                <apex:column headerValue="Genesys Care Amount" value="{!rebate[0].currencyCode} {!rebate[0].totalEarnedRebate}"/>
+                                <apex:column headerValue="License Amount" value="{!rebate[0].currencyCode} {!rebate[1].totalEarnedRebate}"/>
+                                <apex:column headerValue="SaaS Amount" value="{!rebate[0].currencyCode} {!rebate[2].totalEarnedRebate}"/>
+                                -->
+                                <apex:column headerValue="Genesys Care Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0.00}">
+                                        <apex:param value="{!rebate[0].totalEarnedRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="License Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0.00}">
+                                        <apex:param value="{!rebate[1].totalEarnedRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                <apex:column headerValue="SaaS Amount">
+                                    <apex:outputText value="{!rebate[0].currencyCode} {0, number, ###,###,###,###,##0.00}">
+                                        <apex:param value="{!rebate[2].totalEarnedRebate}" />
+                                    </apex:outputText>
+                                </apex:column>
+                                
+                            </apex:pageBlockTable>
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="Rebate Dashboard" rendered="{!ISNULL(rebate) && isDesignatedContact==true}">
+                    <apex:outputText >No rebate records to display.</apex:outputText>
+                </apex:pageBlock> 
+                
+                <!--<c:PartnerKPI1Component platformParam="PureEngage On Premise" rendered="{!displayPureEngageKPI1Exists && isDesignatedContact}" />
+                <c:PartnerKPI1Component platformParam="PureConnect On Premise" rendered="{!displayPureConnectKPI1Exists && isDesignatedContact}"/>-->
+                <c:PartnerKPI1Component rendered="{!displayPureEngageKPI1Exists && isDesignatedContact}" />
+                
+                <apex:pageBlock title="NPS Dashboard" id="NPSDashboard" rendered="{!isDesignatedContact==true && npsData.size > 0}" >
+
+                    <apex:outputLabel style="font-size:16px;font-weight:bold" value="Net Promoter Score : {!npsScore}"> </apex:outputLabel>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <div align="center">
+                        <apex:commandLink value="Details" onclick="showNPS()" reRender="false" id="shwNPSDet" style="text-decoration: underline"/>
+                    </div>
+                    <apex:panelGrid columns="2" >
+                                        <apex:chart height="350" width="450" data="{!npsData}">
+                                            <apex:pieSeries dataField="data" labelField="name"/>
+                                            <apex:legend position="right"/>     
+                                        </apex:chart>
+                                        <apex:outputText style="font-size: 100%;padding:100px 0px 0px 0px;" value="{!$Label.NPSToolTip}"/>
+                    </apex:panelGrid>
+                               
+                    <apex:outputPanel id="NPSPanel" styleClass="hidePanel">
+                        <apex:pageBlockTable value="{!surveyList}" var="sur" columns="6">
+                            <apex:column headerValue="Survey" value="{!sur.name}"/>
+                            <apex:column headerValue="NPS Rating" value="{!sur.NPS_Recommend_Rating__c}"/>
+                            <apex:column headerValue="Survey Type" value="{!sur.Survey_Type__c}"/>
+                            <!-- <apex:column headerValue="Contact" value="{!sur.Contact__r.Name}"/> -->
+                            <apex:column headerValue="End User Account Name" value="{!sur.End_User_Account_Name__c }"/>
+                            <apex:column headerValue="Response Type" value="{!sur.Partner_Response_Type__c}"/>
+                            <apex:column headerValue="Deployment Type" value="{!sur.Deployment_Type1__c}"/>
+                        </apex:pageBlockTable>
+                    </apex:outputPanel>
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="NPS Dashboard" rendered="{!npsData.size == 0 && isDesignatedContact==true}">
+                    <apex:outputText >No records to display.</apex:outputText>
+                </apex:pageBlock> 
+                
+                <apex:pageBlock title="Partner Discounts" rendered="{!partnerDiscount.size > 0 && isDesignatedContact==true}">
+                    <apex:pageBlockTable value="{!partnerDiscount}" var="pardis">
+                        <apex:column value="{!pardis.Type__c}"/>
+                        <apex:column value="{!pardis.Category__c}"/>
+                        <apex:column value="{!pardis.Discount__c}"/>
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+
+                <apex:pageBlock title="Partner Discounts" rendered="{!partnerDiscount.size == 0 && isDesignatedContact==true}">
+                    <apex:outputText >No records to display.</apex:outputText>
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="PureCloud Partner Margins" rendered="{!pureCldMargins.size > 0 && isDesignatedContact==true}">
+                    <apex:pageBlockTable value="{!pureCldMargins}" var="pCldMrgn">
+                        <apex:column value="{!pCldMrgn.Margin_Type__c}"/>
+                        <apex:column value="{!pCldMrgn.Percent__c}"/>
+                        <apex:column value="{!pCldMrgn.From_Date__c}"/>
+                        <apex:column value="{!pCldMrgn.To_Date__c}"/>
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+
+                <apex:pageBlock title="PureCloud Partner Margins" rendered="{!pureCldMargins.size == 0 && isDesignatedContact==true}">
+                    <apex:outputText >No records to display.</apex:outputText>
+                </apex:pageBlock>
+
+            </apex:form>
+            
+            <apex:pageBlock rendered="{!isDesignatedContact != true}">
+                <apex:pageMessage summary="Access Denied." severity="warning" strength="3" />
+            </apex:pageBlock>
+        </apex:define>
+    </apex:composition>
+
+    <style type="text/css">
+    
+    
+    .hidePanel{display:none}
+    .fontNormal{font-weight:normal}
+    .fontBold{font-weight:bold}
+    .fontColorRed{color:red}
+    .fontColorGreen{color:green}
+    .fontColorBlack{color:black}
+    .fontColorOrange{color:Orange}
+    .popup
+    {
+      border: 2px solid #c2c2c2; 
+      background-color: #FFFFFF;  
+      border-radius: 10px;
+      z-index: 9999;
+      left: 50%;
+      padding:10px;
+      position: absolute;
+      width: 800px;
+      margin-left: -350px;
+      top:80px;
+   }
+    .popupKPI
+    {
+      border: 2px solid #c2c2c2; 
+      background-color: #FFFFFF;  
+      border-radius: 10px;
+      z-index: 9999;
+      left: 50%;
+      padding:10px;
+      position: absolute;
+      width: 800px;
+      margin-left: -350px;
+      top:1000px;
+   }
+   .close-btn { 
+    border: 3px solid #CC0000;
+    position: relative;
+    padding: 1px 5px;
+    top: -20px;
+    background-color: #CC0000;
+    left: 795px;
+    border-radius: 3px;
+   }
+   .img { -ms-interpolation-mode: bicubic; }
+   </style>
+
+    
+</apex:page>

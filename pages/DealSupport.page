@@ -1,0 +1,919 @@
+<apex:page standardcontroller="Deal_Support__c" extensions="DealSupportExt" tabstyle="Deal_Support__c" 
+    sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+    
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="dealsupport" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="body">   
+                <apex:sectionHeader title="Deal Support" subtitle="{!strRecordName}" rendered="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}"/>
+                <apex:form >
+                
+                      <apex:outputPanel rendered="{!if(strRecordId=null,true,false) && NOT(blnIsPartnerUser)}">
+                        <li> <apex:outputLabel >Demo Requests must be submitted from an Opportunity or an Account.</apex:outputLabel></li>
+                        <li><apex:outputLabel >RFP Requests must be submitted from an Opportunity.</apex:outputLabel></li>
+                        <li><apex:outputLabel >Legal Requests must be submitted from an Opportunity or an Account.</apex:outputLabel></li>
+                      </apex:outputPanel>
+                      
+                      <apex:outputPanel rendered="{!blnIsAccount}">
+                        <li> <apex:outputLabel >Demo Requests must be submitted from an Opportunity or An Account.</apex:outputLabel></li>
+                      </apex:outputPanel>  
+                      <apex:outputPanel rendered="{!blnIsAccount && NOT(blnIsPartnerUser)}">
+                        <li><apex:outputLabel >RFP Requests must be submitted from an Opportunity.</apex:outputLabel></li>
+                      </apex:outputPanel>
+                  
+                    <apex:pageBlock >
+                        <apex:pageBlockButtons location="top">
+                            <!--<apex:commandButton value="Return To {!IF(blnIsAccount,'Account','Opportunity')}" onclick="location.href='{!IF(blnIsPartnerUser, '/partner/PartnerPortalOptyDetail?Id=','/')}{!strRecordId}';return false;"/>-->
+                            <apex:commandButton value="Return To {!IF(blnIsAccount,'Account','Opportunity')}" onclick="location.href='{!IF(AND(blnIsPartnerUser,blnIsAccount), '/partner/PartnerPortalAcctDetail?Id=',(IF(AND(blnIsPartnerUser,LEFT(strRecordId,3)=='006'),'/partner/PartnerPortalOptyDetail?Id=',IF(blnIsPartnerUser,'/partner/apex/OpenDealSupportTab','/'))))}{!strRecordId}';return false;"/>
+                        </apex:pageBlockButtons>
+                        <table class="list " border="0" cellpadding="3" cellspacing="3" style="width: 950px;">
+                            <thead>
+                                <tr class="headerRow">
+                                    <th class="headerRow">Area Supported</th>
+                                    <th class="headerRow" style="width: 350px;">Description</th>                     
+                                    <th class="headerRow">Action</th>
+                                    <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                    <th class="headerRow">Help Documents</th>
+                                    </apex:outputPanel>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">ASK Sales Support</td>
+                                    <td>START HERE if you are not sure where to go. The Sales Support team can also provide help with many sales tools and processes. 
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Sales Ops&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>                               
+                                    </td>
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                          <!-- <li>
+                                           <!--<apex:outputLink value="/sfc/#version?selectedDocumentId=069U0000001HP6q" target="_blank">Sales Support page in Genie</apex:outputLink>
+                                           <apex:outputLink value="https://genesys.gosavo.com/CustomPage/View.aspx?id=38373721" target="_blank">Sales Support page in Genie</apex:outputLink>
+                                           </li>-->
+                                       </ul>
+                                    </td>
+                                </tr> 
+                                 
+
+                                <tr class="dataRow">
+                                    <td class="dataCell">Transactional Quotes and Orders</td>
+                                        <td><p>This is to request for Quote to be created or to Submit an order for Existing Business- Expansion deals that are considered Transactional.Transactional are:</p>                         
+                                            <li>Hardware only deals</li>                                
+                                            <li>Only additional existing software.</li> 
+                                            <li>Will not require Deal Qualification (DQ) approvals.</li> 
+                                            <li>Software deals of a PEV of $25,000 USD or less (Hardware not considered PEV)</li>
+                                            For more information see the Help Documents link.
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                                        onclick="window.location.href='/apex/DealSupportRequest?area=Transactional Help&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>                               
+                                    </td>
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                            <li>                                           
+                                            <!--<apex:outputLink value="https://genesys.gosavo.com/CustomPage/View.aspx?id=38373721" target="_blank">Genie Link……..</apex:outputLink>-->
+                                            <apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fdd9c7b94d1-c72f-42c4-8e6c-9cfa587a0437%252FdfOthers%252Flfa3aef7b7-bf3b-40a9-b6c9-00668151934b//?mode=view" target="_blank">Genie Link……..</apex:outputLink>
+                                            </li>
+                                        </ul>
+                                </td>
+                                </tr>                   
+                                
+                                 <!-- Added by Jitendra Jain for Subscription -->
+                             <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">Subscription/PureSuccess</td>
+                                    <td>Request assistance on your Subscription or PureSuccess-related deal. This team can help with positioning Subscription, T&amp;Cs, PureSuccess, quoting, and more!</td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Subscription%20PureSuccess&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>                              
+                                    </td>
+                                    <td class="dataCell">
+                                       <ul style="padding-left:0;">
+                                           <li><apex:outputLink value="https://genesys--c.na48.visual.force.com/apex/Ask_Kate?sfdc.tabName=01r0B000000QmRa5" target="_blank">KATE</apex:outputLink></li>
+                                           <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fdd9c7b94d1-c72f-42c4-8e6c-9cfa587a0437%252FdfOthers%252Flf8ffef44d-b78c-4bd4-8237-685b916ae1c5/grid/" target="_blank">Subscription/PureSuccess Playbook</apex:outputLink></li>
+                                           <li><apex:outputLink value="https://genesys.gosavo.com/CustomPage/View.aspx?id=44913796" target="_blank">The Genesys Effect Genie Page</apex:outputLink></li>
+                                           <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fddcc932858-ee7b-4cf4-822a-0c479b22ac46%252FdfYzdmZWM3NmUtY2QxNS00MWI3LTgwYmItMjk5OWEzNTQ5MjBh%252CPT0%253D%252CUXVpY2sgUmVmZXJlbmNlIEd1aWRl%252Flfb1b375f1-2370-4036-9f25-132eab2dd476//?mode=view" target="_blank">The Top 10 Things You Need to Know</apex:outputLink></li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                                
+                                <tr class="dataRow">
+                                    <td class="dataCell">Business Consulting</td>
+                                    <td>
+                                     Enquiries to the Business Consulting.
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Business Consulting&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                           <!--<li><apex:outputLink value="https://intranet.genesys.com/display/ETP/Business+Consulting" target="_blank">Intranet Site</apex:outputLink> Intranet Site</li>
+                                            <li><!--<apex:outputLink value="/apex/Genie_Tab_Page?sfdc.tabName=01rU0000000QTRS" target="_blank">Business Consulting page in Genie</apex:outputLink>Business Consulting page in Genie</li>--> 
+                                       </ul>
+                                    </td>
+                                </tr>
+                                <tr class="dataRow">
+                                    <td class="dataCell">Value Consulting</td>
+                                    <td>
+                                      Enquiries to the Genesys Value Consulting Team regarding ROI (Return on Investment), TCO (Total Cost of Ownership) or Benchmarking analysis.
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Value Consulting&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                           <!--<li><apex:outputLink value="https://intranet.genesys.com/display/ETP/Business+Consulting" target="_blank">Intranet Site</apex:outputLink> Intranet Site</li>
+                                            <li><!--<apex:outputLink value="/apex/Genie_Tab_Page?sfdc.tabName=01rU0000000QTRS" target="_blank">Value Consulting page in Genie</apex:outputLink>Business Consulting page in Genie</li>--> 
+                                       </ul>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="dataRow">
+                                    <td class="dataCell">Customer Care</td>
+                                    <td>
+                                    Enquiries to Customer Care team regarding First Year Maintenance Rates and Offers and special cases of separate PO, multi-year FYM etc
+                                    </td>
+
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Customer Care&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                           <li><apex:outputLink value="https://intranet.genesys.com/display/GSC/Genesys+Care" target="_blank">Intranet Portal</apex:outputLink></li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="dataRow">
+                                    <td class="dataCell">CX Center Visit</td>
+                                    <td>Fill out this form any time you want to bring your customer to a Genesys site. The CX team is here to help. 
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false" rendered="{!BEGINS(strRecordId,'006')}"
+                                            onclick="window.location.href='/a75/e?CF00NU0000004Eoqn={!URLENCODE(strRecordName)}&CF00NU0000004Eoqn_lkid={!strRecordId}&CF00NU00000064RNu={!URLENCODE(strAccName)}&CF00NU00000064RNu_lkid={!strAccId}&retURL=/apex/DealSupport?objid={!strRecordId}';return false;"/>
+                                         <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false" rendered="{!BEGINS(strRecordId,'001')}"
+                                            onclick="window.location.href='/a75/e?CF00NU00000064RNu={!URLENCODE(strRecordName)}&CF00NU00000064RNu_lkid={!strRecordId}&retURL=/apex/DealSupport?objid={!strRecordId}';return false;"/>
+                                    </td>
+                                    
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                           <li>
+                                           <!-- <apex:outputLink value="/sfc/#version?selectedDocumentId=069U0000001HP6q" target="_blank">CXC Help Documentation</apex:outputLink>-->
+                                           <apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fddcc932858-ee7b-4cf4-822a-0c479b22ac46%252FdfYzdmZWM3NmUtY2QxNS00MWI3LTgwYmItMjk5OWEzNTQ5MjBh%252CPT0%253D%252CVHJhaW5pbmc%253D%252Flfb6b5a624-8274-4279-a834-1a33cc36d323//?mode=view" target="_blank">CXC Help Documentation</apex:outputLink>
+                                           </li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                                    
+                                <tr class="dataRow">
+                                    <td class="dataCell">Finance - Deal Desk</td>
+                                    <td>
+                                   Enquiries to Deal Desk regarding DDS, deal economics, or deal structuring questions. For discount guidance and deal approvals, please leverage DDS and utilize the Deal Qualification process. For bookings related inquiries, please submit a DSR to Finance – Field Finance.
+                                    </td>
+                                    <td class="dataCell">
+                                        <!--<apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" onclick="sendEmail('Deal Factory');" reRender="false"/>-->
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Deal Desk&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    <!-- Deal Factory name changed to Deal Desk, as page was not working reported by Debbie-->
+                                    </td>
+                                   <td class="dataCell">
+                                       <!--<apex:outputLink value="/apex/DealSupportHelpDocs?area=dealfactory" target="_blank">Deal Factory Help Documentation</apex:outputLink>-->
+                                       <ul style="padding-left:0;">
+                                           <li><apex:outputLink value="/069U0000000Vtn2" target="_blank">Deal Approval Policy</apex:outputLink></li>
+                                           <li><apex:outputLink value="/069U0000000We96" target="_blank">Deal Approval Policy Cloud</apex:outputLink></li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                                
+                                
+                                
+                            </apex:outputPanel>
+                            
+                            <!--
+                                Added By: Ashish Goyal (08/09/2018)
+                                Desc: Added new support area and request type as 'Competitive Intelligence', 
+                                      requested by Debbie
+                            -->
+                            <tr class="dataRow">
+                                <td class="dataCell">Competitive Intelligence</td>
+                                <td>
+                                Request Support from the Comp. Intelligence Team
+                                </td>
+
+                                <td class="dataCell">
+                                    <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                        onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/apex/DealSupportRequest?area=Competitive Intelligence&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL={!IF(blnIsPartnerUser, '/partner','/apex')}/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                </td>
+                                <td class="dataCell">
+                                    &nbsp;
+                                </td>
+                            </tr>
+                            <!-- End: Ashish -->
+                            
+                            <!--<apex:outputPanel rendered="{!NOT(blnIsPartnerUser) && (strRecordId != null)}">-->
+                            <!--<apex:outputPanel rendered="{!strRecordId != null && NOT(blnIsAccount)}">-->
+                            
+                            <!-- Requested by Debora Lane on 21-Nov-17 -->
+                            <apex:outputPanel rendered="{!strRecordId != null && ((blnIsAccount && NOT(blnIsPartnerUser)) || NOT(blnIsAccount))}">
+                                <tr class="dataRow">
+                                   <td class="dataCell">Demo Request-SPARK</td>
+                                      <td>Engage the SPARK team for strategic/advanced demo assistance.
+                                      </td> 
+                                   <td class="dataCell">
+                                      <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false" rendered="{!blnIsAccount}"
+                                            onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DemoRequestSubmissionAccount?scontrolCaching=1&id={!strRecordId}&retURL={!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupport?id={!strRecordId}';return false;"/>
+                                      <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false" rendered="{!NOT(blnIsAccount)}"
+                                            onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/Demo_Request_VF_Submission?scontrolCaching=1&id={!strRecordId}&retURL={!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupport?objid={!strRecordId}';return false;"/>
+                                   </td>
+                                   <td class="dataCell">
+                                   </td>
+                                </tr>
+                            </apex:outputPanel>    
+                            <tr class="dataRow">
+                                <td class="dataCell">Finance - Operations and Accounting</td>
+                                <td>
+                                 Enquiries to Finance regarding Order Submission, Revenue Recognition and General Inquiries (Tax ID#, etc.)
+                                </td>
+                                <td class="dataCell">
+                                    <!--<apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" onclick="sendEmail('Finance');" reRender="false"/>-->
+                                    <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                        onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupportRequest?area=Finance&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL={!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupport?id={!strRecordId}';return false;"/>
+                                </td>
+                                <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                    <td class="dataCell">
+                                       <!--<apex:outputLink value="/apex/DealSupportHelpDocs?area=Finance" target="_blank">Finance Help Documentation</apex:outputLink>-->
+                                        <ul style="padding-left:0;">
+                                            <li><apex:outputLink value="https://genesys.my.salesforce.com/servlet/servlet.FileDownload?file=015U0000002pRGM" target="_blank">Guidance for Non-Revenue transactions</apex:outputLink></li>
+                                            <li><apex:outputLink value="https://genesys.my.salesforce.com/069U0000001czlN" target="_blank">Revenue Recognition and Order Management FAQ in Genie</apex:outputLink></li>                               
+                                        </ul>
+                                    </td>
+                                </apex:outputPanel>
+                            </tr>
+                            
+                            <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                
+                            <!--    <tr class="dataRow"> 
+                                    <td class="dataCell" style="font-weight:800; color: #0000A0;">ININ Sales Support</td>
+                                    <td>
+                                     Request assistance from various Specialized Support teams for selling ININ product 
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                           onclick="window.location.href='/apex/DealSupportRequest?area=ININ Sales Support&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                    <td class="dataCell">
+                                       <ul style="padding-left:0;">
+                                        
+                                       </ul>
+                                    </td>
+                                </tr>
+                               --> 
+                             <apex:outputPanel rendered="{!if(strRecordId=null,false,true)}">   
+                                <tr class="dataRow">
+                                    <td class="dataCell">Legal</td>
+                                     <td>
+                                    Legal Requests for New Contract, Contract Amendments, Standard Agreements, General Enquiries and Privacy.
+                                   
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Legal&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                     <td class="dataCell">
+                                         <!--<apex:outputLink value="/apex/DealSupportHelpDocs?area=legal" target="_blank">Legal Help Documentation</apex:outputLink>-->
+                                    </td>                           
+                                </tr>
+                             </apex:outputPanel>   
+                                <!---<tr class="dataRow">
+                                    <td class="dataCell">Partner Support</td>
+                                    <td>
+                                        Partner Support                       
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/gcrequest?crt=Partner Contract&t=gcrDetails&{!IF(blnIsAccount,'accid=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                     <td class="dataCell">
+                                         <apex:outputLink value="/apex/DealSupportHelpDocs?area=legal" target="_blank">Legal Help Documentation</apex:outputLink>
+                                    </td>                       
+                                </tr>-->
+                            </apex:outputPanel> 
+                            
+                            <apex:outputPanel rendered="{!NOT(blnIsAccount) && NOT(blnIsPartnerUser)}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">POR Review</td>
+                                     <td>
+                                        Request POR Review for PureEngage Cloud Opportunities
+                                    </td>
+                                    <td class="dataCell">
+                                        <!--<apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=POR Review&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>-->
+                                            <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false"                                
+                                            onclick="window.location.href='/apex/PORDSR?supportarea=POR Review&type=Cloud POR Review&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                            
+                                            
+                                    </td>
+                                     <td class="dataCell">
+                                     <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fddcc932858-ee7b-4cf4-822a-0c479b22ac46%252FdfYzdmZWM3NmUtY2QxNS00MWI3LTgwYmItMjk5OWEzNTQ5MjBh%252CPT0%253D%252CU2FsZXMgVG9vbA%253D%253D%252FdfMzJlNzc0NzEtNmU5MC00NDJkLWJkNDMtMjA3MDY0NTg1OTUz%252CPT0%253D%252CUHVyZUVuZ2FnZQ%253D%253D%252Flf7ae0f023-7875-4b98-9154-39f04cd950df//?mode=view" target="_blank">POR Template</apex:outputLink></li>
+                                        
+                                     
+                                     </td>
+                                </tr>
+                             </apex:outputPanel>
+                             
+                            <apex:outputPanel rendered="{!NOT(blnIsAccount) && NOT(blnIsPartnerUser)}">
+                                <tr class="dataRow"> 
+                                    <td class="dataCell">Pre-Sales Support</td>
+                                    <apex:outputPanel rendered="{!NOT(blnIsPartnerUser) }">
+                                    <td>
+                                     Request assistance from a Solution Consultant on your deal. SCs can assist with Vision, Discovery and Design activities.
+                                    </td>
+                                    </apex:outputPanel>
+                                    
+                                    <!-- Added by JJ on 3/23 -->
+                                    <apex:outputPanel rendered="{!(blnIsPartnerUser) }">
+                                    <td>
+                                     Document your Design, Smart Use Cases, and Architectural Blueprints to maximize your pre-sales efforts.
+                                    </td>
+                                    </apex:outputPanel>
+                                    
+                                    
+                                    <td class="dataCell">
+                                        <apex:commandButton rendered="{!IF(blnIsAccount = false,true,false)}"
+                                                styleClass="btnSharing" style="height:18px" value="Click Here"
+                                                reRender="false"
+                                                onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupportRequest?area=PreSales Support&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;" />
+                                    </td>
+                                    
+                                    <apex:outputPanel rendered="{!NOT(blnIsPartnerUser) }">
+                                    <td class="dataCell">
+                                       <ul style="padding-left:0;">
+                                          <!-- <li><apex:outputLink value="/sfc/#version?selectedDocumentId=069U00000027eJ9" target="_blank">Wow - Quick Reference (AE)</apex:outputLink></li>
+                                           <li><apex:outputLink value="/sfc/#version?selectedDocumentId=069U00000027eJE" target="_blank">Wow - Quick Reference (SC)</apex:outputLink></li>-->
+                                           
+                                        <li><apex:outputLink value="https://genesys.litmos.com/course/1195160?r=False&ts=636612847587723717" target="_blank">SC Engagement Training</apex:outputLink></li>
+
+                                       </ul>
+                                    </td>
+                                   </apex:outputPanel>
+                                </tr> 
+                            </apex:outputPanel>
+                            
+                            <!-- for Partner users start -->
+                              <apex:outputPanel rendered="{!blnIsPartnerUser}">
+                                <tr class="dataRow"> 
+                                    <td class="dataCell">Smart DSR</td>
+                                    <apex:outputPanel >
+                                    <td>
+                                    
+                                     Document your Design, Smart Use Cases, and Architectural Blueprints to maximize your pre-sales efforts.
+                                    </td>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel >
+                                        <td>
+                                         <apex:commandButton value="Click Here" reRender="false" styleClass="btnSharing" style="height:18px"   onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/SC_EngagementPartner_DSR?id={!PartnerDSRID}';return false;" rendered="{!PartnerDSRID != null }" />
+                                        <apex:commandButton value="Click Here" reRender="false" styleClass="btnSharing" style="height:18px"  onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/SC_EngagementPartner_DSR?oppid={!OppId}&IdU={!strUserID}';return false;" rendered="{!PartnerDSRID == null }"/>
+                                        </td>
+                                    </apex:outputPanel>
+                                    <td class="dataCell">
+                                       
+                                        
+                                        
+                                    </td>
+                                    
+                                </tr> 
+                            </apex:outputPanel>
+                            <!-- for Partner users end -->
+                            
+                            <tr class="dataRow">
+                                <td class="dataCell">Pricing</td>
+                                <td>
+                                
+                                <apex:outputText rendered="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+                                    If you cannot find the pricing information you need on the Genie pages linked to the right, engage the Global pricing team.
+                                </apex:outputText>
+                                <apex:outputText rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}">
+                                    Request assistance from the Pricing team for PureCloud, PureConnect or Pure Engage products.
+                                </apex:outputText>
+                                </td>
+
+                                <td class="dataCell">
+                                    <!--<apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" onclick="sendEmail('Pricing');" reRender="false"/>-->
+                                    <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                        onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupportRequest?area=Pricing&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                </td>
+                                <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                <td class="dataCell">
+                                   <!--<apex:outputLink value="/apex/DealSupportHelpDocs?area=pricing" target="_blank">Pricing Help Documentation</apex:outputLink>-->
+                                    <ul style="padding-left:0;">
+                                        <li><apex:outputLink value="https://intranet.genesys.com/display/GPGW/Genesys+Pricing+Guide" target="_blank">Pricing guide</apex:outputLink></li>
+                                        <li><apex:outputLink value="https://genesys.my.salesforce.com/_ui/core/chatter/groups/GroupProfilePage?g=0F9U0000000LQJ2" target="_blank">Simplified Packaging and Pricing Chatter Group</apex:outputLink></li>
+                                        
+                                        <!--<apex:outputLink value="https://genesys.gosavo.com/CustomPage/View.aspx?id=35255215" target="_blank">Price Lists and Pricing related documents</apex:outputLink>-->
+                                        <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/main/%252Fddcc932858-ee7b-4cf4-822a-0c479b22ac46%252FdfYzdmZWM3NmUtY2QxNS00MWI3LTgwYmItMjk5OWEzNTQ5MjBh%252CPT0%253D%252CUHJpY2luZw%253D%253D/grid/title" target="_blank">Price Folder (Genesys)</apex:outputLink> </li>
+                                        <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/b0297c72-c9f4-4981-a280-c2f3b753c6a6/main/%252Fdd5b47c628-1ae9-4997-83a5-db25644756f7%252FdfYzdmZWM3NmUtY2QxNS00MWI3LTgwYmItMjk5OWEzNTQ5MjBh%252CPT0%253D%252CUHJpY2luZw%253D%253D/grid/title" target="_blank">Price Folder (Partner)</apex:outputLink> </li>
+                                    
+                                    </ul>
+                                </td>
+                                </apex:outputPanel> 
+                            </tr>
+                                
+                             
+                            <!-- Changes requested by Monika -->  
+                                <tr class="dataRow">
+                                <td class="dataCell">Finance – Field Finance</td>
+                                <td>
+                                
+                                <apex:outputText rendered="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+                                   Inquiries for regional Field Finance teams, most likely related to opportunity booking amount, opportunity forecasting, or account segmentation. 
+                                </apex:outputText>
+                                
+                                </td>
+
+                                <td class="dataCell">                                     
+                                    <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                        onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupportRequest?area=Finance – Field Finance&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                </td>
+                                <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                <td class="dataCell">                                   
+                                    <ul style="padding-left:0;">     
+                                    <li><apex:outputLink value="https://genesys.seismic.com/Link/Content/DCKRiR9BzTuUayeNnWUj_uCQ" target="_blank">2019 Bookings Requirements and Scenarios</apex:outputLink></li>
+                                    </ul>
+                                </td>
+                                </apex:outputPanel> 
+                            </tr>
+                               
+                            <!-- Changes requested by Debora Lane and Trevor -->   
+                            <tr class="dataRow">
+                                <td class="dataCell">Product Management</td>
+                                <td>
+                                    <apex:outputText rendered="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+                                        Create Field Customer Commitment Request (FCCR) or reach out to Product Management for help finding product information in Genie. For information in Genie you may want to first explore the links on the right.
+                                    </apex:outputText>
+                                    <apex:outputText rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}">
+                                        Request assistance from the Product Management team for product feature/functionality inquiries or product end of life information.
+                                    </apex:outputText>
+                                </td>
+
+                                <td class="dataCell">
+                                    <!--<apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" onclick="sendEmail('Product Management');" reRender="false"/>-->
+                                    <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                        onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupportRequest?area=Product Management&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                </td>
+                                <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                <td class="dataCell">
+                                   <!--<apex:outputLink value="/apex/DealSupportHelpDocs?area=productmanagement" target="_blank"> Product Management Help Documentation</apex:outputLink>-->
+                                    <ul style="padding-left:0;">
+                                        
+                                       <!-- <li><apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=41119028" target="_blank">Taxonomy Ownership (Owner by Product)</apex:outputLink></li>
+                                        <li><apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=44771525&view=&srlid=57586973&srisprm=False&sritidx=0&srpgidx=0&srpgsz=25" target="_blank">Product Roadmap FAQ</apex:outputLink></li>
+                                        <li><apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=44010007&view=&srlid=57161956&srisprm=False&sritidx=2&srpgidx=0&srpgsz=7" target="_blank">Product Roadmap - PureEngage Premise</apex:outputLink></li>
+                                        <li><apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=38138643" target="_blank">Product Roadmap - PureEngage Cloud</apex:outputLink></li>
+                                        <li><apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=41457249" target="_blank">Product Roadmap - PureConnect</apex:outputLink></li>
+                                        <li><apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=42013915" target="_blank">Product Roadmap - PureCloud</apex:outputLink></li>-->
+                                       <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fddbbcd7ea7-8217-4126-9fa6-1cd2e5f431d0%252Fdd4b6566b1-7d64-45dc-9db6-fb26e76631bb%252Flf24d8f9f9-13d0-41db-b780-90f596dfca50//?mode=view" target="_blank">Taxonomy Ownership (Owner by Product)</apex:outputLink></li> 
+                                       <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fdd9c7b94d1-c72f-42c4-8e6c-9cfa587a0437%252FdfOthers%252Flf8f33112a-58c9-4d2c-934d-42d27917387d//?mode=view" target="_blank">Product Roadmap FAQ</apex:outputLink></li> 
+                                       <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fddb6b4314a-0241-4a4c-b185-32ffd694c71e%252Fdd5ce92f69-d38a-4108-9e2f-bdb83fd5de39%252Fldf8a345dd-e6cf-42f1-9a49-2087b2edf899%252Flfd9bad254-60b7-41d5-9065-079b43d0bc99//?mode=view" target="_blank">Product Roadmap - PureEngage Premise</apex:outputLink></li> 
+                                       <li><apex:outputLink value="https://genesys.seismic.com/Link/Content/DCvkZsIuLnD0CTXP3SUwqD5w" target="_blank">Product Roadmap - PureEngage Cloud</apex:outputLink></li> 
+                                       <li><apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fddbbcd7ea7-8217-4126-9fa6-1cd2e5f431d0%252Fdd016ce60f-b7ea-46e1-a7df-b6dde21b3c2b%252Flf4d77b448-26b5-421b-9cab-2a09894b278b//?mode=view" target="_blank">Product Roadmap - PureConnect</apex:outputLink></li> 
+                                       <li><apex:outputLink value="https://genesys.seismic.com/Link/Content/DCQZIxXwK_hEerQJczDY20Pg" target="_blank">Product Roadmap - PureCloud</apex:outputLink></li> 
+
+                                       
+                                    </ul>
+                                </td>
+                                </apex:outputPanel>
+                            </tr>
+                                
+                            <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">Professional Services</td>
+                                    <td>
+                                    Request support from the PS team on Budgetary Estimates, Statements of Work, Letters of Engagement, etc.
+                                    </td>
+                                    <td class="dataCell">
+                                         <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Professional Services&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                    <td class="dataCell">
+                                       <ul style="padding-left:0;">
+                                          <!-- <li>
+                                               <apex:outputLink value="https://genesys.gosavo.com/Document/Document.aspx?id=41933711&view" target="_blank">
+                                               PS Deal Support  - Quick Reference (AE/SC)
+                                               </apex:outputLink>
+                                           </li> -->
+                                           <li>
+                                               <apex:outputLink value="https://genesys.seismic.com/X5/doccenter.aspx?ContentId=d54b4d6f-7abf-4d92-8faa-ba865ca75811#/doccenter/00934254-3857-4539-9786-28d3dbcb59c8/doc/%252Fdd9c7b94d1-c72f-42c4-8e6c-9cfa587a0437%252FdfOthers%252Flfd4751f79-3269-425b-bdf2-725529ba2ff4//?mode=view" target="_blank">
+                                               PS Deal Support - Full Reference (PS)
+                                               </apex:outputLink>
+                                           </li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            
+                            
+                             
+                            <apex:outputPanel rendered="{!AND(blnIsPartnerUserNoOpp, blnIsPartnerUser)}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">Quote Request</td>
+                                    <td>
+                                     Request a PureConnect, PureEngage or PureCloud quote.
+                                    </td>
+                                    <td class="dataCell">
+                                        <!--<apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" onclick="sendEmail('Finance');" reRender="false"/>-->
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                            onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupportRequest?area=Quote Request&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL={!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupport?id={!strRecordId}';return false;"/>
+                                    </td>
+                                    
+                                </tr>
+                            </apex:outputPanel>
+                            
+                             <apex:outputPanel rendered="{!NOT(blnIsAccount) && NOT(blnIsPartnerUser) && if(strRecordId=null,false,true)}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">RFP</td>
+                                    <td>Request assistance from the Global RFP Team. Local experts are ready to help. Self-service RFP tools are available at the Genie page linked to the right.
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                                        onclick="window.location.href='/apex/RFPSupportRequestEdit?{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                            <!--onclick="window.location.href='/a7R/e?CF00NU0000004GtW1={!URLENCODE(Opportunity.Name)}&CF00NU0000004GtW1_lkid={!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>-->
+                                    </td>
+                                   <td class="dataCell">
+                                       <ul style="padding-left:0;">
+                                           <li><apex:outputLink value="https://genesys.gosavo.com/CustomPage/View.aspx?id=39653914" target="_blank">RFP Support page in Genie</apex:outputLink></li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                            
+                            <apex:outputPanel rendered="{!blnIsPartnerUser}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">Tools/Systems Support</td>
+                                    <td>Request assistance from the Global Sales Operations team with a sales tool or process. 
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                                            onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupportRequest?area=Tools/Systems Support&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL={!IF(blnIsPartnerUser, '/partner','/apex')}/DealSupport?id={!strRecordId}';return false;"/>                              
+                                    </td>
+                                    <!--<td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                           <li>                               
+                                           <apex:outputLink value="https://genesys.gosavo.com/CustomPage/View.aspx?id=38373721" target="_blank">Sales Support page in Genie</apex:outputLink>
+                                           </li>
+                                       </ul>
+                                    </td>-->
+                                </tr>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!strRecordId != null && ((blnIsAccount && NOT(blnIsPartnerUser)) || NOT(blnIsAccount))}">
+                                <tr class="dataRow">
+                                    <td class="dataCell">References</td>
+                                    <td>Submit a request only after you have tried Reference Search and could not find an appropriate reference account for your Opportunity. 
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                               onclick="window.location.href='{!IF(blnIsPartnerUser, '/partner','/apex')}/apex/DealSupportRequest?area=References&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL={!IF(blnIsPartnerUser, '/partner','/apex')}/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                </td>
+                                    <!--   End Added by aparna --> 
+                                    <td class="dataCell">
+                                       <ul style="padding-left:0;">
+                                           <li><apex:outputLink value="https://genesys.seismic.com/Link/Content/DCfpFqWB08xES-2b4LzqV9RQ//?mode=view" target="_blank">Need a Reference</apex:outputLink></li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                                <tr class="dataRow">
+                                    <td class="dataCell">Security</td>
+                                    <td>Request assistance from Security once first pass and reviews have occurred on Security Questionnaire. 
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Security&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>                               
+                                    </td>
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                          <li>
+                                          </li> 
+                                       </ul>
+                                    </td>
+                                </tr> 
+                            </apex:outputPanel>
+                            
+                              <apex:outputPanel rendered="{!NOT(blnIsPartnerUser)}">
+                            <tr class="dataRow">
+                                    <td class="dataCell">Play Support and Migrations</td>
+                                    <td>Enquiries to the Sales Play Support Team regarding Top 5 Plays and Migrations Support
+                                    </td>
+                                    <td class="dataCell">
+                                        <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here"  reRender="false"
+                                            onclick="window.location.href='/apex/DealSupportRequest?area=Play Support&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>                               
+                                    </td>
+                                    <td class="dataCell">
+                                        <ul style="padding-left:0;">
+                                          <li><apex:outputLink value="https://genesys.seismic.com/Link/Content/DCN0kDyZJIjkCx-4GWyWwRTA" target="_blank">P2P Migration</apex:outputLink>
+                                           </li>
+                                       </ul>
+                                    </td>
+                                </tr>
+                             </apex:outputPanel>
+                            
+                            <!--Added by Swastika on 10-Dec-2015 to WOW Request form  **End**-->
+                            <!--<tr class="dataRow">
+                                <td class="dataCell">Sales Ops</td>
+                                <td>Enquiries to Sales Ops team on Tool and Process related questions
+                                </td>
+                                <td class="dataCell">
+                                    <apex:commandButton styleClass="btnSharing" style="height:18px" value="Click Here" reRender="false" 
+                                        onclick="window.location.href='/apex/DealSupportRequest?area=sales ops&{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&retURL=/apex/DealSupport?id={!strRecordId}';return false;"/>
+                                </td>
+                                <td class="dataCell">
+                                   <ul style="padding-left:0;">
+                                       <li><apex:outputLink value="/sfc/#workspaceView?selectedWorkspaceId=058U00000008v76" target="_blank">CRM Eco System Library</apex:outputLink></li>
+                                       <li><apex:outputLink value="https://genesyslab.csod.com/client/genesyslab/default.aspx" target="_blank">Sales U Training</apex:outputLink></li>
+                                   </ul>
+                                </td>
+                            </tr>-->
+                            </tbody>
+                        </table>
+                    </apex:pageBlock>
+                </apex:form>
+               <!-- <apex:relatedList subject="{!Opportunity}" list="GCRs__r"/>
+                <apex:relatedList subject="{!Opportunity}" list="RPF_Support_Requests__r"/>
+                <apex:relatedList subject="{!Opportunity}" list="CEC__r"/>
+                <apex:relatedList subject="{!Opportunity}" list="Deal_Support__r"/>-->
+                
+                <apex:pageBlock title="Business Consulting" rendered="{!list_BusinessConsulting.size > 0}">
+                    <apex:pageBlockTable value="{!list_BusinessConsulting}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:pageBlock title="Customer Care" rendered="{!list_CustomerCare.size > 0}">
+                    <apex:pageBlockTable value="{!list_CustomerCare}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:pageBlock title="Deal Desk" rendered="{!list_DealFactory.size > 0}">
+                    <apex:pageBlockTable value="{!list_DealFactory}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:pageBlock title="Finance" rendered="{!list_Finance.size > 0}">
+                    <apex:pageBlockTable value="{!list_Finance}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:pageBlock title="POR Review" rendered="{!list_POR.size > 0}">
+                    <apex:pageBlockTable value="{!list_POR}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="POR Type">
+                            <apex:outputField value="{!objDS.POR_Type__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="POR Disposition">
+                            <apex:outputField value="{!objDS.POR_Disposition__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity">
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:pageBlock title="Tools/Systems Support" rendered="{!list_ToolsSystems.size > 0}">
+                    <apex:pageBlockTable value="{!list_ToolsSystems}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>       
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                    
+                <apex:pageBlock title="Pricing" rendered="{!list_Pricing.size > 0}">
+                    <apex:pageBlockTable value="{!list_Pricing}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:pageBlock title="Product Management" rendered="{!list_ProductManagement.size > 0}">
+                    <apex:pageBlockTable value="{!list_ProductManagement}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                
+                <apex:pageBlock title="Professional Services" rendered="{!list_PS.size > 0}">
+                    <apex:pageBlockTable value="{!list_PS}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:outputPanel rendered="{!blnIsPartnerUserNoOpp}">
+                    <apex:pageBlock title="Quote Request" rendered="{!list_QuoteRequest.size > 0}">
+                        <apex:pageBlockTable value="{!list_QuoteRequest}" var="objQR" >
+                            <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objQR.Id,'/'+objQR.Id)}" >{!objQR.Name}</apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Subject" >
+                                <apex:outputField value="{!objQR.Subject__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="Priority" >
+                                <apex:outputField value="{!objQR.Priority__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="Status" >
+                                <apex:outputField value="{!objQR.Status__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="Last Activity" >
+                                <apex:outputField value="{!objQR.LastModifiedDate}"/>
+                            </apex:column>      
+                        </apex:pageBlockTable>
+                    </apex:pageBlock>
+                </apex:outputPanel>
+                <apex:pageBlock title="Sales Ops" rendered="{!list_SalesOps.size > 0}">
+                    <apex:pageBlockTable value="{!list_SalesOps}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+                <apex:pageBlock title="Transactional Quotes and Orders" rendered="{!list_Transactionalhelp.size > 0}">
+                    <apex:pageBlockTable value="{!list_Transactionalhelp}" var="objDS" >
+                        <apex:column headerValue="Name">
+                            <apex:outputLink value="{!IF(ISPICKVAL($User.UserType,'PowerPartner'),'/partner/PartnerPortalDSDetail?Id='+objDS.Id,'/'+objDS.Id)}" >{!objDS.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Subject" >
+                            <apex:outputField value="{!objDS.Subject__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Priority" >
+                            <apex:outputField value="{!objDS.Priority__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Status" >
+                            <apex:outputField value="{!objDS.Status__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="Last Activity" >
+                            <apex:outputField value="{!objDS.LastModifiedDate}"/>
+                        </apex:column>      
+                    </apex:pageBlockTable>
+                </apex:pageBlock>
+        </apex:define>
+    </apex:composition>
+    <apex:includeScript value="{!URLFOR($Resource.jQueryNew,'/jquery-1.8.3.min.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.jQueryNew,'/ui/js/jquery-ui-1.9.2.custom.min.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.jQueryNew,'/ui/css/smoothness/jquery-ui-1.9.2.custom.min.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.jQueryNew,'/css/common/common.css')}"/>
+    <script>
+        var $j = jQuery.noConflict();
+        
+        function sendEmail(supportAreaSelected)
+        {
+        
+            $j('<div></div>')
+            .html('<iframe id="actionIframe" name="actionIframe" frameborder="0" height="100%" width="100%" marginheight="0" marginwidth="0" scrolling="no" src="/apex/DealSupportQuery?{!IF(blnIsAccount,'accId=','oppId=')}{!strRecordId}&supportarea=' + supportAreaSelected + '"/>')
+            .dialog({
+                modal: true,
+                draggable: true,
+                height: parseInt(475) + 98,
+                width: parseInt(700) + 27,
+                title: "Email Support",
+                closeOnEscape: false,
+                close: function( event, ui ) {window.location.reload(true);}
+            });
+        }
+    </script>
+    <style type="text/css">
+        tr.dataRow {
+            background-color:white;
+        }
+        tr.dataRow:hover {
+            background-color: #e3f3ff;
+        }
+    </style>
+</apex:page>

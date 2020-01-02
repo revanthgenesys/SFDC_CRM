@@ -1,0 +1,836 @@
+<apex:component controller="knowLoginController">
+	<div class="configure-panel-container display:user-menu movable-grid grid-x">
+        <div class="dashboard-header cell small-10">
+            <h1 class="h3">
+                <span class="icon purecloud"></span>
+                <span class="thin">Pure</span><span>Cloud</span>
+            </h1> 
+        </div>
+        <apex:outputPanel layout="none" rendered="{!IF(auth==true, true, false)}">
+            <div class="cell small-2">
+                <button class="configure-panels">Configure Panels</button>
+            </div>
+            <div class="cell movables cards-container large-12">
+                <ul class="dashboard-menu sortables" id="dashboard-menu-01" style="display: none">
+                	<li class="helper-text">To hide a card from your dashboard, drag and drop it here. 
+                        To hide this section, click the Gear. To return a card to your dashboard, 
+                        click the Gear again, and then drag and drop the card to your dashboard.</li>
+                </ul>
+            </div>
+        </apex:outputPanel>
+    </div>
+    
+    <div class="movable-grid grid-x large-up-3">
+                    
+        <div class="cell movables cards-container large-4">
+            <ul id="cards-01" class="cards sortables"></ul>
+        </div>
+        
+        <div class="cell movables cards-container large-4">
+            <ul id="cards-02" class="cards sortables"></ul>
+        </div>
+        
+        <div class="cell movables cards-container large-4">
+            <ul id="cards-03" class="cards sortables"></ul>
+        </div>
+       
+        <ul class="dashboard-menu placeholders sortables" id="dashboard-menu-placeholders" style="display: none;">
+            <li class="movable dashboard-movable item" data-name="placeholder" data-portal="cloud" data-title="Placeholder" data-type="item" id="dashboard-movable-item-placeholder"><span class="title">Placeholder</span><i class="icon drag-bar"></i></li>
+        </ul>
+        
+        <ul id="cards-placeholders" class="cards placeholders sortables" style="display: none;">                    
+            <li id="card-placeholder" class="movable card placeholder" data-type="card" data-portal="cloud" data-name="placeholder" data-load="async" data-title="Placeholder" data-tag="">
+                <div class="card-section">
+                    <h4 class="title">Placeholder</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <div class="links-container grid-container text-center">
+                        <p>
+                            <apex:image url="{!URLFOR($Resource.pureportalpackage, 'assets/img/ani/Double-Ring-30-2.6s-4px-72px.gif')}"  alt="Loading" width="72" height="72" />    
+                            <br />
+                            &nbsp;loading...
+                        </p>
+                    </div>
+                </div>
+            </li>
+        </ul>
+                  
+        <ul id="cards-inactive" class="cards inactive sortables" style="display: none;">
+            
+            <apex:outputPanel layout="none" rendered="{!IF(auth==true, true, false)}">     
+                <li id="card-tips" class="movable cell card tips" data-type="card" data-portal="cloud" data-load="static" data-name="tips" data-title="Tips" data-tag=""> 
+                    <div class="card-section">
+                        <h4 class="title">
+                            A few tips to<br />
+                            get you started
+                        </h4>
+                        <i class="icon drag-bar"></i> 
+                    </div>
+                    <div class="card-section middle slides">
+                        <div class="slick text-center">
+                            <div class="slide">
+                                <p>
+                                    <img src="{!assetImgPath}/img/slides/slide-01.png" alt="" width="280" />
+                                </p>
+                                <p>
+                                    <b>Personalize your dashboard</b><br />
+                                    To reorganize the cards on your dashboard, grab a card, and then drag and drop it to your preferred location. 
+                                </p>
+                            </div>
+                            <div class="slide text-center">
+                                <p>
+                                    <img src="{!assetImgPath}/img/slides/slide-02.png" alt="" width="280" />
+                                </p>
+                                <p>
+                                    <b>Hide and display cards</b> <br />
+                                    Click the Gear to expand the Dashboard Menu. To remove a card from your dashboard, drag and drop it into the menu. Click the Gear again to collapse the menu.
+                                </p>
+                            </div>
+                            <div class="slide text-center">
+                                <p>
+                                    <img src="{!assetImgPath}/img/slides/slide-03.png" alt="" width="280" />
+                                </p>
+                                <p>
+                                    <b>Add your profile picture</b><br />
+                                    After sign in, click the drop-down arrow beside your name and then click Edit Profile to add or edit your profile picture.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </li><!-- #card-tips -->
+            </apex:outputPanel>
+            
+            <li id="card-onboarding-webinars" class="movable cell card onboarding-webinars" data-type="card" data-portal="cloud" data-name="onboarding-webinars" data-load="async" data-title="Upcoming Onboarding Webinars" data-tag="">
+                <div class="card-section">
+                    <h4 class="title">New Customer Onboarding</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section" style="padding-bottom: 0px;">
+                    <p>Boost Your Knowledge with a 20 Min. Webinar</p>
+                </div>
+                <div class="card-section middle">
+                </div>
+            </li>
+            
+            <!-- profile cards -->
+
+            <apex:outputPanel layout="none" rendered="{!AND(NOT(isGKNOnlyUser), auth==true, pureCld!='None')}">
+                <li id="card-customer-care-portal" class="movable cell card customer-care-portal" data-type="card" data-portal="cloud" data-name="customer-care-portal" data-title="Customer Care Portal" data-tag="">
+                    <div class="card-content flex-child-grow flex-container flex-dir-column">
+                        <div class="card-section flex-child-shrink">
+                            <h4>Customer Care</h4>
+                            <i class="icon drag-bar"></i>
+                        </div>
+                        <div class="card-section" data-equalizer-watch="cards">
+                            <h5><span style="color: #999999;">My Support</span> | PureCloud</h5>
+                            <div class="links-container grid-container">
+                                <div class="grid-x grid-padding-x small-up-1 medium-up-2">
+                                    <div class="cell">
+                                        <ul class="vertical menu">
+                                            <li><a href="https://help.mypurecloud.com/articles/contact-purecloud-care/" target="_blank">Customer Care Info</a></li>
+                                            <li><a href="https://genesys.okta.com/app/salesforce/exk1dx5vnowWti9pA0h8/sso/saml?RelayState=https://genesyspartner.force.com/customercare/home/home.jsp" target="_blank">Announcements</a></li>
+                                            <li><a href="https://genesys.okta.com/app/salesforce/exk1dx5vnowWti9pA0h8/sso/saml?RelayState=https://genesyspartner.force.com/customercare/GenesysCareMobileApp" target="_blank">Mobile App</a></li>
+                                            
+                                        </ul>
+                                    </div>
+                                    <div class="cell">
+                                        <ul class="vertical menu">
+                                            <li style="{!IF(pCloud != 'Basic' && pCloud != 'None', 'display:block', 'display:none')}"><a href="https://genesys.okta.com/app/salesforce/exk1dx5vnowWti9pA0h8/sso/saml?RelayState=https://genesyspartner.force.com/customercare/CustCarePCloudCases" target="_blank">New Case</a></li>
+                                            <li style="{!IF(pCloud != 'Basic' && pCloud != 'None', 'display:block', 'display:none')}"><a href="https://genesys.okta.com/app/salesforce/exk1dx5vnowWti9pA0h8/sso/saml?RelayState=https://genesyspartner.force.com/customercare/CustomerPortalMyCases" target="_blank">My Active Cases</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </apex:outputPanel>
+                
+            <apex:outputPanel layout="none" rendered="{!IF(auth==true, true, false)}">
+                <li id="card-road-map" class="movable cell card road-map" data-type="card" data-portal="cloud" data-name="road-map" data-title="Roadmaps and Releases" data-tag="">
+                    <div class="card-content flex-child-grow flex-container flex-dir-column">
+                        <div class="card-section flex-child-shrink">
+                            <h4>Roadmaps and Releases</h4>
+                            <i class="icon drag-bar"></i>
+                        </div>
+                        <div class="card-section" data-equalizer-watch="cards">
+                            <h5>Roadmaps</h5>
+                            <div class="links-container grid-container">
+                                <div class="grid-x grid-padding-x small-up-1 medium-up-1">
+                                    <div class="cell">
+                                        <ul style="list-style: none; line-height: 28px;">
+                                            <li><a href="https://genesyspartner.force.com/customercare/pkb_Home?id=kA80d0000008OpJ&l=en_US&fs=Search&pn=1" target="_blank">PureCloud Roadmap</a></li>
+                                        	<li><a href="https://genesys.zoom.us/recording/share/clI-KEUAREDn5_e9Lumg5y04pat9rVjn15y6N0_2lPewIumekTziMw?startTime=1572476415000">PureCloud Roadmap Webinar</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <h5>Releases</h5>
+                            <div class="links-container grid-container">
+                                <div class="grid-x grid-padding-x small-up-1 medium-up-1">
+                                    <div class="cell">
+                                        <ul style="list-style: none; line-height: 28px;">
+                                            <li><a href="https://www.genesys.com/webinars/genesys-winter-2018-innovations" target="_blank">Winter Innovations 2018</a></li>
+                                            <li><a href="https://www.genesys.com/collateral/summer-release-2018" target="_blank">Summer Innovations 2018</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </apex:outputPanel>
+                
+            <apex:outputPanel layout="none" rendered="{!IF(auth==true, true, false)}">
+                <li id="card-product-webinars" class="movable cell card product-webinars" data-type="card" data-portal="cloud" data-name="product-webinars" data-title="Product Webinars" data-tag="">
+                    <div class="card-content flex-child-grow flex-container flex-dir-column">
+                        <div class="card-section flex-child-shrink">
+                            <h4>Product Webinars</h4>
+                            <i class="icon drag-bar"></i>
+                        </div>
+                        <div class="card-section" data-equalizer-watch="cards">
+                            <h5>Inbound</h5>
+                            <div class="grid-x grid-padding-x small-up-1 medium-up-1">
+                                <div class="cell">
+                                    <ul style="list-style: none;">
+                                        <li>Analytics - <a href="https://genesyspartner.force.com/customercare/servlet/fileField?id=0BE0B000000Tv8W" target="_blank">Webinar</a>,  <a href="https://genesyspartner.force.com/customercare/servlet/fileField?id=0BE0B000000Tv8b" target="_blank">Presentation</a></li> 
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-section" data-equalizer-watch="cards">
+                            <h5>Workforce Engagement Management</h5>
+                            <div class="grid-x grid-padding-x small-up-1 medium-up-1">
+                                <div class="cell">
+                                    <ul style="list-style: none;">
+                                        <li>Workforce Management - <a href="https://genesyspartner.force.com/customercare/pkb_Home?id=kAD0d000000GmhUGAS" target="_blank">Webinar</a>,  <a href="https://genesyspartner.force.com/customercare/servlet/fileField?id=0BE0d0000004Tm9" target="_blank">Presentation</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </li>
+            </apex:outputPanel>
+                
+            <apex:outputPanel layout="none" rendered="{!AND(OR(MyProflieName=='Genesys Portal End User' || MyProflieName=='Genesys Portal End User – Read Only' || MyProflieName=='Overage Customer Portal Manager Custom'), auth==true)}">
+                <li id="card-other-sites" class="movable cell card other-sites" data-type="card" data-portal="cloud" data-name="other-sites" data-title="Other Sites" data-tag="">
+                    <div class="card-content flex-child-grow flex-container flex-dir-column">
+                        <div class="card-section flex-child-shrink">
+                            <h4>Other Sites</h4>
+                            <i class="icon drag-bar"></i>
+                        </div>
+                        <div class="card-section" data-equalizer-watch="cards">
+                            <div class="grid-x grid-padding-x small-up-1 medium-up-2">
+                                <apex:outputPanel layout="none" rendered="{!OR(MyProflieName=='Genesys Portal End User' || MyProflieName=='Genesys Portal End User – Read Only' || MyProflieName=='Overage Customer Portal Manager Custom')}">
+                                    <div class="cell">
+                                        <h5>GCAP Portal</h5>
+                                        <p><a class="button small" href="https://genesys.influitive.com/join/Enroll" target="_blank">View Now</a></p>
+                                    </div>
+                                </apex:outputPanel>
+                            </div>
+                            
+                            <div class="grid-x grid-padding-x small-up-1 medium-up-2">
+                                <apex:outputPanel layout="none" rendered="{!AND(uType=='PowerPartner',auth==true)}">
+                                    <div class="cell">
+                                        <h5>Partner Portal</h5>
+                                        <p><a class="button small" href="https://genesyspartner.force.com/partner/partnerportallanding" target="_blank">View Now</a></p>
+                                    </div>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!AND((uType=='PowerCustomerSuccess' || uType=='CustomerSuccess'),auth==true)}">
+                                    <div class="cell">
+                                        <h5>Consultant portal</h5>
+                                        <p><a class="button small" href="http://genesyspartner.force.com/ConsultantPortal" target="_blank">View Now</a></p>
+                                    </div>
+                                </apex:outputPanel>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </apex:outputPanel>
+                
+            <apex:outputPanel layout="none" rendered="{!IF(auth==true, true, false)}">
+                <li id="card-product-ideas-lab" class="movable cell card product-ideas-lab" data-type="card" data-portal="cloud" data-name="product-ideas-lab">
+                    <div class="card-content flex-child-grow flex-container flex-dir-column">
+                        <div class="card-section flex-child-shrink">
+                            <h4>Product Ideas Lab</h4>
+                            <i class="icon drag-bar"></i>
+                        </div>
+                        <div class="card-section" data-equalizer-watch="cards">
+                            <div class="links-container grid-container">
+                                <div class="grid-x grid-padding-x small-up-1 medium-up-1">
+                                    <div class="cell">
+                                        <p class="up bold">Enter the Laboratory</p>
+                                        <p>
+                                            <a class="button plum small" href="https://genesys.okta.com/app/genesys_ahapurecloud_1/exk1fyt0hn6mOsOWG0h8/sso/saml" target="gkn">Browse and Submit Ideas</a>
+                                        </p>
+                                    </div>
+                                    <div class="cell">
+                                        <ul class="vertical menu">
+                                            <li><a href="http://docs.genesys.com/Special:Repository/Quick_Guide_-_PureCloud.pdf?id=bd339d9a-8cab-49d8-b4fa-b9c731f200e9" target="_blank">Quick Guide</a></li>
+                                            <li><a href="https://docs.genesys.com/Special:Repository/Status_Definition_FAQ_-_Final.png?id=1e6da979-1589-417d-8724-997cf794d94a" target="_blank">Statuses</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </apex:outputPanel>
+
+            <apex:outputPanel layout="none" rendered="{!AND(OR(advisorUser!=null,csmUser!=null), auth==true)}">
+                <li id="card-contacts" class="movable cell card contacts" data-type="card" data-portal="cloud" data-name="contacts" data-title="Genesys Contacts" data-tag="">
+                    <div class="card-content flex-child-grow flex-container flex-dir-column">
+                        <div class="card-section flex-child-shrink">
+                            <h4>Your Contacts</h4>
+                            <i class="icon drag-bar"></i>
+                        </div>
+                        <div class="card-section flex-child-grow">
+                            <apex:outputPanel layout="none" rendered="{!AND(csmUser!=null,auth==true)}">
+                                <div class="contact">
+                                    <h6 class="title">{!csmUser.Title}</h6>
+                                    <p class="name">{!csmUserName}</p>
+                                    <p class="email"><a href="mailto:{!csmUser.email}">{!csmUser.email}</a></p>
+                                    <p class="phone"><a href="mailto:tel:+{!csmUser.Phone}">{!csmUser.Phone}</a></p>
+                                </div>
+                            </apex:outputPanel>
+                        
+                            <apex:outputPanel layout="none" rendered="{!AND(advisorUser!=null,auth==true, advisorUser.email!=csmUser.email)}">
+                                <div class="contact">
+                                    <h6 class="title">{!advisorUser.Title}</h6>
+                                    <p class="name">{!advisorUserName}</p>
+                                    <p class="email"><a href="mailto:{!advisorUser.email}">{!advisorUser.email}</a></p>
+                                    <p class="phone"><a href="mailto:tel:+{!advisorUser.Phone}">{!advisorUser.Phone}</a></p>
+                                </div>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!AND(advisorUser!=null,auth==true,csmUser.Name=='Genesys Advisor')}">
+                                <div id="chat-button">
+                                    <a href=""><span>Chat Now</span></a>
+                                </div>
+                                <h6 id="chat-not-available" style="display:none;">
+                                    Sorry, we are offline at the moment.
+                                </h6>
+                                <div id="chat-container" style="height:5px;margin-top:10px;"></div>
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </li>
+            </apex:outputPanel>
+           
+            <!-- end profile cards -->
+            
+            <!--
+            <li id="card-cx19" class="movable cell card cx19" data-type="card" data-portal="cloud" data-name="cx19" data-load="static" data-title="CX 19" data-tag="">
+                <div class="card-section">
+                    <h4>Xperience19 Registration!</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle" style="padding: 1.59884rem 0 0 0;">
+                    <a href="https://www.genesys.com/events/xperience19?utm_source=https://know.genesys.com/&utm_medium=referral&utm_campaign=xperience-19" target="_blank">
+                        <img src="{!assetImgPath}/img/cards/x19.png" style="width: 100%;" />
+                    </a>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://www.genesys.com/events/xperience19?utm_source=https://know.genesys.com/&utm_medium=referral&utm_campaign=xperience-19" class="view-all" target="_blank" style="color: #4e5055; font-size: 20px; font-weight: bold;">Don’t miss out. <span style="color: #ff4f1f; font-weight: bold;">Register for Xperience19</span> today.</a></span> 
+                </div>                                
+            </li>
+			-->
+
+			<!--            
+            <li id="card-holiday-ama" class="movable cell card holiday-ama" data-type="card" data-portal="cloud" data-name="holiday-ama" data-load="static" data-title="Ask Me Anything" data-tag="">
+                <div class="card-section">
+                    <h4>Holiday Scheduling AMA</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <a href="https://community.genesys.com/events/event-description?CalendarEventKey=9a802c08-4e85-466e-a682-4adb6c59aec2&CommunityKey=bab95e9c-6bbe-4a13-8ade-8ec0faf733d4&Home=%2fcommunities%2fcommunity-home1%2frecent-community-events" target="_blank">
+                        <img src="{!assetImgPath}/img/cards/holiday-ama.jpg" />
+                    </a>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://community.genesys.com/events/event-description?CalendarEventKey=9a802c08-4e85-466e-a682-4adb6c59aec2&CommunityKey=bab95e9c-6bbe-4a13-8ade-8ec0faf733d4&Home=%2fcommunities%2fcommunity-home1%2frecent-community-events" class="view-all" target="_blank">Event Date: November 13, 2019</a></span> 
+                </div>                                
+            </li> 
+			-->
+            
+            <li id="card-qa-show" class="movable cell card qa-show" data-type="card" data-portal="cloud" data-name="qa-show" data-load="dynamic" data-title="PureCloud Community Q&A Show" data-tag="most recent"> 
+                <div class="card-section">
+                    <h4>Community Q&amp;A Show</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section">
+                    <div class="icon-list-grid grid-x grid-padding-x">
+                        <div class="flex-video widescreen" style="width: 100%">
+                            <iframe width="280" height="150" src="https://www.youtube.com/embed/videoseries?list=PL4anLPM52HBCzZfvGhF-ZtKA_T4aBofMO" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://community.genesys.com/search?s=tags:%22PureCloud%20QA%20Episode%22&executesearch=true" class="view-all" target="_blank">View All</a></span> 
+                </div>   
+            </li>
+            
+            <li id="card-write-review" class="movable card write-review" data-type="card" data-portal="cloud" data-name="write-review" data-load="static" data-title="Write a Review" data-tag="">
+                <div class="card-section">
+                    <h4>Write a Review</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <a href="http://ca.gartnerdigitalmarkets.com/Genesys-PureCloud-21409-SS-03_Write_a_Review.html" target="_blank">
+                        <img src="{!assetImgPath}/img/cards/write-review-capterra.png" style="width: 100%" />
+                    </a>
+                </div>                              
+            </li>
+            
+            <!--
+            <li id="card-make-cx" class="movable card make-cx" data-type="card" data-portal="cloud" data-name="make-cx" data-load="static" data-title="Make CX Personal" data-tag="">
+                <div class="card-section">
+                    <h4>Make CX Personal</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <a href="https://www.genesys.com/cx-day" target="_blank">
+                        <img src="{!assetImgPath}/img/cards/make-cx.jpeg" style="width: 100%" />
+                    </a>
+                </div>                              
+            </li>
+			-->
+            
+            <apex:outputPanel layout="none" rendered="{!AND(uType=='PowerCustomerSuccess', auth==true)}">
+                <li id="card-gcap" class="movable card gcap" data-type="card" data-portal="cloud" data-name="gcap" data-load="static" data-title="GCAP" data-tag="">
+                    <div class="card-section">
+                        <h4>Enroll In GCAP</h4>
+                        <i class="icon drag-bar"></i>
+                    </div>
+                    <div class="card-section middle" style="padding: 1.59884rem 0 0 0;">
+                        <a href="https://genesys.influitive.com/users/sign_up" target="_blank">
+                            <img src="{!assetImgPath}/img/cards/gcap.png" style="width: 100%;" />
+                        </a>
+                    </div>
+                    <div class="card-section view-all-section">
+                        <span><a href="https://genesys.influitive.com/users/sign_up" class="view-all" target="_blank" style="color: #4e5055; font-size: 20px; font-weight: bold;">Become a Genesys advocate by joining the Genesys Customer Advocacy Program.</a></span> 
+                    </div>                                
+                </li> 
+            </apex:outputPanel>
+            
+            <!--
+            <li id="card-cia" class="movable cell card cia" data-type="card" data-portal="cloud" data-name="cia" data-load="static" data-title="Customer Innovation Awards" data-tag="">
+                <div class="card-section">
+                    <h4>2019 Customer Innovation Awards</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle" style="padding: 1.59884rem 0 0 0;">
+                    <a href="https://www.genesys.com/customer-awards" target="_blank">
+                        <img src="{!assetImgPath}/img/cards/customer-innovation-awards.jpg" style="width: 100%;" />
+                    </a>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://www.genesys.com/customer-awards" class="view-all" target="_blank" style="color: #4e5055; font-size: 20px; font-weight: bold;">Submit your company by <span style="color: #ff4f1f; font-weight: bold;" >April 5!</span></a></span> 
+                </div>                                
+            </li>
+			-->
+            
+            <li id="card-your-story" class="movable cell card your-story" data-type="card" data-portal="cloud" data-name="your-story" data-load="static" data-title="Submit Your Story" data-tag="">
+                <div class="card-section">
+                    <h4>Submit Your Story</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <a href="https://www.genesys.com/campaign/cx-heroes" target="_blank">
+                        <img src="https://rcstaging.wpengine.com/wp-content/uploads/2019/01/CX-Heroes-GKN-650x367.png" />
+                    </a>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://www.genesys.com/campaign/cx-heroes" class="view-all" target="_blank">View All</a></span> 
+                </div>                                
+            </li> 
+            
+            <li id="card-announcements" class="movable cell card announcements" data-type="card" data-portal="cloud" data-name="announcements" data-load="async" data-title="PureCloud Announcements" data-tag="">
+                <div class="card-section">
+                    <h4 class="title">PureCloud Announcements</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                </div>
+            </li>
+            
+            <li id="card-webinars" class="movable cell card webinars" data-type="card" data-portal="cloud" data-name="webinars" data-load="async" data-title="Upcoming Webinars" data-tag="">
+                <div class="card-section">
+                    <h4 class="title">Upcoming Webinars</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://www.genesys.com/webinars" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>
+            
+            <li id="card-resource-center" class="movable cell card resource-center" data-type="card" data-portal="cloud" data-name="resource-center" data-load="async" data-title="Resource Center" data-tag="popular">
+                <div class="card-section">
+                    <h4 class="title">Resource Center <span class="tag">(popular)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="http://help.mypurecloud.com" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>
+            
+            <li id="card-community" class="movable cell card community" data-type="card" data-portal="cloud" data-name="community" data-load="dynamic" data-title="Community" data-tag="trending">
+                <div class="card-section">
+                    <h4 class="title">Community <span class="tag">(recent)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <div class="posts-grid grid-x grid-margin-x">
+                        <div class="medium-12 cell">
+                            <div id="previewWidget"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://genesys.okta.com/app/genesys_higherlogic_1/exk1fcjkflb6pudpO0h8/sso/saml?RelayState=https://community.genesys.com/communities/purecloud?CommunityKey=bab95e9c-6bbe-4a13-8ade-8ec0faf733d4" class="view-all" target="_blank">View All</a></span>
+                </div>
+                                
+            </li>
+            
+            <li id="card-pssc" class="movable cell card pssc" data-type="card" data-portal="cloud" data-name="pssc" data-load="static" data-title="PureSuccess Catalog" data-tag="pssc">
+                <div class="card-section">
+                    <h4>Service Catalog</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <div class="links-container grid-container">
+                        <div class="grid-x grid-padding-x small-up-1 medium-up-1">
+                            <div class="cell">
+                                <p>Engagements with our experts can accelerate the goals in your success plan. Talk to your Advisor about how we can move you forward.</p>
+                                <p><a class="button small" style="margin-top: 0.5rem; margin-bottom: 0;" href="https://puresuccess.genesys.com">Browse</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            
+            <!--
+            <li id="card-training" class="movable cell card training" data-type="card" data-portal="cloud" data-name="training" data-load="async" data-title="Training: Self-Paced" data-tag="popular">
+                <div class="card-section">
+                    <h4 class="title">Training: Self Paced <span class="tag">(popular)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle"></div>
+                <div class="card-section view-all-section">
+                    <span><a href="http://training.mypurecloud.com" class="view-all" target="_blank">View All</a></span> 
+                </div>
+            </li>
+			-->
+                          
+            <li id="card-knowledge-tour" class="movable cell card knowledge-tour" data-type="card" data-portal="cloud" data-name="knowledge-tour" data-load="dynamic" data-title="Knowledge Network Tour" data-tag="most recent"> 
+                <div class="card-section">
+                    <h4>Tour of the Knowledge Network</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section">
+                    <div class="icon-list-grid grid-x grid-padding-x">
+                        <div class="flex-video widescreen" style="width: 100%">
+                            <iframe width="280" height="150" src="https://www.youtube.com/embed/MXbwSUtjZmk" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            
+            <li id="card-coaching-series" class="movable cell card release-notes" data-type="card" data-portal="cloud" data-name="coaching-series" data-title="CX Coaching Series" data-tag="most recent">
+                <div class="card-section">
+                    <h4>CX Coaching Series</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                
+                <div class="card-section">
+                    <div class="icon-list-grid grid-x grid-padding-x">
+                        <div class="medium-12 cell item post">
+                            <div class="icon-item-grid grid-x grid-margin-x">
+                                <div class="small-3 medium-2 cell icon text-center">
+                                    <img src="{!assetImgPath}/img/icon/svg-red/genesys_university.svg" alt="Note" width="33" height="60" />
+                                </div>
+                                <div class="small-9 medium-10 cell summary">
+                                    <p>Identifying Root Cause Through Data-Driven Decision Making</p>
+                                    <p><a href="https://beyond.genesys.com/explore/course/identifying-root-cause-through-data-driven-decision-making" class="more" target="_blank">Read more</a></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medium-12 cell item post">
+                            <div class="icon-item-grid grid-x grid-margin-x">
+                                <div class="small-3 medium-2 cell icon text-center">
+                                    <img src="{!assetImgPath}/img/icon/svg-red/genesys_university.svg" alt="Note" width="33" height="60" />
+                                </div>
+                                <div class="small-9 medium-10 cell summary">
+                                    <p>Making Behavior Stick Through Skill Transfer</p>
+                                    <p><a href="https://beyond.genesys.com/explore/course/making-behavior-stick-through-skill-transfer" class="more" target="_blank">Read more</a></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medium-12 cell item post">
+                            <div class="icon-item-grid grid-x grid-margin-x">
+                                <div class="small-3 medium-2 cell icon text-center">
+                                    <img src="{!assetImgPath}/img/icon/svg-red/genesys_university.svg" alt="Note" width="33" height="60" />
+                                </div>
+                                <div class="small-9 medium-10 cell summary">
+                                    <p>The Monthly Performance Review</p>
+                                    <p><a href="https://beyond.genesys.com/explore/course/the-monthly-performance-review" class="more" target="_blank">Read more</a></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medium-12 cell item post">
+                            <div class="icon-item-grid grid-x grid-margin-x">
+                                <div class="small-3 medium-2 cell icon text-center">
+                                    <img src="{!assetImgPath}/img/icon/svg-red/genesys_university.svg" alt="Note" width="33" height="60" />
+                                </div>
+                                <div class="small-9 medium-10 cell summary">
+                                    <p>Side-by-Side Coaching and Development Basics</p>
+                                    <p><a href="https://beyond.genesys.com/explore/course/side-by-side-coaching-and-development-basics" class="more" target="_blank">Read more</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://beyond.genesys.com/explore/product/customer-experience" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>
+            
+            <li id="card-blog" class="movable cell card blog" data-type="card" data-portal="cloud" data-name="blog" data-load="async" data-title="Blog" data-tag="most recent">
+                <div class="card-section">
+                    <h4 class="title">Blog <span class="tag">(popular)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                
+                <div class="card-section middle">
+                </div>
+                
+                <div class="card-section view-all-section">
+                    <span><a href="https://www.genesys.com/blog/category?cat=purecloud" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>
+            
+            <li id="card-appfoundry" class="movable cell card blog" data-type="card" data-portal="cloud" data-name="appfoundry" data-load="async" data-title="AppFoundry" data-tag="most recent">
+                <div class="card-section">
+                    <h4 class="title">AppFoundry <span class="tag">(popular)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                
+                <div class="card-section middle">
+                </div>
+                
+                <div class="card-section view-all-section">
+                    <span><a href="https://appfoundry.genesys.com/#/filter/purecloud" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>                            
+            
+            <li id="card-get-started" class="movable cell card get-started" data-type="card" data-portal="cloud" data-name="get-started" data-load="static" data-title="Useful Links" data-tag="">
+                <div class="card-section">
+                    <h4 class="title">Useful Links</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <div class="links-container grid-container">
+                        <div class="grid-x grid-padding-x small-up-1 medium-up-2">
+                            <div class="cell">
+                                <ul class="vertical menu">
+                                    <li><a href="http://www.genesys.com/definitions/" target="_blank">Industry terms</a></li>
+                                    <li><a href="https://itunes.apple.com/us/app/purecloud-supervisor/id1001193746?mt=8" target="_blank">PureCloud Supervisor iPad app</a></li>
+                                    <li><a href="https://help.mypurecloud.com/articles/troubleshooting-purecloud/" target="_blank">Troubleshooting</a></li>
+                                	<li><a href="https://help.mypurecloud.com/?p=143389" target="_blank">Best practices</a></li>
+                                </ul>
+                            </div>
+                            <div class="cell">
+                                <ul class="vertical menu">
+                                    <li><a href="https://help.mypurecloud.com/articles/billing-faqs/" target="_blank">Billing FAQs</a></li>
+                                	<li><a href="https://help.mypurecloud.com/articles/your-purecloud-invoice-explained/" target="_blank">Your PureCloud invoice explained</a></li>
+                                	<li><a href="https://help.mypurecloud.com/articles/download-usage-reports/" target="_blank">Download your usage reports</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <apex:outputPanel layout="none" rendered="{!AND(isaccessableToKnowledge == true, auth == true)}">
+                true
+                <li id="card-knowledge-base" class="movable cell card knowledge-base" data-type="card" data-portal="cloud" data-name="knowledge-base" data-load="dynamic" data-title="Knowledge Base" data-tag="popular">
+                    <div class="card-section">
+                        <h4 class="title">Knowledge Base <span class="tag">(recent)</span></h4>
+                        <i class="icon drag-bar"></i>
+                    </div>
+                    <div class="card-section middle">
+                        <apex:iframe src="KnowPureCloudCoveo" id="theIframe" height="180px"/>
+                    </div>
+                    <div class="card-section view-all-section">
+                        <span><a href="https://genesys.okta.com/app/salesforce/exk1dx5vnowWti9pA0h8/sso/saml?RelayState=https://genesyspartner.force.com/customercare/GenesysSearchExtPCloudLanding" class="view-all" target="_blank">View All</a></span>
+                    </div>
+                </li>
+            </apex:outputPanel>
+
+           <!--
+          <li id="card-ideas-feedback" class="movable cell card ideas-feedback" data-type="card" data-portal="cloud" data-name="ideas-feedback" data-load="static" data-title="Ideas and Feedback" data-tag="">
+                <div class="card-section">
+                    <h4>Is this site helpful?</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <div class="links-container grid-container">
+                        <div class="grid-x grid-padding-x small-up-1 medium-up-1">
+                            <div class="cell">
+                                <p class="up bold">Genesys Knowledge Network</p>
+                                <p>How might we improve the Genesys Knowledge Network? We want to hear from you.</p>
+                                <p><a class="button plum small" style="margin-top: 0.5rem; margin-bottom: 0;" href="https://gkn.ideas.aha.io" target="gkn">Submit Feedback</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+			-->
+            
+            <li id="card-release-notes" class="movable cell card release-notes" data-type="card" data-portal="cloud" data-name="release-notes" data-load="async" data-title="Release Notes" data-tag="most recent">
+                <div class="card-section">
+                    <h4 class="title">Release Notes <span class="tag">(recent)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle"></div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://help.mypurecloud.com/release-notes/" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>
+            
+            <li id="card-status-notes" class="movable cell card status-notes" data-type="card" data-portal="cloud" data-name="status-notes" data-load="async" data-title="Status" data-tag="popular">
+                <div class="card-section">
+                    <h4 class="title">Status <span class="tag">(recent)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle">
+                    <span style="color:green">All Systems Operational</span>
+                    <span><br />&nbsp;</span>
+                    <div class="thumb-list-grid grid-x grid-padding-x">
+                        <div class="medium-12 cell item post">
+                            <div class="thumb-item-grid grid-x grid-margin-x">
+                                <div class="small-4 medium-2 cell icon text-center">
+                                    <img class="ic" src="{!assetImgPath}/img/icon/svg-red/burstlist.svg" alt="Note" width="100" />
+                                </div>
+                                <div class="small-8 medium-9 cell summary"> 
+                                    <p>Oct 19, 2018</p>
+                                    <p><a href="https://status.mypurecloud.com/incidents/pvqtq5qxr7n3" target="_blank">Read more</a></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medium-12 cell item post">
+                            <div class="thumb-item-grid grid-x grid-margin-x">
+                                <div class="small-4 medium-2 cell icon text-center">
+                                    <img class="ic" src="{!assetImgPath}/img/icon/svg-red/burstlist.svg" alt="Note" width="100" />
+                                </div>
+                                <div class="small-8 medium-9 cell summary"> 
+                                    <p>Oct 18, 2018</p>
+                                    <p><a href="https://status.mypurecloud.com/incidents/yfnpypt7bjqx" target="_blank">Read more</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://status.mypurecloud.com" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>
+            
+            <li id="card-developer-center" class="movable cell card developer-center" data-type="card" data-portal="cloud" data-name="developer-center" data-load="async" data-title="Developer Center" data-tag="popular">
+                <div class="card-section">
+                    <h4 class="title">Developer Center <span class="tag">(popular)</span></h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section middle"></div>
+                <div class="card-section view-all-section">
+                    <span><a href="http://developer.mypurecloud.com" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>                              
+              
+            <li id="card-get-certified-notes" class="movable cell card get-certified-notes" data-type="card" data-portal="cloud" data-name="get-certified-notes" data-load="async" data-title="Get Certified" data-tag="popular">
+                <div class="card-section">
+                    <h4 class="title">Get Certified</h4>
+                    <i class="icon drag-bar"></i>
+                </div>
+                <div class="card-section">
+                    <div class="thumb-list-grid grid-x grid-padding-x">
+                        <div class="medium-12 cell item post">
+                            <div class="thumb-item-grid grid-x grid-margin-x">
+                                <div class="small-5 medium-4 cell thumb">
+                                    <a href="https://status.mypurecloud.com/incidents/p45c77zljh5d" class="th">
+                                        <img src="{!assetImgPath}/img/icon/svg-red/certification.svg" width="45" alt="fpo" />
+                                    </a>
+                                </div>
+                                <div class="small-7 medium-8 cell summary">
+                                    <p>Genesys Certified Associate - PureCloud</p>
+                                    <p><a href="http://admin.viewcentral.com/events/uploads/genesys/GCA101-02-PCP_ExamDetails.pdf" class="more" target="_blank" >Get started today</a></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medium-12 cell item post">
+                            <div class="thumb-item-grid grid-x grid-margin-x">
+                                <div class="small-7 medium-8 cell summary">
+                                    <p><a href="https://training.mypurecloud.com" class="more" target="_blank">Training</a></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="medium-12 cell item post">
+                            <div class="thumb-item-grid grid-x grid-margin-x">
+                                <div class="small-7 medium-8 cell summary">
+                                    <p><a href="http://admin.viewcentral.com/events/uploads/genesys/Taking%20a%20Certification%20Exam.pdf" class="more" target="_blank">Take the Exam</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-section view-all-section">
+                    <span><a href="https://inter.viewcentral.com/events/cust/search_results.aspx?cid=genesys&pid=1&lid=1&postingForm=search_results.aspx&cat1_id=189&location_group=North%20America&location_group=Online" class="view-all" target="_blank">View All</a></span>
+                </div>
+            </li>
+            
+        </ul><!-- #cards-inactive -->
+    
+    </div>
+    <script src="{!assetPath}/js/hl.min.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            hl.latestDiscussion('previewWidget', {
+                discussionKey:'510ed02d-5f53-4ff8-a945-f8f0b2847056',
+                maxToRetrieve:'3',
+                subjectLength:'50',
+                contentLength:'40',
+                moreUrl:'https://community.genesys.com/communities/community-home/digestviewer?communitykey=bab95e9c-6bbe-4a13-8ade-8ec0faf733d4&tab=digestviewer',
+                showLoginStatus:'1',
+                loginUrl:'https://community.genesys.com/HigherLogic/Security/LoginBounce.aspx?dialog=1',
+                domainUrl:'https://community.genesys.com',
+                cbUseBioBubble:'0',
+                includeStaff:'0',
+                HLIAMKey:'7266192c-58c5-4f25-ba13-92495ef71c52'
+            });
+        });
+    </script>
+    <apex:outputPanel layout="none" rendered="{!AND(advisorUser!=null,auth==true)}">
+        <script>
+            // Configure Web Chat User
+            window._gkn = window._gkn || {};
+            window._gkn.webchat = {
+                'firstName': '{!$User.FirstName}',
+                'lastName': '{!$User.LastName}'
+            };
+        </script>
+        <script 
+            deployment-key="5c39630e-2764-4056-b591-5a3790451ef0" 
+            id="purecloud-webchat-js" 
+            org-guid="845c9858-a978-4313-b8ed-2a85b289cffb" 
+            region="us-east-1"
+            src="https://apps.mypurecloud.com/webchat/jsapi-v1.js" 
+            type="text/javascript"></script>
+        <script src="{!assetPath}/js/webchat.min.js"></script>
+    </apex:outputPanel>
+    
+</apex:component>

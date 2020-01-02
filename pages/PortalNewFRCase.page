@@ -1,0 +1,203 @@
+<apex:page standardController="Case" extensions="UpdateCaseProductControllerNew,LogCaseDeflections" action="{!lazyLoad}">
+    
+    <style>
+      table { border-spacing: 5px 5px; } 
+    </style>
+       
+    <apex:variable var="doDisplayArticles" value="{!(caseType == 'Genesys_Product_Case' && isPortal &&  NOT(isPortalCloudUser))}" />
+       
+    <apex:form id="caseForm" style="{!IF(doDisplayArticles , 'width:75%;float:left;', '')}">
+        <apex:inputHidden value="{!currentCase.CoveoV2__VisitId__c}"  id="VisitId"/>
+        <apex:pageBlock id="pgBlk">
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Save" id="Save" action="{!saveCase}" onclick="isArticleClick=false;"/>
+                <apex:commandButton value="Cancel" id="Cancel" onclick=" history.go(-2); return false;"/>                
+            </apex:pageBlockButtons>
+        
+            <apex:pageBlockSection columns="1" title="New Feature Request" collapsible="false" rendered="{!(caseType == 'Genesys_Feature_Request_Case')}">
+                    <apex:pageBlockSectionItem >  
+                        <apex:outputLabel value="Priority" >
+                        </apex:outputLabel>
+                        <apex:outputPanel layout="block" styleClass="requiredInput">
+                            <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                            <apex:selectList label="Priority" value="{!currentCase.Priority}"  style="width:40%;" size="1" required="true">
+                                <apex:selectOptions value="{!priorities}" />
+                            </apex:selectList>
+                    </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputfield required="true" value="{!currentCase.Subject}"  style="width:580px" />
+                    <apex:inputfield required="true" value="{!currentCase.Feature_Description__c}"  style="width:580px"/>
+                    <apex:inputfield required="true" value="{!currentCase.Business_Overview__c}"  style="width:580px"/>
+                    <apex:inputfield required="true" value="{!currentCase.Business_Use_Case_for_the_feature__c}"  style="width:500px"/>
+                    <apex:inputfield required="true" value="{!currentCase.Missing_Functionality__c}"  style="width:500px"/>
+                    <apex:inputfield required="true" value="{!currentCase.Cost_Impact_of_missing_the_feature__c}"  style="width:500px"/>
+                    <apex:inputfield value="{!currentCase.Feature_Usage_Frequency__c}"  style="width:500px"/>
+                    <apex:inputfield required="true" value="{!currentCase.Relevant_Technical_Information__c}"  style="width:500px"/>                
+            </apex:pageBlockSection> 
+         
+    <!--                
+            <apex:pageBlockSection title="New Support Case" columns="2" rendered="{!(caseType == 'Genesys_Product_Case') && NOT(isPortal)}" collapsible="false"> 
+                    <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:50%;"/>
+                </apex:repeat>
+                
+                <apex:selectList value="{!currentCase.Cloud_Deployment__c}" size="1" label="Cloud Deployment" rendered="{!NOT(ISNULL(cloudDeployments))}">
+                  <apex:selectOptions value="{!cloudDeployments}" /> 
+                </apex:selectList>
+                
+            </apex:pageBlockSection> 
+     --> 
+            <apex:pageBlockSection title="Support Case - Premise" columns="2" id="pgblk1" rendered="{!(caseType == 'Genesys_Product_Case') && NOT(isPortal)}" collapsible="false">
+                  <apex:inputField value="{!currentCase.Problem_Sub_Type__c}" />
+                  <apex:inputField value="{!currentCase.Service_Request_Type__c}" />          
+            </apex:pageBlockSection>   
+                 
+      <!--    
+            <apex:pageBlockSection columns="2" id="pgblk1" rendered="{!(caseType == 'Genesys_Product_Case') && NOT(isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_0}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:70%;"/>
+                </apex:repeat>
+            </apex:pageBlockSection>   
+    --->            
+                <apex:pageBlockSection columns="1" rendered="{!(caseType == 'Genesys_Product_Case') && NOT(isPortal)}">                                             
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_1}" var="f">
+                   <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width: 90%;" rendered="{!f == 'Subject'}" styleClass="theSubjectField"/>
+                    <apex:inputField value="{!currentCase[f]}" rendered="{!(f == 'Security_Threat__c')}" /> 
+                   <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width: 90%; height: 200px;" rendered="{!(f != 'Subject' && f != 'Security_Threat__c')}"/>             
+                </apex:repeat>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection columns="2"
+                rendered="{!(caseType == 'Genesys_Product_Case') && NOT(isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_2}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:70%;"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1" rendered="{!(caseType == 'Genesys_Product_Case') && NOT(isPortal)}"> 
+                    <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_3}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:90%;"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" rendered="{!(caseType == 'Genesys_Product_Case') && NOT(isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_4}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:70%;"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="New Admin Case" columns="1" rendered="{!(caseType == 'Genesys_Admin_Case') && NOT(isPortal)}"  collapsible="false">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Admin_Layout_1}"
+                    var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:50%"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" rendered="{!(caseType == 'Genesys_Admin_Case') && NOT(isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Admin_Layout_2}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:70%"/>
+                </apex:repeat>              
+            </apex:pageBlockSection>            
+            <apex:pageBlockSection title="New Admin Case" columns="1" rendered="{!(caseType == 'Genesys_Admin_Case') && (isPortal)}"  collapsible="false">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Admin_Layout_1}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:500px"/>                     
+                </apex:repeat>
+            </apex:pageBlockSection>
+           <apex:pageBlockSection columns="1" rendered="{!(caseType == 'Genesys_Admin_Case')  && (isPortal)}" >
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Admin_Layout_1desc}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:500px;height:200px"/>                        
+                </apex:repeat>
+            </apex:pageBlockSection>    
+    
+            <apex:pageBlockSection columns="1" rendered="{!(caseType == 'Genesys_Admin_Case')  && (isPortal)}" >
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Admin_Layout_1BI}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:500px"/>                     
+                </apex:repeat>
+            </apex:pageBlockSection>
+             <apex:pageBlockSection columns="2" rendered="{!(caseType == 'Genesys_Admin_Case')  && (isPortal)}" >
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Admin_Layout_2}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:70%" rendered="{!IF((f.FieldPath=='Priority'),false,true)}" />
+                    <apex:pageBlockSectionItem rendered="{!IF((f.FieldPath=='Priority'),true,false)}">  
+                        <apex:outputLabel value="Priority" >
+                            <img title="Cases with Critical or Production Down priority should be logged as a High." class="helpOrb" alt="" src="/s.gif"/>
+                        </apex:outputLabel>
+                        <apex:outputPanel layout="block" styleClass="requiredInput">
+                            <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                            <apex:selectList label="Priority" value="{!currentCase.Priority}"  style="width:88%;" size="1" title="Cases with Critical or Production Down priority should be logged as a High." required="true">
+                                <apex:selectOptions value="{!priorities}" />
+                            </apex:selectList>
+                    </apex:outputPanel>
+                    </apex:pageBlockSectionItem>                        
+                </apex:repeat>
+            </apex:pageBlockSection>
+             <apex:pageBlockSection columns="1" rendered="{!(caseType == 'Genesys_Admin_Case')  && (isPortal)}" >
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Admin_Layout_3}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:500px"/>                     
+                </apex:repeat>
+            </apex:pageBlockSection>
+            
+             <apex:pageBlockSection title="New Support Case" columns="1" rendered="{!(caseType == 'Genesys_Product_Case') && (isPortal) && NOT(isPortalCloudUser)}"   collapsible="false">  
+               <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_1}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:95%;"  rendered="{!IF((f.FieldPath=='Description' || f.FieldPath=='Security_Threat__c'),false,true)}"  styleClass="theSubjectField"/>
+                     <apex:inputField value="{!currentCase[f]}" rendered="{!(f == 'Security_Threat__c')}" /> 
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:95%;height:200px;" rendered="{!IF((f.FieldPath=='Description'),true,false)}" styleClass="theDescriptionField"/>                                                                
+                </apex:repeat>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection columns="2" rendered="{!(caseType == 'Genesys_Product_Case') && (isPortal) && NOT(isPortalCloudUser)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_2}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:88%;" rendered="{!IF((f.FieldPath=='Priority'),false,true)}"/>
+                    <apex:pageBlockSectionItem rendered="{!IF((f.FieldPath=='Priority'),true,false)}">  
+                        <apex:outputLabel value="Priority" >
+                            <img title="Cases with Critical or Production Down priority should be logged as a High." class="helpOrb" alt="" src="/s.gif"/>
+                        </apex:outputLabel>
+                        <apex:outputPanel layout="block" styleClass="requiredInput">
+                            <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                            <apex:selectList label="Priority" value="{!currentCase.Priority}"  style="width:88%;" size="1" title="Cases with Critical or Production Down priority should be logged as a High." required="true">
+                            <apex:selectOptions value="{!priorities}" />
+                    </apex:selectList>
+                    </apex:outputPanel>
+                    </apex:pageBlockSectionItem>                    
+                 </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1"  rendered="{!(caseType == 'Genesys_Product_Case') && (isPortal) && NOT(isPortalCloudUser)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_3}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:95%;"/>                    
+                 </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2" rendered="{!(caseType == 'Genesys_Product_Case') && (isPortal) && NOT(isPortalCloudUser)}">     
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_4}" var="f">                 
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:88%;"/>                    
+                 </apex:repeat>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="New Support Case" columns="2" rendered="{!(caseType == 'Genesys_Product_Case') && (isPortal) && (isPortalCloudUser)}"   collapsible="false">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Cloud_Product_Layout_1}" var="f">
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:88%;" rendered="{!IF((f.FieldPath=='Priority'|| f.FieldPath=='Security_Threat__c'),false,true)}"/>
+                    <apex:inputField value="{!currentCase[f]}" rendered="{!IF((f.FieldPath=='Security_Threat__c'),true,false)}"/>
+                    <apex:pageBlockSectionItem rendered="{!IF((f.FieldPath=='Priority'),true,false)}">  
+                        <apex:outputLabel value="Priority" >
+                            <img title="Cases with Critical or Production Down priority should be logged as a High." class="helpOrb" alt="" src="/s.gif"/>
+                        </apex:outputLabel>
+                        <apex:outputPanel layout="block" styleClass="requiredInput">
+                            <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                            <apex:selectList label="Priority" value="{!currentCase.Priority}"  style="width:88%;" size="1" title="Cases with Critical or Production Down priority should be logged as a High." required="true">
+                            <apex:selectOptions value="{!priorities}" />
+                    </apex:selectList>
+                    </apex:outputPanel>
+                    </apex:pageBlockSectionItem>                    
+                 </apex:repeat>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection columns="1" rendered="{!(caseType == 'Genesys_Product_Case') && (isPortal) && (isPortalCloudUser)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Cloud_Product_Layout_2}" var="f">
+                   <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:95%;"  rendered="{!IF((f.FieldPath=='Description'),false,true)}"  styleClass="theSubjectField"/>
+                    <apex:inputField value="{!currentCase[f]}" required="{!OR(f.required, f.dbrequired)}" style="width:95%;height:200px;" rendered="{!IF((f.FieldPath=='Description'),true,false)}"/>                                                                
+                </apex:repeat>
+            </apex:pageBlockSection>
+
+        </apex:pageBlock>
+             
+    </apex:form>
+    
+    
+    <apex:outputpanel rendered="{!doDisplayArticles}">
+        <c:CoveoCaseDeflectionPanel />
+    </apex:outputpanel>
+</apex:page>

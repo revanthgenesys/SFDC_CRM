@@ -1,0 +1,879 @@
+<apex:page id="CreateOrderMultipleShip" controller="CreateOrderMultipleShipPureCloudCntlr" docType="html-5.0" sidebar="false" showHeader="false">
+    <apex:stylesheet value="{!$Resource.QuotingToolStyles}"/>
+    <apex:includescript value="{!URLFOR($Resource.JQueryUI1, 'jquery-ui-1.10.4.custom/js/jquery-1.10.2.js')}" />
+    <apex:includescript value="{!URLFOR($Resource.JQueryUI1, 'jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.JQueryUI1, 'jquery-ui-1.10.4.custom/css/cupertino/jquery-ui-1.10.4.custom.css')}" />
+    <apex:includescript value="{!URLFOR($Resource.FreezeHeader, 'freezeheader-master/js/jquery.freezeheader.js')}" />
+    <head>
+        <script type="text/javascript">
+        var $j = jQuery.noConflict();
+        function setShippingPanel()
+        {
+            //alert('setShippingPanel()');
+
+            //setInstructionsCounter();
+
+            var shippingMethod = $j("select[name$='ddlShippingMethod'] :selected").text();
+            $j('.econWording').hide();
+            if (shippingMethod == 'Time Definite AM' || shippingMethod == 'Time Definite PM' || shippingMethod == 'Economy')
+            {
+                $j('.needByDate').removeAttr('disabled');
+                if (shippingMethod == 'Time Definite AM' || shippingMethod == 'Time Definite PM')
+                {
+                    $j('.needByDate').attr('required',true);
+                }
+                else
+                {
+                    $j('.econWording').show();
+                    $j('.needByDate').removeAttr('required');
+                }
+            }
+            else
+            {
+                $j('.needByDate').val('');
+                $j('.needByDate').attr('disabled',true);
+                $j('.needByDate').removeAttr('required');
+            }
+
+            $j(".shippingMethodSelect").change(function () {
+                var shippingMethod2 = $j("select[name$='ddlShippingMethod'] :selected").text();
+                $j('.econWording').hide();
+                if (shippingMethod2 == 'Time Definite AM' || shippingMethod2 == 'Time Definite PM' || shippingMethod2 == 'Economy')
+                {
+                    $j('.needByDate').removeAttr('disabled');
+                    if (shippingMethod2 == 'Time Definite AM' || shippingMethod2 == 'Time Definite PM')
+                    {
+                        $j('.needByDate').attr('required',true);
+                    }
+                    else
+                    {
+                        $j('.econWording').show();
+                        $j('.needByDate').removeAttr('required');
+                    }
+                }
+                else
+                {
+                    $j('.needByDate').val('');
+                    $j('.needByDate').attr('disabled',true);
+                    $j('.needByDate').removeAttr('required');
+                }
+            });
+
+        }
+        function openDQ(){
+                var url = '/apex/DealQualification?oppId={!quote.zqu__Opportunity__c}&p=Cloud';
+                window.open(url, '_blank');
+            }
+
+         function setAllocationTab(){
+
+            $j('.inputQty').hide();
+            $j('.outputQty').hide();
+
+            $j(".allocationRow").each(function () {
+                calculateSum(this);
+            });
+
+            $j(".allocated").each(function () {
+                 $j(this).keyup(function () {
+                    calculateSum($j(this).closest("tr"));
+                });
+            });
+            $j('#allocationTable tr:visible').filter(':odd').removeClass('even').addClass('odd');
+            $j('#allocationTable tr:visible').filter(':even').removeClass('odd').addClass('even');
+
+            $j('#nonShippableTable tr:visible').filter(':odd').removeClass('even').addClass('odd');
+            $j('#nonShippableTable tr:visible').filter(':even').removeClass('odd').addClass('even');
+
+            $j('#allocationTable').freezeHeader();
+
+
+            var locationCount = $j('.shippingLocationCount').text();
+            if (locationCount == 1)
+            {
+                $j('.inputQty').hide();
+                $j('.outputQty').show();
+            }
+            else
+            {
+                $j('.inputQty').show();
+                $j('.outputQty').hide();
+            }
+
+        }
+        function setAddressTab() {
+            $j(".contactName:contains('Not Defined')").addClass('notDefined');
+        }
+        function calculateSum(row) {
+            var sum = 0;
+            var qty = 0;
+            var diff = 0;
+
+            qty = parseFloat($j(".quantity", row).html());
+
+            if($j(".allocated",row).size() > 0)
+            {
+                $j(".allocated", row).each(function () {
+                    var t = this.value;
+                    if (!isNaN(this.value) && this.value.length != 0) {
+                        sum += parseFloat(this.value);
+                    }
+                });
+            }
+            else
+            {
+                sum = qty;
+            }
+            diff = qty - sum;
+            $j(".unAllocated", row).html(diff);
+
+            $j(".unAllocated", row).removeClass('equal').removeClass('unequal');
+            if (diff == 0) {
+                $j(".unAllocated", row).addClass('equal');
+            }
+            else {
+                $j(".unAllocated", row).addClass('unequal');
+            }
+         }
+         function disableOnSave() {
+            if( $j("input[id$=chk_poRequired]").is(":checked") && $j("input[id$=txtPONumber]").val() == '' && $j("input[id$=txtPONumber]").is(":required"))
+            {
+                return;
+            }
+
+            var ctls = $j('[id*=btnSave]');
+            for (var i = 0; i < ctls.length; i++)
+            {
+                var ctl = ctls[i];
+                setTimeout('disableAfterTimeout(\'' + ctl.id + '\', \'Saving...\');', 50);
+            }
+        }
+
+        function disableOnSubmit() {
+            if( $j("input[id$=chk_poRequired]").is(":checked") && $j("input[id$=txtPONumber]").val() == '' && $j("input[id$=txtPONumber]").is(":required"))
+            {
+               return;
+            }
+
+            var ctls = $j('[id*=btnSubmit]');
+            for (var i = 0; i < ctls.length; i++)
+            {
+                var ctl = ctls[i];
+                setTimeout('disableAfterTimeout(\'' + ctl.id + '\', \'Submitting...\');', 50);
+            }
+            $j('.submitWaitingHolder').show();
+        }
+
+        function disableAfterTimeout(id, newCaption) {
+            var toDisable = document.getElementById( id );
+            toDisable.disabled = 'disabled';
+            // Use the Salesforce CSS style to make the button appear disabled
+            toDisable.className = 'btnDisabled';
+            toDisable.value = newCaption;
+        }
+
+
+        function setShippingPanel()
+        {
+            //alert('setShippingPanel()');
+
+            setInstructionsCounter();
+
+            var shippingMethod = $j("select[name$='ddlShippingMethod'] :selected").text();
+            $j('.econWording').hide();
+            if (shippingMethod == 'Time Definite AM' || shippingMethod == 'Time Definite PM' || shippingMethod == 'Economy')
+            {
+                $j('.needByDate').removeAttr('disabled');
+                if (shippingMethod == 'Time Definite AM' || shippingMethod == 'Time Definite PM')
+                {
+                    $j('.needByDate').attr('required',true);
+                }
+                else
+                {
+                    $j('.econWording').show();
+                    $j('.needByDate').removeAttr('required');
+                }
+            }
+            else
+            {
+                $j('.needByDate').val('');
+                $j('.needByDate').attr('disabled',true);
+                $j('.needByDate').removeAttr('required');
+            }
+
+            $j(".shippingMethodSelect").change(function () {
+                var shippingMethod2 = $j("select[name$='ddlShippingMethod'] :selected").text();
+                $j('.econWording').hide();
+                if (shippingMethod2 == 'Time Definite AM' || shippingMethod2 == 'Time Definite PM' || shippingMethod2 == 'Economy')
+                {
+                    $j('.needByDate').removeAttr('disabled');
+                    if (shippingMethod2 == 'Time Definite AM' || shippingMethod2 == 'Time Definite PM')
+                    {
+                        $j('.needByDate').attr('required',true);
+                    }
+                    else
+                    {
+                        $j('.econWording').show();
+                        $j('.needByDate').removeAttr('required');
+                    }
+                }
+                else
+                {
+                    $j('.needByDate').val('');
+                    $j('.needByDate').attr('disabled',true);
+                    $j('.needByDate').removeAttr('required');
+                }
+            });
+
+        }
+
+        function setFinanceDefaults()
+        {
+            //alert('setFinanceDefaults()');
+            var term = $j(".financingTerm").val();
+            if (term > 12)
+            {
+                $j(".downPaymentPct").val(20);
+                $j(".DownPaymentRateText").html('20%');
+                $j(".financingInterestRate").val(9);
+                $j(".financingInterestRateText").html('9%');
+            }
+            else
+            {
+                $j(".downPaymentPct").val(10);
+                $j(".DownPaymentRateText").html('10%');
+                $j(".financingInterestRate").val(6);
+                $j(".financingInterestRateText").html('6%');
+            }
+        }
+
+
+        function setFinanceTab()
+        {
+            //alert('setFinanceTab()');
+
+            $j(".financingTerm").keyup(function () {
+                setFinanceDefaults();
+            });
+
+            var downPayment = $j(".downPaymentYN").val();
+            var term = $j(".financingTerm").val();
+            var currDownPayment = $j('.currentDownPaymentRate').val();
+
+            if (downPayment == 'No')
+            {
+                $j(".downPaymentPct").val(0);
+                $j(".downPaymentPct").attr('disabled',true);
+            }
+            else
+            {
+                if ((currDownPayment) && (term > 12))
+                {
+                    $j(".downPaymentPct").val(20);
+                    $j(".DownPaymentRateText").html('20%');
+                    $j(".financingInterestRate").val(9);
+                    $j(".financingInterestRateText").html('9%');
+                }
+                else
+                {
+                    $j(".downPaymentPct").val(10);
+                    $j(".DownPaymentRateText").html('10%');
+                    $j(".financingInterestRate").val(6);
+                    $j(".financingInterestRateText").html('6%');
+                }
+            }
+
+
+            $j(".downPaymentYN").change(function () {
+                var downPayment = $j(".downPaymentYN").val();
+                var term = $j(".financingTerm").val();
+                var currDownPayment = $j('.currentDownPaymentRate').val();
+
+                if (downPayment == 'Yes')
+                {
+                    $j(".downPaymentPct").attr('disabled',false);
+                    if ((currDownPayment) && (term > 12))
+                    {
+                        $j(".downPaymentPct").val(20);
+                    }
+                    else
+                    {
+                        $j(".downPaymentPct").val(10);
+                    }
+                }
+                else
+                {
+                    $j(".downPaymentPct").val(0);
+                    $j(".downPaymentPct").attr('disabled',true);
+                }
+            });
+
+        }
+
+        function setRevRecTab()
+        {
+            //alert('setRevRecTab()');
+
+            var newLogo = $j(".newLogoYN").val();
+
+            if (newLogo == 'Yes')
+            {
+                $j('.newLogoDate').attr('disabled',false);
+                $j('.newLogoDate').attr('required',true);
+
+            }
+            else
+            {
+                $j('.newLogoDate').attr('disabled',true);
+                $j('.newLogoDate').removeAttr('required');
+            }
+
+
+            $j(".newLogoYN").change(function () {
+                var newLogo = $j(".newLogoYN").val();
+                //alert('newLogo: ' + newLogo);
+                if (newLogo == 'Yes')
+                {
+                    $j(".newLogoDate").attr('disabled',false);
+                }
+                else
+                {
+                    $j(".newLogoDate").attr('disabled',true);
+                }
+            });
+
+        }
+
+
+        function setCaaSTab()
+        {
+            //alert('setCaasTab()');
+
+            var partner = $j(".referralPartner").val();
+            var len = partner.length;
+            if (len == 0)
+            {
+                $j(".referralPercentage").val(0);
+                $j(".referralPercentage").attr('disabled',true);
+            }
+            else
+            {
+                $j(".referralPercentage").removeAttr('disabled');
+            }
+
+            $j('.referralPartner').change(function () {
+                var partner = $j('.referralPartner').val();
+                var len = partner.length;
+                //alert('partner: ' + partner);
+                if (len > 0)
+                {
+                    $j(".referralPercentage").attr('disabled',false);
+                }
+                else
+                {
+                    $j(".referralPercentage").attr('disabled',true);
+                }
+            });
+
+        }
+
+
+        function calculateSum(row) {
+            var sum = 0;
+            var qty = 0;
+            var diff = 0;
+
+            qty = parseFloat($j(".quantity", row).html());
+
+            if($j(".allocated",row).size() > 0)
+            {
+                $j(".allocated", row).each(function () {
+                    var t = this.value;
+                    if (!isNaN(this.value) && this.value.length != 0) {
+                        sum += parseFloat(this.value);
+                    }
+                });
+            }
+            else
+            {
+                sum = qty;
+            }
+            diff = qty - sum;
+            $j(".unAllocated", row).html(diff);
+
+            $j(".unAllocated", row).removeClass('equal').removeClass('unequal');
+            if (diff == 0) {
+                $j(".unAllocated", row).addClass('equal');
+            }
+            else {
+                $j(".unAllocated", row).addClass('unequal');
+            }
+        }
+
+        function validateQuoteEditAccess()
+        {
+            var access = {!$Setup.Custom_Access_Settings__c.Can_Edit_Quote_After_Submit__c}
+            if(access){
+                return generalPopupFunction('Submitting order...');
+            }
+            else{
+                renderQuoteEditAccessPopup();
+                return false;
+            }
+        }
+
+        function initializePoRequired()
+        {
+            var poIsRequired = ($j("input[id$=txtPONumber]").val() === 'Not Required') ? false : true;
+            $j("input[id$=chk_poRequired]").prop('checked', poIsRequired);
+            togglePoRequired();
+        }
+
+        function togglePoRequired()
+        {
+            var txtNotRequired = 'Not Required';
+            var poInput =  $j("input[id$=txtPONumber]");
+
+            if($j("input[id$=chk_poRequired]").is(":checked")) {
+                poInput.prop('disabled', false);
+                //poInput.prop('required', true);
+            }
+            else {
+                poInput.val(txtNotRequired);
+                poInput.prop('disabled', true);
+                //poInput.prop('required', false);
+            }
+
+            EnterSubmitTabJS();
+        }
+
+        function setPoRequired()
+        {
+            if($j("input[id$=chk_poRequired]").is(":checked")) {
+                $j("input[id$=txtPONumber]").prop('required', true);
+            }
+            else {
+                $j("input[id$=txtPONumber]").prop('required', false);
+            }
+        }
+        </script>
+        <style type='text/css'>
+            .custPopup {
+                background-color: white;
+                border-width: 2px;
+                border-style: solid;
+                z-index: 9100;
+                left: 50%;
+                padding: 10px;
+                position: absolute;
+                /* These are the 3 css properties you will need to change so the popup
+            displays in the center of the screen. First set the width. Then set
+            margin-left to negative half of what the width is. You can add
+            the height property for a fixed size pop up if you want.*/
+                width: 820px;
+                margin-left: -275px;
+                top: 100px;
+            }
+
+            .submitPopup {
+                background-color: white;
+                border-width: 2px;
+                border-style: solid;
+                z-index: 9100;
+                left: 50%;
+                padding: 10px;
+                position: absolute;
+                /* These are the 3 css properties you will need to change so the popup
+            displays in the center of the screen. First set the width. Then set
+            margin-left to negative half of what the width is. You can add
+            the height property for a fixed size pop up if you want.*/
+                width: 600px;
+                margin-left: -175px;
+                top: 100px;
+            }
+
+            .datePicker {
+                z-index: 9999; /*Changed this css property which was 100 prior*/
+                position: absolute;
+                display: none;
+                top: 0;
+                left: 0;
+                width: 17em;
+                background-color: #b7c6b2;
+                border-bottom: 1px solid #000;
+                border-right: 1px solid #000;
+                margin: 0;
+                padding: 1px 1px 2px 2px;
+            }
+
+            .popupBackground {
+                background-color: black;
+                opacity: 0.20;
+                filter: alpha(opacity = 20);
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                z-index: 9000;
+            }
+
+            .allocationTable th td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+
+
+            .allocationTable thead {
+                border: 1px solid black;
+                border-collapse: collapse;
+                background-color: gainsboro;
+            }
+
+            .equal {
+                color: green !important;
+                border: 0;
+            }
+
+            .notDefined {
+                color: red !important;
+            }
+
+            .unequal {
+                color: red !important;
+                border: 2px solid red;
+            }
+
+            .odd {
+                background: #E8E8E8;
+            }
+
+            .tabContent {
+                font-size: 1em !important;
+            }
+
+            .activeTab {
+                color: white;
+                background-image: none;
+                text-align: center;
+            }
+
+            .inactiveTab {
+                background-color: #d0e4fe;
+                color: orange;
+                background-image: none;
+                text-align: center;
+            }
+
+            .shippabletrue {
+            }
+
+            .shippablefalse {
+                display: none;
+            }
+
+            .checkList {
+                background-color: white;
+                border: 1px solid black;
+                width: 450px;
+                overflow: auto;
+            }
+
+            .checkListHeading {
+                text-align: center;
+                background-color: whitesmoke;
+            }
+
+            .header {
+                text-align: center;
+            }
+
+            .allocationHeader {
+                text-align: center;
+            }
+
+            .quantity {
+                text-align: center;
+                color: blue;
+            }
+
+            .shippingLocationError {
+                color: red;
+                border: 1px solid red;
+                padding: 10px;
+            }
+
+
+        </style>
+
+    </head>
+    <apex:form >
+        <apex:actionfunction action="{!enterAllocationTab}"
+                             status="EnterAllocationStatus"
+                             name="EnterAllocationTabJS"
+                             rerender="AllocationTab"
+                             oncomplete="setAllocationTab();" />
+        <apex:actionfunction action="{!enterSubmitTab}"
+                             name="EnterSubmitTabJS"
+                             rerender="SubmitTab"
+                             status="EnterSubmitStatus" />
+        <apex:outputpanel id="notSubmittedPanel">
+        <apex:pageBlock >
+            <apex:pageblockbuttons location="top">
+                <apex:commandbutton styleclass="btn" id="btnSave" value="Save Shipping Allocation" onclick="disableOnSave();"
+                                    action="{!saveOrder}" title="Save (not submit)" rendered="{!intNoOfOrders=0}"
+                                    rerender="notSubmittedPanel,addressTabPanel" oncomplete="setAllocationTab();" >
+                </apex:commandbutton>
+                <apex:actionstatus starttext="Saving..." stoptext=""
+                                   id="savingStatus" />
+            </apex:pageblockbuttons>
+            <div style="color:blue;font-size:9pt;">
+            <b>Please save your shipping allocation before submitting order by clicking the 'Save Shipping Allocation' button.</b><br/><br/>
+            </div> 
+            <apex:tabpanel switchtype="client" id="orderTabPanel">
+                <apex:tab label="Ship-To Selection" name="ShippingTab"
+                          oncomplete="setAddressTab();">
+                    <apex:outputpanel id="addressTabPanel">
+                        <apex:pageblock title="Shipping Locations">
+                            <div id="addressArea">
+                                <apex:outputpanel rendered="{!orderIsAllNonShippableParts}">
+                                    <div style="background-color:lightgoldenrodyellow; display:block; border:1px solid black; padding: 10px;">
+                                        There are no shippable parts on this order.
+                                    </div>
+                                    <br />
+                                </apex:outputpanel>
+                                <apex:datatable value="{!selectedLocations}" var="addr" id="locationTable"
+                                                rules="rows" rowclasses="odd,even" style="font-size:12px;" cellpadding="3"
+                                                width="100%" styleclass="tableClass">
+                                    <apex:facet name="footer">
+                                        <apex:commandbutton id="btnNewLocation" action="{!showLocationPopup}" value="Add..." rerender="locationPopup"
+                                                            disabled="{! orderIsAllNonShippableParts}" oncomplete="setShippingPanel();" />
+                                    </apex:facet>
+                                    <apex:column headervalue="Action" width="40px;">                                    
+                                        <apex:commandlink value="Del" action="{!removeLocation}" rerender="addressTabPanel" oncomplete="setAddressTab();">
+                                            <apex:param name="LineNumber" assignto="{!LineNumber}" value="{!addr.LineNumber}" />
+                                            <apex:param name="RecordId" assignto="{!selectedAddressRecordId}" value="{!addr.id}" />
+                                        </apex:commandlink>&nbsp;
+                                        <apex:commandlink value="Upd" action="{!editLocation}" rerender="locationPopup" oncomplete="setShippingPanel();">
+                                            <apex:param name="LineNumber" assignto="{!LineNumber}" value="{!addr.LineNumber}" />
+                                        </apex:commandlink>
+    
+                                    </apex:column>
+                                    <apex:column style="text-align:center;" width="30px;">
+                                        <apex:facet name="header">Number</apex:facet>
+                                        <apex:outputtext value="{!addr.LineNumber}" />
+                                    </apex:column>
+                                    <apex:column >
+                                        <apex:facet name="header">Address / Instructions</apex:facet>
+                                        <apex:outputpanel >
+                                            <apex:outputtext value="{!addr.Address}" />
+                                            <br />
+                                            <apex:outputtext id="ShippingInstructions" value="{!addr.ShippingInstructions}" />
+                                        </apex:outputpanel>
+                                    </apex:column>
+                                    <apex:column width="150px">
+                                        <apex:facet name="header">Contact</apex:facet>
+                                        <apex:outputtext styleclass="contactName" value="{!addr.Address.ShippingContactName}" />
+                                    </apex:column>
+                                    <apex:column width="100px">
+                                        <apex:facet name="header">Shipping Method</apex:facet>
+                                        <apex:outputtext value="{!addr.ShippingMethod}" />
+                                    </apex:column>
+                                    <apex:column width="100px">
+                                        <apex:facet name="header">Need-by Date</apex:facet>
+                                        <apex:outputtext value="{0, date, MM'/'dd'/'yyyy}">
+                                            <apex:param value="{!addr.NeedByDate}" />
+                                        </apex:outputtext>
+                                    </apex:column>
+                                </apex:datatable>
+                            </div>
+                        </apex:pageblock>
+                    </apex:outputpanel>
+                </apex:tab>
+                <apex:tab label="Shipping Allocations" name="AllocationsTab" ontabenter="EnterAllocationTabJS();">
+                    <apex:outputpanel id="AllocationTab">
+                        <!--
+                        <apex:outputtext value="{!shippingLocationCount}" styleclass="shippingLocationCount" style="font-size:6px;" />
+                        -->
+                        <apex:pageblock title="Shipping Allocations" rendered="{! !orderIsAllNonShippableParts}">
+                            <p>Selected Addresses:</p>
+                            <apex:outputpanel >
+                                <apex:actionstatus id="EnterAllocationStatus">
+                                    <apex:facet name="start">
+                                        <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;
+                                                                                                         height: 100%;opacity:0.65;width:100%;">
+                                            <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                                                <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                                                <span class="waitingDescription">Please Wait...</span>
+                                            </div>
+                                        </div>
+                                    </apex:facet>
+                                </apex:actionstatus>
+                            </apex:outputpanel>
+                            <apex:datalist value="{!selectedLocations}" var="c">{!c.LineNumber} - {!c.Address.ShippingAddressDisplay}</apex:datalist>
+                            <table id='allocationTable' cellpadding="5" class="allocationTable">
+                                <thead>
+                                <tr id='header'>
+                                    <th style='width: 150px; text-align: center;'>Part Number</th>
+                                    <th style='width: 300px; text-align: center;'>Name</th>
+                                    <th style='width: 60px; text-align: center;'>Qty</th>
+                                    <th style='width: 60px; text-align: center;'>Unallocated</th>
+                                    <apex:repeat value="{!selectedLocations}" var="loca">
+                                        <th style='width: 80px; text-align: center;'>Adddress - {!loca.LineNumber}</th>
+                                    </apex:repeat>
+                                </tr>
+                                </thead>
+                                <apex:repeat value="{!LineItems}" var="item">
+                                    <tr class='allocationRow shippable{!item.IsShippable}'>
+                                        <td>{!item.PartNumber}</td>
+                                        <td>{!item.PartName}</td>
+                                        <td class="quantity" style='text-align: center;'>{!item.Quantity}</td>
+                                        <td style='text-align: center;' class='unAllocated'></td>
+                                        <apex:repeat value="{!item.Allocation}" var="loc">
+                                            <td style="text-align: center;" rendered="{!shippingLocationCount} > 1">
+                                                <apex:inputtext id="LocAlloc"
+                                                                styleclass="allocated inputQty"
+                                                                style="width:50px; text-align:right;"
+                                                                value="{!loc.Quantity}"
+                                                                rendered="{!item.IsShippable}" />
+                                                <apex:outputtext styleclass="allocated outputQty"
+                                                                 style="width:50px; text-align:right;"
+                                                                 value="{!loc.Quantity}"
+                                                                 rendered="{!item.IsShippable}" />
+                                            </td>
+                                        </apex:repeat>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                            <br />
+                        </apex:pageblock>
+                        <apex:pageblock rendered="{!orderHasNonShippableParts}">
+                            <p>
+                                Non-shippable parts:
+                            </p>
+                            <table id='nonShippableTable' cellpadding="3" class='allocationTable'>
+                                <thead>
+                                <tr>
+                                    <th style='width: 150px; text-align: center;'>Part Number</th>
+                                    <th style='width: 500px; text-align: center;'>Name</th>
+                                    <th style='width: 80px; text-align: center;'>Qty</th>
+                                </tr>
+                                </thead>
+                                <apex:repeat value="{!LineItems}" var="item">
+                                    <tr class='shippable{!NOT(item.IsShippable)}'>
+                                        <td>{!item.PartNumber}</td>
+                                        <td>{!item.PartName}</td>
+                                        <td class="quantity" style='text-align: center;'>{!item.Quantity}</td>
+                                    </tr>
+                                </apex:repeat>
+                            </table>
+                        </apex:pageblock>
+    
+                    </apex:outputpanel>
+                </apex:tab>
+            </apex:tabpanel>
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:outputpanel id="locationPopup">
+            <apex:outputpanel styleclass="popupBackground" layout="block" rendered="{!displayLocationPopup}" />
+            <apex:outputpanel styleclass="custPopup" layout="block" rendered="{!displayLocationPopup}">
+                <apex:pageblock title="Add/Update Locations">
+                    <apex:pageblockbuttons location="bottom">
+                        
+                        <apex:commandbutton styleclass="btn" value="Save" action="{!saveLocation}" title="Address"/>
+                          
+                        <apex:commandbutton styleclass="btn" value="Cancel" action="{!cancelUpdateAddress}" immediate="true"
+                                            title="Address" rerender="addressTabPanel,locationPopup" oncomplete="setAddressTab();" />
+
+                    </apex:pageblockbuttons>
+                    <apex:inputhidden value="{!selectedLocationNumber}" />
+                    <apex:messages styleclass="shippingLocationError" />
+                    <apex:outputlabel value="Select which shipping addresses will be used for this order:" />
+                    <apex:pageblocksection id="ShippingPanel" columns="1">
+                        <apex:pageblocksectionitem >
+                            <apex:outputlabel value="Shipping Address"
+                                              for="ddlShippingAddress" />
+                            <apex:outputpanel >
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <apex:outputpanel rendered="{!AddUpdateAddressStatus != 'update'}">
+                                                <div class='requiredInput'>
+                                                    <div class='requiredBlock'></div>
+                                                    <apex:selectlist id="ddlShippingAddress" size="1"
+                                                                     value="{!selectedShippingAddressId}" multiselect="false">
+                                                        <apex:selectoption itemlabel="--Select--" itemvalue="" />
+                                                        <apex:selectoptions value="{!ShippingAddresses}" />
+                                                        <apex:actionsupport event="onchange" oncomplete="setShippingPanel();" action="{!shippingAddressSelect}" rerender="ShippingPanel" />
+                                                    </apex:selectlist>
+                                                </div>
+                                            </apex:outputpanel>
+                                        </td>
+                                        <td style="padding-left:5px;">
+                                            <div class='contactName'>
+                                                <apex:outputtext value="{! '(' + SelectedShippingAddress.ShippingContactName + ')'}" /><br />
+                                            </div>
+                                            <div>
+                                                <apex:outputlabel value="{! IF(SelectedShippingAddress.LegalName == '','No Legal Name Defined',SelectedShippingAddress.LegalName + ' *')}" style="font-weight: bold;" /><br />
+                                                <apex:outputlabel value="{!SelectedShippingAddress.Street}" /><br />
+                                                <apex:outputlabel value="{!SelectedShippingAddress.City + ', ' + SelectedShippingAddress.State + ' ' + SelectedShippingAddress.PostalCode}" /><br />
+                                                <apex:outputlabel value="{!SelectedShippingAddress.Country}" /><br />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                    </tr>
+                                </table>
+                            </apex:outputpanel>
+                        </apex:pageblocksectionitem>
+
+                        <apex:pageblocksectionitem >
+                            <apex:outputlabel value="Shipping Method" />
+                            <apex:outputpanel >
+                                <div class='requiredInput'>
+                                    <div class='requiredBlock'></div>
+                                    <apex:selectlist id="ddlShippingMethod"
+                                                     size="1"
+                                                     onchange="SelectedShippingMethodJS"
+                                                     value="{!selectedShippingMethod}"
+                                                     styleclass="shippingMethodSelect"
+                                                     multiselect="false">
+                                        <apex:selectoption itemlabel="--Select--" itemvalue="" />
+                                        <apex:selectoptions value="{!shippingMethodList}" />
+                                    </apex:selectlist>
+                                </div>
+                            </apex:outputpanel>
+                        </apex:pageblocksectionitem>-
+                        <apex:pageblocksectionitem >
+                            <apex:outputlabel value="Need-by Date" />
+                            <apex:outputpanel >
+                                <apex:input id="txtNeedByDate"
+                                            styleclass="needByDate"
+                                            type="date"
+                                            label="Need By Date:" value="{! enteredNeedByDate}" />
+                                <div class='econWording' style='display:inline; font-style:italic;'>&nbsp;If you want this shipped in the future, please enter a date.</div>
+                            </apex:outputpanel>
+
+                        </apex:pageblocksectionitem>
+
+                        <apex:pageblocksectionitem >
+                            <apex:outputlabel value="Shipping Instructions" />
+                            <apex:outputpanel >
+                                <apex:outputpanel id="InstructionPanel">
+                                    <apex:inputtextarea id="txtShippingInstructions" rows="3" html-maxlength="255" styleclass="Instructions maxed" style="width:100%;" value="{!enteredShippingInstructions}" />
+                                    <br /> <span style="font:normal 11px sans-serif;color:#B00400;">
+                                        <span class='counter_msg'></span>
+                                    </span>
+                                </apex:outputpanel>
+
+                                <apex:pagemessage summary="If this is an NST discount, please enter your NST number and percent above." strength="1" severity="info" />
+                                <apex:pagemessage summary="Inputting shipping instructions may extend the order processing time." strength="1" severity="warning" />
+                            </apex:outputpanel>
+                        </apex:pageblocksectionitem>
+                    </apex:pageblocksection>
+                </apex:pageblock>
+            </apex:outputpanel>
+        </apex:outputpanel>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,82 @@
+<apex:page controller="OrderLineItemToOpptyProductLinker" >
+    <script>
+        function setSelectedOppProduct(prId)
+        {
+            document.getElementById('{!$Component.frmMain.pbMain.hdnOppProduct}').value = prId;
+        }
+    </script>
+
+    <apex:form id="frmMain">
+        <apex:pageMessage severity="info" strength="3" summary="There are no associated CAS Opportunity Products available to link to for this Order Line Item at this time." rendered="{!IF(AND(isPSMasterOpportunityLinkFound, NOT(itemsAreAvailableToLinkTo)), true, false)}" />
+        <apex:pageMessage severity="info" strength="3" summary="There is no associated Master PS Opportunity record for the Opportunity related to this Order and Order Line Item." rendered="{!IF(isPSMasterOpportunityLinkFound, false, true)}" />
+        <apex:pageMessage severity="info" strength="3" summary="Please select an Opportunity Product to link to this Order Line Item." rendered="{!IF(AND(isPSMasterOpportunityLinkFound, NOT(isRecordSelected)), true, false)}" />
+        
+        <apex:pageBlock id="ctrlButtons">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Link Item" id="btnLinkRecord" action="{!LinkSelectedRecord}" rendered="{!itemsAreAvailableToLinkTo}"/>
+                <apex:commandButton value="Clear Linked Item" action="{!ClearLinkedItem}" rendered="{!isAlreadyLinked}"/>
+                <apex:commandButton value="Cancel" action="{!Cancel}" immediate="true"/>
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Parent Order:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!parentOrderName}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Associated PS Opportunity Name:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!masterPSOpptyName}</b>"></apex:outputText>
+            </apex:pageBlockSection>            
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Associated PS Opportunity Number:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!masterPSOpptyNumber}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Order Line Item to Link from is:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!sourceOrderLineItemMaterialDescription}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Order Line Item Solution Names (PS):"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!sourceOrderLineItemSolutionNamesCoveredFormula}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection >
+                <apex:outputLabel value="Order Line Item Total Price is:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!sourceOrderLineItemCurrency} {0, number, Currency}</b>">
+                    <apex:param value="{!sourceOrderLineItemTotalPrice}" />
+                </apex:outputText>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection rendered="{!isAlreadyLinked}">
+                <apex:outputLabel value="This Order Line Item is already linked to:"></apex:outputLabel>
+                <apex:outputText escape="false" value="<b>{!alreadyLinkedProductName}</b>"></apex:outputText>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:pageBlock id="pbMain">
+            <apex:inputhidden id="hdnOppProduct" value="{!selectedOppProductId}"/>
+            <apex:pageBlockTable value="{!opptyProducts}" var="oli">
+                <apex:column headerValue="Select">
+                    <input type="radio" name="Productitem" value="{!oli.Opportunity_Product_Line_Item_ID__c}" onchange="setSelectedOppProduct('{!oli.Opportunity_Product_Line_Item_ID__c}');"/> 
+                </apex:column>
+                <apex:column headerValue="Product Name">
+                    <apex:outputLabel value="{!oli.Product2.Name}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Linked to Opportunity Product">
+                    <apex:outputLabel value="{!oli.Linked_Oppty_Product_Name__c}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Description">
+                    <apex:outputLabel value="{!oli.Description__c}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Quantity">
+                    <apex:outputLabel value="{!oli.Quantity__c}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Total Price">
+                    <apex:outputLabel value="{!oli.TotalPrice}"></apex:outputLabel>
+                </apex:column>
+                <apex:column headerValue="Type">
+                    <apex:outputLabel value="{!oli.Product_Type__c}"></apex:outputLabel>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    
+    </apex:form>
+
+</apex:page>

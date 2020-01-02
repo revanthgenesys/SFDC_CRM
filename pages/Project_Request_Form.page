@@ -1,0 +1,612 @@
+<apex:page controller="ProjectRequestForm" tabStyle="Project_Request_Form__c" sidebar="false" >
+<script>function setFocusOnLoad() {}</script>
+    <style>
+
+       /* popup_box DIV-Styles  Start*/
+        #popup_box {
+            display:none; /* Hide the DIV */
+            position:fixed;  
+            _position:absolute; /* hack for internet explorer 6 */  
+            height:700px;
+            width:600px;  
+            background:#FFFFFF;  
+            left: 300px;
+            top: 50px;
+            z-index:100; /* Layering ( on-top of others), if you have lots of layers: I just maximized, you can change it yourself */
+            margin-left: 15px;  
+           
+            /* additional features, can be omitted */
+            border:2px solid #1797C0;      
+            padding:15px;  
+            font-size:15px;  
+            -moz-box-shadow: 0 0 5px #ff0000;
+            -webkit-box-shadow: 0 0 5px #ff0000;
+            box-shadow: 0 0 5px #ff0000;
+           
+        }
+        
+        #container {
+            background: #d2d2d2; /*Sample*/
+            width:100%;
+            height:100%;
+        }
+        
+        a{ 
+        cursor: pointer; 
+        text-decoration:none; 
+        }
+        
+        /* This is for the positioning of the Close Link */
+        #popupBoxClose {
+            font-size:20px;  
+            line-height:15px;  
+            right:5px;  
+            top:5px;  
+            position:absolute;  
+            color:#6fa5e2;  
+            font-weight:500;      
+        }
+        /* popup_box DIV-Styles  Close*/
+    </style> 
+  <script>
+    function colorPageBlock(pageblock, color) {
+    if (pageblock != null) pageblock.firstChild.style.cssText = "background-color: " + color + ";";
+    }
+  </script>
+  
+  <script src="{!URLFOR($Resource.JQ2)}" type="text/javascript"></script>
+  <script type="text/javascript">
+   var j$ = jQuery.noConflict();
+   
+     
+   j$(document).ready( function() {
+
+     // When site loaded, load the Popupbox First
+     //loadPopupBox();
+
+     j$(".clsBoxClose").click( function() {           
+        unloadPopupBox();
+     });
+   
+     j$('#container').click( function() {
+        //unloadPopupBox();
+     });
+     
+  
+   });
+  
+      
+    function loadPopupBox(fType) 
+    {    
+      j$('[id$=hdnFileType]').val(fType);
+      
+      // To Load the Popupbox
+      j$('#popup_box').fadeIn("slow");
+      j$("#container").css({ // this is just for style
+         "opacity": "0.3" 
+       }); 
+      return false;       
+    } 
+    function unloadPopupBox() 
+    {    
+     // TO Unload the Popupbox
+
+     j$('#popup_box').fadeOut("slow");
+     j$("#container").css({ // this is just for style       
+        "opacity": "1" 
+     });
+     return false;
+    }
+        
+   function GetAttachmentId(obj)       
+    {
+      j$('[id$=hdnFileId]').val(obj);
+      //return false;
+    }
+    
+    function inputLimiter(e,allow) {
+            var AllowableCharacters = '';
+            if (allow == 'Numbers'){AllowableCharacters='1234567890';}
+            var k = document.all?parseInt(e.keyCode): parseInt(e.which);
+            if (k!=13 && k!=8 && k!=0){
+                if ((e.ctrlKey==false) && (e.altKey==false)) {
+                return (AllowableCharacters.indexOf(String.fromCharCode(k))!=-1);
+                } else {
+                return true;
+                }
+            } else {
+                return true;
+            }
+        }
+    function inputLimiterWithDot(e,allow) {
+            var AllowableCharacters = '';
+            if (allow == 'Numbers'){AllowableCharacters='1234567890.';}
+            var k = document.all?parseInt(e.keyCode): parseInt(e.which);
+            if (k!=13 && k!=8 && k!=0){
+                if ((e.ctrlKey==false) && (e.altKey==false)) {
+                return (AllowableCharacters.indexOf(String.fromCharCode(k))!=-1);
+                } else {
+                return true;
+                }
+            } else {
+                return true;
+            }
+        } 
+     function Validations()
+     {
+        var isRetrn = true;
+        
+        if(j$('.clsTechBsnsIssue').val().length < 25)
+        {
+          isRetrn = false;
+          alert('The Technical Business Issues to be solved field requires at least 25 characters.');
+        }
+        if(j$('.clsCriBsIssue').val().length < 25)
+        {
+          isRetrn = false;
+          alert('The Critical Business Issues to be solved field requires at least 25 characters.');
+        }
+        return isRetrn;
+     }             
+  </script>
+ <apex:form > 
+   <apex:pagemessages rendered="{!blnShowErrorMsg}" />
+   <!-- Hidden field to get the Select file type for Attachment -->
+   <apex:inputHidden value="{!FileDescType}" id="hdnFileType" />
+   <apex:inputHidden value="{!sAttachmentId}" id="hdnFileId" />
+    
+   <div id="popup_box" style="height:200px;margin-top:200px;">   <!-- OUR PopupBox DIV-->
+    <!--<APEX:PAGEMESSAGES />-->
+    <apex:pageBlock id="pbLive">
+      <div style="float:left;width:10px;color:black;"><a id="popupBoxClose" class="clsBoxClose">X</a></div>
+        <table style="width:100%;margin-top:30px">
+          <tr><td>
+            
+     <apex:outputPanel id="Panel" > 
+          <div id="upload" class="upload">
+            <table><tr>
+              <td><apex:inputFile id="fileToUpload" value="{!fileBody}" filename="{!fileName}" styleClass="input-file"/></td> 
+              <td><apex:commandButton value="Upload Attachment" action="{!uploadFile}"  /></td>
+            </tr></table>
+          </div>   
+     </apex:outputPanel> 
+          </td></tr>
+        </table>
+    </apex:pageBlock>
+   </div><!-- Close PopupBox DIV-->
+  
+  
+  <!-- Wow Reuqest Form Start -->
+  <apex:pageblock title="Genesys PS Project Request Form" >
+     <apex:pageBlockButtons rendered="{!blnIsSubmitted}">
+       <apex:commandButton value="Save" action="{!SaveProjReqForm}"/>
+       <apex:commandButton value="Submit" action="{!SubmitProjReqForm}" disabled="{!blnEnable}" onclick="return Validations();"/>
+     </apex:pageBlockButtons>
+     
+     <apex:outputPanel rendered="{!blnIsSubmitted_RO}">
+            <center>
+                <apex:commandButton value="Return To {!IF(ISBLANK(objPrjReqFrm.Opportunity__c),'Account','Opportunity')}" onclick="location.href='/{!IF(ISBLANK(objPrjReqFrm.Opportunity__c),objPrjReqFrm.Account__c,objPrjReqFrm.Opportunity__c)}';return false;"/>
+                &nbsp;&nbsp;
+                <apex:commandButton value="Return To Deal Support" onclick="location.href='/apex/DealSupport?id={!IF(ISBLANK(objPrjReqFrm.Opportunity__c),objPrjReqFrm.Account__c,objPrjReqFrm.Opportunity__c)}';return false;"/>
+                &nbsp;&nbsp;
+                <!--<apex:commandButton value="View Project Request" onclick="location.href='/{!objPrjReqFrm.Id}';return false;"/>-->
+            </center>
+     </apex:outputPanel>
+     
+     
+     
+     <!-- Request Details Section Start -->
+      <apex:pageBlockSection id="pbsRequestDtl" title="Request Details" columns="2" rendered="{!blnIsSubmitted}">
+        <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Support Area" />
+         <apex:outputfield value="{!objPrjReqFrm.Support_Area__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Request Type" />
+         <apex:inputfield value="{!objPrjReqFrm.Request_Type__c}"  required="true"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Requester" />
+         <apex:outputText value="{!sLoggedUser}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Status" />
+         <apex:outputText value="{!sStatus}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Booking Date" />
+         <apex:inputfield value="{!objPrjReqFrm.Booking_Date__c}"  required="true"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Priority" />
+         <apex:inputfield value="{!objPrjReqFrm.Priority__c}"  required="true"  style="width:174px;"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Account" />
+         <apex:outputText value="{!objAccount.name}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         
+       </apex:pageBlockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Opportunity Number" />
+         <apex:outputfield value="{!objOpportunity.OpportunityNumber__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Opportunity Name" />
+         <apex:outputfield value="{!objOpportunity.name}" />
+       </apex:pageBlockSectionItem>
+       
+        
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Region" />
+         <apex:outputText value="{!sRegion}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="New or existing customer" />
+         <apex:inputfield value="{!objPrjReqFrm.New_Or_Existing_Customer__c}"  required="true"  style="width:174px;"/>
+       </apex:pageBlockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Solution Consultant (SC)" />
+         <apex:inputfield value="{!objPrjReqFrm.Solution_Consultant_SC__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+       </apex:pageBlockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Customer Success Manager (CSM)" />
+         <apex:inputfield value="{!objPrjReqFrm.Customer_Success_Manager_CSM__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+       </apex:pageBlockSectionItem>
+       
+      </apex:pageBlockSection>
+     <!-- Request Details Section End -->
+     
+     <!-- Request Details ReadOnly Section Start -->
+      <apex:pageBlockSection id="pbsRequestDtl_RO" title="Request Details" columns="2" rendered="{!blnIsSubmitted_RO}">
+        <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Support Area" />
+         <apex:outputfield value="{!objPrjReqFrm.Support_Area__c}"  />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Request Type" />
+         <apex:outputfield value="{!objPrjReqFrm.Request_Type__c}"  />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Requester" />
+         <apex:outputfield value="{!objPrjReqFrm.Requester__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Status" />
+         <apex:outputfield value="{!objPrjReqFrm.Status__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Booking Date" />
+         <apex:outputfield value="{!objPrjReqFrm.Booking_Date__c}"  />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Priority" />
+         <apex:outputfield value="{!objPrjReqFrm.Priority__c}"  />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Account" />
+         <apex:outputfield value="{!objAccount.name}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Opportunity Number" />
+         <apex:outputfield value="{!objOpportunity.OpportunityNumber__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Opportunity Name" />
+         <apex:outputfield value="{!objOpportunity.name}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Region" />
+         <apex:outputfield value="{!objPrjReqFrm.Region__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="New or existing customer" />
+         <apex:outputfield value="{!objPrjReqFrm.New_Or_Existing_Customer__c}"  />
+       </apex:pageBlockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Solution Consultant (SC)" />
+         <apex:outputfield value="{!objPrjReqFrm.Solution_Consultant_SC__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+       </apex:pageBlockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Customer Success Manager (CSM)" />
+         <apex:outputfield value="{!objPrjReqFrm.Customer_Success_Manager_CSM__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+       </apex:pageBlockSectionItem>
+       
+      </apex:pageBlockSection>
+     <!-- Request Details Section End -->
+    
+    <!-- Project Details Section Start -->
+     <apex:pageBlockSection id="pbsProjectDtls" title="Project Details" columns="2" rendered="{!blnIsSubmitted}">
+        <apex:pageBlockSectionItem >
+         <apex:outputLabel value="New CMRR or Incremental CMRR Value" />
+         <apex:inputfield value="{!objPrjReqFrm.New_CMRR__c}"  required="true" onkeypress="return inputLimiterWithDot(event,'Numbers');"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Pre-Discount PS Project Value" />
+         <apex:inputfield value="{!objPrjReqFrm.Pre_Discount_PS_Project_Value__c}"  required="true" onkeypress="return inputLimiterWithDot(event,'Numbers');"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Is this a package? if so, which one" />
+         <apex:inputfield value="{!objPrjReqFrm.Is_this_a_package__c}"  required="true"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Customer Location(city/state)" />
+         <apex:inputfield value="{!objPrjReqFrm.Customer_Location__c}"  required="true"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Number of VCC seats" />
+         <apex:inputfield value="{!objPrjReqFrm.Number_Of_VCC_Seats__c}"  required="true" onkeypress="return inputLimiter(event,'Numbers');"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Number of SS IVR minutes" />
+         <apex:inputfield value="{!objPrjReqFrm.No_Of_SS_IVR_Minutes__c}"  required="true" onkeypress="return inputLimiter(event,'Numbers');"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Is this a VCC or SS IVR Project, or both" />
+         <apex:inputfield value="{!objPrjReqFrm.Is_VCC_Or_SS_IVR_Project__c}"  required="true" style="width:174px;"/>
+       </apex:pageBlockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+       </apex:pageBlockSectionItem>
+       
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Have any time commitments been made to the customer?" />
+         <apex:inputfield value="{!objPrjReqFrm.Commitments_Been_Made_To_Customer__c}"  required="true"  style="width:300px;height:100px;"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Are there any customer integrations included in the scope of this project? if so, briefly describe?" />
+         <apex:inputfield value="{!objPrjReqFrm.Any_Customer_Integrations_Included__c}"  required="true" style="width:300px;height:100px;"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Is there any onsite travel required for this project?" />
+         <apex:inputfield value="{!objPrjReqFrm.Any_Onsite_Travel_Required__c}"  required="true"  style="width:300px;height:100px;"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Please include any other pertinent information PS may require in order to correctly staff this project" />
+         <apex:inputfield value="{!objPrjReqFrm.Include_Any_Other_Pertinent__c}"  style="width:300px;height:100px;"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Technical Business Issues to be solved" />
+         <apex:inputfield value="{!objPrjReqFrm.Technical_Business_Issues_to_be_solved__c}" required="true" style="width:300px;height:100px;" styleClass="clsTechBsnsIssue"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Critical Business Issues to be solved" />
+         <apex:inputfield value="{!objPrjReqFrm.Critical_Business_Issues_to_be_solved__c}" required="true" style="width:300px;height:100px;" styleClass="clsCriBsIssue"/>
+       </apex:pageBlockSectionItem>
+     </apex:pageBlockSection>
+    <!-- Project Details Section End --> 
+    
+    <!-- Project Details Readonly Section Start -->
+     <apex:pageBlockSection id="pbsProjectDtls_RO" title="Project Details" columns="2" rendered="{!blnIsSubmitted_RO}">
+        <apex:pageBlockSectionItem >
+         <apex:outputLabel value="New CMRR or Incremental CMRR Value" />
+         <apex:outputfield value="{!objPrjReqFrm.New_CMRR__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Pre-Discount PS Project Value" />
+         <apex:outputfield value="{!objPrjReqFrm.Pre_Discount_PS_Project_Value__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Is this a package? if so, which one" />
+         <apex:outputfield value="{!objPrjReqFrm.Is_this_a_package__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Customer Location(city/state)" />
+         <apex:outputfield value="{!objPrjReqFrm.Customer_Location__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Number of VCC seats" />
+         <apex:outputfield value="{!objPrjReqFrm.Number_Of_VCC_Seats__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Number of SS IVR minutes" />
+         <apex:outputfield value="{!objPrjReqFrm.No_Of_SS_IVR_Minutes__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Is this a VCC or SS IVR Project, or both" />
+         <apex:outputfield value="{!objPrjReqFrm.Is_VCC_Or_SS_IVR_Project__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Have any time commitments been made to the customer?" />
+         <apex:outputfield value="{!objPrjReqFrm.Commitments_Been_Made_To_Customer__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Are there any customer integrations included in the scope of this project? if so, briefly describe?" />
+         <apex:outputfield value="{!objPrjReqFrm.Any_Customer_Integrations_Included__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Is there any onsite travel required for this project?" />
+         <apex:outputfield value="{!objPrjReqFrm.Any_Onsite_Travel_Required__c}"/>
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Please include any other pertinent information PS may require in order to correctly staff this project" />
+         <apex:outputfield value="{!objPrjReqFrm.Include_Any_Other_Pertinent__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Technical Business Issues to be solved" />
+         <apex:outputfield value="{!objPrjReqFrm.Technical_Business_Issues_to_be_solved__c}" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Critical Business Issues to be solved" />
+         <apex:outputfield value="{!objPrjReqFrm.Critical_Business_Issues_to_be_solved__c}" />
+       </apex:pageBlockSectionItem>
+     </apex:pageBlockSection>
+    <!-- Project Details Section End --> 
+
+    <!-- Attachment Section Start -->
+     <apex:pageBlockSection id="pbsAttachment" title="Attachments" columns="2" rendered="{!blnIsSubmitted}">
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="NOTE: Statement of Work, Services Order, and Opportunity Quote Sheet are required!" />
+       </apex:pageBlockSectionItem>
+       <apex:pageBlockSection ></apex:pageBlockSection>
+       
+       <apex:pageBlockSectionItem >
+         <apex:outputLabel value="Statement Of Work" />
+         <apex:commandButton value="Upload File" onclick="return loadPopupBox('Statement Of Work');"/>
+       </apex:pageBlockSectionItem>
+     
+           <apex:pageBlockSectionItem >
+             <apex:pageBlock rendered="{!list_StatementOfWork != null}">
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                  <apex:repeat value="{!list_StatementOfWork}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+         
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="Services Order" />
+           <apex:commandButton value="Upload File" onclick="return loadPopupBox('Services Order');"/>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+             <apex:pageBlock rendered="{!list_ServiceOrders != null}">
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                  <apex:repeat value="{!list_ServiceOrders}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+         
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="Opportunity Quote Sheets" />
+           <apex:commandButton value="Upload File" onclick="return loadPopupBox('Opportunity Quote Sheets');"/>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+             <apex:pageBlock rendered="{!list_OppQuoteSheet != null}">
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                  <apex:repeat value="{!list_OppQuoteSheet}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+         
+         <apex:pageBlockSectionItem >
+           <apex:outputLabel value="Attach any call flow documents, scripts or other documents created or obtain during pre-sales that will be beneficial to PS" />
+           <apex:commandButton value="Upload File" onclick="return loadPopupBox('Flow Documents');"/>
+         </apex:pageBlockSectionItem>
+         <apex:pageBlockSectionItem >
+             <apex:pageBlock rendered="{!list_AttachCallFlowDoc != null}">
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td><td width="35%">Click to Remove Attached File</td></tr>
+                  <apex:repeat value="{!list_AttachCallFlowDoc}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+         
+     </apex:pageBlockSection>
+    <!-- Attachment Section End -->  
+    
+    
+   <!-- Attachment ReadOnly Section Start -->
+     <apex:pageBlockSection id="pbsAttachment_RO" title="Attachments" columns="2" rendered="{!blnIsSubmitted_RO}">
+     
+           <apex:pageBlockSectionItem >
+             <apex:pageBlock title="Statement Of Work" rendered="{!list_StatementOfWork != null}">
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                  <apex:repeat value="{!list_StatementOfWork}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <!--<td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>-->
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+
+         <apex:pageBlockSectionItem >
+             <apex:pageBlock title="Services Order" rendered="{!list_ServiceOrders != null}">
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                  <apex:repeat value="{!list_ServiceOrders}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <!--<td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>-->
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+         
+
+         <apex:pageBlockSectionItem >
+             <apex:pageBlock title="Opportunity Quote Sheets" rendered="{!list_OppQuoteSheet != null}">
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="65%">File Name</td></tr>
+                  <apex:repeat value="{!list_OppQuoteSheet}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <!--<td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>-->
+                   </tr>
+                 </apex:repeat>
+               </table>
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+         
+
+         <apex:pageBlockSectionItem dataStyle="width:50%">
+             <apex:pageBlock title="Attach any call flow documents, scripts or other documents created or obtain during pre-sales that will be beneficial to PS" rendered="{!list_AttachCallFlowDoc != null}">
+               
+               <table border="1" width="100%">
+                 <tr style="font-weight:800;"><td width="100%">File Name</td></tr>
+                  <apex:repeat value="{!list_AttachCallFlowDoc}" var="abp"> 
+                    <tr><td>
+                         <a href="{!BaseURL}/servlet/servlet.FileDownload?file={!abp.id}" target="_blank">{!abp.Description} ({!abp.Name})</a><br></br>
+                       </td>
+                      <!--<td><apex:commandButton value="Remove" action="{!DeleteAttachment}" onclick="GetAttachmentId('{!abp.id}');"/></td>-->
+                   </tr>
+                 </apex:repeat>
+               </table>
+               
+           </apex:pageBlock>
+         </apex:pageBlockSectionItem>
+         
+     </apex:pageBlockSection>
+    <!-- Attachment Section End --> 
+  </apex:pageblock>   
+ </apex:form> 
+</apex:page>

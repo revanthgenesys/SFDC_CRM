@@ -1,0 +1,442 @@
+<apex:page controller="DownloadsController" id="pg"
+    extensions="DownloadsControllerExtension" sidebar="false"
+    showheader="false">
+<apex:variable var="isCommunity" value="{!$Site.CurrentSiteUrl != null}" />
+    
+    <style type="text/css">
+   .message.warningM2 { width:700px; }
+.left_panel {
+    margin: 0 0px 0 0;
+    width: 25%;
+    float: left;
+}
+
+.displayme {
+    display: block !important;
+}
+
+.right_panel {
+    margin: 0 0 0 00px;
+    float: left;
+    width: 100%;
+}
+
+.custPopup {
+    background-color: white;
+    border-width: 2px;
+    border-style: solid;
+    z-index: 9999;
+    left: 50%;
+    padding: 10px;
+    position: absolute;
+    width: 550px;
+    margin-left: -250px;
+    top: 100px;
+}
+
+.popupBackground {
+    background-color: black;
+    opacity: 0.20;
+    filter: alpha(opacity =                 20);
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 9998;
+}
+
+.list {
+    width: 100% !important
+}
+.apexp>div { background:none !important; border:none !important; }
+tr.dataRow { width:700px !important; }
+.message.warningM2  { margin-bottom:20px; }
+
+</style>
+    <apex:includeScript value="{!$Resource.LookupPopUp}" />
+    <script type="text/javascript">
+  
+    var newWin=null;
+    var field1ClassName = 'End_User_Account__c';
+    var field2ClassName = 'Sold_To_Account__c';
+            
+    function renSW(){
+        renSWTab();
+        renSWTabWihtPag();
+    }
+    function renPgMsg(){
+        renPgMsgAcFn();
+    }    
+
+    function checkTNC(isSelected,dloadURL){
+        if(isSelected!= true){
+            alert('Please accept terms and conditions');
+            return true;
+        }else{        
+              alert(here);
+            window.location.href=dloadURL;
+         
+            return false;
+        }
+    }
+    
+    function closeLookupPopup()
+    {
+       if (null!=newWin)
+       {
+          newWin.close();
+       }  
+    }
+    
+    function isTncChecked()
+    {
+        var tncChecked = '';
+        var inputElem = document.getElementsByTagName('input');
+        for(var i=0; i<inputElem.length; i++)
+        {      
+            if ( inputElem[i].id.indexOf('tnc') != -1 )
+                  tncChecked = inputElem[i].checked;
+        }
+        return(tncChecked);
+    } 
+    
+    function downloadFileResponse(urlToDownload, errMsg) 
+    {
+        if ( !isTncChecked() ) 
+            alert("Please accept the Terms and Conditions in order to download the file.");   
+        else if ( errMsg == "" )
+        {
+            window.open(urlToDownload,'', 'location=no,width=600,height=600');
+            return;
+        } 
+        else if ( errMsg == "ERROR: Not Found" )
+             alert ("The file is temporary not available. Please check back later.");
+        else if ( errMsg == "ERROR: Service" )
+            alert ("The download service is temporary not available. Please check back later.");
+        else if ( errMsg == "ERROR: Embargo" )
+            alert ("The file is currently unavailable.");
+        else 
+            alert ("An unexpected error has occurred. This error has been logged and Genesys support staff will be looking into it.");      
+    }
+    
+        function openCustomLookup(type, nameField, idField, nameField1, idField1){
+            var searchString = document.getElementById(nameField).value;                
+            searchString = searchString == null ? '' : searchString;
+            if(type == 'SoldToAccount' || type =='EndUserAccount'){
+                var role;
+                var url = '{!IF(contains($Site.CurrentSiteUrl,'/customercare/'), '/customercare','/apex')}/CustomLookup?namefield=' + nameField + '&idfield=' + idField + '&searchText='+searchString + '&namefield1=' + nameField1 + '&idfield1=' + idField1;
+                url = url + '&obj=Account&fieldType='+type;
+                //In case of portal user
+                                   
+                url = url +'&contactId={!conId}';                
+                if(document.getElementById('pg:frm:pgblk1:dynFld:pgsecSoldToAccount:pgsecItemSoldToAccount1:txtSoldToAccount').value != '')
+                    url = url +'&soldToId='+document.getElementById('pg:frm:pgblk1:dynFld:pgsecSoldToAccount:pgsecItemSoldToAccount1:hdnSoldToAccountId').value;
+                window.open(url,'lookupWindow','width=550,height=550,top=50,toolbar=no,personalbar=no,location=no,directories=no,statusbar=no,menubar=no,status=no,re sizable=yes,left=60,screenX=60,top=100,screenY=100,resizable=yes,scrollbars=yes');            
+            }           
+        }
+      
+        </script>
+    
+    <apex:form id="frm">
+    
+        <apex:actionFunction name="showTNCactionFn" id="shwtncaf"
+            reRender="tstpopup" action="{!showTNC}" />
+        <apex:pageBlock rendered="true"  id="pgblk1">
+         <!--   <h1>Genesys Downloads Center</h1> -->
+           <div style="float: left; width: 100%"> 
+            <br />
+            
+            <div class="">
+             <apex:outputPanel id="selctAccMsg1" style="padding-bottom:10px;" >
+                    <apex:pageMessage summary="Please select a End User and Sold To combinations before accessing the available downloads"
+            severity="warning" strength="3"
+            rendered="{!NOT(isEndSoldToSelected)}" />
+            </apex:outputPanel>
+         <apex:actionFunction name="setContactAF" action="{!setContact}" status="status" reRender="pgblk1,softwarePanel"/>
+         <apex:pageBlock id="dynFld">
+            <apex:pageBlockSection columns="1" id="pgsecEndUserAccount">
+                <apex:pageBlockSectionItem id="pgsecItemEndUserAccount1">
+                    <apex:outputLabel value="End User Account" />
+                    <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput">
+                        <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                        <apex:inputHidden value="{!currentCase.End_User_Account__c}" id="hdnEndUserAccountId" />                        
+                        <apex:inputText id="txtEndUserAccount" value="{!endUserName}" maxlength="100">          
+                            <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" onComplete="" action="{!setContact}" status="status" />               
+                        </apex:inputText>                                
+                        <a href="javascript:void(0);"> 
+                            <img id="theImage" src="/s.gif" height="10" width="10"  
+                                    onclick="openCustomLookup('EndUserAccount','pg:frm:pgblk1:dynFld:pgsecEndUserAccount:pgsecItemEndUserAccount1:txtEndUserAccount','pg:frm:pgblk1:dynFld:pgsecEndUserAccount:pgsecItemEndUserAccount1:hdnEndUserAccountId','pg:frm:pgblk1:dynFld:pgsecSoldToAccount:pgsecItemSoldToAccount1:txtSoldToAccount','pg:frm:pgblk1:dynFld:pgsecSoldToAccount:pgsecItemSoldToAccount1:hdnSoldToAccountId');return false;" title="Contact" 
+                                    class="lookupIcon" onmouseout="this.className='lookupIcon';" alt="Contact Lookup" onmouseover="this.className='lookupIconOn';" /> 
+                        </a>
+                        <apex:commandButton value="Clear Accounts" onclick="document.getElementById('pg:frm:pgblk1:dynFld:pgsecSoldToAccount:pgsecItemSoldToAccount1:txtSoldToAccount').value = ''; document.getElementById('pg:frm:pgblk1:dynFld:pgsecEndUserAccount:pgsecItemEndUserAccount1:txtEndUserAccount').value = '';setContactAF();return false;" />
+                        </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecSoldToAccount" >
+            <apex:pageBlockSectionItem id="pgsecItemSoldToAccount1">
+                    <apex:outputLabel value="Sold To Account" />
+                    <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput">
+                        <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                        <apex:inputHidden value="{!currentCase.Sold_To_Account__c}" id="hdnSoldToAccountId" />                      
+                        <apex:inputText id="txtSoldToAccount" value="{!soldToName}" maxlength="100" >           
+                            <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" onComplete="" action="{!setContact}" status="status" />               
+                        </apex:inputText>
+                         <script>
+                            document.getElementById('pg:frm:pgblk1:dynFld:pgsecSoldToAccount:pgsecItemSoldToAccount1:txtSoldToAccount').disabled = true;
+                        </script>
+                        </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecProduct" >  
+            <apex:pageBlockSectionItem id="pgsecItemProductLine1">
+                <apex:outputLabel value="Product" />
+                <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput" >    
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />                 
+                        <apex:selectList value="{!selectedProduct}" size="1" style="width:350px" disabled="{!disableProduct}">
+                            <apex:selectOptions value="{!prods}" />             
+                            <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" action="{!populateAllOnProdChange}" status="status" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+            </apex:pageBlockSectionItem>            
+        </apex:pageBlockSection>            
+        <apex:pageBlockSection columns="1" id="pgsecComponent" >
+            <apex:pageBlockSectionItem >
+                <apex:outputPanel >                 
+                    <apex:outputLabel value="Component" rendered="{!NOT(isDloadTypeCD)}"/>
+                    <apex:outputLabel value="CD/DVD Name" rendered="{!isDloadTypeCD}"/>
+                </apex:outputPanel>             
+                <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput" >         
+                    <apex:selectList value="{!selectedComponent}" size="1" label="Component" style="width:350px" disabled="{!disableComponent}">
+                        <apex:selectOptions value="{!components}" />                
+                        <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" action="{!populateAll}" status="status" />
+                    </apex:selectList>
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>                        
+        </apex:pageBlockSection>
+         <apex:pageBlockSection columns="1" id="pgsecMajorVersion" >
+            <apex:pageBlockSectionItem id="pgsecItemProductLine1">
+                <apex:outputLabel value="Major Release" />
+                <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput" >                    
+                        <apex:selectList value="{!selectedMajorRelease}" size="1" style="width:350px" disabled="{!disableMajorVersion}">
+                            <apex:selectOptions value="{!majorVersions}" />             
+                            <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" action="{!populateAll}" status="status" />
+                        </apex:selectList>
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>        
+            
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecProductVersion" >           
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel >Version</apex:outputLabel>
+                <apex:outputPanel layout="block" styleClass="requiredInput">                    
+                    <apex:selectList value="{!selectedProductVersion}" size="1" style="width:350px" disabled="{!disableProdVersion}">
+                        <apex:selectOptions value="{!productVersions}"></apex:selectOptions>
+                        <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" action="{!populateAll}" status="status" />
+                    </apex:selectList>
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>            
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecLanguage" >
+            <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Language" />
+                <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput" >         
+                    <apex:selectList value="{!selectedlanguage}" size="1" label="Language" style="width:350px" disabled="{!disableLanguage}" >
+                        <apex:selectOptions value="{!languages}" />                
+                        <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" action="{!populateAll}" status="status" />
+                    </apex:selectList>
+                </apex:outputPanel>
+            </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" id="pgsecOS" >
+            <apex:pageBlockSectionItem rendered="{!NOT(isDloadTypeCD)}">
+                <apex:outputLabel value="O/S" />
+                    <apex:outputPanel id="pnl1" layout="block" styleClass="requiredInput" >         
+                        <apex:selectList value="{!selectedOsVersion}" size="1" label="O/S" style="width:350px" disabled="{!disableOSVersion}" >
+                            <apex:selectOptions value="{!osVersions}" />                
+                            <apex:actionSupport event="onchange" reRender="pgblk1,softwarePanel" action="{!populateAll}" status="status" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+           </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+          
+          <div class="">      
+             <apex:outputPanel id="isLtVer">                    
+                    <apex:actionStatus startText=" Processing"
+                        stopText=" Done " id="counterStatus">
+                        <apex:facet name="start">Processing...
+          <img src="/apexpages/devmode/img/saveStatus.gif" />
+                        </apex:facet>
+                        <apex:facet name="stop">
+                            <apex:inputCheckbox value="{!includeSwRelShipCntrl}"
+                                disabled="{!NOT(isEndSoldToSelected)}">
+                                <apex:actionSupport event="onchange" action="{!queryFilter}"
+                                    rerender="dynFld,swTable,sDloads" status="counterStatus" />
+                            </apex:inputCheckbox>
+                        </apex:facet>
+                        </apex:actionStatus>
+                    <apex:outputLabel style="font-weight: bold;" value="    Include Software Releases under Shipping Control" />                    
+                </apex:outputPanel>
+           </div>
+                  
+                <apex:inputHidden value="{!query2}" id="query" />
+                <script type="text/javascript">
+                    queryFieldId = '{!$Component.query}';
+                </script>
+         
+        </apex:pageBlock>
+        
+              <apex:actionFunction name="test"
+                id="cancel" reRender="dynFld" oncomplete="renPgMsg();renSW()" /> <apex:actionFunction name="renPgMsgAcFn" id="renp" reRender="tncBlk,dynFld,selctAccMsg1" /> <apex:actionFunction name="renSWTab" id="rens" reRender="swTable" /></div>
+
+            <div class="">
+             <br />
+            <apex:outputPanel id="tncBlk">
+                <apex:inputCheckbox id="tnc" rendered="{!isEndSoldToSelected}"
+                    value="{!acceptTnc}" immediate="true">
+                    <apex:actionsupport event="onchange" rerender="tncBlk,swTable" />
+                </apex:inputCheckbox>
+               
+                <apex:outputLabel style="color:red;" value=" I accept the Genesys software usage"
+                    for="tnc" rendered="{!isEndSoldToSelected}" />
+                <apex:commandLink action="{!showTNC}"
+                    rendered="{!isEndSoldToSelected}">
+                    terms and conditions
+                </apex:commandLink>
+            </apex:outputPanel></div>
+
+            </div>
+            <apex:outputPanel id="tstpopup">
+                <apex:outputPanel styleClass="popupBackground" layout="block"
+                    rendered="{!displayTNC}" />
+                <apex:outputPanel styleClass="custPopup" layout="block"
+                    rendered="{!displayTNC}">
+                    <table>
+                        <tr>
+                            <td>
+                            <b>Agreement Terms</b><br/><br/>
+                            <apex:outputLabel value="{!$Label.TNC1}"/>
+                            <br/> <br/>
+                            <apex:outputLabel value="{!$Label.TNC2}"/>
+                            <br /> <br/>
+                            <b>Distribution Agreement Terms</b><br/><br/>
+                            <apex:outputLabel value="{!$Label.TNC3}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><apex:commandButton style="display:block !important;"
+                                value="Close" action="{!closeTNC}" rerender="tstpopup"
+                                styleClass="displayme" /></td>
+                        </tr>
+                    </table>
+
+
+                </apex:outputPanel>
+            </apex:outputPanel>
+
+            <apex:outputPanel id="tncNO" rendered="false">
+                <apex:outputPanel styleClass="popupBackground" layout="block"
+                    rendered="{!displayNTNC}" />
+                <apex:outputPanel styleClass="custPopup" layout="block"
+                    rendered="{!displayNTNC}">
+
+                    <table>
+                        <tr>
+                            <td>Terms and condtions goes here.<br />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><apex:commandButton value="Close" action="{!closeNTNC}"
+                                rerender="tncNO" /></td>
+                        </tr>
+                    </table>
+
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlock>
+        <apex:actionFunction name="loadRecordsAF" action="{!populateSoftwares}" rerender="sDloads" />
+        <apex:outputPanel id="softwarePanel">
+            <apex:outputPanel rendered="{!showPagination}">
+            <script>
+                loadRecordsAF();
+            </script>
+            </apex:outputPanel>
+            <apex:pageBlock id="sDloads">
+                <apex:actionFunction rerender="softwarePanel" name="lazyLoad"
+                    action="{!lazyLoad}" />
+                <apex:outputPanel rendered="{!!activated}">
+                    <apex:image value="/img/loading.gif" />
+                    Loading... 
+                </apex:outputPanel>
+                <apex:inputCheckBox value="{!isDloadTypeCD}" style="display:none;"/>
+                <apex:outputPanel rendered="{!activated && isEndSoldToSelected}">
+                    <div class="scroll">
+                        <c:DynamicOffsetPaginator pController="{!controller}" panel="softwarePanel" id="pginatorComp" rendered="{!showPagination}"/> 
+                        <apex:pageBlockTable value="{!softwares}" var="sw" width="900" rendered="{!NOT(isDloadTypeCD)}">
+
+
+                        <apex:repeat value="{!$ObjectType.Software_Download__c.FieldSets.Customer_Portal_Download_Fields}"
+                            var="f">
+                            <apex:column style="width:550px">
+                                <apex:facet name="header">
+                                    <c:SortOffsetHeader sController="{!controller}"
+                                        header="{!f.Label}" column="{!f.FieldPath}"
+                                        panel="softwarePanel" />
+                                </apex:facet>
+                    
+                              <apex:outputLink value="{!IF(isCommunity,'/customercare','/apex')}/SoftwareDownloadDetails?Id={!sw}" target="_blank"> 
+                                    <apex:outputText value="More"
+                                        rendered="{!IF((f.FieldPath=='File_Name__c'),true,false)}"></apex:outputText>
+                                </apex:outputLink>
+                                <apex:outputField value="{!sw[f]}"
+                                    rendered="{!IF((f.FieldPath=='File_Name__c' || f.FieldPath == 'File_URL__c'),false,true)}" />
+                                <apex:commandLink action="{!gtDload}" value="Download" 
+                                    oncomplete="downloadFileResponse('{!urlToDl}', '{!errMsg}');"
+                                    rendered="{!IF((f.FieldPath=='File_URL__c' && !sw['Contolled__c']),true,false)}"
+                                    id="theCommandLink">
+                                    <apex:param name="swId" value="{!sw.Id}"
+                                        assignTo="{!swdLoadId}" />
+                                </apex:commandLink>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable> <apex:pageBlockTable value="{!softwares}" var="sw"
+                        style="width:900px;" rendered="{!isDloadTypeCD}">
+
+                        <apex:repeat value="{!$ObjectType.Software_Download__c.FieldSets.Customer_Portal_CD_Download_Fields}"
+                            var="f">
+                            <apex:column style="width:250px">
+                                <apex:facet name="header">
+                                    <c:SortOffsetHeader sController="{!controller}"
+                                        header="{!f.Label}" column="{!f.FieldPath}"
+                                        panel="softwarePanel" rendered="true"/>
+                                </apex:facet>
+           
+                                <apex:outputLink value="{!IF(isCommunity,'/customercare','/apex')}/SoftwareDownloadDetails?Id={!sw}" target="_blank"> 
+                                   <apex:outputText value="More"
+                                        rendered="{!IF((f.FieldPath=='File_Name__c'),true,false)}"></apex:outputText>
+                                </apex:outputLink>
+                                <apex:outputField value="{!sw[f]}"
+                                    rendered="{!IF((f.FieldPath=='File_Name__c' || f.FieldPath == 'File_URL__c'),false,true)}" />
+                                <apex:commandLink action="{!gtDload}" value="Download"
+                                    oncomplete="downloadFileResponse('{!urlToDl}', '{!errMsg}');"
+                                    rendered="{!IF((f.FieldPath=='File_URL__c' && !sw['Contolled__c']),true,false)}"
+                                    id="theCommandLink">
+                                    <apex:param name="swId" value="{!sw.Id}"
+                                        assignTo="{!swdLoadId}" />
+                                </apex:commandLink>
+                            </apex:column>
+                        </apex:repeat>
+                    </apex:pageBlockTable></div>
+
+                </apex:outputPanel>
+
+            </apex:pageBlock>
+        </apex:outputPanel>
+        <apex:actionFunction rerender="sDloads" name="renSWTabWihtPag" />
+    </apex:form>
+   
+    <script>
+        setTimeout(lazyLoad, 1000);
+    </script>
+ 
+</apex:page>

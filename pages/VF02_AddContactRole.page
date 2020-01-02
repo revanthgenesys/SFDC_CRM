@@ -1,0 +1,51 @@
+<apex:page standardController="OQM_Form__c" extensions="Ctrl01_VF01_AddContactRole">
+    <apex:outputText value="{!OQM_Form__c.OpportunityName__c}" rendered="false"/>
+    <apex:outputText value="{!OQM_Form__c.Id}" rendered="false"/>
+    
+    <apex:detail subject="{!OQM_Form__c.Id}" relatedList="true"/>
+
+    <apex:form >
+
+        <apex:pageBlock title="Contact Roles" >
+            <apex:pageBlockButtons location="top">
+                 <apex:commandButton action="{!OQMAddContactRole}" value="New"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockTable value="{!lstOpptyContactRole}" var="item">
+                <apex:column >
+                    <apex:commandLink action="{!OQMAddContactRole}" value="Edit"/>
+                    <apex:outputText > | </apex:outputText>
+                    <apex:commandLink action="{!OQMDeleteContactRole}" value=" Del">
+	                    <apex:param name="Id" value="{!item.id}" assignTo="{!OCRToDelete}"/>
+	                </apex:commandLink>    
+                    <apex:facet name="header">Action</apex:facet>
+                </apex:column>
+                <apex:column >
+                    <apex:commandLink action="{!URLFOR($Action.Contact.View,item.Contact.Id,[retURL=OQM_Form__c.Id])}" value="{!item.Contact.name}"/>
+                    <apex:facet name="header">{!$ObjectType.Contact.fields.Name.label}</apex:facet>
+                </apex:column> 
+                <apex:column >
+                <apex:commandLink action="{!URLFOR($Action.Account.View,item.Contact.Account.Id,[retURL=OQM_Form__c.Id])}" value="{!item.Contact.Account.name}"/>
+                    <apex:facet name="header">{!$ObjectType.Account.fields.Name.label}</apex:facet>
+                </apex:column> 
+                <apex:column >
+
+                    <apex:outputLink value="mailto:{!item.Contact.Email}">{!item.Contact.Email}</apex:outputLink>
+                    <apex:facet name="header">{!$ObjectType.Contact.fields.Email.label}</apex:facet>
+                </apex:column>
+                <apex:column value="{!item.Contact.Phone}">
+                    <apex:facet name="header">{!$ObjectType.Contact.fields.Phone.label}</apex:facet>
+                </apex:column>
+                <apex:column value="{!item.Role}">
+                    <apex:facet name="header">{!$ObjectType.OpportunityContactRole.fields.Role.label}</apex:facet>
+                </apex:column>
+                <apex:column value="{!item.IsPrimary}">
+                    <apex:facet name="header">{!$ObjectType.OpportunityContactRole.fields.IsPrimary.label}</apex:facet>
+                </apex:column>   
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+    
+    <apex:relatedList List="NotesAndAttachments" />
+    <apex:relatedList List="OpenActivities" />
+    <apex:relatedList List="ActivityHistories" />
+</apex:page>

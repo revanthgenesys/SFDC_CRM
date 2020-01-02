@@ -1,0 +1,173 @@
+<!-- Naresh Kumar       06/23/2014
+ -->
+<apex:component controller="QuoteApprovalHistoryController" access="global" allowDML="true">
+    <style>
+        .stepRow{
+            background-color:#70AAC6;
+            font-weight:bold;
+            color:#ffffff;            
+        }
+        .approved{
+            font-color:green;
+            font-weight:bold;
+        }
+        .rejected{
+            font-color:red;
+            font-weight:bold;
+        }
+        .pendingStatus{
+            background-color:#FFCC00;
+            font-weight:bold;
+        }
+        .approvedStatus{
+            background-color:#4DFF4D;
+            font-weight:bold;
+        }
+        .rejectedStatus{
+            background-color:#FF6666;
+            font-weight:bold;
+        }
+        .dataTable {
+            width:100%;
+            height:100%;
+            margin:0px;
+            padding:0px;
+            border:0px;
+        }   
+        .dataTable td{
+            vertical-align:middle;      
+            border:0px solid #000000;
+            border-width:0px 0px 0px 0px;
+            text-align:left;
+            padding:3px;
+            font-size:11px;
+            font-family:Verdana;
+            color:#000000;
+        }
+        .dataTable th{
+            vertical-align:middle;      
+            border:0px solid #000000;
+            border-width:0px 0px 0px 0px;
+            text-align:left;
+            padding:3px;
+            font-size:11px;
+            font-family:Verdana;
+            color:#000000;
+        }
+    </style>
+    <apex:attribute name="quote" description="Quote id." type="String" assignTo="{!quoteId}" />
+    <apex:attribute name="dq" description="DealQualification id." type="String" assignTo="{!dqId}" />
+    <apex:attribute name="retURL" description="Return url" type="String"  />    
+    <apex:attribute name="showOnlyLastSubmission" description="Show only last submission history" type="Boolean" required="false" assignTo="{!showLastSubmission}" />
+        <!-- <apex:pageBlock title="Approval History"> -->
+            <apex:outputLabel value="No records to display" rendered="{!NOT(showApprovalHistory)}"/>
+            <apex:outputPanel rendered="{!showApprovalHistory}">
+                <apex:dataTable value="{!approvals}" var="eachRecord" style="border-width:0px;padding:5px;font-size:12px;font-family:Verdana;" rendered="{!quoteId != null}">
+                    <apex:column headerValue="Action" style="{!eachRecord.style}">
+                        <apex:outputLabel value="{!eachRecord.actionTitle}" rendered="{!NOT(eachRecord.actionTitle == '')}" />                        
+                    </apex:column>
+                    <apex:column headerValue="Submitted Date" style="{!eachRecord.style}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy hh:mm:ss a}" rendered="{!AND(eachRecord.rowType != 'submissionDetail', eachRecord.approvalRecord.Status__c != 'In-Active')}">
+                            <apex:param value="{!eachRecord.approvalRecord.Submitted_Date__c}" />
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Status" style="{!eachRecord.style}">
+                        <span class="{!eachRecord.statusClass}">
+                        {!eachRecord.approvalRecord.Status__c}
+                        </span>
+                    </apex:column>
+                    <apex:column headerValue="Approved/Reject Date" style="{!eachRecord.style}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy hh:mm:ss a}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                            <apex:param value="{!eachRecord.approvalRecord.Quote_Approval_Date__c}" />
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Function Name" style="{!eachRecord.style}">
+                        <apex:outputPanel rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Quote_Approval_Step_Details__r.Quote_Approver_Step_Approver_Detail__r.Name}
+                        </apex:outputPanel>
+                    </apex:column>
+                    <apex:column headerValue="Assigned To" style="{!eachRecord.style}" >
+                        {!eachRecord.approvalRecord.Owner.Name}                        
+                    </apex:column>
+                    <apex:column headerValue="Actual Approver" style="{!eachRecord.style}" >
+                        {!eachRecord.approvalRecord.Actual_Approver__r.Name}                        
+                    </apex:column>
+                    <apex:column headerValue="Comments" style="{!eachRecord.style}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Comments__c}
+                    </apex:column>
+                    <apex:column headerValue="Approval Method" style="{!eachRecord.style}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Approval_Method__c}
+                    </apex:column>
+                    
+                    <apex:column headerValue="Overall Status" style="{!eachRecord.style}">
+                        <apex:outputPanel rendered="{!AND(eachRecord.showOverallStatus, overAllStatus == 'Pending')}" >
+                            <span class="pendingStatus">
+                                Pending &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            </span>                     
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!AND(eachRecord.showOverallStatus, overAllStatus == 'Approved')}" >
+                            <span class="approvedStatus">
+                            Approved &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>                      
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!AND(eachRecord.showOverallStatus, overAllStatus == 'Rejected')}" >
+                            <span class="rejectedStatus">
+                            Rejected &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>                      
+                        </apex:outputPanel>                 
+                    </apex:column>                          
+                </apex:dataTable>
+                <apex:dataTable value="{!DQApprovals}" var="eachRecord" style="border-width:0px;padding:5px;font-size:12px;font-family:Verdana;" rendered="{!dqId != null}">
+                    <apex:column headerValue="Action" style="{!eachRecord.style}">
+                        <apex:outputLabel value="{!eachRecord.actionTitle}" rendered="{!NOT(eachRecord.actionTitle == '')}" />                        
+                    </apex:column>
+                    <apex:column headerValue="Submitted Date" style="{!eachRecord.style}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy hh:mm:ss a}" rendered="{!AND(eachRecord.rowType != 'submissionDetail', eachRecord.approvalRecord.Status__c != 'In-Active')}">
+                            <apex:param value="{!eachRecord.approvalRecord.Submitted_Date__c}" />
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Status" style="{!eachRecord.style}">
+                        <span class="{!eachRecord.statusClass}">
+                        {!eachRecord.approvalRecord.Status__c}
+                        </span>
+                    </apex:column>
+                    <apex:column headerValue="Approved/Reject Date" style="{!eachRecord.style}">
+                        <apex:outputText value="{0,date,MM/dd/yyyy hh:mm:ss a}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                            <apex:param value="{!eachRecord.approvalRecord.Quote_Approval_Date__c}" />
+                        </apex:outputText>
+                    </apex:column>
+                    <apex:column headerValue="Function Name" style="{!eachRecord.style}">
+                        <apex:outputPanel rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Quote_Approval_Step_Details__r.Quote_Approver_Step_Approver_Detail__r.Name}
+                        </apex:outputPanel>
+                    </apex:column>
+                    <apex:column headerValue="Assigned To" style="{!eachRecord.style}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Owner.Name}                        
+                    </apex:column>
+                    <apex:column headerValue="Actual Approver" style="{!eachRecord.style}" >
+                        {!eachRecord.approvalRecord.Actual_Approver__r.Name}                        
+                    </apex:column>
+                    <apex:column headerValue="Comments" style="{!eachRecord.style}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Comments__c}
+                    </apex:column>
+                    <apex:column headerValue="Approval Method" style="{!eachRecord.style}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}">
+                        {!eachRecord.approvalRecord.Approval_Method__c}
+                    </apex:column>
+                    
+                    <apex:column headerValue="Overall Status" style="{!eachRecord.style}">
+                        <apex:outputPanel rendered="{!AND(eachRecord.showOverallStatus, overAllStatus == 'Pending')}" >
+                            <span class="pendingStatus">
+                                Pending &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            </span>                     
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!AND(eachRecord.showOverallStatus, overAllStatus == 'Approved')}" >
+                            <span class="approvedStatus">
+                            Approved &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>                      
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!AND(eachRecord.showOverallStatus, overAllStatus == 'Rejected')}" >
+                            <span class="rejectedStatus">
+                            Rejected &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>                      
+                        </apex:outputPanel>                 
+                    </apex:column>                          
+                </apex:dataTable>
+            </apex:outputPanel>
+         <!-- </apex:pageBlock>-->
+</apex:component>

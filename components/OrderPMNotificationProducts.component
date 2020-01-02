@@ -1,0 +1,74 @@
+<apex:component controller="OrderPMNotificationProductsControlller" access="global">
+    <apex:attribute name="OrderIds" description="Order Id" type="Id" assignTo="{!orderId}" />
+    <apex:attribute name="ShipmentApprovalStatus" description="Shipment Approval Status" type="String" assignTo="{!shipAppStatus}" />
+    <apex:attribute name="AEName" description="AE (Owner) Name" type="String" />
+    <apex:outputPanel rendered="{!products != ''}">
+    <div style='text-align:left;'>
+        <table border="0" style="border:0px ;border-width:0px 0px 0px 0px;padding:5px;font-size:12px;font-family:Verdana;border-collapse: collapse;width:100%;">
+            <tr >
+                <td colspan="2" style="background-color:#70AAC6;color:#FFFFFF;">
+                    {!shipAppStatus} 
+                    <br/>                   
+                    <apex:outputPanel rendered="{!shipAppStatus != 'All Order Line Items' && shipAppStatus != 'No Approval Required - Email Notification when Quoted'}">
+                        <b>{!AEName}</b> has acknowledged the special conditions for the following products.
+                    </apex:outputPanel>
+                </td>                
+            </tr>
+            <tr>
+                <td>                    
+                </td>
+                <td>
+                    <table>
+                        <th style="padding:3px;font-size:12px;font-family:Verdana;font-weight:bold;text-align:left;width;200px;">
+                            Product Number
+                        </th>
+                        <th style="padding:3px;font-size:12px;font-family:Verdana;font-weight:bold;text-align:left;width;300px;">
+                            Product Name
+                        </th>
+                        <th style="padding:3px;font-size:12px;font-family:Verdana;font-weight:bold;text-align:right;width;250px;">
+                            Quantity
+                        </th>
+                        <apex:outputPanel rendered="{!shipAppStatus != 'All Order Line Items'}">
+                            <th style="padding:3px;font-size:12px;font-family:Verdana;font-weight:bold;text-align:left;width;150px;">
+                                Notification Sent to
+                            </th>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!NOT(shipAppStatus == 'All Order Line Items' || shipAppStatus == 'No Approval Required - Email Notification when Quoted')}">
+                            <th style="padding:3px;font-size:12px;font-family:Verdana;font-weight:bold;text-align:left;">
+                                Condition
+                            </th>      
+                        </apex:outputPanel>
+                        <apex:repeat value="{!products}" var="eachProduct" >
+                            <tr>
+                                <td style="padding:3px;font-size:12px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                                    {!eachProduct.Product__r.Name}
+                                </td>
+                                <td style="padding:3px;font-size:12px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                                    {!eachProduct.Product__r.Description__c}                        
+                                </td>
+                                <td style="padding:3px;font-size:12px;font-family:Verdana;font-weight:normal;text-align:right;"> 
+                                    <apex:outputText value="{!eachProduct.BigMachines_Quantity__c}" />
+                                </td>
+                                <apex:outputPanel rendered="{!shipAppStatus != 'All Quote Line Items'}">
+                                    <td style="padding:3px;font-size:12px;font-family:Verdana;font-weight:normal;text-align:left;"> 
+                                        <!--
+                                        {!eachProduct.Product__r.Product_Manager_Approval_Group__r.Name}
+                                        -->
+                                    </td>                               
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!NOT(shipAppStatus == 'All Order Line Items' || shipAppStatus == 'No Approval Required - Email Notification when Quoted')}">
+                                    <td style="padding:3px;font-size:12px;font-family:Verdana;font-weight:normal;text-align:left;">
+                                        {!eachProduct.Acknowledge_Text__c}
+                                    </td>                   
+                                </apex:outputPanel>
+                            </tr>
+                        </apex:repeat>           
+                    </table>
+                </td>
+                <td>
+                </td>
+            </tr>    
+            </table>
+    </div>
+    </apex:outputPanel>
+</apex:component>

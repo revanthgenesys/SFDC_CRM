@@ -1,0 +1,200 @@
+<apex:page id="pg" controller="SellableItemPricingController" title="Pricing" tabStyle="Sellable_Item_Product__c">
+    <head>
+        <style>
+            .pricingTable {
+                border-collapse: collapse;
+            }
+            
+            .tdBorder {
+                border: 1px solid #AAD4FF;
+            	height: 13px;
+            }
+        </style>
+    </head>
+    <apex:form id="frm">
+        <apex:pageMessages id="msg"/>
+        <div style="height:15px;">
+            <apex:actionStatus id="status">
+                <apex:facet name="start">    
+                    <apex:image value="/img/loading.gif"/>
+                </apex:facet>                           
+            </apex:actionStatus>
+        </div>
+        <apex:actionFunction action="{!refresh0}" name="refreshAF0"/>  
+        <apex:actionFunction action="{!refresh}" name="refreshAF"/>  
+        <apex:actionFunction action="{!Flip_flag1}" name="Flip_flag1"/> 
+        <apex:actionFunction action="{!Flip_flag2}" name="Flip_flag2"/> 
+        
+        <apex:sectionHeader title="Sellable Item Pricing" subtitle="{!sellableItem.Name}" /> 
+        <apex:pageBlock title="Pricing" id="pgblk">
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton action="{!save}" value="Save" rendered="{!isPricingManagement}"/>
+                <apex:commandButton value="Back" onclick="location.href='/{!sellableItem.id}'; return false;"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" >
+                <apex:pageBLockSectionItem >
+                    <apex:outputLabel value="Offer Type" />
+                    <apex:actionRegion >
+                    <apex:inputField value="{!sellableItem.Offer_Type__c}" onchange="refreshAF0(); return false;">
+                    <apex:param assignTo="{!offertype}" value="{!sellableItem.Offer_Type__c}" name="offertype"/>
+                    </apex:inputField>
+                    </apex:actionRegion>
+                </apex:pageBLockSectionItem>
+                
+            
+                <apex:pageBLockSectionItem >
+                    <apex:outputLabel value="Price Book Type" />
+                    <apex:inputField value="{!sellableItem.Price_Book_Type__c}" onchange="refreshAF(); return false;"/>
+                </apex:pageBLockSectionItem>
+                <apex:pageBLockSectionItem >
+                    <apex:outputLabel value="Pricing Approval Required" />
+                    <apex:inputField value="{!sellableItem.Pricing_Approval_Required__c}" onchange="Flip_flag1(); return false;" />
+                </apex:pageBLockSectionItem>
+                <apex:pageBLockSectionItem >
+                    <apex:outputLabel value="Pricing Approved" />
+                    <apex:inputField value="{!sellableItem.Pricing_Approved__c }" onchange="Flip_flag2(); return false;" />
+                </apex:pageBLockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlock rendered="{!Isoffernull}" id="pbk1">
+            <table style="width:90%;border:solid 1px gray;" cellpadding="5" cellspacing="0" class="pricingTable">
+                <tr style="background-color:#85C2FF;color:#FFFFFF;font-weight:bold;">
+                    <th rowspan="2" class="tdBorder">
+                        Region/Currency
+                    </th>
+                    <th rowspan="2" class="tdBorder">
+                        Conversion Rate            
+                    </th>
+                    <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'Old Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                        <th colspan="3" style="text-align:center;" class="tdBorder">
+                            Old Price Book
+                        </th>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'New Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                        <th colspan="5" style="text-align:center;" class="tdBorder">
+                            New Price Book
+                        </th>              
+                    </apex:outputPanel> 
+                </tr>
+                <tr style="background-color:#85C2FF;color:#FFFFFF;">
+                    <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'Old Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                        <th class="tdBorder">
+                            Pricebook
+                        </th>
+                        <!-- 
+                        <th class="tdBorder">
+                            Price &nbsp; <apex:inputText id="txtOldPrice" style="width:70px;" onchange="populatePrice(this, 'Old');"/>
+                        </th>
+                         -->
+                        <th class="tdBorder">
+                            Current Price
+                        </th>
+                        <th class="tdBorder">
+                            Updated Price
+                        </th>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'New Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                        <th class="tdBorder">
+                            Pricebook
+                        </th>
+                        <th class="tdBorder">
+                            Integer &nbsp; <apex:inputText id="txtNewPrice" style="width:70px;" onchange="populatePrice(this, 'New');"/>
+                        </th>
+                        <th class="tdBorder">
+                            Multiplier
+                        </th>
+                        <th class="tdBorder">
+                            Current Price
+                        </th>  
+                        <th class="tdBorder">
+                            Updated Price
+                        </th>               
+                    </apex:outputPanel>
+                </tr>
+                <apex:repeat value="{!pricingList}" var="eachRecord" id="rptPricing">
+                    <tr>
+                        <td class="tdBorder">
+                            {!eachRecord.newPricing.Name}
+                        </td>
+                        <td class="tdBorder" style="text-align:right;width:150px;">
+                            <apex:outputLabel id="lblConversionRate">
+                                {!eachRecord.newPricing.Conversion_Rate__c}
+                            </apex:outputLabel>
+                        </td>
+                        <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'Old Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                            <td class="tdBorder" style="">
+                                {!eachRecord.oldPricing.Price_Book__c}
+                            </td>
+                            <!-- 
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:inputText value="{!eachRecord.oldPrice}" style="width:100px;" rendered="{!eachRecord.oldPricing.Price_Book__c != ''}" id="txtOldPrice" onchange="calculatePrice(this.id);"/>
+                            </td>
+                             -->                              
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:outputText value="{!eachRecord.oldCurrentPrice}" />                                                               
+                            </td>
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:inputText value="{!eachRecord.oldUpdatedPrice}" style="width:100px;" rendered="{!eachRecord.oldPricing.Price_Book__c != ''}"  id="txtUpdatedOldPrice"/>
+                            </td>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!OR(sellableItem.Price_Book_Type__c == 'New Pricing', sellableItem.Price_Book_Type__c == 'Both')}">
+                            <td class="tdBorder" style="">
+                                {!eachRecord.newPricing.Price_Book__c}
+                            </td>
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:inputText value="{!eachRecord.newPrice}" style="width:100px;"  id="txtNewPrice" onchange="calculatePrice(this.id);" rendered="{!IF(eachRecord.newPricing != null ,true,false)}"/>
+                            	<apex:outputText value="{!eachRecord.newPrice}" rendered="{!IF(eachRecord.newPricing ==null ,true,false)}"/>
+                            </td>
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:outputLabel id="lblMultiplier">
+                                    {!eachRecord.newPricing.Multiplier__c}
+                                </apex:outputLabel>
+                            </td>
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:outputText value="{!eachRecord.newCurrentPrice}" />
+                            </td>
+                            <td class="tdBorder" style="text-align:right;">
+                                <apex:inputText value="{!eachRecord.newUpdatedPrice}" style="width:100px;"  id="txtNewUpdatedPrice" rendered="{!IF(eachRecord.newPricing !=null ,true,false)}"/>
+                            	<apex:outputText value="{!eachRecord.newUpdatedPrice}" rendered="{!IF(eachRecord.newPricing ==null ,true,false)}"/>
+                            </td>                         
+                        </apex:outputPanel>
+                    </tr>                   
+                </apex:repeat>
+            </table>   
+        </apex:pageBlock>           
+        </apex:pageBlock>
+    </apex:form>
+    <script>
+        function calculatePrice(contId){
+            var rowNum = contId.split(':')[5];
+            var conversionRate = document.getElementById('pg:frm:pgblk:pbk1:rptPricing:' + rowNum + ':lblConversionRate').innerText;
+            var oldPrice =  document.getElementById('pg:frm:pgblk:pbk1:rptPricing:' + rowNum + ':txtOldPrice');
+            var oldUpdatedPrice = document.getElementById('pg:frm:pbk1:pgblk:rptPricing:' + rowNum + ':txtUpdatedOldPrice');
+            var newPrice = document.getElementById('pg:frm:pgblk:pbk1:rptPricing:' + rowNum + ':txtNewPrice');
+            var newPrice = document.getElementById('pg:frm:pgblk:pbk1:rptPricing:' + rowNum + ':txtNewPrice');
+            var multiplier = document.getElementById('pg:frm:pgblk:pbk1:rptPricing:' + rowNum + ':lblMultiplier').innerText;
+            var newUpdatedPrice = document.getElementById('pg:frm:pgblk:pbk1:rptPricing:' + rowNum + ':txtNewUpdatedPrice'); 
+            if(contId.indexOf('txtOldPrice') > -1){           
+                //Calculating old updated price
+                var tempFixedValue = (conversionRate * oldPrice.value).toFixed(7);
+                oldUpdatedPrice.value = tempFixedValue.substring(0, tempFixedValue.length - 1);                
+            }else{             
+                //Calculating new updated price
+                var tempFixedValue = (conversionRate * newPrice.value * multiplier).toFixed(7);
+                newUpdatedPrice.value = tempFixedValue.substring(0, tempFixedValue.length - 1);
+                /*newUpdatedPrice.value = conversionRate * newPrice.value * multiplier;
+                if(rowNum != 0)
+                    newUpdatedPrice.value = Math.round(newUpdatedPrice.value / 5 ) * 5;*/
+            }
+        }
+        
+        function populatePrice(cont, priceType){
+            for(var i = 0; i < 20 ; i++){
+                var strId = 'pg:frm:pgblk:pbk1:rptPricing:' + i + ':txt' + priceType + 'Price';
+                if(document.getElementById(strId) != null){
+                    document.getElementById(strId).value = cont.value;
+                    calculatePrice('pg:frm:pgblk:pbk1:rptPricing:' + i + ':txt' + priceType + 'Price');
+                }
+            }  
+        }
+    </script>
+</apex:page>

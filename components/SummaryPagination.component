@@ -1,0 +1,86 @@
+<apex:component controller="LicensePaginationController" id="pgcmp" allowDML="True">  
+  <apex:attribute name="Summary" description="This paginates the input" type="LicenseSummaryWrapper[]" assignTo="{!summaryLst}" required="true"/>
+  <apex:attribute name="NoOfRecords" description="This holds the size of page" type="Integer" assignTo="{!pageSize}" required="false"/>
+  <apex:attribute name="Label" description="This holds title of the component" type="String" assignTo="{!title}" required="false"/>
+  <apex:attribute name="Source" description="This holds component refresh logic" type="String" assignTo="{!sourceKey}" required="false"/>  
+ <script type="text/javascript">   
+    
+    function showHideKeys(divNumber) {
+        var PartKeysDiv = document.getElementById('PartKeys'+divNumber);
+        var plusDiv = document.getElementById('plus'+divNumber);
+        var minusDiv = document.getElementById('minus'+divNumber);
+        if (PartKeysDiv.style.display === "none") {
+            PartKeysDiv.style.display = "block";
+        } else {
+            PartKeysDiv.style.display = "none";
+        }
+        if (plusDiv.style.display === "none") {
+            plusDiv.style.display = "block";
+        } else {
+            plusDiv.style.display = "none";
+        }
+        if (minusDiv.style.display === "none") {
+            minusDiv.style.display = "block";
+        } else {
+            minusDiv.style.display = "none";
+        }
+    }  
+   </script>
+   <apex:actionStatus id="loading">
+            <apex:facet name="start">
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.25; z-index: 1000; background-color: grey;">
+                    &nbsp;
+                </div>
+                <div class="waitingSearchDiv" id="el_loading" style="background-color: #fbfbfb;height: 100%;opacity:0.65;width:100%;">
+                    <div class="waitingHolder" style="top: 74.2px; width: 91px;">
+                        <img class="waitingImage" src="/img/loading.gif" title="Please Wait..." />
+                        <span class="waitingDescription">Please Wait...</span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionStatus>
+   <apex:variable var="count" value="{!10001}"/> 
+   <apex:pageBlock id="pageblock" mode="maindetail">  
+              <apex:outputText Value="{!title}" style="font-weight:bold"/>
+                <apex:pageBlockTable value="{!lstRecords}" var="record">
+                    <apex:column headerValue=" " style="vertical-align:Top" width="5%">
+                        <div id="plus{!count}" style="display:block">
+                            <apex:image value="{!$Resource.ArrowCollapse}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;" />
+                        </div>
+                        <div id="minus{!count}" style="display:none">
+                            <apex:image value="{!$Resource.ArrowExpand}" onclick="showHideKeys('{!count}');" width="18px;" height="18px;"/>
+                        </div>
+                    </apex:column>
+                    <apex:column headerValue="Part Number" style="vertical-align:Top">                    
+                        {!record.objRec.partNumber}
+                        <div id="PartKeys{!count}" style="display:none">
+                            <TABLE BORDER="0" WIDTH="100%">
+                                <apex:repeat value="{!record.objRec.partKeys}" var="partKey">
+                                    <TR><TD>&nbsp;&nbsp; {!partKey}</TD></TR>
+                                </apex:repeat>
+                            </TABLE>                                    
+                        </div>
+                    </apex:column>
+                    <apex:column headerValue="Description" value="{!record.objRec.description}" style="vertical-align:Top"/>                    
+                    <apex:column headerValue="Total" value="{!record.objRec.total}" style="vertical-align:Top" />                    
+                    <apex:column headerValue="Used" value="{!record.objRec.Used}" style="vertical-align:Top" />                    
+                    <apex:column headerValue="Available" value="{!record.objRec.available}" style="vertical-align:Top" /> 
+                    <apex:column headerValue="Use">
+                        <apex:inputText styleClass="order" value="{!record.objRec.orderedQty}" rendered="{!record.objRec.available>0}" onChange="javascript:check('{!record.objRec.available}','{!count}',this);return false;"/>
+                        
+                        <apex:variable value="{!count+1}" var="count"/>
+                    </apex:column>           
+                </apex:pageBlockTable>    
+     <apex:outputpanel >  
+       <center>  
+       <apex:panelGrid columns="5">  
+         <apex:commandButton style="background:none!important;border:none;padding:0!important;cursor:pointer;" value="◄◄" reRender="pageblock" action="{!first}" status="loading"/>  
+         <apex:commandButton style="background:none!important;border:none;padding:0!important;cursor:pointer;" value="◄ Previous" reRender="pageblock" action="{!previous}" disabled="{!!hasPrevious}" status="loading"/>  
+         <apex:outputLabel value="{!intPageNumber} of {!intNumberofPages}" />  
+         <apex:commandButton style="background:none!important;border:none;padding:0!important;cursor:pointer;" value="Next ►" reRender="pageblock" action="{!next}" disabled="{!!hasNext}" status="loading"/>  
+         <apex:commandButton style="background:none!important;border:none;padding:0!important;cursor:pointer;" value="►►" reRender="pageblock" action="{!last}" status="loading"/>  
+       </apex:panelGrid>  
+       </center>  
+     </apex:outputpanel>  
+   </apex:pageBlock>  
+ </apex:component>

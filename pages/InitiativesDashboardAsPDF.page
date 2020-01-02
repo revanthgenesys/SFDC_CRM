@@ -1,0 +1,78 @@
+<apex:page controller="ExecInitiativeController" showHeader="false" applyHtmlTag="false" renderAs="pdf">
+<html>
+    <head>
+        <style type="text/css" media="print">
+            bHead {color: black; font-size:100%; font-weight: bold; }
+            egName {color: black; font-size:120%; font-weight: bold; }
+            ul {margin-left: 10px; padding: 0px;}
+            table#AItable {border: 1px solid black; border-collapse:collapse; width:100%, padding:5px; }
+            table#EGtable {border: 1px solid black; border-collapse:collapse; width:100%, padding:5px; }
+            table#MainTable {border: 1px solid black; border-collapse:collapse; width:100%, padding:5px; }
+            @media print {
+                table {page-break-inside:auto }
+                tr    {page-break-inside:avoid; page-break-after:auto }
+                thead {display:table-header-group }
+            }
+            @page {
+                @pageBreak{
+                    page-break:always;
+                    page-break-inside:avoid;
+                }
+            
+                size:landscape;
+                
+                @bottom-right{
+                    content: "Page " counter(page) " of " counter(pages);
+                {
+            }
+        </style>
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width" />
+    </head>
+
+    <bHead>Executive Initiatives Dashboard</bHead>
+
+    <body>
+        <table id="egTable">
+            <tr>
+                <td>
+                    <egName>{!ExecGroupNameAndOwner}</egName>
+                </td>
+            </tr>
+        </table>
+        
+        <table id="MainTable">
+            <thead>
+                <tr>
+                    <th style="width:14%; vertical-align:Top; background-color:rgb(200,200,200); font-size:7.0pt; border: 1px solid black;">Initiative Name</th>
+                    <th style="width:10%; vertical-align:Top; background-color:rgb(200,200,200); font-size:7.0pt; border: 1px solid black;">Owner</th>
+                    <th style="width:6%; vertical-align:Top; background-color:rgb(200,200,200); font-size:7.0pt; border: 1px solid black;">Status</th>
+                    <th style="width:35%; vertical-align:Top; background-color:rgb(200,200,200); font-size:7.0pt; border: 1px solid black;">Accomplishments in the past month</th>
+                    <th style="width:35%; vertical-align:Top; background-color:rgb(200,200,200); font-size:7.0pt; border: 1px solid black;">High Level Deadlines</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                <tr>
+                    <apex:repeat value="{!Initiatives}" var="i">
+                        <tr style="page-break-after:auto">
+                            <td style="width:14%; vertical-align:Top; font-size:7.0pt; border: 1px solid black;"><apex:outputText escape="false" value="{!i.Initiative_Name__c}"/></td>
+                            <td style="width:10%; vertical-align:Top; font-size:7.0pt; border: 1px solid black;"><apex:outputText escape="false" value="{!i.Initiative_Owner__r.Name}"/></td>
+                            <td style="width:6%; background-color: {!i.Status__c}; border: 1px solid black;"></td>
+                            <td style="width:35%; vertical-align:Top; font-size:7.0pt; border: 1px solid black;"><apex:outputText escape="false" value="{!i.ObjectivesSummary__c}"/></td>
+                            <td style="width:35%; vertical-align:Top; font-size:7.0pt; border: 1px solid black;"><apex:outputText escape="false" value="{!i.DeadlinesSummary__c}"/></td>
+                        </tr>
+                    </apex:repeat>
+                </tr>
+            </tbody>
+        </table>
+       
+        <table id="AITable">
+            <tr>
+                <td style="width:15%; background-color:rgb(200,200,200); font-size:7.0pt; font-weight:bold; border: 1px solid black;">Additional Inputs</td>
+                <td style="width:85%; border: 1px solid black; font-size:7.0pt;"><apex:outputText escape="false" value="{!ExecGroupAdditionalInfo}"/></td>
+            </tr>
+        </table>
+        <apex:messages />
+    </body>
+</html>
+</apex:page>

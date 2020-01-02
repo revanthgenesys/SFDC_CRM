@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>Deal_Size_Notification</fullName>
+        <description>Deal Size Notification</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>Old_Templates/Deal_Size_Notification</template>
+    </alerts>
+    <alerts>
+        <fullName>Finance_notification_for_discount</fullName>
+        <description>Finance notification for discount</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Finance_Discount_Notification</template>
+    </alerts>
+    <alerts>
+        <fullName>Future_Products_Notification</fullName>
+        <description>Future Products - Notification</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/DQ_Future_products_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_Available_for_Expansion_Only_AE_Acknowledgment</fullName>
+        <description>PM Shipment Notification - Available for Expansion Only - AE Acknowledgment</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_Highly_technical_sale_requiring_PM_approval</fullName>
+        <description>PM Shipment Notification - Highly technical sale requiring PM approval</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_NRO_Available_for_Expansion_Only_AE_Acknowledgment</fullName>
+        <description>PM Shipment Notification - NRO - Available for Expansion Only - AE Acknowledgment</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_NRO_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_NRO_Highly_technical_sale_requiring_PM_approval</fullName>
+        <description>PM Shipment Notification - NRO - Highly technical sale requiring PM approval</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_NRO_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_NRO_New_product_with_limited_functionality_or_other_res</fullName>
+        <description>PM Shipment Notification - NRO - New product with limited functionality or other restrictions</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_NRO_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_NRO_Notification_only_so_PM_can_help_AE</fullName>
+        <description>PM Shipment Notification - NRO - Notification only so PM can help AE if quote looks incorrect</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_NRO_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_NRO_Product_has_prerequisites_or_limited_com</fullName>
+        <description>PM Shipment Notification NRO - Product has prerequisites or limited compatibility or is headed towards EOL</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_NRO_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_New_product_with_limited_functionality_or_other_restric</fullName>
+        <description>PM Shipment Notification - New product with limited functionality or other restrictions</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_Notification_only_so_PM_can_help_AE_if_quote_looks_inco</fullName>
+        <description>PM Shipment Notification - Notification only so PM can help AE if quote looks incorrect</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>PM_Shipment_Notification_Product_has_prerequisites_or_limited_compatibility_or_i</fullName>
+        <description>PM Shipment Notification - Product has prerequisites or limited compatibility or is headed towards EOL</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Email_2__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/PM_Notification_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>Profressional_Services_Notification</fullName>
+        <ccEmails>vikram.sharma@genesys.com</ccEmails>
+        <description>Profressional Services - Notification</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Notification_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Professional_Services_Required_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>Quote_Approval_Assignment</fullName>
+        <description>Quote Approval Assignment</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Quote_Approval_Assignment2</template>
+    </alerts>
+    <alerts>
+        <fullName>Quote_Approval_Assignment_Cloud_BE</fullName>
+        <description>Quote Approval Assignment Cloud BE</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Quote_Approval_Assignment_Cloud_BE</template>
+    </alerts>
+    <alerts>
+        <fullName>Quote_Approval_Assignment_DQ</fullName>
+        <description>Quote Approval Assignment DQ</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>testnavanee/Quote_Approval_Assignment_New_DQ_Updated</template>
+    </alerts>
+    <alerts>
+        <fullName>Quote_Approval_Assignment_DQ_Cloud</fullName>
+        <description>Quote Approval Assignment DQ Cloud</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Quote_Approval_Assignment_New_DQ_Cloud</template>
+    </alerts>
+    <alerts>
+        <fullName>Quote_Approval_Submission_Notification_To_PM</fullName>
+        <description>Quote Approval Submission Notification To PM</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>all/Quote_Approval_Sub_Notif_To_PM_VF</template>
+    </alerts>
+    <alerts>
+        <fullName>Quote_Rejected_Before_Approval</fullName>
+        <description>Quote Rejected Before Approval</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Quote_Rejected_Before_Approval</template>
+    </alerts>
+    <alerts>
+        <fullName>Quote_Revised_Before_Approval</fullName>
+        <description>Quote Revised Before Approval</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Quote_Revised_Before_Approval</template>
+    </alerts>
+    <alerts>
+        <fullName>Require_Separate_Quote_for_Genesys_Care</fullName>
+        <ccEmails>holli.bingham@genesys.com</ccEmails>
+        <ccEmails>vikram.sharma@genesys.com</ccEmails>
+        <description>Require Separate Quote for Genesys Care</description>
+        <protected>false</protected>
+        <recipients>
+            <type>owner</type>
+        </recipients>
+        <senderAddress>quotesapproval@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>all/Genesys_Care_sperate_Quote_VF</template>
+    </alerts>
+    <fieldUpdates>
+        <fullName>Trigger_Email_Alert_To_None</fullName>
+        <field>Trigger_Email_Alert__c</field>
+        <literalValue>None</literalValue>
+        <name>Trigger Email Alert To None</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Email_Notification_Sent</fullName>
+        <field>EmailNotificationSent__c</field>
+        <literalValue>1</literalValue>
+        <name>Update Email Notification Sent</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <rules>
+        <fullName>Approval Assignment</fullName>
+        <actions>
+            <name>Quote_Approval_Assignment</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <formula>AND(ISPICKVAL(Status__c, &apos;Pending&apos;), ISPICKVAL(BigMachines_Quote__r.Quote_Business_Type__c,&apos;On Premise&apos;),  Don_t_send_notification_to_approvers__c == false,
+Not($User.BypassWorkflows__c)
+)</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Approval Assignment Cloud BE</fullName>
+        <actions>
+            <name>Quote_Approval_Assignment_Cloud_BE</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <formula>AND(ISPICKVAL(Status__c, &apos;Pending&apos;), ISPICKVAL(BigMachines_Quote__r.Quote_Business_Type__c,&apos;Cloud&apos;), BigMachines_Quote__r.Offering_Type__c == &apos;Business Edition&apos;,
+Not($User.BypassWorkflows__c)
+)</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Approval Assignment DQ</fullName>
+        <actions>
+            <name>Quote_Approval_Assignment_DQ</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <formula>AND(ISPICKVAL(Status__c, &apos;Pending&apos;),  Deal_Qualification__c != null,  Don_t_send_notification_to_approvers__c == false,  NOT( ISPICKVAL(Deal_Qualification__r.Platform_Type__c,&apos;Cloud&apos;) &amp;&amp;  (Deal_Qualification__r.Offering_Type__c == &apos;Business Edition&apos; || Deal_Qualification__r.Offering_Type__c == &apos;PureConnect Cloud&apos; || Deal_Qualification__r.Offering_Type__c == &apos;PureCloud&apos;)))</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Approval Assignment DQ Cloud</fullName>
+        <actions>
+            <name>Quote_Approval_Assignment_DQ_Cloud</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <description>To send Approval Request email notifications for Cloud DQ.</description>
+        <formula>AND(ISPICKVAL(Status__c, &apos;Pending&apos;),  Deal_Qualification__c != null,  Don_t_send_notification_to_approvers__c == false, ISPICKVAL(Deal_Qualification__r.Platform_Type__c,&apos;Cloud&apos;) &amp;&amp;  (Deal_Qualification__r.Offering_Type__c == &apos;Business Edition&apos; || Deal_Qualification__r.Offering_Type__c == &apos;PureConnect Cloud&apos; || Deal_Qualification__r.Offering_Type__c == &apos;PureCloud&apos;))</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Deal Size - Notification</fullName>
+        <actions>
+            <name>Deal_Size_Notification</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>Update_Email_Notification_Sent</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Notification Only</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Step_Name__c</field>
+            <operation>contains</operation>
+            <value>Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>contains</operation>
+            <value>Deal size</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.EmailNotificationSent__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Finance Discounts - Notification</fullName>
+        <actions>
+            <name>Finance_notification_for_discount</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>Update_Email_Notification_Sent</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Notification Only</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Step_Name__c</field>
+            <operation>equals</operation>
+            <value>Level 3 (Notification)</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.EmailNotificationSent__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - Available for Expansion Only - AE Acknowledgment</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_Available_for_Expansion_Only_AE_Acknowledgment</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Available for Expansion Only - AE Acknowledgment</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Quote</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_Number__c</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - Highly technical sale requiring PM approval</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_Highly_technical_sale_requiring_PM_approval</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Highly Technical Sale - PM Approval Required</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Quote</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_Number__c</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - NRO  - Available for Expansion Only - AE Acknowledgment</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_NRO_Available_for_Expansion_Only_AE_Acknowledgment</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Available for Expansion Only - AE Acknowledgment</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Order</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - NRO - Highly technical sale requiring PM approval</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_NRO_Highly_technical_sale_requiring_PM_approval</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Highly Technical Sale - PM Approval Required</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Order</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - NRO - New product with limited functionality or other</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_NRO_New_product_with_limited_functionality_or_other_res</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Limited Functionality or Other Restrictions - AE Acknowledgment &amp; Exec Visibility</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Order</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - NRO - Notification only so PM can help AE if quote looks in</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_NRO_Notification_only_so_PM_can_help_AE</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>No Approval Required - Email Notification when Quoted</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Order</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - NRO - Product has prerequisites or limited compatibility or</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_NRO_Product_has_prerequisites_or_limited_com</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Prerequisites Limited Compatibility or Headed Towards EOL - AE Acknowledgment</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Order</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - New product with limited functionality or other</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_New_product_with_limited_functionality_or_other_restric</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Limited Functionality or Other Restrictions - AE Acknowledgment &amp; Exec Visibility</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Quote</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_Number__c</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOnly</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - Notification only so PM can help AE if quote looks in</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_Notification_only_so_PM_can_help_AE_if_quote_looks_inco</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>No Approval Required - Email Notification when Quoted</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Quote</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_Number__c</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>PM Shipment Notification - Product has prerequisites or limited compatibility or</fullName>
+        <actions>
+            <name>PM_Shipment_Notification_Product_has_prerequisites_or_limited_compatibility_or_i</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>contains</operation>
+            <value>Limited Compatibility or Headed</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_or_DQ__c</field>
+            <operation>equals</operation>
+            <value>Quote</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>contains</operation>
+            <value>PM Shipment Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Quote_Number__c</field>
+            <operation>notEqual</operation>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Quote Approval Assignment Profressional Services - Notification</fullName>
+        <actions>
+            <name>Profressional_Services_Notification</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Notification Only</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Profressional Services - Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Quote Approval Assignment Require Future Products - Notification</fullName>
+        <actions>
+            <name>Future_Products_Notification</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Notification Only</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Future Products - Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Quote Approval Assignment Require Separate Quote for Genesys Care</fullName>
+        <actions>
+            <name>Require_Separate_Quote_for_Genesys_Care</name>
+            <type>Alert</type>
+        </actions>
+        <active>true</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Notification Only</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Reason_Name__c</field>
+            <operation>equals</operation>
+            <value>Require Separate Quote for Genesys Care - Notification</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Quote Approval Submission Notice to PM</fullName>
+        <actions>
+            <name>Quote_Approval_Submission_Notification_To_PM</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>equals</operation>
+            <value>Notification Only</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOnly</triggerType>
+    </rules>
+    <rules>
+        <fullName>Quote Rejected Before Approval</fullName>
+        <actions>
+            <name>Quote_Rejected_Before_Approval</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>Trigger_Email_Alert_To_None</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>equals</operation>
+            <value>Quote Rejected Before Approval</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>notEqual</operation>
+            <value>In-Active,Rejected</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+    <rules>
+        <fullName>Quote Revised Before Approval</fullName>
+        <actions>
+            <name>Quote_Revised_Before_Approval</name>
+            <type>Alert</type>
+        </actions>
+        <actions>
+            <name>Trigger_Email_Alert_To_None</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <criteriaItems>
+            <field>Quote_Approval__c.Trigger_Email_Alert__c</field>
+            <operation>equals</operation>
+            <value>Quote Revised Before Approval</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>Quote_Approval__c.Status__c</field>
+            <operation>notEqual</operation>
+            <value>In-Active,Rejected,Approved</value>
+        </criteriaItems>
+        <criteriaItems>
+            <field>User.BypassWorkflows__c</field>
+            <operation>equals</operation>
+            <value>False</value>
+        </criteriaItems>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
+</Workflow>

@@ -1,0 +1,116 @@
+<apex:page StandardController="Partner_Rebate__c" Extensions="PartnerRebateController">
+<head>
+    <style type="text/css">
+        .pbTitle {
+                font-weight: 12opx
+        }
+    </style>
+</head>
+<apex:form >
+<apex:pageMessages id="showmsg"></apex:pageMessages>
+    <apex:pageBlock rendered="{!NOT(isexpired)}">
+        <apex:pageBlockButtons rendered="{!IF(viewOnly, false, true)}">
+            <apex:commandButton value="Cancel" action="{!doCancel}" status="status" immediate="true"/>                    
+            <apex:commandButton value="Agree" action="{!saveTermsWithAgree}"  status="status" />
+            <apex:commandButton value="Disagree" action="{!saveTermsWithDisagree}"  status="status"/>                                        
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection columns="1">
+                    <apex:pageBlockSection columns="2">
+                        <apex:inputField value="{! prebate.Agree_Disagree_By__c}" required="true" rendered="{!IF(viewOnly, false, true)}"/>
+                        <apex:outputField value="{!prebate.Agree_Disagree_By__c}" rendered="{!viewOnly}"/>
+                        <apex:outputField value="{!prebate.Date_Agree_Disagree__c}" rendered="{!viewOnly}"/>
+                    </apex:pageBlockSection>
+                    <apex:pageBlock title="Rebate Agreement">
+                        <apex:pageBlockSection columns="1">
+                            <div style="width:100% text-align:center;">
+                                <div style="overflow:scroll; height:500px; width:99%; text-align:left;">
+                                
+                                Dear {!$User.FirstName} {!$User.LastName},<br/><br/>  
+                                    We are pleased to invite you to participate in the {!prebate.Rebate_Year__c} Genesys Rebate Program. 
+                                    Delivering great CX solutions is our joint mission. Growing new License and SaaS revenue is a key metric 
+                                    of our common success. The rebate program rewards excellence in market performance and allows us to jointly 
+                                    invest in building your business. 
+                                    <br/> <br/>
+                                    The {!prebate.Rebate_Year__c} Rebate Program has been changed from the previous year. The criteria in this letter 
+                                    supersedes any criteria in the Program Guide. The new criteria are specified below:
+                                    <br/>
+                                    <Table BORDER="0" ALIGN="CENTER" WIDTH="100%" style="font-size:13px;">
+                                        <TR>
+                                            <TD ALIGN="LEFT" >
+                                                <p>
+                                                    <B>{!prebate.Partner_Name__r.Name}:</B>
+                                                </p>
+                                                <apex:outputPanel rendered="{!(prebate.License_Amount__c != NULL && prebate.License_Amount__c > 0 && prebate.Rebate_Year__c == '2019')}">
+                                                    <B>{!prebate.Rebate_Year__c} REBATE ANNUAL TARGET: </B>
+                                                    <apex:outputText value="{!prebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                                                        <apex:param value="{!prebate.License_Amount__c}" />
+                                                    </apex:outputText>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!(prebate.License_Amount__c != NULL && prebate.License_Amount__c > 0 && prebate.Rebate_Year__c != '2019')}">
+                                                    <B>{!prebate.Rebate_Year__c}  LICENSE REVENUE REBATE TARGET: </B>
+                                                    <apex:outputText value="{!prebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                                                        <apex:param value="{!prebate.License_Amount__c}" />
+                                                    </apex:outputText>
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{!(prebate.SaaS_Amount__c != NULL && prebate.SaaS_Amount__c > 0)}">
+                                                    <B>{!prebate.Rebate_Year__c}  SaaS REVENUE REBATE TARGET: </B>
+                                                    <apex:outputText value="{!prebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}">
+                                                        <apex:param value="{!prebate.SaaS_Amount__c}" />
+                                                    </apex:outputText>
+                                                </apex:outputPanel>
+                                         </TD>
+                                     </TR>
+                                    </Table>
+ 
+                                
+                                    <p style="font-size:14px;font-weight: bold">
+                                        {!prebate.Rebate_Year__c} Rebate Terms and Conditions
+                                    </p>
+                                        <br/><br/>
+                                        The {!prebate.Rebate_Year__c} Rebate is available to eligible Genesys partners. To participate and be eligible for rebate incentives, Partners must agree, 
+                                        via the Partner Portal, to the rebate target assigned to them for {!prebate.Rebate_Year__c}.  
+                                        <br/><br/>
+                                        Partners must acknowledge and accept this notice detailing their target within thirty (30) calendar 
+                                        days of receipt to be eligible for the rebate in {!prebate.Rebate_Year__c}.
+                                        <br/><br/>
+                                        Upon achievement of the target, a credit (not a cash payout) will be issued to the partner's account. 
+                                        The details of the program are listed below: 
+                                        <br/> <br/> 
+                                        
+                                        <b>License/SaaS Revenue Rebate: </b>
+                                            <br/>
+                                            1.  Partner must achieve the agreed to annual bookings target to earn the rebate award
+                                            <br/>
+                                            &nbsp;&nbsp;&nbsp;a. After achieving 100% or more of the annual target the rebate will be earned up to 200% attainment of the annual target. 
+                                            <br/>
+                                            &nbsp;&nbsp;&nbsp;b. The payout is capped at 200% attainment of the annual target attainment. 
+                                            <br/>
+                                            &nbsp;&nbsp;&nbsp;c. Gold partners are eligible for 5% of rebate target attainment and Silver partners are eligible for 3% rebate target attainment
+                                            <br/><br/>
+                                            2.  Conditions to be rebate eligible: 
+                                            <br/>
+                                            &nbsp;&nbsp;&nbsp;a. Only Gold and Silver partners for {!prebate.Rebate_Year__c} are eligible to participate in the {!prebate.Rebate_Year__c} rebate program. 
+                                            <br/>
+                                            &nbsp;&nbsp;&nbsp;b. License/ACV bookings must be booked with Genesys within {!prebate.Rebate_Year__c}. 
+                                            <br/>
+                                            &nbsp;&nbsp;&nbsp;c. Partner must meet tier level requirements (Bookings, Certifications, KPI #1) by end of calendar year. 
+                                            <br/>
+                                            &nbsp;&nbsp;&nbsp;d. Partner must be in good financial standing with no delinquent invoices +60 days due to Genesys. 
+                                            <br/><br/>
+
+                                        If you have any questions regarding the Rebate Program, please contact your Channel Manager. We wish you continued success in
+                                        {!prebate.Rebate_Year__c}.
+                                        <br/> <br/>
+                                        Sincerely
+                                        <br/><br/>
+                                        The Genesys Partner Network Program Team
+                                        <br/>
+                                   </div>  
+                            </div>
+                        </apex:pageBlockSection>
+      </apex:pageBlock>
+   </apex:pageBlockSection>
+ 
+  </apex:pageBlock>
+    </apex:form>
+</apex:page>

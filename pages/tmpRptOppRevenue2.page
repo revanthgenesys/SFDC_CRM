@@ -1,0 +1,305 @@
+<apex:page controller="tmpRptOppRevenue2_Contr"
+  tabstyle="Report"
+  id="p"
+  title="Opportunity Revenue"
+  action="{!canAccess}"
+  readOnly="true">
+
+	<c:jQueryExternalSourceReference themeName="redmond"/>
+
+	<script type="text/javascript">
+function setFocusOnLoad() {
+}
+	</script>
+
+    <style>
+
+.sectionHeader {
+	font-size: 150%;
+	font-weight: bold;
+}
+
+.formLabel {
+	float: left;
+	width: 230px;
+	margin-right: 10px;
+	text-align: right;
+	font-weight: bold;
+	clear: left;
+}
+
+table#reportData thead tr th.tHeader {
+	background-color: #F2F2F2;
+}
+
+table#reportData tbody tr td.leftAlign {
+	text-align: left;
+	white-space: nowrap;
+}
+
+table#reportData tbody tr td.rightAlign {
+	text-align: right;
+	white-space: nowrap;
+}
+
+table#reportData tbody tr td.summaryRow {
+	background-color: #F8F8F8;
+}
+	</style>
+
+    <!-- div to show loading -->
+    <div style="display: none;" id="loadingDiv" title="Loading">
+        <span><apex:image url="/img/loading.gif" style="padding-top: 1px; padding-right: 2px; padding-left: 2px;"/>Loading . . .</span>
+    </div>
+
+	<span class="sectionHeader">Criteria</span>
+	<apex:form id="subForm">
+		<p>
+	    	<label for="{!$Component.rtsl}" class="formLabel">Record Type:</label>
+	      	<apex:outputPanel styleClass="requiredInput" layout="block">
+				<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+				<apex:selectList id="rtsl" value="{!mRTIds}" size="4" multiselect="true">
+					<apex:selectOptions value="{!recordTypes}"/>
+				</apex:selectList>
+			</apex:outputPanel>
+		</p>
+		<p>
+			<label for="{!$Component.startDateObjCD}" class="formLabel">Start Date:</label>
+			<apex:outputPanel styleClass="requiredInput" layout="block">
+				<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+				<apex:inputField id="startDateObjCD" value="{!mOppDateObj.Quote_Maintenance_Start_Date__c}" required="true"/>
+			</apex:outputPanel>
+		</p>
+		<p>
+			<label for="{!$Component.endDateObjCD}" class="formLabel">End Date:</label>
+			<apex:outputPanel styleClass="requiredInput" layout="block">
+				<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+				<apex:inputField id="endDateObjCD" value="{!mOppDateObj.Quote_Maintenance_End_Date__c}" required="true"/>
+			</apex:outputPanel>
+		</p>
+		<p>
+			<label for="{!$Component.oppStatuses}" class="formLabel">Opportunity Status:</label>
+			<apex:outputPanel styleClass="requiredInput" layout="block">
+				<apex:outputPanel styleClass="requiredBlock" layout="block"/>
+				<apex:selectList id="oppStatuses" value="{!mOppStatuses}" size="4" multiselect="true">
+					<apex:selectOptions value="{!oppStatuses}"/>
+				</apex:selectList>
+			</apex:outputPanel>
+		</p>
+		<p>
+			<!-- apex:commandButton id="runReport" styleClass="runReport" action="{!runReport}" value="Submit"/-->
+			<apex:outputPanel onclick="
+				showLoading();
+				runReport(
+					jq$('[id$=rtsl]').val()
+					,jq$('[id$=startDateObjCD]').val()
+					,jq$('[id$=endDateObjCD]').val()
+					);"
+				styleClass="btn">
+				Run Report
+			</apex:outputPanel>
+			&#160;&#160;
+			<apex:outputPanel onclick="
+				exportReport();"
+				styleClass="btn">
+				Export Report as CSV
+			</apex:outputPanel>
+		</p>
+		<apex:outputPanel layout="block" id="reportArea">
+			<apex:messages />
+			<br/>
+			Accessible Regions: {!mAccessibleRegions}
+			<br/>
+			<table id="reportData" border="1" cellspacing="0" cellpadding="5">
+				<thead>
+					<tr>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Quote_Order_Payment_Terms__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.CloseDate.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Quote_Big_Six__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Country_Region__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Sub_Region_Maint__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Sub_Sub_Region_Maint__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Name.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Gene_Care_Specialist__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.label} {!$ObjectType.Opportunity.fields.Name.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.BusinessPartner__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Account.label}: {!$ObjectType.Account.fields.Name.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Genesys_Care__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Current_Maint_Rate__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Quote_Maintenance_Start_Date__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Quote_Maintenance_End_Date__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Total_Maintenance_Amount_Due__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Total_Before_Tax_Maintenance__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: Recognized Revenue</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Total_Before_Tax_Maintenance_by_Region__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Opportunity_Status__c.label}</th>
+						<th class="tHeader">{!$ObjectType.Opportunity.fields.Invoice_Date__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Rate_Increase_Value_USD__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Annual_Increase_Value__c.label}</th>
+						<th class="tHeader">{!$ObjectType.BigMachines__Quote__c.label}: {!$ObjectType.BigMachines__Quote__c.fields.Decreased_Quote_Value_USD__c.label}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<apex:repeat value="{!queryDataAsSingleList}" var="dataMap">
+						<tr>
+							<apex:outputText escape="false" rendered="{!dataMap['DESCRIPTION'] == 'TERMROW'}">
+								<td colspan="24" class="leftAlign">
+									{!IF(dataMap['term'] == 'NULL', '[no term available]', dataMap['term'])}
+								</td>
+							</apex:outputText>
+							<apex:outputText escape="false" rendered="{!dataMap['DESCRIPTION'] == 'DATAROW'}">
+								<td class="leftAlign">&#160;</td>
+								<td class="rightAlign"><apex:outputField value="{!dataMap['opp'].CloseDate}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].Quote_Big_Six__c}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].Country_Region__c}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].Sub_Region_Maint__c}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].Sub_Sub_Region_Maint__c}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['bmQuote'].Name}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].Gene_Care_Specialist__c}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].Name}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].BusinessPartner__c}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['acct'].Name}"/></td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['bmQuote'].Genesys_Care__c}"/></td>
+								<td class="rightAlign"><apex:outputField value="{!dataMap['bmQuote'].Current_Maint_Rate__c}"/></td>
+								<td class="rightAlign"><apex:outputField value="{!dataMap['opp'].Quote_Maintenance_Start_Date__c}"/></td>
+								<td class="rightAlign"><apex:outputField value="{!dataMap['opp'].Quote_Maintenance_End_Date__c}"/></td>
+								<td class="rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['bmQuote'].Total_Maintenance_Amount_Due__c}" />
+									</apex:outputText>
+								</td>
+								<td class="rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['bmQuote'].Total_Before_Tax_Maintenance__c}" />
+									</apex:outputText>
+								</td>
+								<td class="rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mQrtTotalBeforeTaxMaintenanceByRegion']}" />
+									</apex:outputText>
+								</td>
+								<td class="rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['bmQuote'].Total_Before_Tax_Maintenance_by_Region__c}" />
+									</apex:outputText>
+								</td>
+								<td class="leftAlign"><apex:outputField value="{!dataMap['opp'].Opportunity_Status__c}"/></td>
+								<td class="rightAlign"><apex:outputField value="{!dataMap['opp'].Invoice_Date__c}"/></td>
+								<td class="rightAlign"><apex:outputField value="{!dataMap['bmQuote'].Rate_Increase_Value_USD__c}"/></td>
+								<td class="rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['bmQuote'].Annual_Increase_Value__c}" />
+									</apex:outputText>
+								</td>
+								<td class="rightAlign"><apex:outputField value="{!dataMap['bmQuote'].Decreased_Quote_Value_USD__c}"/></td>
+							</apex:outputText>
+							<apex:outputText escape="false" rendered="{!dataMap['DESCRIPTION'] == 'DATASUMMARYROW'}">
+								<td colspan="15" class="summaryRow leftAssign">
+									{!dataMap['mTerm']} Number of records: {!dataMap['mNumRecords']}
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mTotalMaintenanceAmountDue']}" />
+									</apex:outputText>
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mTotalBeforeTaxMaintenance']}" />
+									</apex:outputText>
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mTotalQrtTotalBeforeTaxMaintenanceByRegion']}" />
+									</apex:outputText>
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mTotalBeforeTaxMaintenanceByRegion']}" />
+									</apex:outputText>
+								</td>
+								<td colspan="5" class="summaryRow">
+									&#160;
+								</td>
+							</apex:outputText>
+							<apex:outputText escape="false" rendered="{!dataMap['DESCRIPTION'] == 'DATATOTALROW'}">
+								<td colspan="15" class="summaryRow leftAssign">
+									Total number of records: {!dataMap['mAllNumRecords']}
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mAllTotalMaintenanceAmountDue']}" />
+									</apex:outputText>
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mAllTotalBeforeTaxMaintenance']}" />
+									</apex:outputText>
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mAllTotalQrtTotalBeforeTaxMaintenanceByRegion']}" />
+									</apex:outputText>
+								</td>
+								<td class="summaryRow rightAlign">
+									<apex:outputText value="{0, number, #.##}">
+										<apex:param value="{!dataMap['mAllTotalBeforeTaxMaintenanceByRegion']}" />
+									</apex:outputText>
+								</td>
+								<td colspan="5" class="summaryRow">
+									&#160;
+								</td>
+							</apex:outputText>
+						</tr>
+					</apex:repeat>
+				</tbody>
+			</table>
+		</apex:outputPanel>
+		<apex:actionFunction action="{!runReport}" name="runReport"
+			oncomplete="hideLoading();"
+			reRender="reportArea">
+			<apex:param name="firstParam" assignTo="{!opportunityRecordIds}" value=""/>
+			<apex:param name="secondParam" assignTo="{!startDate}" value=""/>
+			<apex:param name="thirdParam" assignTo="{!endDate}" value=""/>
+		</apex:actionFunction>
+		<apex:actionFunction action="{!exportReport}" name="exportReport"/>
+	</apex:form>
+	
+	  <script type="text/javascript">
+jq$ = jQuery.noConflict();
+var UI_Utilities = {
+    openDialog: function(element, w, h) {
+        jq$(element).dialog({
+            draggable: true,
+            resizable: true,
+            modal: true,
+            width: w,
+            height: h,
+            close: function(event, ui) {
+                jq$(element).dialog('destroy');
+            }
+        });
+    },
+    closeDialog: function(element) {
+        jq$(element).dialog('destroy');
+    }
+}
+
+function hideLoading() {
+	try {
+		UI_Utilities.closeDialog(jq$('#loadingDiv'));
+	}
+	catch (e) {
+		alert(e);
+	}
+}
+
+function showLoading() {
+	try {
+		UI_Utilities.openDialog(jq$('#loadingDiv'), 300, 100);
+	}
+	catch (e) {
+		alert(e);
+	}
+}
+	</script>
+</apex:page>

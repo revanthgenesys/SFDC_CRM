@@ -1,0 +1,1679 @@
+<apex:page controller="PartnerApplicationController"  tabStyle="Partner_Application__c" action="{!redirectToDetailPage}" id="thepg"
+    sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" showheader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}">
+  <apex:includeScript value="{!$Resource.jquery19}"/>
+  <style>
+    .clsUser select{
+            visibility: hidden !important;
+            display: block !important;
+            }
+            div.tooltip {
+            width: 20px;
+            float: right;
+            display:inline;
+        }
+        .clsSolutionCon select{
+            visibility: hidden !important;
+            display: block !important;
+            }
+            div.tooltip {
+            width: 20px;
+            float: right;
+            display:inline;
+        }
+    div.tooltip span {
+            display: none;
+            font-weight:normal;
+            text-align:left;
+            padding: 3px 5px;
+            margin-left: 8px;
+            width: 250px;
+            font-size: 12px;
+        }
+        
+        div.tooltip:hover span {
+            display: inline;
+            position: absolute;
+            border: 1px solid #cccccc;
+            background: #FFC;
+            color: #000000;
+            z-index:10000;
+        } 
+        
+        body form .apexp label {
+            font-weight: 600;
+            line-height: 1.125rem;
+            color: #4a4a56;
+            font-size: 0.70rem;
+        }
+
+        .helpOrb {
+            background-image: url(/img/help/helpOrbs.gif);
+            background-position: 0 0;
+            width: 20px !important;
+            height: 15px;
+            float: right !important;
+            padding: 0rem;
+            background-color: transparent;
+            position: relative !important;
+        }
+                
+
+  </style>
+  <script>
+      var path="{!URLFOR($Resource.GenesysPartnerLogo)}";
+      //document.getElementById("phHeaderLogoImage").style.width = "175px";
+      //document.getElementById("phHeaderLogoImage").style.height= "75px";
+      //document.getElementById("phSearchInput").placeholder= "Search Partner Portal....";
+      /*$('#phSearchContainer').hide();  
+      var commName = "{!$Site.Prefix}";
+      var h2 = $("#sidebarDiv").find("h2");
+      $(h2).each(function() {
+          if( $(this).text() == 'Recent Items')
+          {
+           $(this).parent().parent().hide(); 
+          }
+      });  */
+  </script> 
+  <script>
+  var j$ = jQuery.noConflict();
+   
+  
+  j$(document).ready( function() {
+     
+  
+  });
+  
+    function CheckFields()
+    {
+      //alert('q');
+      if(j$('.clsSameAddHQ').is(':checked') == true)
+      {
+        j$('.clsAdd1').val(j$('.clsAdd1_HQ').val());
+        j$('.clsAdd2').val(j$('.clsAdd2_HQ').val());
+        j$('.clsAdd3').val(j$('.clsAdd3_HQ').val());
+        j$('.clsCity').val(j$('.clsCity_HQ').val());
+        j$('.clsState').val(j$('.clsState_HQ').val());
+        j$('.clsZipCode').val(j$('.clsZipCode_HQ').val());
+      }
+      else
+      {
+        /*j$('.clsAdd1').val('');
+        j$('.clsAdd2').val('');
+        j$('.clsAdd3').val('');
+        j$('.clsCity').val('');
+        j$('.clsState').val('');*/
+      }
+    }
+    /*function GetIndustry(indSFID,indx)
+    {
+       afRemoveIndus(indSFID,indx);
+       //return false;
+    }*/
+    function toggleVisibility(id) {
+       var e = document.getElementById(id);
+       if(e.style.display == 'block')
+          e.style.display = 'none';
+       else
+          e.style.display = 'block';
+    }
+    
+    function displaypartner(){
+        alert('displaypartner()');
+        var txt = document.getElementById("thepg:fm:pgblk2:pgblk2sec:formalPartner").value;
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:formalPartner").value ='Yes'){
+            alert('YES....'+txt);
+            document.getElementById(one).style.display = 'block';
+        }  
+        //document.getElementById('other').style.display = 'inline';
+    }
+    
+    function doChange(thiss){
+        alert('thiss--'+thiss.value);
+        if(thiss.value == 'Yes')
+            document.getElementById("myid").style.visibility="visible";
+        else
+            document.getElementById("myid").style.visibility="hidden";
+    }     
+    
+    function calculateHeadCount(){
+        
+        var EMEAHeadcount=0;
+        var NorthAmerica=0;
+        var APAC=0;
+        var LATAM=0;
+        
+        /*    1st column  */
+        //Professional Services NorthAmerica
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:1:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:1:j_id179").value >0){
+            NorthAmerica = + NorthAmerica + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:1:j_id179").value;
+        }
+        
+        //Project Management NorthAmerica
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:1:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:1:j_id179").value >0){
+            NorthAmerica = + NorthAmerica + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:1:j_id179").value;
+        }
+        
+        //Development Team NorthAmerica
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:1:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:1:j_id179").value >0){
+            NorthAmerica = + NorthAmerica + + document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:1:j_id179").value;
+        }
+        
+        //Technical Support Team     NorthAmerica
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:1:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:1:j_id179").value >0){
+            NorthAmerica = + NorthAmerica + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:1:j_id179").value;
+        }
+        //set EMEAHeadcount into Total Headcount(NorthAmerica)
+        // alert('NorthAmerica-->'+NorthAmerica);
+        document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:4:pgblk2sec2Tabrep:1:j_id179").value = NorthAmerica;
+        
+        /*    2nd column  */
+        //Professional Services LATAM
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:3:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:3:j_id179").value >0){
+            LATAM = + LATAM + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:3:j_id179").value;
+        }
+        
+        //Project Management LATAM
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:3:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:3:j_id179").value >0){
+            LATAM = + LATAM + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:3:j_id179").value;
+        }
+        
+        //Development Team LATAM
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:3:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:3:j_id179").value >0){
+            LATAM = + LATAM + + document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:3:j_id179").value;
+        }
+        
+        //Technical Support Team     LATAM
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:3:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:3:j_id179").value >0){
+            LATAM = + LATAM + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:3:j_id179").value;
+        }
+        //set LATAM into Total Headcount(LATAM)
+        // alert('LATAM-->'+LATAM);
+        document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:4:pgblk2sec2Tabrep:3:j_id179").value = LATAM;  
+        
+        
+        // alert('EMEAHeadcount-->'+EMEAHeadcount);
+        
+        //Professional Services EMEA
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:0:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:0:j_id179").value >0){
+            EMEAHeadcount = + EMEAHeadcount + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:0:j_id179").value;
+        }
+        
+        //Project Management EMEA
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:0:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:0:j_id179").value >0){
+            EMEAHeadcount = + EMEAHeadcount + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:0:j_id179").value;
+        }
+        
+        //Development Team EMEA
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:0:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:0:j_id179").value >0){
+            EMEAHeadcount = + EMEAHeadcount + + document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:0:j_id179").value;
+        }
+        
+        //Technical Support Team     EMEA
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:0:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:0:j_id179").value >0){
+            EMEAHeadcount = + EMEAHeadcount + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:0:j_id179").value;
+        }
+        //set EMEAHeadcount into Total Headcount(EMEA)
+        //  alert('EMEAHeadcount-->'+EMEAHeadcount);
+        document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:4:pgblk2sec2Tabrep:0:j_id179").value = EMEAHeadcount;
+        
+        /*    3rd column  */
+        //Professional Services APAC
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:2:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:2:j_id179").value >0){
+            APAC = + APAC + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:0:pgblk2sec2Tabrep:2:j_id179").value;
+        }
+        
+        //Project Management APAC
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:2:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:2:j_id179").value >0){
+            APAC = + APAC + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:1:pgblk2sec2Tabrep:2:j_id179").value;
+        }
+        
+        //Development Team APAC
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:2:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:2:j_id179").value >0){
+            APAC = + APAC + + document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:2:pgblk2sec2Tabrep:2:j_id179").value;
+        }
+        
+        //Technical Support Team     APAC
+        if(document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:2:j_id179").value !='' &&  document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:2:j_id179").value >0){
+            APAC = + APAC + +document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:3:pgblk2sec2Tabrep:2:j_id179").value;
+        }
+        //set APAC into Total Headcount(APAC)
+        // alert('APAC-->'+APAC);
+        document.getElementById("thepg:fm:pgblk2:pgblk2sec:pgblk2sec2:pgblk2sec2Tab:4:pgblk2sec2Tabrep:2:j_id179").value = APAC;
+        
+    }
+    
+    
+    </script>
+     <style type="text/css">
+        .custPopup{
+            background-color: white;
+            border-width: 2px;
+            border-style: solid;
+            z-index: 9999;
+            left: 50%;
+            padding:10px;
+            position: absolute;
+            width: 500px;
+            margin-left: -250px;
+            top:100px;
+        }
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+    </style>
+
+    <apex:composition template="{!$Site.Template}">
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="partnerApp" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="body">
+                <apex:form id="fm" >  
+                    <div style="height:15px;">
+                        <apex:actionStatus id="status">
+                            <apex:facet name="start">    
+                                <apex:outputPanel >
+                                    <apex:outputPanel styleClass="popupBackground" layout="block" style="position:absolute;"/>
+                                    <apex:outputPanel layout="block" style="text-align:center;">
+                                        <apex:image value="/img/loading.gif"/>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </apex:facet>                           
+                        </apex:actionStatus>
+                    </div>
+                    <apex:actionFunction name="removeRowEMTAF" id="removeRowEMTAF" action="{!removeRowFromExecMgmstTeamList}" reRender="execMgmtTeam" status="status">
+                        <apex:param value="" name="rowToRemove" assignTo="{!rowToRemove}" />
+                    </apex:actionFunction>
+                    <apex:actionFunction name="removeRowCOAF" id="removeRowCOAF" action="{!removeRowFromCompanyOwnershipList}" reRender="companyOwnership" status="status">
+                        <apex:param value="" name="rowToRemove" assignTo="{!rowToRemove}" />
+                    </apex:actionFunction>
+                    <apex:actionFunction name="removeRowCCAF" id="removeRowCCAF" action="{!removeRowFromCategoryAndCountryList}" reRender="categoryAndCountry" status="status">
+                        <apex:param value="" name="rowToRemove" assignTo="{!rowToRemove}" />
+                    </apex:actionFunction>
+                    <apex:actionFunction name="removeRowEmpForm" id="removeEmpForm" action="{!removeRowFromEmployeeList}" reRender="employerForm" status="status">
+                        <apex:param value="" name="rowToRemove" assignTo="{!rowToRemove}" />
+                    </apex:actionFunction>
+                   <apex:actionFunction name="removeRowSumaryForm" id="removeRowSumaryForm" action="{!removeRowFromAppsumaryList}" reRender="summaryRatesForm" status="status">
+                        <apex:param value="" name="rowToRemove" assignTo="{!rowToRemove}" />
+                    </apex:actionFunction>
+                    
+                    <apex:pageMessages id="pgmsg" />
+                    <apex:outputPanel id="pgblk">
+                        <apex:outputPanel rendered="{!step == 1}">
+                            <apex:outputText value="ATTENTION – If you are using IE11 as your browser, please " style="font-weight:bold; font-size:14px; color:red;"/><apex:outputLink value="{!URLFOR($Resource.IE11Setting)}" style="font-weight:bold; font-size:14px; color:blue;" target="_blank">click here</apex:outputLink><br/><br/>
+                        </apex:outputPanel>
+                        <apex:pageBlock title="NEW PARTNER APPLICATION FORM" rendered="{!OR(step == 0, step == 1)}">
+                            <apex:pageBlockSection title="NOTE: EXISTING PARTNER" columns="1">
+                                <p>
+                                    Thank you for your interest in the Genesys Partner Network program. Please complete this Genesys New Partner Application Form for consideration in the Genesys Partner Network program.
+                                </p>
+                                <p>
+                                    <b>Note:</b>  Knowingly making a false or misleading statement in this Genesys New Partner Application Form can be considered a material breach of your contract with Genesys and can lead to immediate termination of all of your contracts with Genesys.
+                                </p>
+                                <!--<p>
+                                    <b>Questions?</b>  Please contact your Genesys representative or Debra.Hoerner@genesyslab.com.<br/>  
+                                    +1 214-729-1068.  Submit completed application to Debra.Hoerner@genesyslab.com.             
+                                </p>-->
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                    
+                        <apex:pageBlock rendered="{!hideDetails}" title="Partner Application">
+                            <apex:outputLabel value="You have already submitted/cancelled you application." />
+                        </apex:pageBlock>
+                        <apex:pageBlock title="Partner Application {!stepDetails}" rendered="{!NOT(hideDetails)}" id="pgblk2"> 
+                                     
+                                     
+                         <apex:pageBlockButtons location="bottom" rendered="{!(step == 0)}">
+                                <apex:commandButton value="Create New Partner Application" action="{!actionCreate}" reRender="pgblk" status="status" style="width:200px">
+                                   <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                </apex:commandButton>             
+                                
+                            </apex:pageBlockButtons>
+                             
+                         <!--modified by Ravi    <apex:pageBlockButtons location="bottom" rendered="{!(step == 0)}">
+                                <apex:commandButton value="Yes" action="{!actionYes}" reRender="pgblk" status="status" style="width:50px"/>
+                                <apex:commandButton value="No" action="{!actionNo}" reRender="pgblk" status="status" style="width:50px"/>
+                            </apex:pageBlockButtons> --> 
+                              
+                            <apex:pageBlockButtons location="both">
+                                <!--<apex:commandButton value="Yes" action="{!actionYes}" reRender="pgblk" rendered="{!(step == 0)}" status="status"/>
+                                <apex:commandButton value="No" action="{!actionNo}" reRender="pgblk" rendered="{!(step == 0)}" status="status"/> -->              
+                                <apex:commandButton value="Previous" action="{!previous}" reRender="pgblk, pgmsg" rendered="{!(step > 1)}" status="status" immediate="true"/>
+                                <apex:commandButton value="Next" action="{!next}" rendered="{!renderNext}" />  
+                                <apex:commandButton value="Save" action="{!save}" status="status" rendered="{!renderSave}" />
+                                <apex:commandButton value="Cancel" onclick="location.href='/partner/PotentialPartnerHome';" reRender="pgblk, pgmsg" rendered="{!renderCancel}" status="status" immediate="true"/>
+                                <apex:commandButton value="Submit Application" action="{!submit}" reRender="pgblk, pgmsg" rendered="{!renderSubmitApp}" status="status"/>
+                                <apex:commandButton value="Cancel Application" action="{!cancelApplication}" reRender="pgblk, pgmsg" rendered="{!renderCancelApp}" status="status" immediate="true"/>                    
+                                <!--
+                                <apex:commandButton value="Agree" action="{!approve}" reRender="pgblk, pgmsg" rendered="{!renderApprove}" status="status" />
+                                <apex:commandButton value="Disagree" action="{!reject}" reRender="pgblk, pgmsg" rendered="{!renderReject}" status="status"/>                                        
+                                -->
+                            </apex:pageBlockButtons>
+                            
+                          <!--    <apex:pageBlockSection rendered="{!(step == 0)}">
+                                <b>Would you like to apply for Genesys Professional Services Subcontractor consideration?</b>             
+                            </apex:pageBlockSection>  -->
+                            <!--<apex:actionFunction action="{!RemoveIndustry}" name="afRemoveIndus" rerender="selectValues" >
+                               <apex:param name="industry" assignTo="{!strIndustry }" value=""/>
+                               <apex:param name="indexcol" assignTo="{!iIndexIndustry}" value=""/>
+                            </apex:actionFunction>-->
+                            <apex:pageBlockSection columns="1"  rendered="{!(step == 1)}" title="Company Profile and Partner Category" collapsible="false">                                     
+                                    <apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_1}" var="f">
+                                        <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                           <apex:outputPanel >{!mapFieldLabelVsHelpText[f.label]}</apex:outputPanel>                                     
+                                                <apex:outputPanel >
+                                                    <div class = "requiredInput">
+                                                    <div class = "requiredBlock"></div>
+                                                        <!--<apex:dynamicComponent componentValue="{!DynamicControl}" invokeAfterAction="true" id="mainPanel1" rendered="{!(f.label =='Industry')}">
+                                                        </apex:dynamicComponent>-->
+                                                        <!-- Added for resolving Add Industry Issue by Anshul(26Jun)-->
+                                                        <apex:actionRegion >
+                                                        <apex:commandButton value="Add" action="{!AddIndustry}"  rendered="{!(f.label =='Industry')}" reRender="selectValues,selectValuestest" status="actStatusId">
+                                                           <apex:actionStatus id="actStatusId" >
+                                                               <apex:facet name="start" >
+                                                                 <img src="/img/loading.gif" />                    
+                                                               </apex:facet>
+                                                             </apex:actionStatus>
+                                                          </apex:commandButton>
+                                                          <apex:pageMessages id="pgmsgIndus" rendered="{!isSelectIndustry}"/>
+                                                        <br></br>                                            
+                                                        <apex:outputPanel id="selectValues" rendered="{!(f.label =='Industry')}"> 
+                                                          <table border="0" >
+                                                           <tr>
+                                                             <th>Industry</th>
+                                                             <th>Vertical</th>
+                                                           </tr> 
+                                                            <apex:variable value="{!0}" var="idx"/>
+                                                            <apex:repeat id="pbtInds" value="{!list_IndustryNVertical}" var="ind" rendered="{!(f.label =='Industry')}">
+                                                             <tr>
+                                                              <td><apex:inputField value="{!ind.Industry__c}" styleClass="clsIndustr"/></td>
+                                                              <td><apex:inputField value="{!ind.Vertical_Markets__c }" styleClass="clsVertical"/></td>
+                                                              <td>
+                                                               <apex:commandlink value="Remove" action="{!RemoveIndustry}" >
+                                                                 <!-- onClick="GetIndustry('{!ind.id}','{!idx}');"
+                                                                 <apex:actionStatus id="actStatusId" >
+                                                                   <apex:facet name="start" >
+                                                                     <img src="/img/loading.gif" />                    
+                                                                   </apex:facet>
+                                                                 </apex:actionStatus>-->
+                                                                 <apex:param name="industry" assignTo="{!strIndustry }" value="{!ind.id}"/>
+                                                                 <apex:param name="indexcol" assignTo="{!iIndexIndustry}" value="{!idx}"/>
+                                                               </apex:commandlink></td>
+                                                              <apex:variable var="idx" value="{!idx + 1}"/>
+                                                             </tr> 
+                                                            </apex:repeat>
+                                                           </table> 
+                                                        </apex:outputPanel>
+                                                        </apex:actionRegion>
+                                                        
+                                                        <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea') && NOT(f.label =='Industry')}" /> 
+                                                        <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                                        
+                                                        <apex:outputPanel rendered="{!newApplication[f] == NULL && errorsInStep1 == true} && NOT(f.label =='Industry')}" >
+                                                            <br /><font color="red">Error: You must enter a value</font>
+                                                        </apex:outputPanel>
+                                                        
+                                                    </div>
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                                <!--
+                                                <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>
+                                                <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                      
+                                                -->
+                                    </apex:repeat>
+                                <apex:outputPanel id="integrate" >  
+                                    <apex:pageBlockSection columns="1">           
+                                        <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                            <apex:outputLabel value="Do you want to integrate to Genesys products: " for="file" />
+                                            <apex:actionRegion >  
+                                            <apex:inputField value="{!newApplication.Do_you_want_to_integrate_to_Genesys_prod__c}">  
+                                                <apex:actionSupport event="onchange" reRender="integrate" status="actStatusId">
+                                                    <apex:actionStatus id="actStatusId" >
+                                                        <apex:facet name="start" >
+                                                            <img src="/img/loading.gif" />                    
+                                                        </apex:facet>
+                                                    </apex:actionStatus>
+                                                </apex:actionSupport>
+                                            </apex:inputField> 
+                                            </apex:actionRegion> 
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem rendered="{!newApplication.Do_you_want_to_integrate_to_Genesys_prod__c ==true}"  dataStyle="width:100%" labelStyle="width:19%">
+                                                <apex:outputPanel >What is the added value you can offer by integrating with Genesys products?</apex:outputPanel>
+                                                <apex:outputPanel >
+                                                    <div class = "requiredInput">
+                                                    <div class = "requiredBlock"></div>
+                                                        <apex:inputField value="{!newApplication.Value_Added_to_Genesys__c}" style="width:400px; height:60px;" />                                                      
+                                                        <apex:outputPanel rendered="{!newApplication.Value_Added_to_Genesys__c == NULL && errorsInStep1 == true}" >
+                                                            <br /><font color="red">Error: You must enter a value</font>
+                                                        </apex:outputPanel>
+                                                    </div>
+                                                </apex:outputPanel>                                
+                                            <!--
+                                            <apex:outputLabel value="What is the added value you can offer by integrating with Genesys products? " for="file"/>
+                                            <apex:inputField value="{!newApplication.Value_Added_to_Genesys__c}" style="width:400px; height:60px;" label="What is the added value you can offer by integrating with Genesys products?" required="true" rendered="{!newApplication.Do_you_want_to_integrate_to_Genesys_prod__c ==true}"/>
+                                            -->
+                                        </apex:pageBlockSectionItem>
+                                    </apex:pageBlockSection>
+                                </apex:outputPanel>
+                            </apex:pageBlockSection>
+                            
+                                            
+                            <apex:pageBlockSection columns="1"  rendered="{!(step == 1)}" title="Partner Company Details">
+                                <apex:repeat value="{!$ObjectType.Account.FieldSets.Partner_Application_Part_2}" var="f">
+                                    <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%" rendered="{!IF(mapFieldLabelVsHelpText[f.label]  == 'HQ Address 1' || mapFieldLabelVsHelpText[f.label]  == 'State/Province' || mapFieldLabelVsHelpText[f.label]  == 'Country' , false , true)}">
+                                        
+                                        <apex:outputPanel rendered="{!IF(mapFieldLabelVsHelpText[f.label]  == 'HQ Address 1', false , true)}"><apex:outputLabel rendered="{!IF(mapFieldLabelVsHelpText[f.label]  == 'HQ Address 1', false , true)}">{!mapFieldLabelVsHelpText[f.label]}</apex:outputLabel> </apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <!--<apex:outputPanel styleClass="clsPCD" rendered="{!if(mapFieldLabelVsHelpText[f.label] == 'HQ Address 2' || mapFieldLabelVsHelpText[f.label] == 'HQ Address 3' || mapFieldLabelVsHelpText[f.label] == 'VAT Number' || mapFieldLabelVsHelpText[f.label] == 'Standard Industrial Classification Code (SIC)', false, true)}">-->
+                                            <apex:outputPanel styleClass="clsPCD" rendered="{!if(mapFieldLabelVsHelpText[f.label] == 'HQ Address 2' || mapFieldLabelVsHelpText[f.label] == 'HQ Address 3'|| mapFieldLabelVsHelpText[f.label] == 'HQ Address 1' || mapFieldLabelVsHelpText[f.label] == 'VAT Number' || mapFieldLabelVsHelpText[f.label] == 'Standard Industrial Classification Code (SIC)', false, true)}" >
+                                                <div class = "requiredInput">
+                                                    <div class = "requiredBlock"></div>
+                                                    <apex:inputField value="{!newAccount[f]}" rendered="{!NOT(f.type =='textarea')}" /> 
+                                                    <apex:inputField value="{!newAccount[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                                    
+                                                    <apex:outputPanel rendered="{!newAccount[f] == NULL && errorsInStep1 == true }" >
+                                                        <br /><font color="red">Error: You must enter a value</font>
+                                                    </apex:outputPanel>
+                                                    
+                                                    <apex:outputPanel rendered="{!newAccount[f] == 0 && errorsInStep1 }" >
+                                                        <br /><font color="red">Error: You must enter a value. Should not be Zero(0)</font>
+                                                    </apex:outputPanel>
+                                                    
+                                                    
+                                                </div>
+                                            </apex:outputPanel>
+                                            
+                                            <apex:outputPanel rendered="{!IF(mapFieldLabelVsHelpText[f.label] == 'HQ Address 2' || mapFieldLabelVsHelpText[f.label] == 'HQ Address 3' || mapFieldLabelVsHelpText[f.label] == 'VAT Number' || mapFieldLabelVsHelpText[f.label] == 'Standard Industrial Classification Code (SIC)', true,  false)}">
+                                                <apex:inputField value="{!newAccount[f]}" rendered="{!NOT(f.type =='textarea')}" /> 
+                                                <apex:inputField value="{!newAccount[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                            </apex:outputPanel>
+                                        </apex:outputPanel>
+                                        
+                                       
+                                        
+                                    </apex:pageBlockSectionItem>
+                                    
+                              
+                                    <apex:pageBlockSectionItem rendered="{!IF(mapFieldLabelVsHelpText[f.label] == 'HQ Address 1', true,  false)}" dataStyle="width:100%" labelStyle="width:20%">
+                                     
+                                      <apex:outputPanel id="pnlHQ"  rendered="{!IF(mapFieldLabelVsHelpText[f.label] == 'HQ Address 1', true,  false)}">
+                                          <apex:pageBlockSection columns="1">                      
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="HQ Address 1" />                       
+                                              <apex:inputField value="{!newAccount.Street1__c}" required="true" styleClass="clsAdd1_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="HQ Address 2" />                       
+                                              <apex:inputField value="{!newAccount.Street2__c}" styleClass="clsAdd2_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="HQ Address 3" />                       
+                                              <apex:inputField value="{!newAccount.Street3__c}" styleClass="clsAdd3_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="Billing City" />                       
+                                              <apex:inputField value="{!newAccount.BillingCity}" required="true" styleClass="clsCity_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="Jurisdiction of Incorporation (Country / State / Province)" >  
+                                                <div class="helpOrb tooltip" >
+                                                  <span>
+                                                   Please select none if you are NOT located in:<br/>
+                                                    <li>Australia</li>
+                                                    <li>Argentina</li>
+                                                    <li>Bolivian Departments</li>
+                                                    <li>Brazil</li>
+                                                    <li>Canada</li>
+                                                    <li>Chile</li>
+                                                    <li>Columbia</li>
+                                                    <li>Costa Rica</li>
+                                                    <li>Germany</li>
+                                                    <li>Paraguaya</li>
+                                                    <li>Regions of Peru</li>
+                                                    <li>United States</li>
+                                                    <li>Uruguaya</li>
+                                                    <li>Venezula</li>
+                                                    
+                                                   </span>
+                                                 </div> 
+                                               </apex:outputLabel>
+                                                                   
+                                              <apex:inputField value="{!newAccount.StateProvince__c}" required="true" styleClass="clsState_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                           <apex:pageBlockSectionItem > 
+                                              <apex:outputLabel value="Zip Code" />                       
+                                              <apex:inputField value="{!newAccount.ZipCode__c}" required="true" styleClass="clsZipCode_HQ"/>
+                                           </apex:pageBlockSectionItem>
+                                         </apex:pageBlockSection>
+                                       </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:repeat>
+                                
+                                <!--
+                                <apex:repeat value="{!$ObjectType.Account.FieldSets.Partner_Application_Part_2}" var="f">
+                                    <apex:inputField value="{!newAccount[f]}" rendered="{!NOT(f.type =='textarea')}" required="{!if(mapFieldLabelVsHelpText[f.label] == 'HQ Address 2' || mapFieldLabelVsHelpText[f.label] == 'HQ Address 3' || mapFieldLabelVsHelpText[f.label] == 'VAT Number' || mapFieldLabelVsHelpText[f.label] == 'Standard Industrial Classification Code (SIC)', false, true)}" label="{!mapFieldLabelVsHelpText[f.label]}" />
+                                    <apex:inputField value="{!newAccount[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                                                                                              
+                                </apex:repeat>
+                                -->
+                            </apex:pageBlockSection>
+                            
+                            
+                            <apex:pageBlockSection columns="1"  rendered="{!(step == 1)}" title="Your Contact Information - Primary Contact">
+                              
+                                
+                                <apex:inputField value="{!newContact.FirstName}" required="true"/>
+                             
+                              
+                             
+                                 
+                                <apex:inputField value="{!newContact.LastName}"/>
+                              
+                             
+                               
+                                <apex:repeat value="{!$ObjectType.Contact.FieldSets.Partner_Application_Part_2_2}" var="f">
+                                    <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%" rendered="{!(f.Label != 'Country')}">
+                                        <apex:outputPanel >{!mapFieldLabelVsHelpTextContact[f.label]}</apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <apex:outputPanel rendered="{! IF(mapFieldLabelVsHelpTextContact[f.label] == 'Address 2' || mapFieldLabelVsHelpTextContact[f.label] == 'Address 3' || mapFieldLabelVsHelpTextContact[f.label] == 'City' || mapFieldLabelVsHelpTextContact[f.label] == 'State/Province' || mapFieldLabelVsHelpTextContact[f.label] == 'Zip/Postal Code'  , false, true)}">
+                                            
+                                                <div class = "requiredInput">
+                                                    <div class = "requiredBlock"></div>
+                                                    <apex:inputField value="{!newContact[f]}" rendered="{!AND(NOT(f.type =='textarea'),(f.label != 'Last Name'))}" /> 
+                                                    <apex:inputField value="{!newContact[f]}" style="width:400px; height:60px;" rendered="{!AND(f.type =='textarea',(f.label != 'Last Name'))}"/>                                                      
+                                                    <apex:inputField value="{!newContact[f]}" rendered="{!(f.label == 'Last Name')}" Label="Name" />
+                                                    <apex:outputPanel rendered="{!newContact[f] == NULL && errorsInStep1 == true}" >
+                                                        <br /><font color="red">Error: You must enter a value</font>
+                                                    </apex:outputPanel>
+                                                </div>
+                                            </apex:outputPanel> 
+                                            
+                              
+                                                                        
+                                            <!--<apex:outputPanel rendered="{!mapFieldLabelVsHelpTextContact[f.label] == 'Address 2' || mapFieldLabelVsHelpTextContact[f.label] == 'Address 3' || mapFieldLabelVsHelpTextContact[f.label] == 'City' || mapFieldLabelVsHelpTextContact[f.label] == 'State/Province' || mapFieldLabelVsHelpTextContact[f.label] == 'Zip/Postal Code' }">
+                                                <apex:outputPanel rendered="{! ( mapFieldLabelVsHelpTextContact[f.label] == 'Address 2' || mapFieldLabelVsHelpTextContact[f.label] == 'Address 3' || mapFieldLabelVsHelpTextContact[f.label] == 'Zip/Postal Code')}">
+                                                
+                                                        <apex:inputField value="{!newContact[f]}" rendered="{!AND(NOT(f.type =='textarea'),(f.label != 'Last Name'))}" /> 
+                                                        <apex:inputField value="{!newContact[f]}" style="width:400px; height:60px;" rendered="{!AND(f.type =='textarea',(f.label != 'Last Name'))}"/>                                                      
+                                                </apex:outputPanel>
+                                                <apex:outputPanel rendered="{! ( mapFieldLabelVsHelpTextContact[f.label] == 'City' || mapFieldLabelVsHelpTextContact[f.label] == 'State/Province')}">
+                                                    <apex:inputField value="{!newContact[f]}" rendered="{!AND(NOT(f.type =='textarea'),(f.label != 'Last Name'))}" /> 
+                                                    <apex:inputField value="{!newContact[f]}" style="width:400px; height:60px;" rendered="{!AND(f.type =='textarea',(f.label != 'Last Name'))}"/>                                                      
+                                                    <apex:outputPanel rendered="{! NOT(isAddressLine1Same) && newContact[f] == NULL }" >
+                                                        <div class = "requiredInput">
+                                                            <div class = "requiredBlock"></div>
+                                                            <font color="red">Error: You must enter a value</font>
+                                                        </div>
+                                                 </apex:outputPanel>
+                                                </apex:outputPanel>
+                                            </apex:outputPanel>-->
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:repeat>
+                               
+                               
+                              <apex:pageBlockSectionItem dataStyle="">  
+                                
+                                    <apex:outputPanel id="opSameAddress2" > 
+                                    <apex:pageBlockSection columns="1">                      
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Address 1" />                       
+                                      <apex:inputField value="{!newContact.Street1__c}" required="true" styleClass="clsAdd1"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Address 2" />                       
+                                      <apex:inputField value="{!newContact.Street2__c}"  styleClass="clsAdd2"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Address 3" />                       
+                                      <apex:inputField value="{!newContact.Street3__c}"  styleClass="clsAdd3"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="City" />                       
+                                      <apex:inputField value="{!newContact.City__c}"  styleClass="clsCity"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="State/Province" />
+                                      <apex:inputField value="{!newContact.MailingState}"  required="true" styleClass="clsState"/>
+                                   </apex:pageBlockSectionItem>
+                                   <apex:pageBlockSectionItem > 
+                                      <apex:outputLabel value="Zip/Postal Code" />                       
+                                      <apex:inputField value="{!newContact.ZipCode__c}"  required="true" styleClass="clsZipCode"/>
+                                   </apex:pageBlockSectionItem>
+                                   </apex:pageBlockSection>
+                                 </apex:outputPanel>
+                                 
+                             </apex:pageBlockSectionItem>   
+                              
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="opSameAddress1">
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem >
+                                   <apex:outputLabel value="Same address as HQ" />
+                                   <apex:inputField value="{!newApplication.Same_address_as_HQ__c}" styleClass="clsSameAddHQ"  onclick="CheckFields();">
+                                          <!--<apex:actionSupport event="onchange" reRender="opSameAddress1,opSameAddress2" status="actAddressId">
+                                             <apex:actionStatus id="actAddressId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport>--> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:outputPanel> 
+                               </apex:pageBlockSectionItem>
+                             <!--<apex:outputPanel id="opSameAddress2"> 
+                                <apex:pageBlockSection columns="1">                      
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Same_address_as_HQ__c!= true}"> 
+                                  <apex:outputLabel value="Address 1" />                       
+                                  <apex:inputField value="{!newContact.Street1__c}" required="true"/>
+                               </apex:pageBlockSectionItem>
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Same_address_as_HQ__c!= true}"> 
+                                  <apex:outputLabel value="Address 2" />                       
+                                  <apex:inputField value="{!newContact.Street2__c}" />
+                               </apex:pageBlockSectionItem>
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Same_address_as_HQ__c!= true}"> 
+                                  <apex:outputLabel value="Address 3" />                       
+                                  <apex:inputField value="{!newContact.Street3__c}" />
+                               </apex:pageBlockSectionItem>
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Same_address_as_HQ__c!= true}"> 
+                                  <apex:outputLabel value="City" />                       
+                                  <apex:inputField value="{!newContact.City__c}" />
+                               </apex:pageBlockSectionItem>
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Same_address_as_HQ__c!= true}"> 
+                                  <apex:outputLabel value="State/Province" />
+                                  <apex:inputField value="{!newContact.MailingState}" />
+                               </apex:pageBlockSectionItem>
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Same_address_as_HQ__c!= true}"> 
+                                  <apex:outputLabel value="Zip/Postal Code" />                       
+                                  <apex:inputField value="{!newContact.ZipCode__c}" />
+                               </apex:pageBlockSectionItem>
+                               </apex:pageBlockSection>
+                             </apex:outputPanel> -->
+                              
+                              
+                                <!--
+                                <apex:repeat value="{!$ObjectType.Contact.FieldSets.Partner_Application_Part_2_2}" var="f">
+                                    <apex:inputField value="{!newContact[f]}" rendered="{!AND(NOT(f.type =='textarea'),(f.label != 'Last Name'))}"  required="true" label="{!mapFieldLabelVsHelpTextContact[f.label]}" />
+                                    <apex:inputField value="{!newContact[f]}" style="width:400px; height:60px;" rendered="{!AND(f.type =='textarea',(f.label != 'Last Name'))}"  required="true" label="{!mapFieldLabelVsHelpTextContact[f.label]}"/>
+                                    <apex:inputField value="{!newContact[f]}" rendered="{!(f.label == 'Last Name')}" Label="Name" />  
+                                </apex:repeat>
+                                -->
+                            </apex:pageBlockSection>
+                            
+                            <apex:outputPanel id="execMgmtTeam" rendered="{!(step == 1)}" >
+                                <apex:actionRegion >
+                                <apex:variable value="{!0}" var="rowNum"/>
+                                <apex:pageBlockSection columns="2" title="Executive Management Team" > 
+                                    <apex:pageBlockTable value="{!execMgmtTeam}" var="eachRecord"> 
+                                        <apex:column headerValue="Action">
+                                            <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromExecMgmstTeamList}" rendered="{!rowNum > 0}" rerender="execMgmtTeam"  immediate="true">
+                                                <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                            </apex:commandLink>
+                                            <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                        </apex:column>
+                                        <apex:column headerValue="Position">
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!eachRecord.record.Position__c}"  />
+                                                <apex:outputPanel rendered="{!eachRecord.record.Position__c == NULL && errorsInStep1 }">
+                                                    <br/><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                           <!-- <apex:inputField value="{!eachRecord.record.Position__c}"  /> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Name">
+                                           <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!eachRecord.record.Name}"  />
+                                                <apex:outputPanel rendered="{! eachRecord.record.Name == NULL && errorsInStep1 }">
+                                                    <br/><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                            <!-- <apex:inputField value="{!eachRecord.record.Name}"  required="true"/> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Email">
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!eachRecord.record.Email__c}"  />
+                                                <apex:outputPanel rendered="{! eachRecord.record.Email__c == NULL && errorsInStep1 }">
+                                                    <br/><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                           <!--  <apex:inputField value="{!eachRecord.record.Email__c}"  required="true"/> -->
+                                        </apex:column>                      
+                                    </apex:pageBlockTable>
+                                    </apex:pageBlockSection>
+                                    <br/>
+                                    <apex:commandButton value="Add More" action="{!addNewRowToExecMgmtTeamList}" rerender="execMgmtTeam" Status="status" />
+                                <br/> <br/>
+                            </apex:actionRegion>
+                            </apex:outputPanel>
+                            
+                            
+                            <apex:outputPanel id="companyOwnership" rendered="{!(step == 1)}">
+                                <apex:actionRegion >
+                                <apex:variable value="{!0}" var="rowNum"/>
+                                <apex:pageBlockSection columns="2" title="Company Ownership - Please list persons/firms who have more than 10% ownership of the Company.">             
+                                    <apex:pageBlockTable value="{!companyOwnership}" var="eachRecord"> 
+                                        <apex:column headerValue="Action">
+                                            <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromCompanyOwnershipList}" rendered="{!rowNum > 0}" rerender="companyOwnership"  immediate="true">
+                                                <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                            </apex:commandLink>
+                                            <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                        </apex:column>
+                                        <apex:column headerValue="Name">
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!eachRecord.record.Name}"  />
+                                                <apex:outputPanel rendered="{! eachRecord.record.Name == NULL && errorsInStep1 }">
+                                                    <br/><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                            <!-- <apex:inputField value="{!eachRecord.record.Name}"  required="true" /> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Person/Firm">
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!eachRecord.record.Person_Firm__c}"  />
+                                                <apex:outputPanel rendered="{! eachRecord.record.Person_Firm__c == NULL && errorsInStep1 }">
+                                                    <br/><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                            <!-- <apex:inputField value="{!eachRecord.record.Person_Firm__c}"  required="true" /> -->
+                                        </apex:column>
+                                        <apex:column headerValue="% Ownership">
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!eachRecord.record.Ownership__c}"  />
+                                                <apex:outputPanel rendered="{! eachRecord.record.Ownership__c == NULL && errorsInStep1 }">
+                                                    <br/><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                            <!-- <apex:inputField value="{!eachRecord.record.Ownership__c}"  required="true" /> -->
+                                        </apex:column>                      
+                                    </apex:pageBlockTable>
+                                    </apex:pageBlockSection>
+                                    <br/>
+                                    <apex:commandButton value="Add More" action="{!addNewRowToCompanyOwnershipList}" rerender="companyOwnership" Status="status" />
+                                 <br/> <br/>
+                                 </apex:actionRegion> 
+                            </apex:outputPanel>
+                            
+                             <br/>
+                            <!-- <apex:pageBlockSection columns="1"  rendered="{!(step == 1)}" title="Government Interests & Compliance" >
+                                <apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_3}" var="f">
+                                   
+                                    <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                        <apex:outputPanel >{!mapFieldLabelVsHelpText[f.label]}</apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}" /> 
+                                                <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                                
+                                                <apex:outputPanel rendered="{!newApplication[f] == NULL && errorsInStep1 == true}" >
+                                                    <br /><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                                
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                </apex:repeat>
+                            </apex:pageBlockSection>-->
+                            
+                            <!-- Government Interests & Compliance Start -->
+                            <apex:pageBlockSection columns="2"  rendered="{!(step == 1)}" title="Government Interests & Compliance" >    
+                               <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlASR">
+                              <!--<apex:pageBlockSectionItem >-->
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does the company have sales revenue derived from Government sales? If so, what is the approximate percentage of the company's overall annual sales revenue (turnover) derived from Government sales?" />
+                                    <apex:inputField value="{!newApplication.AnnualSalesRevenue_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlASR,pnlASR2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>  
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               <!--</apex:pageBlockSectionItem>-->
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlASR2"> 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.AnnualSalesRevenue_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:inputField value="{!newApplication.AnnualSalesRevenueComments__c}"  style="width:400px; height:60px;" required="true" />
+                               </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                             </apex:pageBlockSectionItem> 
+                             
+                             <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlOS1">
+                              <!--<apex:pageBlockSectionItem >-->
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official own any of the Company?  If yes, provide details on the ownership structure and amount." />
+                                   <apex:inputField value="{!newApplication.Ownership_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlOS1,pnlOS2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               <!--</apex:pageBlockSectionItem>-->
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlOS2"> 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Ownership_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                                  <apex:inputField value="{!newApplication.Ownership_Comments__c}"  style="width:400px; height:60px;" required="true" />
+                               </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                             </apex:pageBlockSectionItem> 
+                              
+                              <!-- field 2 start-->
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlRTAD1">                 
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official have the right to appoint or dismiss members of the Company’s governing board of Directors? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.RightToAppointOrDismiss_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlRTAD1,pnlRTAD2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion>                    
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              <apex:pageBlockSectionItem > 
+                              <apex:outputPanel id="pnlRTAD2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.RightToAppointOrDismiss_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%">                   
+                                  <apex:inputField value="{!newApplication.RightToAppointOrDismissComments__c}"  style="width:400px; height:60px;" required="true"/>                   
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                             </apex:pageBlockSectionItem>  
+                              <!-- field 2 end -->
+                              <!-- field 3 start-->
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlAODM1">                  
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official have the right to appoint or dismiss the Company’s Chief Executive Officer, General Manager or Managing Director? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.AppointOrDismissMD_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlAODM1,pnlAODM2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion>                   
+                              </apex:outputPanel> 
+                             </apex:pageBlockSectionItem> 
+                             <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlAODM2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.AppointOrDismissMD_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.AppointOrDismissMDComments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel> 
+                            </apex:pageBlockSectionItem>  
+                              <!-- field 3 end -->
+                              <!-- field 7 start-->
+                              <apex:outputPanel id="pnlGoVe1">
+                              <apex:pageBlockSectionItem >
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does a government organization, entity or official have the right to veto any of the Company’s investment or purchase decisions? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.Government_Veto_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlGoVe1,pnlGoVe2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlGoVe2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Government_Veto_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.Government_Veto_Comments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 7 end -->
+                              <!-- field 4 start-->
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlPIO1">                  
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Do any officers, directors or employees of the Company hold any legislative, administrative or judicial office or serve as an official or agent of any public international organization? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.PublicInternationalOrg_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlPIO1,pnlPIO2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion>
+                              </apex:outputPanel> 
+                              </apex:pageBlockSectionItem>
+                              <apex:pageBlockSectionItem >
+                              <apex:outputPanel id="pnlPIO2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.PublicInternationalOrg_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.PublicInternationalOrgComments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>  
+                             </apex:pageBlockSectionItem> 
+                              <!-- field 4 end -->
+                              <!-- field 8 start-->
+                              <apex:outputPanel id="pnlConEx1">
+                              <apex:pageBlockSectionItem >
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Have any employees, including any member of the Company’s executive management team, been convicted of, or pleaded guilty to an offense involving fraud or corruption? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.Convicted_Executive_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlConEx1,pnlConEx2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlConEx2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Convicted_Executive_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.Convicted_Executive_Comments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 8 end -->
+                              <!-- field 5 start-->
+                              <apex:outputPanel id="pnlBEmp1">
+                              <apex:pageBlockSectionItem >
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Has the company, any affiliate company or any Employee ever been debarred, prohibited or otherwise banned from bidding on Government contracts or tenders in any country in which the company conducts business? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.BannedEmployee_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlBEmp1,pnlBEmp2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlBEmp2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.BannedEmployee_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.BannedEmployeeComments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 5 end -->
+                              <!-- field 6 start-->
+                              <apex:outputPanel id="pnlExEnAc1">
+                              <apex:pageBlockSectionItem >
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Has the company, any affiliate company or any of its current directors, Key Employees, owners, agents, or Affiliates ever been involved in any US or local government export enforcement activity? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.ExportEnforcementActivity_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlExEnAc1,pnlExEnAc2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlExEnAc2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.ExportEnforcementActivity_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.ExportEnforcementActivityComments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 6 end -->
+                              
+                              <!-- field 11 start-->
+                              <apex:outputPanel id="pnlCCUS1">
+                              <apex:pageBlockSectionItem >
+                               <!--<apex:actionRegion >-->
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Does the company or any of its affiliates do business in or with any country currently under US embargo?" />
+                                   <apex:inputField value="{!newApplication.CountryCurrentlyUnderUS_PL__c}">
+                                          <!--<apex:actionSupport event="onchange" reRender="pnlCCUS1,pnlCCUS2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport>--> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               <!--</apex:actionRegion> -->
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              <apex:pageBlockSectionItem />
+                              <!--<apex:outputPanel id="pnlCCUS2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.CountryCurrentlyUnderUS_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.CountryCurrentlyUnderUSComments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>-->   
+                              <!-- field 11 end -->
+                              
+                              <!-- field 9 start-->
+                              <apex:outputPanel id="pnlConIn1">
+                              <apex:pageBlockSectionItem >
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel >Does any employee have a conflict of interest arising from a business, professional, private or family relationship with any of the following:<br></br> -  Actual or potential customer of Genesys <br></br>-    Actual or potential competitor or supplier of Genesys<br></br>-    Director or employee of Genesys <br></br>If yes, provide details. </apex:outputLabel>
+                                   <apex:inputField value="{!newApplication.Conflict_of_Interest_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlConIn1,pnlConIn2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlConIn2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Conflict_of_Interest_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.Conflict_of_Interest_Comments__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 9 end -->
+                              <!-- field 10 start-->
+                              <apex:outputPanel id="pnlCOFGE1">
+                              <apex:pageBlockSectionItem >
+                               <apex:actionRegion >
+                                <apex:pageBlockSection columns="2">
+                                  <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:75%">
+                                   <apex:outputLabel value="Are any company officers, directors or employees current or former employees of Genesys? If yes, provide details." />
+                                   <apex:inputField value="{!newApplication.Current_or_Former_Genesys_Employee_PL__c}">
+                                          <apex:actionSupport event="onchange" reRender="pnlCOFGE1,pnlCOFGE2" status="actStatusId">
+                                             <apex:actionStatus id="actStatusId" >
+                                               <apex:facet name="start" >
+                                                 <img src="/img/loading.gif" />                    
+                                               </apex:facet>
+                                             </apex:actionStatus>
+                                           </apex:actionSupport> 
+                                    </apex:inputField>
+                                   </apex:pageBlockSectionItem> 
+                                 </apex:pageBlockSection>
+                               </apex:actionRegion> 
+                               </apex:pageBlockSectionItem>
+                              </apex:outputPanel> 
+                              
+                              <apex:outputPanel id="pnlCOFGE2" > 
+                               <apex:pageBlockSectionItem rendered="{!newApplication.Current_or_Former_Genesys_Employee_PL__c == 'Yes'}" dataStyle="width:100%" labelStyle="width:19%"> 
+                              
+                                  <apex:inputField value="{!newApplication.Current_or_Former_Genesys_Employee_Comme__c}"  style="width:400px; height:60px;" required="true"/>
+                               
+                              </apex:pageBlockSectionItem>
+                             </apex:outputPanel>   
+                              <!-- field 10 end -->
+                              
+                            </apex:pageBlockSection> <!-- Government Interests & Compliance End -->
+                        
+                              <apex:outputPanel id="categoryAndCountry" rendered="{!(step == 1)}">
+                              <apex:actionRegion >
+                                <apex:variable value="{!0}" var="rowNum"/> 
+                                <apex:pageBlockSection columns="1" title="Add Categories and Countries Combination(s)">  
+                                    <apex:pageBlockTable value="{!categoryAndCountry}" var="eachRecord" Id="pAppCatCntry"> 
+                                    <apex:column headerValue="Action">
+                                       <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromCategoryAndCountryList}" rendered="{!rowNum > 0}" rerender="categoryAndCountry"  immediate="true">
+                                        <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                       </apex:commandLink>
+                                            <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                     </apex:column>
+                                     <apex:column headerValue="Category">
+                                            <br/>
+                                            <apex:actionRegion >
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!eachRecord.record.Category__c}" style="width:150px;">
+                                                    <apex:actionSupport event="onchange" reRender="techPartnerFlds" status="actStatusId">
+                                                       <apex:actionStatus id="actStatusId" >
+                                                           <apex:facet name="start" >
+                                                             <img src="/img/loading.gif" />                    
+                                                           </apex:facet>
+                                                         </apex:actionStatus>
+                                                    </apex:actionSupport>
+                                                </apex:inputField>
+                                                <apex:outputPanel rendered="{!eachRecord.record.Category__c == NULL && errorsInStep1 == true}" >
+                                                    <br /><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                            </apex:actionRegion>
+                                            <br/>
+                                            
+                                            <apex:outputPanel Id="techPartnerFlds">
+                                            <apex:outputLabel value="Company partner with in the CX space?" for="cPartnerCXSpc" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                                <apex:inputField value="{!eachRecord.record.Company_partner_CX_space__c}" id="cPartnerCXSpc" required="{!eachRecord.record.Category__c == 'Technology Partner'}" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                            <br/>
+                                            <apex:outputLabel value="Dev/Integr Genesys AppFoundry" for="genAppFndry" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                            <apex:inputField value="{!eachRecord.record.Genesys_AppFoundry__c}" id="genAppFndry" required="{!eachRecord.record.Category__c == 'Technology Partner'}" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                            <br/>
+                                            <apex:outputLabel value="Project priority in your Development" for="projPrior" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                            <apex:inputField value="{!eachRecord.record.Project_priority_in_your_Development__c}" id="projPrior" required="{!eachRecord.record.Category__c == 'Technology Partner'}" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                            <br/>
+                                            <apex:outputLabel value="Reason for integration?" for="integRsn" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                            <apex:inputField value="{!eachRecord.record.Reason_for_integration__c}" id="integRsn" required="{!eachRecord.record.Category__c == 'Technology Partner'}" rendered="{!eachRecord.record.Category__c == 'Technology Partner'}"/>
+                                            <br/>
+                                            </apex:outputPanel>
+                                       </apex:column>
+                                       <apex:column headerValue="Countries" style="width:210px;">
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <c:MultiselectPicklist leftLabel="Available Countries"
+                                                            leftOptions="{!eachRecord.list_AllCountries}"
+                                                            rightLabel="Selected Countries"
+                                                            rightOptions="{!eachRecord.list_SelectedCountries}"
+                                                            size="10"
+                                                            width="200px"/>
+                                                <apex:outputPanel rendered="{!eachRecord.list_SelectedCountries.size == 0 && errorsInStep1 == true}" >
+                                                    <br /><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                            <!--<apex:inputField value="{!eachRecord.record.Country__c}"/>-->
+                                        </apex:column>
+                                        
+                                        <apex:column headerValue="Platform Type">
+                                           <!--<apex:selectList value="{!eachRecord.SelectedPltfrmType}" size="3" multiselect="true">
+                                              <apex:selectOptions value="{!PlatformType}" >
+                                              </apex:selectOptions>
+                                           </apex:selectList>-->
+                                           
+                                           <c:MultiselectPicklist leftLabel="Available Offering Type"
+                                                            leftOptions="{!eachRecord.list_AllPTType }"
+                                                            rightLabel="Selected Offering Type"
+                                                            rightOptions="{!eachRecord.list_SelectedPTType }"
+                                                            size="10"
+                                                            width="110px"/>
+                                            <!--<apex:inputField value="{!eachRecord.record.PlatformType__c}"/>-->
+                                        </apex:column>
+                                        <!--<apex:column value="{!eachRecord.record.Company_partner_CX_space__c}" />
+                                            <apex:facet name="footer">
+                                                <apex:inputText value="{!eachRecord.record.Company_partner_CX_space__c}" id="cPartnerCXSpc" required="true"/>
+                                            </apex:facet>-->
+                                    </apex:pageBlockTable>
+                                    </apex:pageBlockSection>
+                                    
+                                    <br/>
+                                    <apex:commandButton value="Add More" action="{!addNewRowToCategoryAndCountryList}" rerender="categoryAndCountry" Status="status" />
+                                    <br/> <br/>
+                            </apex:actionRegion>
+                            </apex:outputPanel>
+                            <apex:pageBlock rendered="{!(step == 2)}">
+                              
+                                     
+                                    <p> Genesys Professional Services (PS) is committed to successfully delivering services and solutions that enable our clients to realize their business goals.  We recognize the importance of strategic partnerships and maintain a global <b> Subcontractor ecosystem consisting of Partners that have extensive experience with Genesys’ solutions, provide specialized skills and/or offer complementary products and service offerings to help us accomplish this objective.</b>
+                                    </p> 
+                                    <p> <b>Genesys PS Subcontractors can be considered a person or business which has a contract (as an "independent contractor" and not an employee) with Genesys PS to provide some portion of the work or services on a project which Genesys PS manages and has agreed to perform with one of its customers.</b>
+                                    </p> 
+                                    <br/>
+                                    <apex:outputText value="Would you like to apply for Genesys Professional Services Subcontractor consideration? " style="font-weight: bold" rendered="{!(step == 2)}"> 
+                                    </apex:outputText>  
+                                                                          
+                                    <apex:commandButton value="Yes" action="{!actionYes}" reRender="pgblk" status="status" style="width:50px" rendered="{!(step == 2)}"/>
+                                    <apex:commandButton value="No" action="{!actionNo}" reRender="pgblk" status="status" style="width:50px" rendered="{!(step == 2)}"/>
+                             </apex:pageBlock>                
+                            
+                            
+                            
+                      <!--  by Ravi     <apex:pageBlockSection columns="1"  rendered="{!AND(step == 2, SPAsSC)}" title="Services Partner Assessment Form (SPAF) for Subcontractor Applicants Only">
+                      -->  
+                      <apex:pageBlockSection columns="1"  rendered="{!AND(step == 3, SPAsSC)}" title="Services Partner Assessment Form (SPAF) for Subcontractor Applicants Only" id="pgblk2sec">  
+                             <p style="background-color:#FFFF99;">
+                                <!--Please complete this Services Partner Assessment Form (SPAF) as thoroughly as possible as it will form the basis of consideration for a partner relationship with Genesys.
+                                 If needed, please attach additional supporting documentation. -->
+                                 Please complete this Services Partner Assessment Form (SPAF) as thoroughly as possible as it will form the basis of consideration for a <b> <u> subcontractor relationship </u> </b> with Genesys Professional Services.
+                                 </p>
+                            
+                            <br/>
+                            <apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_4}" var="f">
+                                
+                                <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                        <apex:outputPanel >{!mapFieldLabelVsHelpText[f.label]}</apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}" /> 
+                                                <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                                
+                                                <apex:outputPanel rendered="{!newApplication[f] == NULL && errorsInStep3 == true}" >
+                                                    <br /><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                                
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                
+                                <!--
+                                 <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}"  label="{!mapFieldLabelVsHelpText[f.label]}" required="true" />
+                                 <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}" required="true" label="{!mapFieldLabelVsHelpText[f.label]}"/>                                          
+                               -->
+                          </apex:repeat> 
+                                
+                             
+                             
+                               <!--                                       
+                              <apex:inputfield value="{!newApplication.formal_partnership_with_any_other_CTI__c}"  label="Does your company have a formal partnership with any other CTI and/or Interaction Mgmt vendor?" id="formalPartner">
+                               <apex:actionRegion>
+                               <apex:actionSupport event="onchange" rerender="pgblk2sec" />
+                               </apex:actionRegion>
+                              </apex:inputfield>
+                                <apex:inputField id="their_names_CTI"  style="width:400px; height:60px;" value="{!newApplication.If_yes_please_list_their_names_CTI__c}" rendered="{!newApplication.formal_partnership_with_any_other_CTI__c =='Yes'}"/>
+                               --> 
+                               <apex:outputPanel id="partnershipwithanyh" >
+                            <apex:actionRegion >
+                            
+                            <apex:pageBlockSection >  
+                                
+                                <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                        <apex:outputPanel >Does your company have a formal partnership with any other CTI and/or Interaction Mgmt vendor?</apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!newApplication.formal_partnership_with_any_other_CTI__c}" id="formalPartner" > 
+                                                    <apex:actionSupport event="onchange" rerender="partnershipwithanyh"  Status="status"/>
+                                                </apex:inputfield>
+                                                <apex:outputPanel rendered="{!newApplication.formal_partnership_with_any_other_CTI__c == NULL && errorsInStep1 == true}" >
+                                                    <br /><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                <!--
+                                 <apex:inputfield value="{!newApplication.formal_partnership_with_any_other_CTI__c}"  label="Does your company have a formal partnership with any other CTI and/or Interaction Mgmt vendor?" id="formalPartner" required="true">
+                              
+                                 <apex:actionSupport event="onchange" rerender="partnershipwithanyh"  Status="status"/>
+                              
+                                  </apex:inputfield>
+                                -->
+                                  <n/>
+                                
+                                <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%" rendered="{!newApplication.formal_partnership_with_any_other_CTI__c =='Yes'}">
+                                        <apex:outputPanel >If yes, please list their names.</apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!newApplication.If_yes_please_list_their_names_CTI__c}" id="their_names_CTI" style="width:400px; height:60px;" />
+                                                <apex:outputPanel rendered="{!newApplication.formal_partnership_with_any_other_CTI__c == NULL && errorsInStep3 == true}" >
+                                                    <br /><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+
+                                <!--
+                                  <apex:inputField id="their_names_CTI"  style="width:400px; height:60px;" value="{!newApplication.If_yes_please_list_their_names_CTI__c}" rendered="{!newApplication.formal_partnership_with_any_other_CTI__c =='Yes'}" required="true"/>
+                                  -->        
+                            </apex:pageBlockSection>
+                            </apex:actionRegion>
+                            </apex:outputPanel>
+                              
+                             
+                           
+                            <apex:outputPanel id="summaryRatesForm" >
+                            <apex:actionRegion >
+                             <apex:variable value="{!0}" var="rowNum"/> 
+                            <apex:pageBlockSection columns="2" title="Please provide a summary of your list rates for services to Genesys Professional Services.  Enter 'N/A' as needed.">            
+                                    <apex:pageBlockTable value="{!appsummaryRateList}" var="eachRecord"> 
+                                        
+                                        <apex:column headerValue="Action">
+                                            <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromAppsumaryList}" rendered="{!rowNum > 0}" rerender="summaryRatesForm"  immediate="true">
+                                                <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                            </apex:commandLink>
+                                            <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                        </apex:column>
+                                        
+                                       
+                                         <apex:column headerValue="Resource or Skill Type">
+                                             <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Resource_or_Skill_Type__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Resource_or_Skill_Type__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                           <!-- <apex:inputField value="{!eachRecord.record.Resource_or_Skill_Type__c}" required="true"/> -->
+                                          </apex:column>
+                                          
+                                        <apex:column headerValue="Rate or Rate Range">
+                                            <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Rate_or_Rate_Range__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Rate_or_Rate_Range__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                         <!-- <apex:inputField value="{!eachRecord.record.Rate_or_Rate_Range__c}" required="true"/> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Currency">
+                                            <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Currency_Type__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Currency_Type__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                            <!-- <apex:inputfield value="{!eachRecord.record.Currency_Type__c}" required="true"/> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Comments">
+                                            <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Comments__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Comments__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                            <!-- <apex:inputField value="{!eachRecord.record.Comments__c}" required="true"/>  -->
+                                        </apex:column>                        
+                                    </apex:pageBlockTable>
+                                    </apex:pageBlockSection>
+                                    <br/>
+                                    <apex:commandButton value="Add More" action="{!addNewRowToSummaryRatesList}" rerender="summaryRatesForm" Status="status"  immediate="true" />
+                            <br/> <br/>
+                            </apex:actionRegion>
+                            </apex:outputPanel>
+                          
+                                <apex:outputPanel id="employerHead">
+                                <apex:pageBlockSection columns="2" title="Please list the numbers of individuals in the following Genesys related technical functions.  This section is required for your application.  Enter '0' as needed." id="pgblk2sec2"> 
+                                <apex:pageBlockTable value="{!$ObjectType.Partner_Application_Head_Count__c.FieldSets.Partner_Head_Count_Table}" var="f" id="pgblk2sec2Tab">
+                                  <apex:column >
+                                     <apex:outputText value="{!IF(ISBLANK($ObjectType.Partner_Application_Head_Count__c.Fields[f].inlineHelpText),f.Label,$ObjectType.Partner_Application_Head_Count__c.Fields[f].inlineHelpText)}" />  
+                                </apex:column>
+                                
+                                <apex:repeat value="{!list_PAHeadCount}"  var="objHeadCount" id="pgblk2sec2Tabrep">
+                                     
+                                   <apex:column headerValue="{!map_PAHeadCountRegionMap[objHeadCount.Region__c]}">
+                                       <apex:outputPanel >
+                                           <div class = "requiredInput">
+                                               <div class = "requiredBlock"></div>
+                                               <apex:inputField value="{!objHeadCount[f]}" onchange="calculateHeadCount();" />
+                                               <apex:outputPanel rendered="{!objHeadCount[f] == NULL && errorsInStep3 == true}" >
+                                                   <br /><font color="red">Error: You must enter a value</font>
+                                               </apex:outputPanel>
+                                           </div>
+                                       </apex:outputPanel>
+                                    <!-- <apex:inputField value="{!objHeadCount[f]}" onchange="calculateHeadCount();" required="true">
+                            </apex:inputField> -->
+                                    </apex:column> 
+                                </apex:repeat> 
+                            </apex:pageBlockTable>  
+                           </apex:pageBlockSection>
+                           </apex:outputPanel>
+                           
+                          <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                              <apex:outputPanel >How many employees have Genesys University Certifications?</apex:outputPanel>
+                              <apex:outputPanel >
+                                  <div class = "requiredInput">
+                                      <div class = "requiredBlock"></div>
+                                      <apex:inputField value="{!newApplication.Number_of_Employees__c}" id="their_names_CTI" />
+                                      <apex:outputPanel rendered="{!newApplication.Number_of_Employees__c == NULL && errorsInStep3 == true}" >
+                                          <br /><font color="red">Error: You must enter a value</font>
+                                      </apex:outputPanel>
+                                  </div>
+                              </apex:outputPanel>
+                          </apex:pageBlockSectionItem>
+                          
+                            <!-- <apex:inputField value="{!newApplication.Number_of_Employees__c}" label="How many employees have Genesys University Certifications?" required="true" /> -->
+                            
+                            <apex:outputPanel id="employerForm" >
+                             <apex:actionRegion >
+                            <apex:variable value="{!0}" var="rowNum"/>  
+                            <apex:pageBlockSection columns="2" title="Please provide details on your employee Genesys University Certifications.  This section is required for your application.  Enter N/A as needed.">            
+                                    <apex:pageBlockTable value="{!paEmployeeList}" var="eachRecord"> 
+                                        
+                                        <apex:column headerValue="Action">
+                                            <apex:commandLink value="Remove" style="color:red" action="{!removeRowFromEmployeeList}" rendered="{!rowNum > 0}" rerender="employerForm"  immediate="true">
+                                              <apex:param value="{!rowNum}" name="rowToRemove" assignTo="{!rowToRemove}"/>
+                                            </apex:commandLink>
+                                            <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                                        </apex:column>
+                                        <apex:column headerValue="Employee Name">
+                                            <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Employee_Name__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Employee_Name__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                        <!-- <apex:inputField value="{!eachRecord.record.Employee_Name__c}" required="true"/> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Certification Name">
+                                            <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Certification_Name__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Certification_Name__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                        <!-- <apex:inputField value="{!eachRecord.record.Certification_Name__c}" required="true"/> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Year Achieved">
+                                            <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Year_Aheived__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Year_Aheived__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                            <!-- <apex:inputfield value="{!eachRecord.record.Year_Aheived__c}" required="true"/> -->
+                                        </apex:column>
+                                        <apex:column headerValue="Resource Country of Residence">
+                                            <apex:outputPanel >
+                                                 <div class = "requiredInput">
+                                                     <div class = "requiredBlock"></div>
+                                                     <apex:inputField value="{!eachRecord.record.Resource_Country_of_Residence__c}" />
+                                                     <apex:outputPanel rendered="{!eachRecord.record.Resource_Country_of_Residence__c == NULL && errorsInStep3 == true}" >
+                                                         <br /><font color="red">Error: You must enter a value</font>
+                                                     </apex:outputPanel>
+                                                 </div>
+                                             </apex:outputPanel>
+                                           <!--  <apex:inputField value="{!eachRecord.record.Resource_Country_of_Residence__c}" required="true"/> -->
+                                        </apex:column>                        
+                                    </apex:pageBlockTable>
+                                      
+                                    </apex:pageBlockSection>
+                                    <br/>
+                                    <apex:commandButton value="Add More" action="{!addNewRowToEmployeeList}" rerender="employerForm" Status="status" immediate="true" />
+                            <br/> <br/>
+                             </apex:actionRegion>
+                            </apex:outputPanel>
+
+                                <apex:repeat value="{!$ObjectType.Partner_Application__c.FieldSets.Partner_Application_Part_5}" var="f">
+                                    
+                                    <apex:pageBlockSectionItem dataStyle="width:100%" labelStyle="width:20%">
+                                        <apex:outputPanel >{!mapFieldLabelVsHelpText[f.label]}</apex:outputPanel>
+                                        <apex:outputPanel >
+                                            <div class = "requiredInput">
+                                                <div class = "requiredBlock"></div>
+                                                <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}" /> 
+                                                <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"/>                                                      
+                                                
+                                                <apex:outputPanel rendered="{!newApplication[f] == NULL && errorsInStep3 == true}" >
+                                                    <br /><font color="red">Error: You must enter a value</font>
+                                                </apex:outputPanel>
+                                                
+                                            </div>
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSectionItem>
+                                    <!-- 
+                                    <apex:inputField value="{!newApplication[f]}" rendered="{!NOT(f.type =='textarea')}"  label="{!mapFieldLabelVsHelpText[f.label]}" required="true"/>
+                                    <apex:inputField value="{!newApplication[f]}" style="width:400px; height:60px;" rendered="{!(f.type =='textarea')}"  label="{!mapFieldLabelVsHelpText[f.label]}" required="true"/>                                          
+                                    -->   
+                                </apex:repeat>
+                            </apex:pageBlockSection> 
+                            
+                             <apex:pageBlockSection columns="1"  rendered="{!OR(step == 4, AND( step == 3, NOT(SPAsSC)))}">
+                                <apex:pageBlockSection columns="2">
+                                    <apex:inputField value="{!newApplication.NDA_Approver_Name__c}"  required="true"/>
+                                    <apex:inputField value="{!newApplication.NDA_Approver_Title__c}"  required="true"/>                         
+                                </apex:pageBlockSection>                        
+                                <apex:pageBlock title="Non-Disclosure Agreement" >
+                                    <apex:pageBlockSection columns="1">
+                                        <apex:outputPanel >
+                                            <apex:inputField value="{!newApplication.NDA_Already_Exists__c}" >
+                                                <apex:actionSupport event="onchange" action="{!existingNDACheckboxClick}" reRender="ExistingNDAMessage, NewNDAMessage"/>
+                                                <b>Please check this option, if your company already has a Non-Disclosure Agreement with Genesys Telecommunications Laboratories, Inc.</b>
+                                            </apex:inputField>    
+                                        </apex:outputPanel>
+                                    </apex:pageBlockSection>
+                                    <apex:pageBlockSection columns="1" id="ExistingNDAMessage">
+                                        <apex:outputPanel rendered="{!newApplication.NDA_Already_Exists__c}">
+                                            <table width="100%">
+                                                <tr>
+                                                    <td align="left" colspan="2"><font color="red"><b>Please note that you application will be rejected if you do not have an existing Non-Disclosure Agreement. Please verify before submitting the application.</b></font></td>
+                                                </tr>
+                                                <tr>
+                                                    <td width="27%">&nbsp;</td>
+                                                    <td><apex:commandButton value=" Submit with Existing NDA " action="{!approve}" reRender="pgblk, pgmsg" status="status"/></td>
+                                                </tr>
+                                            </table>
+                                        </apex:outputPanel>    
+                                    </apex:pageBlockSection>
+                                    <apex:pageBlockSection columns="1" id="NewNDAMessage">
+                                        <apex:pageBlock rendered="{!newApplication.NDA_Already_Exists__c == false}">
+                                            <!-- <div style="width:100% text-align:center;" id="NewNDADiv">
+                                                <div style="overflow:scroll; height:500px; width:99%; text-align:left;"> -->
+                                                        <b>This Non-Disclosure Agreement (the Agreement), with an effective date on date of signature, is made between Genesys Telecommunications Laboratories, Inc. ("Genesys") and Company as listed in the signature block below, (?Company?). The parties agree as follows:</b><br/><br/><br/>
+                                                        <b>1. Definitions. </b> Confidential Information? means information disclosed by Genesys or its affiliates to Company in relation to the Purpose (defined below), which is identified as confidential, or which can reasonably be considered confidential due to its nature, or the circumstances surrounding disclosure. Confidential Information does not include information which (a) is in the public domain; (b) was or lawfully becomes known to Company; or (c) was independently developed by Company.<br/><br/>
+                                                        <b>2. Purpose. </b> The Confidential Information shall be used by Company solely for evaluating, undertaking, and/or furthering business transactions or technical discussions between Genesys and Company (the ?Purpose?).<br/><br/>
+                                                        <b>3. Confidentiality. </b> Company agrees to use the Confidential Information solely for the Purpose, and to only disclose the Confidential Information to their affiliates, employees, directors, agents or third party contractors who have a need to know the Confidential Information and are under a substantially similar obligation to keep information confidential. Company shall exercise a reasonable degree of care to protect the Confidential Information from unauthorized disclosure.<br/><br/>
+                                                        <b>4. Mandatory disclosure. </b> Company may disclose Confidential Information to the extent required by law.<br/><br/>
+                                                        <b>5. No Warranty. </b> Company acknowledges that Genesys retains all rights to the Confidential Information and no license is implied by the conveying of Confidential Information hereunder. The Confidential Information is disclosed ?as is? and no representation, warranty, or any other obligation with respect to the accuracy or performance of the Confidential Information shall be provided by Genesys or its affiliates.<br/><br/>
+                                                        <b>6. No Waiver. </b> The parties agree that a failure to enforce any of provisions of this agreement will not constitute a waiver.<br/><br/>
+                                                        <b>7. Return or Destruction of Confidential Information. </b> Upon demand by Genesys, the Confidential Information and any copies thereof will be promptly destroyed or returned to Genesys. If destroyed, Company shall certify in writing to Genesys that all such information, including all copies, has been destroyed.<br/><br/>
+                                                        <b>8. Term. </b> The obligations of confidentiality will continue for a period of ten (10) years from the date of disclosure of Confidential Information.<br/><br/>
+                                                        <b>9. Export.  </b>Company acknowledges that certain Confidential Information may be subject to United States, European Union or other export control laws and regulations, and agree not to export or re-export such Confidential Information except in compliance with those laws and regulations.<br/><br/>
+                                                        <b>10. Governing Law. </b> This Agreement will be construed in accordance with the laws of California and subject to the jurisdiction of the state district courts of California.<br/><br/>
+                                                        <b>11. Remedies.  </b>Each party acknowledges that the disclosure of Confidential Information in a manner not authorized by this Agreement may cause irreparable damage that could not be fully remedied by monetary damages. Each party agrees to waive any requirement for the other party to post a bond in order to obtain injunctive or other equitable relief. Any such relief will be in addition to and not in lieu of monetary damages.<br/><br/>
+                                                        <b>12. Entire Agreement. </b> This agreement constitutes the complete and exclusive statement of the terms and conditions between the parties with respect to the subject matter hereof and supersedes all prior and contemporaneous oral or written agreements regarding this subject matter.<br/><br/>
+                                                <!-- </div>  
+                                            </div> -->
+                                            <apex:pageBlockButtons location="both">
+                                                <apex:commandButton value="Agree" action="{!approve}" reRender="pgblk, pgmsg" rendered="{!renderApprove}" status="status" />
+                                                <apex:commandButton value="Disagree" action="{!reject}" reRender="pgblk, pgmsg" rendered="{!renderReject}" status="status"/>                                        
+                                            </apex:pageBlockButtons>
+                                        </apex:pageBlock>                                 
+                                    </apex:pageBlockSection>
+                                </apex:pageBlock>
+                            </apex:pageBlockSection>  
+                        </apex:pageBlock>
+                    </apex:outputPanel>
+                </apex:form>
+        </apex:define>
+    </apex:composition>
+</apex:page>

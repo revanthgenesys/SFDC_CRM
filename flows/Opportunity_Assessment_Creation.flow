@@ -1,0 +1,977 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <processMetadataValues>
+            <name>emailAlertSelection</name>
+            <value>
+                <stringValue>PB_Opportunity_Assessment_Email</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>myRule_1_A1</name>
+        <label>Send 5*5 email</label>
+        <locationX>100</locationX>
+        <locationY>200</locationY>
+        <actionName>Opportunity.PB_Opportunity_Assessment_Email</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>myRule_1_A2</targetReference>
+        </connector>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </inputParameters>
+    </actionCalls>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>0.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision</name>
+        <label>myDecision</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>myDecision4</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_1</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_1</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_1_pmetdec</targetReference>
+            </connector>
+            <label>Regional Opp Criteria 2</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision4</name>
+        <label>myDecision4</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_5</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_5</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_5_A1</targetReference>
+            </connector>
+            <label>opportunity Quote change</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>myRule_1_pmetdec</name>
+        <label>Previously Met Decision</label>
+        <locationX>100</locationX>
+        <locationY>100</locationY>
+        <defaultConnector>
+            <targetReference>myRule_1_A1</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Not Previously Met</defaultConnectorLabel>
+        <rules>
+            <name>myRule_1_pmetnullrule</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>myVariable_old</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_1_A1</targetReference>
+            </connector>
+            <label>Previously Met - Null</label>
+        </rules>
+        <rules>
+            <name>myRule_1_pmetrule</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_1_pmetrule</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <label>Previously Met - Prev</label>
+        </rules>
+    </decisions>
+    <description>Creation of an opportunity assessment task when an opp qualifies</description>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>IF((ISPICKVAL([Opportunity].Primary_Line_of_Business__c, &quot;On Premise&quot;) &amp;&amp; Not((ISPICKVAL([Opportunity].Offering_Detail__c , &quot;Subscription&quot;)))), [Opportunity].Total_On_Premise_Amount__c, IF(ISPICKVAL([Opportunity].Primary_Line_of_Business__c, &quot;Cloud&quot;), [Opportunity].Total_Annual_Contract_Value__c, 
+IF((ISPICKVAL([Opportunity].Offering_Detail__c , &quot;Subscription&quot;) &amp;&amp; (ISPICKVAL([Opportunity].Primary_Line_of_Business__c, &quot;On Premise&quot;))) , [Opportunity].Total_Annual_Contract_Value__c,
+IF((ISPICKVAL([Opportunity].Offering_Detail__c , &quot;Rental&quot;) &amp;&amp; (ISPICKVAL([Opportunity].Primary_Line_of_Business__c, &quot;On Premise&quot;))) , [Opportunity].Term_License_Amount_TCV__c, 0))))</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_2_myRule_1_A2_2246392328</name>
+        <dataType>Currency</dataType>
+        <expression>IF((ISPICKVAL({!myVariable_current.Primary_Line_of_Business__c}, &quot;On Premise&quot;) &amp;&amp; Not((ISPICKVAL({!myVariable_current.Offering_Detail__c} , &quot;Subscription&quot;)))), {!myVariable_current.Total_On_Premise_Amount__c}, IF(ISPICKVAL({!myVariable_current.Primary_Line_of_Business__c}, &quot;Cloud&quot;), {!myVariable_current.Total_Annual_Contract_Value__c}, 
+IF((ISPICKVAL({!myVariable_current.Offering_Detail__c} , &quot;Subscription&quot;) &amp;&amp; (ISPICKVAL({!myVariable_current.Primary_Line_of_Business__c}, &quot;On Premise&quot;))) , {!myVariable_current.Total_Annual_Contract_Value__c},
+IF((ISPICKVAL({!myVariable_current.Offering_Detail__c} , &quot;Rental&quot;) &amp;&amp; (ISPICKVAL({!myVariable_current.Primary_Line_of_Business__c}, &quot;On Premise&quot;))) , {!myVariable_current.Term_License_Amount_TCV__c}, 0))))</expression>
+        <scale>18</scale>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>[Opportunity].Name &amp; &quot;-&quot; &amp; &quot;5x5 Deal Review&quot;</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_3_myRule_1_A2_2740065831</name>
+        <dataType>String</dataType>
+        <expression>{!myVariable_current.Name} &amp; &quot;-&quot; &amp; &quot;5x5 Deal Review&quot;</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>If([Opportunity].Primary_Quote__c.Top_Play__c==&apos;PureBridge 3.0&apos;, &apos;2019 Play 1 PureBridge&apos;,If([Opportunity].Primary_Quote__c.Top_Play__c==&apos;Cloud for Mid-Size&apos;, &apos;2019 Play 2 Cloud for Midmarket&apos;,If([Opportunity].Primary_Quote__c.Top_Play__c==&apos;Digital Service&apos;, &apos;2019 Play 3 Digital Service&apos;,If([Opportunity].Primary_Quote__c.Top_Play__c==&apos;Digital Sales&apos;, &apos;2019 Play 4 Digital Sales&apos;,If([Opportunity].Primary_Quote__c.Top_Play__c==&apos;Automation at Work&apos;, &apos;2019 Play 5 Automation at Work&apos;,&apos;None&apos;)))))</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_6_myRule_5_A1_1019004530</name>
+        <dataType>String</dataType>
+        <expression>If({!myVariable_current.Primary_Quote__r.Top_Play__c}==&apos;PureBridge 3.0&apos;, &apos;2019 Play 1 PureBridge&apos;,If({!myVariable_current.Primary_Quote__r.Top_Play__c}==&apos;Cloud for Mid-Size&apos;, &apos;2019 Play 2 Cloud for Midmarket&apos;,If({!myVariable_current.Primary_Quote__r.Top_Play__c}==&apos;Digital Service&apos;, &apos;2019 Play 3 Digital Service&apos;,If({!myVariable_current.Primary_Quote__r.Top_Play__c}==&apos;Digital Sales&apos;, &apos;2019 Play 4 Digital Sales&apos;,If({!myVariable_current.Primary_Quote__r.Top_Play__c}==&apos;Automation at Work&apos;, &apos;2019 Play 5 Automation at Work&apos;,&apos;None&apos;)))))</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>Not($User.BypassWorkflows__c)
+
+&amp;&amp;
+
+[Opportunity].RecordType.Name =&apos;GEN - Opportunity Record Type&apos;
+
+&amp;&amp;
+
+Not([Opportunity].X5x5_task_created__c)
+
+&amp;&amp;
+[Opportunity].X5x5_Review_Qualified1__c 
+
+&amp;&amp;
+
+( ISPICKVAL([Opportunity].StageName, &quot;4.Build Consensus&quot;) || ISPICKVAL([Opportunity].StageName, &quot;5.Purchase Solution&quot;))
+
+&amp;&amp;
+
+(
+	(
+		((CONTAINS([Opportunity].Owner_Region__c,&quot;NORTH AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;CAD&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;=1248000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1248000||[Opportunity].Total_On_Premise_Amount__c  &gt;=1248000))
+			||
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;= 1000000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c &gt;=1000000))))
+	)
+	||
+	(
+		(CONTAINS([Opportunity].Owner_Region__c, &quot;LATIN AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;BRL&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;=3167400|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 3167400||[Opportunity].Total_On_Premise_Amount__c &gt;=3167400))
+			||
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;=1000000||[Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c &gt;=1000000)))
+	)
+	||
+	(
+	(CONTAINS([Opportunity].Owner_Region__c, &quot;APAC&quot;) &amp;&amp; 
+		ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;AUD&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=2549800|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 2549800||[Opportunity].Total_On_Premise_Amount__c&gt;=2549800))
+		||
+		(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;JPY&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=112532100|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 112532100||[Opportunity].Total_On_Premise_Amount__c&gt;=112532100))
+		||
+		(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;NZD&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=1384500|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1384500||[Opportunity].Total_On_Premise_Amount__c&gt;=1384500))
+		||
+		(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=1000000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c&gt;=1000000))
+	)
+	||
+	(
+		(CONTAINS([Opportunity].Owner_Region__c, &quot;EMEA&quot;) &amp;&amp; 
+				ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;AUD&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=1274900|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1274900||[Opportunity].Total_On_Premise_Amount__c&gt;=1274900))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;EUR&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=846000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 846000||[Opportunity].Total_On_Premise_Amount__c&gt;=846000))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;GBP&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;= 746300|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 746300||[Opportunity].Total_On_Premise_Amount__c &gt;=746300))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=1000000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c &gt;=1000000))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;ZAR&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=13538700|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 13538700||[Opportunity].Total_On_Premise_Amount__c &gt;=13538700))
+	)
+)</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_1</name>
+        <dataType>Boolean</dataType>
+        <expression>Not({!$User.BypassWorkflows__c})
+
+&amp;&amp;
+
+{!myVariable_current.RecordType.Name} =&apos;GEN - Opportunity Record Type&apos;
+
+&amp;&amp;
+
+Not({!myVariable_current.X5x5_task_created__c})
+
+&amp;&amp;
+{!myVariable_current.X5x5_Review_Qualified1__c} 
+
+&amp;&amp;
+
+( ISPICKVAL({!myVariable_current.StageName}, &quot;4.Build Consensus&quot;) || ISPICKVAL({!myVariable_current.StageName}, &quot;5.Purchase Solution&quot;))
+
+&amp;&amp;
+
+(
+	(
+		((CONTAINS({!myVariable_current.Owner_Region__c},&quot;NORTH AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;CAD&quot;) &amp;&amp;
+			({!myVariable_current.Term_License_Amount_TCV__c} &gt;=1248000|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 1248000||{!myVariable_current.Total_On_Premise_Amount__c}  &gt;=1248000))
+			||
+			(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+			({!myVariable_current.Term_License_Amount_TCV__c} &gt;= 1000000|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_current.Total_On_Premise_Amount__c} &gt;=1000000))))
+	)
+	||
+	(
+		(CONTAINS({!myVariable_current.Owner_Region__c}, &quot;LATIN AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;BRL&quot;) &amp;&amp;
+			({!myVariable_current.Term_License_Amount_TCV__c} &gt;=3167400|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 3167400||{!myVariable_current.Total_On_Premise_Amount__c} &gt;=3167400))
+			||
+			(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+			({!myVariable_current.Term_License_Amount_TCV__c} &gt;=1000000||{!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_current.Total_On_Premise_Amount__c} &gt;=1000000)))
+	)
+	||
+	(
+	(CONTAINS({!myVariable_current.Owner_Region__c}, &quot;APAC&quot;) &amp;&amp; 
+		ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;AUD&quot;) &amp;&amp;
+		({!myVariable_current.Term_License_Amount_TCV__c} &gt;=2549800|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 2549800||{!myVariable_current.Total_On_Premise_Amount__c}&gt;=2549800))
+		||
+		(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;JPY&quot;) &amp;&amp;
+		({!myVariable_current.Term_License_Amount_TCV__c} &gt;=112532100|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 112532100||{!myVariable_current.Total_On_Premise_Amount__c}&gt;=112532100))
+		||
+		(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;NZD&quot;) &amp;&amp;
+		({!myVariable_current.Term_License_Amount_TCV__c} &gt;=1384500|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 1384500||{!myVariable_current.Total_On_Premise_Amount__c}&gt;=1384500))
+		||
+		(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+		({!myVariable_current.Term_License_Amount_TCV__c} &gt;=1000000|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_current.Total_On_Premise_Amount__c}&gt;=1000000))
+	)
+	||
+	(
+		(CONTAINS({!myVariable_current.Owner_Region__c}, &quot;EMEA&quot;) &amp;&amp; 
+				ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;AUD&quot;) &amp;&amp;
+				({!myVariable_current.Term_License_Amount_TCV__c} &gt;=1274900|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 1274900||{!myVariable_current.Total_On_Premise_Amount__c}&gt;=1274900))
+				||
+				(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;EUR&quot;) &amp;&amp;
+				({!myVariable_current.Term_License_Amount_TCV__c} &gt;=846000|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 846000||{!myVariable_current.Total_On_Premise_Amount__c}&gt;=846000))
+				||
+				(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;GBP&quot;) &amp;&amp;
+				({!myVariable_current.Term_License_Amount_TCV__c} &gt;= 746300|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 746300||{!myVariable_current.Total_On_Premise_Amount__c} &gt;=746300))
+				||
+				(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+				({!myVariable_current.Term_License_Amount_TCV__c} &gt;=1000000|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_current.Total_On_Premise_Amount__c} &gt;=1000000))
+				||
+				(ISPICKVAL({!myVariable_current.CurrencyIsoCode}, &quot;ZAR&quot;) &amp;&amp;
+				({!myVariable_current.Term_License_Amount_TCV__c} &gt;=13538700|| {!myVariable_current.Total_Annual_Contract_Value__c}   &gt;= 13538700||{!myVariable_current.Total_On_Premise_Amount__c} &gt;=13538700))
+	)
+)</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>Not($User.BypassWorkflows__c)
+
+&amp;&amp;
+
+[Opportunity].RecordType.Name =&apos;GEN - Opportunity Record Type&apos;
+
+&amp;&amp;
+
+Not([Opportunity].X5x5_task_created__c)
+
+&amp;&amp;
+[Opportunity].X5x5_Review_Qualified1__c 
+
+&amp;&amp;
+
+( ISPICKVAL([Opportunity].StageName, &quot;4.Build Consensus&quot;) || ISPICKVAL([Opportunity].StageName, &quot;5.Purchase Solution&quot;))
+
+&amp;&amp;
+
+(
+	(
+		((CONTAINS([Opportunity].Owner_Region__c,&quot;NORTH AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;CAD&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;=1248000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1248000||[Opportunity].Total_On_Premise_Amount__c  &gt;=1248000))
+			||
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;= 1000000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c &gt;=1000000))))
+	)
+	||
+	(
+		(CONTAINS([Opportunity].Owner_Region__c, &quot;LATIN AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;BRL&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;=3167400|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 3167400||[Opportunity].Total_On_Premise_Amount__c &gt;=3167400))
+			||
+			(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+			([Opportunity].Term_License_Amount_TCV__c &gt;=1000000||[Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c &gt;=1000000)))
+	)
+	||
+	(
+	(CONTAINS([Opportunity].Owner_Region__c, &quot;APAC&quot;) &amp;&amp; 
+		ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;AUD&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=2549800|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 2549800||[Opportunity].Total_On_Premise_Amount__c&gt;=2549800))
+		||
+		(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;JPY&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=112532100|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 112532100||[Opportunity].Total_On_Premise_Amount__c&gt;=112532100))
+		||
+		(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;NZD&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=1384500|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1384500||[Opportunity].Total_On_Premise_Amount__c&gt;=1384500))
+		||
+		(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+		([Opportunity].Term_License_Amount_TCV__c &gt;=1000000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c&gt;=1000000))
+	)
+	||
+	(
+		(CONTAINS([Opportunity].Owner_Region__c, &quot;EMEA&quot;) &amp;&amp; 
+				ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;AUD&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=1274900|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1274900||[Opportunity].Total_On_Premise_Amount__c&gt;=1274900))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;EUR&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=846000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 846000||[Opportunity].Total_On_Premise_Amount__c&gt;=846000))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;GBP&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;= 746300|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 746300||[Opportunity].Total_On_Premise_Amount__c &gt;=746300))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;USD&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=1000000|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 1000000||[Opportunity].Total_On_Premise_Amount__c &gt;=1000000))
+				||
+				(ISPICKVAL([Opportunity].CurrencyIsoCode, &quot;ZAR&quot;) &amp;&amp;
+				([Opportunity].Term_License_Amount_TCV__c &gt;=13538700|| [Opportunity].Total_Annual_Contract_Value__c   &gt;= 13538700||[Opportunity].Total_On_Premise_Amount__c &gt;=13538700))
+	)
+)</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_1_pmetrule</name>
+        <dataType>Boolean</dataType>
+        <expression>Not({!$User.BypassWorkflows__c})
+
+&amp;&amp;
+
+{!myVariable_old.RecordType.Name} =&apos;GEN - Opportunity Record Type&apos;
+
+&amp;&amp;
+
+Not({!myVariable_old.X5x5_task_created__c})
+
+&amp;&amp;
+{!myVariable_old.X5x5_Review_Qualified1__c} 
+
+&amp;&amp;
+
+( ISPICKVAL({!myVariable_old.StageName}, &quot;4.Build Consensus&quot;) || ISPICKVAL({!myVariable_old.StageName}, &quot;5.Purchase Solution&quot;))
+
+&amp;&amp;
+
+(
+	(
+		((CONTAINS({!myVariable_old.Owner_Region__c},&quot;NORTH AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;CAD&quot;) &amp;&amp;
+			({!myVariable_old.Term_License_Amount_TCV__c} &gt;=1248000|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 1248000||{!myVariable_old.Total_On_Premise_Amount__c}  &gt;=1248000))
+			||
+			(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+			({!myVariable_old.Term_License_Amount_TCV__c} &gt;= 1000000|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_old.Total_On_Premise_Amount__c} &gt;=1000000))))
+	)
+	||
+	(
+		(CONTAINS({!myVariable_old.Owner_Region__c}, &quot;LATIN AMERICA&quot;) &amp;&amp; 
+			(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;BRL&quot;) &amp;&amp;
+			({!myVariable_old.Term_License_Amount_TCV__c} &gt;=3167400|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 3167400||{!myVariable_old.Total_On_Premise_Amount__c} &gt;=3167400))
+			||
+			(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+			({!myVariable_old.Term_License_Amount_TCV__c} &gt;=1000000||{!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_old.Total_On_Premise_Amount__c} &gt;=1000000)))
+	)
+	||
+	(
+	(CONTAINS({!myVariable_old.Owner_Region__c}, &quot;APAC&quot;) &amp;&amp; 
+		ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;AUD&quot;) &amp;&amp;
+		({!myVariable_old.Term_License_Amount_TCV__c} &gt;=2549800|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 2549800||{!myVariable_old.Total_On_Premise_Amount__c}&gt;=2549800))
+		||
+		(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;JPY&quot;) &amp;&amp;
+		({!myVariable_old.Term_License_Amount_TCV__c} &gt;=112532100|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 112532100||{!myVariable_old.Total_On_Premise_Amount__c}&gt;=112532100))
+		||
+		(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;NZD&quot;) &amp;&amp;
+		({!myVariable_old.Term_License_Amount_TCV__c} &gt;=1384500|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 1384500||{!myVariable_old.Total_On_Premise_Amount__c}&gt;=1384500))
+		||
+		(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+		({!myVariable_old.Term_License_Amount_TCV__c} &gt;=1000000|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_old.Total_On_Premise_Amount__c}&gt;=1000000))
+	)
+	||
+	(
+		(CONTAINS({!myVariable_old.Owner_Region__c}, &quot;EMEA&quot;) &amp;&amp; 
+				ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;AUD&quot;) &amp;&amp;
+				({!myVariable_old.Term_License_Amount_TCV__c} &gt;=1274900|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 1274900||{!myVariable_old.Total_On_Premise_Amount__c}&gt;=1274900))
+				||
+				(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;EUR&quot;) &amp;&amp;
+				({!myVariable_old.Term_License_Amount_TCV__c} &gt;=846000|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 846000||{!myVariable_old.Total_On_Premise_Amount__c}&gt;=846000))
+				||
+				(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;GBP&quot;) &amp;&amp;
+				({!myVariable_old.Term_License_Amount_TCV__c} &gt;= 746300|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 746300||{!myVariable_old.Total_On_Premise_Amount__c} &gt;=746300))
+				||
+				(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;USD&quot;) &amp;&amp;
+				({!myVariable_old.Term_License_Amount_TCV__c} &gt;=1000000|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 1000000||{!myVariable_old.Total_On_Premise_Amount__c} &gt;=1000000))
+				||
+				(ISPICKVAL({!myVariable_old.CurrencyIsoCode}, &quot;ZAR&quot;) &amp;&amp;
+				({!myVariable_old.Term_License_Amount_TCV__c} &gt;=13538700|| {!myVariable_old.Total_Annual_Contract_Value__c}   &gt;= 13538700||{!myVariable_old.Total_On_Premise_Amount__c} &gt;=13538700))
+	)
+)</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>ISCHANGED([Opportunity].Primary_Quote__c )  
+
+&amp;&amp; 
+
+Not(ISBLANK([Opportunity].Primary_Quote__c) ) 
+
+&amp;&amp;
+
+Not(ISBLANK([Opportunity].Primary_Quote__c.Top_Play__c))
+
+&amp;&amp;
+
+[Opportunity].RecordType.Name =&apos;GEN - Opportunity Record Type&apos;</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_5</name>
+        <dataType>Boolean</dataType>
+        <expression>ISCHANGED({!myVariable_current.Primary_Quote__c} )  
+
+&amp;&amp; 
+
+Not(ISBLANK({!myVariable_current.Primary_Quote__c}) ) 
+
+&amp;&amp;
+
+Not(ISBLANK({!myVariable_current.Primary_Quote__r.Top_Play__c}))
+
+&amp;&amp;
+
+{!myVariable_current.RecordType.Name} =&apos;GEN - Opportunity Record Type&apos;</expression>
+    </formulas>
+    <interviewLabel>Opportunity_Assessment_Creation-38_InterviewLabel</interviewLabel>
+    <label>Opportunity Assessment Creation</label>
+    <processMetadataValues>
+        <name>ObjectType</name>
+        <value>
+            <stringValue>Opportunity</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>ObjectVariable</name>
+        <value>
+            <elementReference>myVariable_current</elementReference>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OldObjectVariable</name>
+        <value>
+            <elementReference>myVariable_old</elementReference>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>TriggerType</name>
+        <value>
+            <stringValue>onAllChanges</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Workflow</processType>
+    <recordCreates>
+        <name>myRule_1_A2</name>
+        <label>Create 5*5 task</label>
+        <locationX>100</locationX>
+        <locationY>300</locationY>
+        <connector>
+            <targetReference>myRule_1_A3</targetReference>
+        </connector>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Picklist</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Currency ISO Code</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Reference</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>CurrencyIsoCode</field>
+            <value>
+                <elementReference>myVariable_current.CurrencyIsoCode</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Currency</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>5x5 TCV</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>OA_Amount__c</field>
+            <value>
+                <elementReference>formula_2_myRule_1_A2_2246392328</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Assigned To ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Reference</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>myVariable_current.OwnerId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Picklist</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Priority</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Picklist</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Priority</field>
+            <value>
+                <stringValue>3-Medium</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Task Record Type ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue>RecordType</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>RecordTypeId</field>
+            <value>
+                <stringValue>0120B000000N8IM</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Picklist</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Status</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Picklist</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Status</field>
+            <value>
+                <stringValue>5x5 Review Initiated</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>String</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Subject</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Subject</field>
+            <value>
+                <elementReference>formula_3_myRule_1_A2_2740065831</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Related To ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue>AQI_Audit__c;Account;Account_Billing_Info__c;Account_Licensing_Instructions__c;Account_Order_Address__c;Account_Satisfaction__c;Action__c;Addresses__c;Alarm__c;Asset;AssetRelationship;Back_Office_Account__c;Backoffice_Account__c;Bidding_Cost__c;BigMachines__Quote__c;Blog_Comment__c;Blog_Post__c;BusinessPartner__c;Business_Region__c;Business_Segment__c;CEC__c;CSM_Contact__c;Campaign;Case;Case_Escalation__c;Case_FeedPost_Log__c;Case_SN_Request__c;Cases_Closed_By_Default_Detail__c;Cases_Closed_By_Default_Header__c;Change_Log__c;ChannelProgram;ChannelProgramLevel;Channel_Managers__c;Client_Product_Mapping__c;Client_Service__c;Cloud_Billing__c;Cloud_Deployment__c;Compliance_Response__c;Consume_Service__c;Contract;ContractLineItem;Cost_Center__c;Country__c;Credit_Memo_Line_Item__c;Credit_Memo__c;Currencies__c;Custom_SWDL_Request__c;Customer_Care_Analyst_Skill__c;Customer_Contact__c;Customer_Provided_Solution__c;Customer_Site__c;Customer_Success_Management__c;DMAPP__AM_Action__c;DMAPP__Account_Plan_Objective__c;DMAPP__Call_Plan__c;Deal_Qualification__c;Deal_Support__c;Demo_Request__c;EchoNotify__Echo_Notification_Log__c;EchoNotify__Echo_Notification_Recipient_Log__c;Entitlement;Error_Log__c;Export_Screening_Checklist__c;FR_Commitment__c;Favorite_Content__c;Favorite__c;Field_Marketing_Checklist__c;Finance_Notifications__c;GCF_NetSuite_Data__c;GCR__c;GL_Account__c;GenEd_Achievements__c;GenEd_UserCourses__c;GenEd_Users__c;Genesys_Care_Forecasting__c;Genesys_Case_Updates__c;Guru_Mentoring__c;Hierarchy__c;ININ_Applications__c;INVOCA_FOR_SF__Invoca_Call_Log__c;Initiative_Deadline__c;Initiative_Objective__c;Initiative__c;Internal_Contact__c;Invoice__c;JBCXM__Alert__c;JBCXM__CSEvent__c;JBCXM__CTAGroup__c;JBCXM__CTA__c;JBCXM__GSNPSTextAnalytics__c;JBCXM__JobTracker__c;JBCXM__Milestone__c;JBCXM__SuccessPlanTemplate__c;JBCXM__SurveyResponseTask__c;Jira_Issue_Link__c;KPI1_Case_Details__c;Key_Product__c;Lead_Generation__c;LeanData__Marketing_Lead__c;Legal_Approval_Configuration__c;License_Request__c;ListEmail;Marketing_Activity__c;Marketing_Content_Offer__c;Marketing_OPS_Project__c;Milestone__c;OQM_Form__c;Offer__c;Opportunity;Opportunity_Approval__c;Opportunity_Competitor__c;Order;Order_Line_Item__c;Order__c;PC_Solution_Component__c;PS_Revenue_Recognition__c;Package_Services__c;Partner_Application__c;Partner_Business_Terms_Country__c;Partner_Rebate_Request__c;Partner_Rebate__c;Partner_User_Request__c;Portal_Password__c;Pricing_Proposal__c;Product2;Product_Lineage__c;Product_Name_History__c;Product_Predecessor__c;Product_Successor__c;Product_Usage__c;Product_Version__c;Project_Contact__c;Project_Management__c;PureCloud_Trial__c;Pure_Success_Package__c;RQI_Audit__c;Reference_Data__c;Related_License_Request__c;Release_Phase__c;SMART_Use_Case_Alignment__c;Sales_Aid_Question__c;Sales_Aid__c;Sales_Coach_Role__c;Sales_Coach_Section_Item__c;Sales_Coach_Section__c;Sales_Coach_Stage__c;Sales_OPS_Project__c;Sales_Ops_Deployment__c;Sales_Ops_Initiatives__c;Sales_Ops_Programs__c;Salesaid_Action_Plan__c;Sellable_Item_Product__c;ServiceContract;Service_Team_Member__c;Shippable_Item__c;Software_Download__c;Solution;Solution_Design__c;Solution_Search_Alert__c;SourceAccounts__c;Split_Contract_Line__c;Subscription__c;Support_Access_Cloud__c;Support_Access__c;Support_Product_Related_Category__c;Survey_Response__c;Technology_Market_place_Application__c;ThreeMarketeers__BullsEye_Campaign_Prospect__c;Token_Allocations__c;Token_Consumption__c;Track_1_QA__c;ValueStoryApp__Error1_Log__c;ValueStoryApp__ValueStory_NamedRange__c;ValueStoryApp__ValueStory_Run__c;ValueStoryApp__Value_Story_Play__c;Win_Loss__c;Workload_Manager__c;Zuora__CustomerAccount__c;Zuora__Payment__c;Zuora__SubscriptionProductCharge__c;Zuora__SubscriptionProductFeature__c;Zuora__SubscriptionRatePlanChargeTier__c;Zuora__SubscriptionRatePlan__c;Zuora__Subscription__c;adroll__AcctLvlTrackingDataBatchSummary__c;ahaapp__AhaIdea__c;ca2cq_best_answer_to_migrate__c;compliance_question__c;dsfs__DocuSign_Recipient_Status__c;dsfs__DocuSign_Status__c;dupe_eliminator__AccChild__c;mkto_si__Get_Method_Argus__c;purecloud__PureCloud_Contact_List_Request__c;purecloud__PureCloud_Routing_Request__c;refedge__Community_Invite__c;refedge__Hit_List__c;refedge__Nomination__c;refedge__ReferenceLeadAttributes__c;refedge__ReferenceLeadFilter__c;refedge__ReferenceLeadReferenceability__c;refedge__Reference_Interview__c;refedge__Reference_Refresh_Update__c;refedge__Reference_Refresh__c;refedge__Reference_Request_Account__c;refedge__Reference_Request__c;refedge__Unspecified_Request__c;sales_aid_response__c;vidyard__Video_View__c;zisf__ZoomInfo_Clean_Settings__c</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Reference</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>WhatId</field>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+    </recordCreates>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>always</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[Opportunity]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_1_A3</name>
+        <label>Update flag</label>
+        <locationX>100</locationX>
+        <locationY>400</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>5x5 task created?</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>X5x5_task_created__c</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <object>Opportunity</object>
+    </recordUpdates>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>always</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[Opportunity]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_5_A1</name>
+        <label>update top 5 plays</label>
+        <locationX>500</locationX>
+        <locationY>200</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Picklist</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Primary Play</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Formula</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>Primary_Play__c</field>
+            <value>
+                <elementReference>formula_6_myRule_5_A1_1019004530</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Opportunity</object>
+    </recordUpdates>
+    <startElementReference>myDecision</startElementReference>
+    <status>Active</status>
+    <variables>
+        <name>myVariable_current</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+        <objectType>Opportunity</objectType>
+    </variables>
+    <variables>
+        <name>myVariable_old</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Opportunity</objectType>
+    </variables>
+</Flow>

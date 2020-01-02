@@ -1,0 +1,149 @@
+<apex:page controller="ContactsListWithUserInfoController">
+
+<apex:form >
+ <apex:pageBlock >
+        <apex:pageMessages id="msg"/>
+        
+         <apex:pageBlockSection title="Contacts with User Login Information" columns="3">
+         
+          <apex:pageBlockSectionItem > 
+            <apex:outputPanel id="contNm">  
+            <br/>         
+                 <apex:outputLabel value="Contact Name  " />    
+                    <apex:inputText value="{!contactSearchName}" />  
+                    <apex:commandButton action="{!getByName}" value="Find Contacts"  status="fnd" reRender="blk, msg, conEm, acct"/>                
+                        <apex:actionstatus id="fnd">             
+                    <apex:facet name="start">
+                          <apex:outputLabel value="Working, Please wait..."/>
+                   </apex:facet>                         
+                </apex:actionstatus>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OR  
+            </apex:outputPanel>                           
+         </apex:pageBlockSectionItem>   
+  
+          <apex:pageBlockSectionItem > 
+            <apex:outputPanel id="conEm">  
+           <br/>    
+                 <apex:outputLabel value="Contact Email  " />    
+                    <apex:inputText value="{!contactSearchEmail}" />  
+                    <apex:commandButton action="{!getByEmail}" value="Find Contacts"  status="fnd" reRender="blk, msg, contNm, acct"/>                
+                        <apex:actionstatus id="fnd">             
+                    <apex:facet name="start">
+                          <apex:outputLabel value="Working, Please wait..."/>
+                   </apex:facet>
+                </apex:actionstatus> 
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OR  
+            </apex:outputPanel>                     
+         </apex:pageBlockSectionItem>
+    
+         <apex:pageBlockSectionItem > 
+            <apex:outputPanel id="acct">  
+           <br/>
+                
+              <apex:outputLabel value="Contact Account  " />    
+                    <apex:inputText value="{!acctSearchName }" />  
+                    <apex:commandButton action="{!getByAcct}" value="Find Contacts"  status="fnd" reRender="blk, msg, contNm, conEm"/>                
+                        <apex:actionstatus id="fnd">             
+                    <apex:facet name="start">
+                          <apex:outputLabel value="Working, Please wait..."/>
+                   </apex:facet>
+                </apex:actionstatus>  
+            </apex:outputPanel>                     
+         </apex:pageBlockSectionItem>
+                
+     </apex:pageBlockSection>      
+ </apex:pageBlock>
+ 
+     <apex:pageBlock id="blk">           
+            <apex:pageBlockTable value="{!wrapContList}" var="cont" id="lst" style="width:1000px;">
+               
+                    <apex:column headerValue="Contact Name">
+                         <apex:facet name="header">
+                             <apex:commandLink value="Contact Name" action="{!getContacts}" reRender="blk, msg">
+                                   <apex:param name="sortField" value="Name" assignTo="{!sortField}"/>
+                                   <apex:image value="{!IF(sortField = "Name", IF(sortDir="asc", '/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif'),'/s.gif')}"/>
+                              </apex:commandLink>
+                            </apex:facet>       
+                        <apex:outputLink value="/{!cont.contact.Id}" target="_blank">{!cont.contact.Name}</apex:outputLink>
+                    </apex:column>
+                    
+                    <apex:column headerValue="Email">
+                        <apex:outputField value="{!cont.contact.Email}" />                        
+                    </apex:column>
+                      
+                     <apex:column headerValue="Country">
+                         <apex:facet name="header">
+                             <apex:commandLink value="Country" action="{!getContacts}" reRender="blk, msg">
+                                   <apex:param name="sortField" value="Country__r.Name" assignTo="{!sortField}"/>
+                                   <apex:image value="{!IF(sortField = "Country__r.Name", IF(sortDir="asc", '/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif'),'/s.gif')}"/>
+                              </apex:commandLink>
+                            </apex:facet>                     
+                      <apex:outputField value="{!cont.contact.Country__c}" />                        
+                    </apex:column>
+                               
+                    <apex:column headerValue="Account">
+                        <apex:facet name="header">
+                             <apex:commandLink value="Account" action="{!getContacts}" reRender="blk, msg">
+                                   <apex:param name="sortField" value="Account.Name" assignTo="{!sortField}"/>
+                                   <apex:image value="{!IF(sortField = "Account.Name", IF(sortDir="asc", '/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif'),'/s.gif')}"/>
+                              </apex:commandLink>
+                            </apex:facet>  
+                           <apex:outputLink value="/{!cont.contact.Account.Id}" target="_blank">{!cont.contact.Account.Name}</apex:outputLink>                                                
+                    </apex:column>
+                    
+                     <apex:column headerValue="Contact Status">
+                       <apex:facet name="header">
+                             <apex:commandLink value="Contact Status" action="{!getContacts}" reRender="blk, msg">
+                                   <apex:param name="sortField" value="Status__c" assignTo="{!sortField}"/>
+                                   <apex:image value="{!IF(sortField = "Status__c", IF(sortDir="asc", '/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif'),'/s.gif')}"/>
+                              </apex:commandLink>
+                            </apex:facet>                     
+                      <apex:outputField value="{!cont.contact.Status__c}" />                           
+                    </apex:column> 
+                    
+                     <apex:column headerValue="Designated Contact">
+                         <apex:facet name="header">
+                             <apex:commandLink value="Designated Contact" action="{!getContacts}" reRender="blk, msg">
+                                   <apex:param name="sortField" value="Designated_Contact__c" assignTo="{!sortField}"/>
+                                   <apex:image value="{!IF(sortField = "Designated_Contact__c", IF(sortDir="asc", '/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif'),'/s.gif')}"/>
+                              </apex:commandLink>
+                            </apex:facet>          
+                        <apex:outputText value="{!cont.contact.Designated_Contact__c}" />                        
+                    </apex:column> 
+                    
+                 <apex:column headerValue="R/O SA Count">
+                         <apex:facet name="header">
+                             <apex:commandLink value="R/O SA Count" action="{!getContacts}" reRender="blk, msg">
+                                   <apex:param name="sortField" value="Read_Only_Total_SA_Records__c" assignTo="{!sortField}"/>
+                                   <apex:image value="{!IF(sortField = "Read_Only_Total_SA_Records__c", IF(sortDir="asc", '/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif'),'/s.gif')}"/>
+                              </apex:commandLink>
+                            </apex:facet>          
+                        <apex:outputText value="{!(cont.contact.Read_Only_Total_SA_Records__c)}" />                        
+                    </apex:column> 
+              
+                 <apex:column headerValue="Web Enabled">
+                         <apex:facet name="header">
+                             <apex:commandLink value="Web Enabled" action="{!getContacts}" reRender="blk, msg">
+                                   <apex:param name="sortField" value="isWebEnabled" assignTo="{!sortField}"/>
+                                   <apex:image value="{!IF(sortField="isWebEnabled", IF(sortDir="asc", '/img/sort_asc_arrow.gif','/img/sort_desc_arrow.gif'),'/s.gif')}"/>
+                              </apex:commandLink>
+                            </apex:facet>                     
+                      <apex:outputText value="{!cont.isWebEnabled}" />                        
+               </apex:column>
+                        
+               <apex:column headerValue="Last Login">
+                      <apex:outputText value="{0,date, MM'/'dd'/'yyyy HH:mm z}">
+                          <apex:param value="{!cont.lastLogin}" /> 
+                      </apex:outputText>
+               </apex:column>
+                    
+               <apex:column headerValue="Username">                 
+                        <apex:outputLink value="/{!cont.usrId}" target="_blank">{!cont.username}</apex:outputLink>
+               </apex:column>
+                                                     
+            </apex:pageBlockTable>
+          
+         </apex:pageBlock>
+
+</apex:form>
+</apex:page>

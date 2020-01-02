@@ -1,0 +1,124 @@
+<apex:component controller="GCRVFEmailRelatedListsController" access="global" allowDML="true">
+	<apex:attribute name="legalRequestId" description="GCR Id." type="Id" assignTo="{!gcrId}" />
+	<apex:attribute name="documentApprovalId" description="Approval History Document Id" type="Id" assignTo="{!approvalDocumentId}" />
+	
+		<table style="width:100%;border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+			<tr>
+				<td colspan="2" style="background-color:#70AAC6;color:#FFFFFF;width:100%;text-align:left;">
+					Action
+				</td>
+			</tr>
+			<tr>	
+				<td>		
+					<apex:outputLabel value="No records to display" rendered="{!NOT(showNotes)}"/>		
+			    	<apex:dataTable value="{!notes}" var="eachNote" rendered="{!showNotes}" style="border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+			        	<apex:column value="{!eachNote.title}"/>
+			            <apex:column value="{!eachNote.body}"/>
+			            <apex:column value="{!eachNote.createddate}"/>
+			        </apex:dataTable>
+		        </td>
+		    </tr>
+		</table>
+		<table style="width:100%;border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+			<tr>
+				<td colspan="2" style="background-color:#70AAC6;color:#FFFFFF;width:100%;text-align:left;">
+					Documents
+				</td>
+			</tr>
+			<tr>	
+				<td>		
+					<apex:outputLabel value="No records to display" rendered="{!NOT(showAttachments)}"/>		
+			    	<apex:dataTable value="{!documents}" var="eachAtt" rendered="{!showAttachments}" style="border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+                    	<apex:column headerValue="Title">
+                        	<apex:outputLink value="{!currentOrgURL}/{!eachAtt.att.id}" target="_blank"> {!eachAtt.att.Name} </apex:outputLink>
+                        </apex:column>
+                        <apex:column value="{!eachAtt.att.CreatedBy.Name}" headerValue="Created By"/>
+                        <apex:column headerValue="Created Date">
+                        	<apex:outputText value="{0,date,MM/dd/yyyy HH:mm:ss }">
+                            	<apex:param value="{!eachAtt.att.CreatedDate}" />
+                            </apex:outputText>                              
+                        </apex:column>
+                        <apex:column headerValue="Signed Document?">
+                        	<apex:outputLabel value="Yes" rendered="{!eachAtt.isFinal}" />
+                        	<apex:outputLabel value="No" rendered="{!NOT(eachAtt.isFinal)}" />
+                        </apex:column>
+                     </apex:dataTable>
+		        </td>
+		    </tr>
+		</table>
+		<table style="width:100%;border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+			<tr>
+				<td colspan="2" style="background-color:#70AAC6;color:#FFFFFF;width:100%;">
+					Docusign Status
+				</td>
+			</tr>
+			<tr>	
+				<td>		
+					<apex:outputLabel value="No records to display" rendered="{!NOT(showDocStatus)}" />		
+			    	<apex:dataTable value="{!docusignRecpDisplay}" var="docusign" rendered="{!showDocStatus}" style="border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+	                 	<apex:column styleclass="inBorder">
+	                        <apex:facet name="header">Recipient Email</apex:facet>
+	                        <apex:outputText value="{!docusign.dsfs__DocuSign_Recipient_Email__c }"/>
+	                    </apex:column>  
+	                    <apex:column styleclass="inBorder">
+	                        <apex:facet name="header">Date Sent</apex:facet>
+	                        <apex:outputText value="{0,date,MM/dd/yyyy}">
+                          		<apex:param value="{!docusign.dsfs__Date_Sent__c}" />
+                            </apex:outputText>  
+	                    </apex:column>  
+						<apex:column styleclass="inBorder">
+	                        <apex:facet name="header">Date Delivered</apex:facet>
+	                        <apex:outputText value="{0,date,MM/dd/yyyy}">
+                          		<apex:param value="{!docusign.dsfs__Date_Delivered__c}" />
+                            </apex:outputText>
+	                    </apex:column>  
+						<apex:column styleclass="inBorder">
+	                        <apex:facet name="header">Recipient Status</apex:facet>
+	                        <apex:outputText value="{!docusign.dsfs__Recipient_Status__c}"/>
+	                    </apex:column>  
+						<apex:column styleclass="inBorder">
+	                        <apex:facet name="header">Recipient Status</apex:facet>	                        
+	                        <apex:outputText value="{0,date,MM/dd/yyyy}">
+                          		<apex:param value="{!docusign.dsfs__Date_Signed__c}" />
+                            </apex:outputText>  	                        
+	                    </apex:column>                
+                    </apex:dataTable>		
+		        </td>
+		    </tr>
+		</table>		
+		<apex:outputPanel rendered="{!AND(approvalDocumentId != null, approvalDocumentId != '')}">		
+			<table style="width:100%;border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+				<tr>
+					<td colspan="2" style="background-color:#70AAC6;color:#FFFFFF;width:100%;">
+						Approval History
+					</td>
+				</tr>
+				<tr>
+					<td>		
+						<apex:outputLabel value="No records to display" rendered="{!NOT(showApprovalHistory)}"/>
+				        <apex:outputPanel rendered="{!showApprovalHistory}">        	
+				            <apex:dataTable value="{!approvals}" var="eachRecord" style="border-width:0px;padding:5px;font-family:arial;font-size:9pt;text-align:left;">
+				                <apex:column headerValue="Submitted Date" styleClass="{!eachRecord.styleClass}" style="{!eachRecord.style}">
+				                    <apex:outputText value="{!eachRecord.submittedDate}" />                    	
+				                </apex:column>
+				                <apex:column headerValue="Status" styleClass="{!eachRecord.styleClass}" style="{!eachRecord.style}">
+				                    <span class="{!eachRecord.statusClass}">
+				                        {!eachRecord.approvalRecord.Status__c}
+				                    </span>
+				                </apex:column>
+				                <apex:column headerValue="Approved/Reject Date" styleClass="{!eachRecord.styleClass}" style="{!eachRecord.style}">
+				                    <apex:outputText value="{!eachRecord.approvalRejectDate}" />
+				                </apex:column>
+				                <apex:column headerValue="Assigned To" styleClass="{!eachRecord.styleClass}"  style="{!eachRecord.style}">
+				                    {!eachRecord.approvalRecord.Owner.Name}				                    
+				                </apex:column>
+				                <apex:column headerValue="Comments" styleClass="{!eachRecord.styleClass}" rendered="{!NOT(eachRecord.rowType == 'submissionDetail')}"  style="{!eachRecord.style}">
+				                    {!eachRecord.approvalRecord.Comments__c}
+				                </apex:column>
+				            </apex:dataTable>
+				        </apex:outputPanel>	
+			        </td>
+			    </tr>
+			</table>
+		</apex:outputPanel>		
+</apex:component>

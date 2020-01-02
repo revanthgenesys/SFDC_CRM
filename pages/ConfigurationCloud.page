@@ -1,0 +1,1675 @@
+<apex:page title="Quote : {!objQuote.Name}" controller="ConfigurationCloudController" tabStyle="BigMachines__Quote__c" sidebar="false" showHeader="false" id="pg" >
+    <apex:stylesheet value="{!$Resource.QuotingToolStyles}"/>
+    <!-- Use cases -->
+    <link rel="stylesheet" href="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.treeview.css')}"/>
+    <script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.js')}" type="text/javascript"></script>     
+    <script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.cookie.js')}" type="text/javascript"></script>
+    <script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.treeview.js')}" type="text/javascript"></script>
+    <!-- Use cases Ends -->
+        <style>
+        li .dropbtn {
+            display: inline-block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            min-width: 150px;
+            text-decoration: none;
+        }
+    li.dropdown {
+        display: inline-block;
+    }
+    
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #f9f9f9;
+        min-width: 200px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+    }
+    
+    .dropdown-content a {
+        color: blue;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        text-align: left;
+    }
+    
+    .dropdown-content a:hover {background-color: #f1f1f1}
+    
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+                               </style>
+                               <table style="width:100%">
+                                   <tr>
+                                   <td style="width:300px;">
+                                       <apex:sectionHeader title="Product Configuration - Add Products" subtitle="{!objQuote.Name}"/>
+                                           </td>
+                                       <td style="font-size:13pt;">
+                                           <b></b>
+                                       </td>
+                                       </tr>
+                                       </table>
+                                       <hr/>
+                                           <apex:pageMessage severity="info" strength="2" rendered="{!NOT(blnIsQuoteUnLocked)}">
+                                               Quote is Locked so no new products can be added to the quote.
+                                               </apex:pageMessage>
+                                               <apex:pageMessage severity="error" strength="2" rendered="{!blnIsQuoteUnLocked && ISBLANK(objQuote.New_Price_Book__c)}">
+                                                   Pricebook not available on quote. Please check 'Sold To' on the quote.
+                                                   </apex:pageMessage>
+                                                   
+                                                   <apex:form rendered="{!blnIsQuoteUnLocked && NOT(ISBLANK(objQuote.New_Price_Book__c))}" id="frm">
+                                                       <a name="top"/>
+                                                           <table width="100%">
+                                                               <tr>
+                                                               <td>                    
+                                                               <div style="width:80%;color:blue;font-size:9pt;">
+                                                                   <b>Please pick one of the Categories listed below to add your products or click All Categories to list all products.<br/>Tip: Click ctrl+F and type name of product to search.</b>            
+                                                                   </div>
+                                                                   </td>
+                                                                   <td style="text-align:right;">                    
+                                                                       <apex:outputLink value="https://intranet.genesys.com/display/GPGW/Genesys+Pricing+Guide" target="_blank">
+                                                                           Pricing Guide Wiki
+                                                                           </apex:outputLink>&nbsp;&nbsp;&nbsp;
+                                                                           <apex:outputLink value="https://genesys.my.salesforce.com/sfc/#search?searchPageNum=0&searchCreatorIds=%5B%22005U0000000gZzA%22%5D&shepherdToken=RkgtDcdzqMhUhxHsKAPG9pw0KXQ4MKcSGX5m_nLo3ibNTm13RF09D95Jvy__PG1d6NaHactTMhiZES8OiV4.7m5Gf7dDUbSY8YkE6QrINGztxItwIaJ6rW.T.SxYBwZN9pdCeNZle3tQybXIJNs9CkwG85U%3D&searchExtensions=%5B%5D&searchWorkspaceIds=%5B%5D&searchLanguageFilters=%5B%5D&searchTags=%5B%5D&resultsListType=s&searchRefreshFacets=false" target="_blank">
+                                                                               Pricing Documents
+                                                                               </apex:outputLink>
+                                                                               </td>
+                                                                               <td >
+                                                                                   </td>
+                                                                               </tr>     
+                                                                               <tr>
+                                                                                   <td valign="top" width="65%">
+                                                                                       <apex:toolbar id="theToolbar" height="40px" styleClass="toolBarClass">
+                                                                                           
+                                                                                           <apex:toolbarGroup styleClass="{!IF(strMainOption = 'All Products','toolBarOption','')}">
+                                                                                               <apex:commandLink value="All Products" action="{!allProductsOptionHandler}" reRender="leftSection,theToolbar"
+                                                                                               immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                               rendered="{!strMainOption != 'All Products'}"/>
+                                                                                                   <apex:outputText value="All Products" styleClass="toolBarText" rendered="{!strMainOption = 'All Products'}"/>
+                                                                                                       </apex:toolbarGroup>
+                                                                                                   
+                                                                                                   <apex:toolbarGroup styleClass="{!IF(strMainOption = 'Product Search','toolBarOption','')}">
+                                                                                                       <apex:commandLink value="Product Search" action="{!productSearchOptionHandler}" reRender="leftSection,theToolbar" 
+                                                                                                       immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                                       rendered="{!strMainOption != 'Product Search'}"/>
+                                                                                                           <apex:outputText value="Product Search" styleClass="toolBarText" rendered="{!strMainOption = 'Product Search'}"/>
+                                                                                                               </apex:toolbarGroup>
+                                                                                                           
+                                                                                                           <apex:toolbarGroup styleClass="{!IF(strMainOption = 'Guided Selling','toolBarOption','')}">
+                                                                                                               <apex:commandLink value="Guided Selling" action="{!guidedSellingOptionHandler}" reRender="leftSection,theToolbar"
+                                                                                                               immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                                               rendered="{!strMainOption != 'Guided Selling'}"/>
+                                                                                                                   <apex:outputText value="Guided Selling" styleClass="toolBarText" rendered="{!strMainOption = 'Guided Selling'}"/>
+                                                                                                                       </apex:toolbarGroup>
+                                                                                                                   
+                                                                                                                   <!--<apex:toolbarGroup styleClass="{!IF(strMainOption = 'Campaigns','toolBarOption','')}">
+                                                                                                                       <apex:commandLink value="Dynamic Bundles" action="{!CampaignsOptionHandler}" reRender="leftSection,theToolbar" 
+                                                                                                                       immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                                                       rendered="{!strMainOption != 'Campaigns'}"/>
+                                                                                                                           <apex:outputText value="Dynamic Bundles" styleClass="toolBarText" rendered="{!strMainOption = 'Campaigns'}"/>
+                                                                                                                               </apex:toolbarGroup>
+                                                                                                                           
+                                                                                                                           <apex:toolbarGroup styleClass="{!IF(strMainOption = 'Bundles','toolBarOption','')}" rendered="{!blnIsNewPricing}">
+                                                                                                                               <apex:commandLink value="Bundles" action="{!bundleOptionHandler}" reRender="leftSection,theToolbar" 
+                                                                                                                               immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                                                               rendered="{!strMainOption != 'Bundles'}"/>
+                                                                                                                                   <apex:outputText value="Bundles" styleClass="toolBarText" rendered="{!strMainOption = 'Bundles'}"/>
+                                                                                                                                       </apex:toolbarGroup>
+                                                                                                                                   rendered="{!blnIsNewPricing  && (objQuote.Does_customer_currently_have_PureSuccess__c || objQuote.Keep_the_existing_estate_on_Perpetual__c || objQuote.BigMachines__Opportunity__r.Type == 'New logo' || objQuote.BigMachines__Opportunity__r.Cloud_Renewal__c)}"
+                                                                                                                                   -->
+                                                                                                                                       <apex:toolbarGroup styleClass="{!IF(strMainOption = 'PureSuccess','toolBarOption','')}">
+                                                                                                                                           <apex:commandLink value="PureSuccess" action="{!pureSuccessOptionHandler}" reRender="leftSection,theToolbar" 
+                                                                                                                                           immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                                                                           rendered="{!strMainOption != 'PureSuccess'}"/>
+                                                                                                                                               <apex:outputText value="PureSuccess" styleClass="toolBarText" rendered="{!strMainOption = 'PureSuccess'}"/>
+                                                                                                                                                   </apex:toolbarGroup> 
+                                                                                                                                               
+                                                                                                                                               <!--Anju Dec 18 usecases -->
+                                                                                                                                                   <apex:toolbarGroup styleClass="{!IF(strMainOption = 'Use Cases','toolBarOption','')}" rendered="{!blnIsNewPricing}">
+                                                                                                                                                       <apex:commandLink value="Use Cases" action="{!useCaseOptionHandler}"  
+                                                                                                                                                       immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                                                                                       rendered="{!strMainOption != 'Use Cases'}"/>
+                                                                                                                                                           <apex:outputText value="Use Cases" styleClass="toolBarText" rendered="{!strMainOption = 'Use Cases'}"/>
+                                                                                                                                                               </apex:toolbarGroup>
+                                                                                                                                                           <!--Anju Dec 18 usecases ends-->
+                                                                                                                                                               
+                                                                                                                                                               <apex:toolbarGroup styleClass="{!IF(strMainOption = 'Favourites','toolBarOption','')}">
+                                                                                                                                                                   <apex:commandLink value="Favorites" action="{!favouritesOptionHandler}" reRender="leftSection,theToolbar" 
+                                                                                                                                                                   immediate="true" status="status" styleClass="toolBarLink" style="text-decoration: none;"
+                                                                                                                                                                   rendered="{!strMainOption != 'Favourites'}"/>
+                                                                                                                                                                       <apex:outputText value="Favorites" styleClass="toolBarText" rendered="{!strMainOption = 'Favourites'}"/>
+                                                                                                                                                                           </apex:toolbarGroup>
+                                                                                                                                                                       
+                                                                                                                                                                       </apex:toolbar>
+                                                                                                                                                                       <br/>
+                                                                                                                                                                           <apex:outputPanel id="leftSection">
+                                                                                                                                                                               
+                                                                                                                                                                               <apex:outputPanel id="GSPanel" rendered="{!strMainOption = 'Guided Selling'}">
+                                                                                                                                                                                   <ul>
+                                                                                                                                                                                   <apex:repeat value="{!list_GuidedSellingFlows}" var="objGSFlow">
+                                                                                                                                                                                       <li class="dropdown" style="text-decoration: none;background-color:{!IF(objGSFlow.Name == objCurrentGSFlowStep.Guided_Selling_Flow__r.Name,'#3CB371','#98bf21')};">
+                                                                                                                                                                                           <a href="javascript:void(0)" class="dropbtn" style="text-decoration: none;font-size:150%">{!objGSFlow.Name}</a>
+                                                                                                                                                                                           <div class="dropdown-content">
+                                                                                                                                                                                               <apex:repeat value="{!objGSFlow.Guided_Selling_Flow_Steps__r}" var="objGSFlowStep">
+                                                                                                                                                                                                   <apex:commandLink value="Step {!objGSFlowStep.Order__c} : {!objGSFlowStep.Title__c}" style="text-decoration: none;" action="{!showGSFlowStepProducts}" status="status" reRender="GSPanel">
+                                                                                                                                                                                                       <apex:param value="{!objGSFlowStep.Id}" name="flowStepId" assignTo="{!idFlowStepSelected}" ></apex:param>
+                                                                                                                                                                                                       </apex:commandLink>
+                                                                                                                                                                                                       </apex:repeat>
+                                                                                                                                                                                                       </div>
+                                                                                                                                                                                                       </li>
+                                                                                                                                                                                                       </apex:repeat>
+                                                                                                                                                                                                       </ul>
+                                                                                                                                                                                                       <apex:outputPanel id="GSFlowStepPanel">
+                                                                                                                                                                                                           <br/>
+                                                                                                                                                                                                           <div align="right">
+                                                                                                                                                                                                               <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addProductsFromSearch}" status="status" reRender="msgs,PABlock,flowStep" rendered="{!list_SearchProducts.size > 0}"/> 
+                                                                                                                                                                                                                   </div>
+                                                                                                                                                                                                               <br/>
+                                                                                                                                                                                                                   <apex:pageblock id="flowStep" title="{!objCurrentGSFlowStep.Guided_Selling_Flow__r.Name}" rendered="{!list_SearchProducts.size > 0}">
+                                                                                                                                                                                                                       <apex:pageBlockButtons >
+                                                                                                                                                                                                                           <b>Total Records : {!intTotalNoOfRecords}&nbsp;&nbsp;</b>
+                                                                                                                                                                                                                           <apex:commandLink action="{!first}" rendered="{!HasPrevious}" style="text-decoration:none" status="status" reRender="flowStep">
+                                                                                                                                                                                                                               First
+                                                                                                                                                                                                                           </apex:commandLink>
+                                                                                                                                                                                                                           <apex:outputText value="First" rendered="{!NOT(HasPrevious)}" style="color:gray"/>
+                                                                                                                                                                                                                               &nbsp;
+                               <apex:commandLink action="{!previous}" rendered="{!HasPrevious}" style="text-decoration:none" status="status" reRender="flowStep">
+                                   <apex:image url="/img/search_prevarrow.gif" title="Previous" styleClass="prevArrow"/>
+                                       &nbsp;
+                               Previous
+                               </apex:commandLink>
+                               <apex:outputPanel rendered="{!NOT(HasPrevious)}" style="color:gray">
+                                   <apex:image url="/img/search_prevarrow_disabled.gif"/>
+                                       &nbsp;
+                               Previous
+                               </apex:outputPanel>
+                               &nbsp;
+                               ({!PageNumStr})
+                               &nbsp;
+                               <apex:commandLink action="{!next}" rendered="{!HasNext}" style="text-decoration:none" status="status" reRender="flowStep">
+                                   Next
+                               &nbsp;
+                               <apex:image url="/img/search_nextarrow.gif" title="Next" styleClass="nextArrow"/>
+                                   </apex:commandLink>
+                               <apex:outputPanel rendered="{!NOT(HasNext)}" style="color:gray">
+                                   Next
+                               &nbsp;
+                               <apex:image url="/img/search_nextarrow_disabled.gif"/>
+                                   </apex:outputPanel>
+                               &nbsp;
+                               <apex:commandLink action="{!last}" title="Last" rendered="{!HasNext}" style="text-decoration:none" status="status" reRender="flowStep">
+                                   Last
+                               </apex:commandLink>
+                               <apex:outputText value="Last" rendered="{!NOT(HasNext)}" style="color:gray"/>
+                                   <apex:outputPanel style="Float:right;">
+                                       <apex:commandButton style="width:90px" value="Previous Step" action="{!previousFlowStepBtnHandler}" status="status" reRender="flowStep" disabled="{!objCurrentGSFlowStep.Order__c == 1}"/>
+                                           &nbsp;&nbsp;
+                               <apex:commandButton style="width:90px" value="Next Step" action="{!nextFlowStepBtnHandler}" status="status" reRender="flowStep" disabled="{!objCurrentGSFlowStep.Order__c == objCurrentGSFlowStep.Guided_Selling_Flow__r.Number_of_Steps__c}"/>
+                                   </apex:outputPanel>
+                               </apex:pageBlockButtons>
+                               
+                               <apex:pageBlockSection title="(Step {!objCurrentGSFlowStep.Order__c} of {!objCurrentGSFlowStep.Guided_Selling_Flow__r.Number_of_Steps__c}) : {!objCurrentGSFlowStep.Title__c}" collapsible="false"/>
+                                   <apex:pageBlockTable value="{!list_SearchProducts}" var="objSearchProd">
+                                       <apex:column headerValue="Product">
+                                           <apex:facet name="header">
+                                               <apex:commandLink action="{!changeSorting}" value="Product{!IF(strSortField=='Name',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="flowStep">
+                                                   <apex:param value="Name" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                                   </apex:commandLink>
+                                                   </apex:facet>
+                                                   <apex:outputText value="{!objSearchProd.Name}"/><br/>
+                                                       (<apex:outputText value="{!objSearchProd.APN_Number__c}"/>)
+                                                   <span style="color:red;font-weight:bold;"><sup>{!objSearchProd.Show_New__c}</sup></span>
+                                                       </apex:column>
+                                                   <apex:column headerValue="Taxonomy Solution">
+                                                       <apex:facet name="header">
+                                                           <apex:commandLink action="{!changeSorting}" value="Taxonomy Solution{!IF(strSortField=='Taxonomy_Solution__c',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="flowStep">
+                                                               <apex:param value="Taxonomy_Solution__c" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                                               </apex:commandLink>
+                                                               </apex:facet>
+                                                               <apex:outputField value="{!objSearchProd.Taxonomy_Solution__c}"/>
+                                                                   </apex:column>
+                                                               <apex:column headerValue="Sub Category">
+                                                                   <apex:facet name="header">
+                                                                       <apex:commandLink action="{!changeSorting}" value="Sub Category{!IF(strSortField=='Sub_Category__c',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="flowStep">
+                                                                           <apex:param value="Sub_Category__c" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                                                           </apex:commandLink>
+                                                                           </apex:facet>
+                                                                           <apex:outputField value="{!objSearchProd.Sub_Category__c}"/>
+                                                                               </apex:column>
+                                                                           <apex:column headerValue="Supp Info">
+                                                                               <apex:facet name="header">Supp<br/>Info</apex:facet>
+                                                                               <apex:actionRegion >
+                                                                                   <apex:commandLink value="View" action="{!showProductInfo}" status="status" reRender="popPanel">
+                                                                                       <apex:param name="strProductIdForInfo" assignTo="{!strProductIdForInfo}" value="{!objSearchProd.Id}" />
+                                                                                           </apex:commandLink>
+                                                                                       </apex:actionRegion>
+                                                                                       </apex:column>
+                                                                                       <apex:column headerValue="Quantity">
+                                                                                           <apex:selectList value="{!objSearchProd.Product_Name__c}" size="1" rendered="{!NOT(ISBLANK(objSearchProd.Quantities_Available__c))}">
+                                                                                               <apex:selectOption itemLabel="" itemValue=""/>
+                                                                                                   <apex:selectOptions value="{!map_QuantitiesToSelectOptions[objSearchProd.Quantities_Available__c]}"/>
+                                                                                                       </apex:selectList>
+                                                                                                   <apex:inputField value="{!objSearchProd.Quantity__c}" style="width:45px;" rendered="{!ISBLANK(objSearchProd.Quantities_Available__c)}"/>
+                                                                                                       </apex:column>
+                                                                                                   <apex:column headerValue="Unit of Measure">
+                                                                                                       <apex:facet name="header">
+                                                                                                           <apex:commandLink action="{!changeSorting}" value="Unit of Measure{!IF(strSortField=='Unit_of_Measure__c',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="flowStep">
+                                                                                                               <apex:param value="Unit_of_Measure__c" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                                                                                               </apex:commandLink>
+                                                                                                               </apex:facet>
+                                                                                                               <apex:outputField value="{!objSearchProd.Unit_of_Measure__c}"/>
+                                                                                                                   </apex:column>
+                                                                                                               <apex:column headerValue="Price" rendered="{!strPricebookFieldName != ''}">
+                                                                                                                   <!--Mukunth modified/added below code for 6 digit project on 04-APR-2019-->
+                                                                                                                       <!--<apex:outputField value="{!objSearchProd[strPricebookFieldName]}"/>-->
+                                                                                                                       <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!objSearchProd.Tier_Pricing_Decimal_Precision__c == null || objSearchProd.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                                                                                                       <apex:param value="{!objSearchProd[strPricebookFieldName]}"/>
+                                                                                                                       </apex:outputText>
+                                                                                                                       <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!objSearchProd.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                                                                                                       <apex:param value="{!objSearchProd[strPricebookFieldName]}"/>
+                                                                                                                       </apex:outputText>
+                                                                                                                       <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!objSearchProd.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                                                                                                       <apex:param value="{!objSearchProd[strPricebookFieldName]}"/>
+                                                                                                                       </apex:outputText>
+                                                                                                                       <!--Mukunth end-->
+                                                                                                                       </apex:column>
+                                                                                                                       </apex:pageBlockTable>
+                                                                                                                       </apex:pageblock>
+                                                                                                                       <div align="right">
+                                                                                                                       <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addProductsFromSearch}" status="status" reRender="msgs,PABlock,flowStep" rendered="{!list_SearchProducts.size > 0}"/> 
+                                                                                                                       </div>
+                                                                                                                       </apex:outputPanel>
+                                                                                                                       </apex:outputPanel>
+                                                                                                                       
+                                                                                                                       <apex:outputPanel rendered="{!strMainOption = 'Favourites'}">
+                                                                                                                       <div align="right">
+                                                                                                                       <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addFavoritesBtnHandler}" status="status" reRender="msgs,PABlock,favouritesBlock"/>  
+                                                                                                                       </div>
+                                                                                                                       <br/>
+                                                                                                                       <apex:pageblock id="favouritesBlock" title="Favorites">
+                                                                                                                       <table class="list " border="0" cellpadding="0" cellspacing="0">
+                                                                                                                       <thead>
+                                                                                                                       <tr class="headerRow">
+                                                                                                                       <th class="headerRow">Select</th>
+                                                                                                                       <th class="headerRow">Action</th>
+                                                                                                                       <th class="headerRow">Name</th>
+                                                                                                                       <th class="headerRow">Show Details</th>
+                                                                                                                       </tr>
+                                                                                                                       </thead>
+                                                                                                                       <tbody>
+                                                                                                                       <apex:repeat value="{!list_Favourites}" var="objFavWrapper">
+                                                                                                                       <tr class="dataRow">
+                                                                                                                       <td class="dataCell">
+                                                                                                                       <apex:inputCheckBox value="{!objFavWrapper.blnIsSelected}"/>
+                                                                                                                       </td>
+                                                                                                                       <td class="dataCell">
+                                                                                                                       <apex:commandlink action="{!deleteFavorite}" title="Delete Favorite" reRender="favouritesBlock" status="status">
+                                                                                                                       <apex:param name="strFavId" assignTo="{!strFavId}" value="{!objFavWrapper.objFavorite.Id}"/>
+                                                                                                                       <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons, '/Icons/trash.png')}"/>   
+                                                                                                                       </apex:commandlink>
+                                                                                                                       </td>
+                                                                                                                       <td class="dataCell">
+                                                                                                                   {!objFavWrapper.objFavorite.Name}
+                                                                                                                       </td>
+                                                                                                                       <td class="dataCell">
+                                                                                                                       <apex:commandLink styleClass="{!IF(objFavWrapper.blnShowItems,'btn','btnSharing')}" 
+                                                                                                                       value="{!IF(objFavWrapper.blnShowItems,'Hide Items','Show Items')}" 
+                                                                                                                       action="{!showHideFavoriteItems}" status="itemsDisplayStatus" reRender="favouritesBlock"
+                                                                                                                       style="text-decoration: none;">
+                                                                                                                       <apex:param name="strFavId" assignTo="{!strFavId}" value="{!objFavWrapper.objFavorite.Id}"/>
+                                                                                                                       </apex:commandLink>
+                                                                                                                       <apex:actionStatus id="itemsDisplayStatus">
+                                                                                                                       <apex:facet name="start">
+                                                                                                                       <apex:image value="/img/loading.gif"/>
+                                                                                                                       </apex:facet> 
+                                                                                                                       </apex:actionStatus>
+                                                                                                                       </td>
+                                                                                                                       </tr>
+                                                                                                                       <apex:outputPanel layout="none" rendered="{!objFavWrapper.blnShowItems}">
+                                                                                                                       <tr>
+                                                                                                                       <td colspan="100">
+                                                                                                                       <apex:outputPanel layout="none" rendered="{!objFavWrapper.list_Bundles.size > 0}" style="font-size:90%">
+                                                                                                                       <span style="position: relative; left:10%;">
+                                                                                                                       <b>Bundles</b>
+                                                                                                                       <apex:pageBlockTable value="{!objFavWrapper.list_Bundles}" var="objBundleItem" style="width:90%">
+                                                                                                                       <apex:column headerValue="Name">
+                                                                                                                       <apex:outputField value="{!objBundleItem.Bundle__c}"/>
+                                                                                                                       </apex:column>
+                                                                                                                       <apex:column headerValue="Type">
+                                                                                                                       <apex:outputField value="{!objBundleItem.Bundle__r.Type__c}"/>
+                                                                                                                       </apex:column>
+                                                                                                                       <apex:column headerValue="Bundle Discount">
+                                                                                                                       <apex:outputField value="{!objBundleItem.Bundle__r.Discount__c}"/>
+                                                                                                                       </apex:column>
+                                                                                                                       <apex:column headerValue="Quantity">
+                                                                                                                       <apex:outputField value="{!objBundleItem.Quantity__c}"/>
+                                                                                                                       </apex:column>
+                                                                                                                       </apex:pageBlockTable>
+                                                                                                                       </span>
+                                                                                                                       <br/>
+                                                                                                                       </apex:outputPanel>
+                                                                                                                       <apex:outputPanel layout="none" rendered="{!objFavWrapper.list_Products.size > 0}" style="font-size:90%">
+                                                                                                                       <span style="position: relative; left:10%;">
+                                                                                                                       <b>Products</b>
+                                                                                                                       <apex:pageBlockTable value="{!objFavWrapper.list_Products}" var="objProductItem" style="width:90%">
+                                                                                                                       <apex:column headerValue="Name">
+                                                                                                                       <apex:outputField value="{!objProductItem.Product__r.Description}"/><br/>
+                                                                                                                       (<apex:outputField value="{!objProductItem.Product__c}"/>)
+                                                                                                                       </apex:column>
+                                                                                                                       <apex:column headerValue="Unit of Measure">
+                                                                                                                           <apex:outputField value="{!objProductItem.Product__r.Unit_of_Measure__c}"/>
+                                                                                                                               </apex:column>
+                                                                                                                           <apex:column headerValue="Quantity">
+                                                                                                                               <apex:outputField value="{!objProductItem.Quantity__c}"/>
+                                                                                                                                   </apex:column>
+                                                                                                                               </apex:pageBlockTable>
+                                                                                                                               </span>
+                                                                                                                               </apex:outputPanel>
+                                                                                                                               </td>
+                                                                                                                               </tr>
+                                                                                                                               </apex:outputPanel>
+                                                                                                                               </apex:repeat>
+                                                                                                                               </tbody>
+                                                                                                                               </table>
+                                                                                                                               </apex:pageblock>
+                                                                                                                               </apex:outputPanel>
+                                                                                                                               
+                                                                                                                               <apex:outputPanel rendered="{!strMainOption = 'Product Search'}">
+                                                                                                                                   
+                                                                                                                                   <apex:pageblock title="Search Criteria">
+                                                                                                                                       <apex:pageBlockSection showHeader="false" columns="2">
+                                                                                                                                           <apex:pageBlockSectionItem >
+                                                                                                                                               <apex:outputLabel value="Product Name"/>
+                                                                                                                                                   <apex:inputText value="{!objSearchProduct.Name}"/>
+                                                                                                                                                       </apex:pageBlockSectionItem>
+                                                                                                                                                   <apex:pageBlockSectionItem >
+                                                                                                                                                       <apex:outputLabel value="Product Number"/>
+                                                                                                                                                           <apex:inputText value="{!objSearchProduct.APN_Number__c}"/>
+                                                                                                                                                               </apex:pageBlockSectionItem>
+                                                                                                                                                           <apex:inputField value="{!objSearchProduct.Taxonomy_Solution_Category__c}"/>
+                                                                                                                                                               <apex:inputField value="{!objSearchProduct.Taxonomy_Solution__c}"/>
+                                                                                                                                                                   <!--<apex:selectList value="{!objSearchProduct.Pricing_Model__c}" size="1">
+                                                                                                                                                                       <apex:selectOption itemLabel="Enabled" itemValue="Enabled"/>
+                                                                                                                                                                           <apex:selectOption itemLabel="Concurrent" itemValue="Concurrent"/>
+                                                                                                                                                                               </apex:selectList>-->
+                                                                                                                                                                           <apex:pageBlockSectionItem >
+                                                                                                                                                                               <apex:outputLabel value=""/>
+                                                                                                                                                                                   <apex:commandButton value="Search" action="{!searchBtnHandler}" styleClass="btnSharing" style="width:80px" status="status" reRender="resultsBlock"/>
+                                                                                                                                                                                       </apex:pageBlockSectionItem>
+                                                                                                                                                                                   </apex:pageBlockSection>
+                                                                                                                                                                                   </apex:pageblock>
+                                                                                                                                                                                   
+                                                                                                                                                                                   <div align="right">
+                                                                                                                                                                                       <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addProductsFromSearch}" status="status" reRender="msgs,PABlock,resultsBlock"/> 
+                                                                                                                                                                                           </div>
+                                                                                                                                                                                       <br/>
+                                                                                                                                                                                           <apex:pageblock title="Search Results" id="resultsBlock">
+                                                                                                                                                                                               <apex:pageBlockButtons >
+                                                                                                                                                                                                   <b>Total Records : {!intTotalNoOfRecords}&nbsp;&nbsp;</b>
+                                                                                                                                                                                                   <apex:commandLink action="{!first}" rendered="{!HasPrevious}" style="text-decoration:none" status="status" reRender="resultsBlock">
+                                                                                                                                                                                                       First
+                                                                                                                                                                                                   </apex:commandLink>
+                                                                                                                                                                                                   <apex:outputText value="First" rendered="{!NOT(HasPrevious)}" style="color:gray"/>
+                                                                                                                                                                                                       &nbsp;
+                               <apex:commandLink action="{!previous}" rendered="{!HasPrevious}" style="text-decoration:none" status="status" reRender="resultsBlock">
+                                   <apex:image url="/img/search_prevarrow.gif" title="Previous" styleClass="prevArrow"/>
+                                       &nbsp;
+                               Previous
+                               </apex:commandLink>
+                               <apex:outputPanel rendered="{!NOT(HasPrevious)}" style="color:gray">
+                                   <apex:image url="/img/search_prevarrow_disabled.gif"/>
+                                       &nbsp;
+                               Previous
+                               </apex:outputPanel>
+                               &nbsp;
+                               ({!PageNumStr})
+                               &nbsp;
+                               <apex:commandLink action="{!next}" rendered="{!HasNext}" style="text-decoration:none" status="status" reRender="resultsBlock">
+                                   Next
+                               &nbsp;
+                               <apex:image url="/img/search_nextarrow.gif" title="Next" styleClass="nextArrow"/>
+                                   </apex:commandLink>
+                               <apex:outputPanel rendered="{!NOT(HasNext)}" style="color:gray">
+                                   Next
+                               &nbsp;
+                               <apex:image url="/img/search_nextarrow_disabled.gif"/>
+                                   </apex:outputPanel>
+                               &nbsp;
+                               <apex:commandLink action="{!last}" title="Last" rendered="{!HasNext}" style="text-decoration:none" status="status" reRender="resultsBlock">
+                                   Last
+                               </apex:commandLink>
+                               <apex:outputText value="Last" rendered="{!NOT(HasNext)}" style="color:gray"/>
+                                   </apex:pageBlockButtons>
+                               <apex:pageBlockTable value="{!list_SearchProducts}" var="objSearchProd">
+                                   <apex:column headerValue="Product">
+                                       <apex:facet name="header">
+                                           <apex:commandLink action="{!changeSorting}" value="Product{!IF(strSortField=='Name',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="resultsBlock">
+                                               <apex:param value="Name" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                               </apex:commandLink>
+                                               </apex:facet>
+                                               <apex:outputText value="{!objSearchProd.Name}"/><br/>
+                                                   (<apex:outputText value="{!objSearchProd.APN_Number__c}"/>)
+                                               <span style="color:red;font-weight:bold;"><sup>{!objSearchProd.Show_New__c}</sup></span>
+                                                   </apex:column>
+                                               <apex:column headerValue="Concurrent">
+                                                   <apex:outputText value="{!objSearchProd.Is_Concurrent__c}"/>
+                                                       </apex:column>
+                                                   <apex:column headerValue="Taxonomy Solutions">
+                                                       <apex:facet name="header">
+                                                           <apex:commandLink action="{!changeSorting}" value="Taxonomy Solution{!IF(strSortField=='Taxonomy_Solution__c',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="resultsBlock">
+                                                               <apex:param value="Taxonomy_Solution__c" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                                               </apex:commandLink>
+                                                               </apex:facet>
+                                                               <apex:outputField value="{!objSearchProd.Taxonomy_Solution__c}"/>
+                                                                   </apex:column>
+                                                               <apex:column headerValue="Sub Category">
+                                                                   <apex:facet name="header">
+                                                                       <apex:commandLink action="{!changeSorting}" value="Sub Category{!IF(strSortField=='Sub_Category__c',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="resultsBlock">
+                                                                           <apex:param value="Sub_Category__c" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                                                           </apex:commandLink>
+                                                                           </apex:facet>
+                                                                           <apex:outputField value="{!objSearchProd.Sub_Category__c}"/>
+                                                                               </apex:column>
+                                                                           <apex:column headerValue="Supp Info">
+                                                                               <apex:facet name="header">Supp<br/>Info</apex:facet>
+                                                                               <apex:actionRegion >
+                                                                                   <apex:commandLink value="View" action="{!showProductInfo}" status="status" reRender="popPanel">
+                                                                                       <apex:param name="strProductIdForInfo" assignTo="{!strProductIdForInfo}" value="{!objSearchProd.Id}" />
+                                                                                           </apex:commandLink>
+                                                                                       </apex:actionRegion>
+                                                                                       </apex:column>
+                                                                                       <apex:column headerValue="Quantity">
+                                                                                           <apex:selectList value="{!objSearchProd.Product_Name__c}" size="1" rendered="{!NOT(ISBLANK(objSearchProd.Quantities_Available__c))}">
+                                                                                               <apex:selectOption itemLabel="" itemValue=""/>
+                                                                                                   <apex:selectOptions value="{!map_QuantitiesToSelectOptions[objSearchProd.Quantities_Available__c]}"/>
+                                                                                                       </apex:selectList>
+                                                                                                   <apex:inputField value="{!objSearchProd.Quantity__c}" style="width:45px;" rendered="{!ISBLANK(objSearchProd.Quantities_Available__c)}"/>
+                                                                                                       </apex:column>
+                                                                                                   <apex:column headerValue="Unit of Measure">
+                                                                                                       <apex:facet name="header">
+                                                                                                           <apex:commandLink action="{!changeSorting}" value="Unit of Measure{!IF(strSortField=='Unit_of_Measure__c',IF(strSortOrder='DESC','▼','▲'),'')}" status="status" reRender="resultsBlock">
+                                                                                                               <apex:param value="Unit_of_Measure__c" name="strSortField" assignTo="{!strSortFieldSelected}" ></apex:param>
+                                                                                                               </apex:commandLink>
+                                                                                                               </apex:facet>
+                                                                                                               <apex:outputField value="{!objSearchProd.Unit_of_Measure__c}"/>
+                                                                                                                   </apex:column>
+                                                                                                               <apex:column headerValue="Price" rendered="{!strPricebookFieldName != ''}">
+                                                                                                                   <!--Mukunth added/modified below code for 6 digit project-->
+                                                                                                                       <!--<apex:outputField value="{!objSearchProd[strPricebookFieldName]}"/>-->
+                                                                                                                       <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!objSearchProd.Tier_Pricing_Decimal_Precision__c == null || objSearchProd.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                                                                                                       <apex:param value="{!objSearchProd[strPricebookFieldName]}"/>
+                                                                                                                       </apex:outputText>
+                                                                                                                       <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!objSearchProd.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                                                                                                       <apex:param value="{!objSearchProd[strPricebookFieldName]}"/>
+                                                                                                                       </apex:outputText>
+                                                                                                                       <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!objSearchProd.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                                                                                                       <apex:param value="{!objSearchProd[strPricebookFieldName]}"/>
+                                                                                                                       </apex:outputText>
+                                                                                                                       <!--Mukunth code end-->
+                                                                                                                       </apex:column>
+                                                                                                                       </apex:pageBlockTable>
+                                                                                                                       </apex:pageblock>
+                                                                                                                       <div align="right">
+                                                                                                                       <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addProductsFromSearch}" status="status" reRender="msgs,PABlock,resultsBlock"/> 
+                                                                                                                       </div>
+                                                                                                                       </apex:outputPanel>
+                                                                                                                       
+                                                                                                                       <!--Anju Dec 18 usecases -->
+                                                                                                                       <apex:outputPanel rendered="{!strMainOption = 'Use Cases'}">
+                                                                                                                       <div align="right">
+                                                                                                                       <apex:commandButton value="Add to Quote" action="{!addUseCasesHandler}" status="status" reRender="msgs,PABlock,bundleBlock,bundleBlockuseCases" style="font-weight: bolder;" styleClass="slds-button slds-button--brand slds-button--small"/> 
+                                                                                                                       </div>
+                                                                                                                       <br/>
+                                                                                                                       <apex:pageblock id="bundleBlockuseCases" title="Use Cases">
+                                                                                                                       
+                                                                                                                       <script type="text/javascript">         
+                                                                                                                       $(function() {             
+                                                                                                                           $("#tree").treeview({                 
+                                                                                                                               collapsed: true,                 
+                                                                                                                               animated: "medium",                 
+                                                                                                                               control:"#sidetreecontrol",                 
+                                                                                                                               persist: "location"            
+                                                                                                                           });
+                                                                                                                       }) 
+                                                                                                                         </script>
+    <div id="sidetreecontrol">
+        <a href="?#"><font style="font-size: larger; color: black; font-weight: bold;">Collapse All</font></a> | <a href="?#"><font style="font-size: larger; color: black; font-weight: bold;">Expand All</font></a>
+    </div><br />     
+    <ul id="tree">
+        <apex:repeat value="{!list_PlayCategory}" var="key">
+            <li>
+                <font style="font-size: larger; color: black; font-weight: bold;">
+                    <apex:outputtext escape="false" value="{!key}" />
+                </font>                        
+                <ul>
+                    <li>
+                        
+                        <!--<apex:pageBlockTable style="width:80%;" value="{!map_PlayCategoryListPlayOffer[key]}" var="eachLine" rendered="{!key == 'Other/Use Cases'}">
+
+<apex:column headerValue="Select" style="{!eachLine.Type__c}; width:10%;">
+<apex:inputCheckbox style="vertical-align: middle;" value="{!eachLine.Selected__c}" rendered="{!eachLine.Category__c == null}" />
+</apex:column>
+<apex:column headerValue="Name" style="{!eachLine.Type__c};width:20%;">
+<b>
+<apex:outputText value="{!eachLine.Category__c}" rendered="{!eachLine.Category__c != null}" />
+</b>
+<apex:outputLink onclick="window.open('../apex/ShowBundleproducts?pgId={!eachLine.id}','Window1','menubar=no,width=430,height=360,toolbar=no');return false;" rendered="{!eachLine.Category__c == null}">
+<apex:outputField value="{!eachLine.Name}" />
+</apex:outputLink>
+</apex:column>
+<apex:column headerValue="Description" style="{!eachLine.Type__c};width:70%;">
+<apex:outputField value="{!eachLine.Description__c}" />
+</apex:column>
+</apex:pageBlockTable> -->
+                        
+                        
+                        <apex:pageBlockTable style="width:80%;" value="{!map_PlayCategoryListPlayOffer[key]}" var="eachLine">
+                            
+                            <apex:column headerValue="Select" style="{!eachLine.Type__c}; width:10%;">
+                                <!--   <apex:inputCheckbox style="vertical-align: middle;" value="{!eachLine.Selected__c}" />-->
+                                <apex:inputCheckbox style="vertical-align: middle;" value="{!map_SelectedBundle[key+eachLine.Id]}" />                                                        </apex:column>
+                            <apex:column headerValue="Name" style="{!eachLine.Type__c};width:20%;">
+                                <apex:outputLink onclick="window.open('../apex/ShowBundleproducts?pgId={!eachLine.id}','Window1','menubar=no,width=430,height=360,toolbar=no');return false;">
+                                    <apex:outputField value="{!eachLine.Name}" />
+                                </apex:outputLink>
+                            </apex:column>
+                            <apex:column headerValue="Description" style="{!eachLine.Type__c};width:70%;">
+                                <apex:outputField value="{!eachLine.Description__c}" />
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </li>
+                </ul>
+            </li>
+        </apex:repeat>
+    </ul>
+    <!--    
+<apex:repeat value="{!list_UseCases}" var="strBundleType">
+<apex:variable value="{!0}" var="rowNumLevel1"/>
+<apex:repeat value="{!map_BundleTypeToBundles[strBundleType]}" var="objProductUseCase">
+<apex:variable value="{!1}" var="rowNumLevel1"/>
+<tr class="dataRow" style="{!objProductUseCase.Type__c}">
+<td>
+<apex:inputField value="{!objProductUseCase.Selected__c}" rendered="{!objProductUseCase.Category__c == null}" />
+</td>
+<td class="dataCell">
+<b>{!objProductUseCase.Name}</b>
+</td>
+<td class="dataCell">
+{!objProductUseCase.Description__c}
+</td>                                                
+<td class="dataCell">
+<apex:commandLink rendered="{!objProductUseCase.Category__c == null}" value="{!IF(map_BundleIdToShowProductsChoice[objProductUseCase.Id],'Hide Products','Show Products')}" 
+action="{!showHideProducts}" status="prodDisplayStatus" reRender="bundleBlock,bundleBlockuseCases">
+<apex:param name="strGroupId" assignTo="{!strGroupId}" value="{!objProductUseCase.Id}" />
+</apex:commandLink>
+&nbsp;
+<apex:actionStatus id="prodDisplayStatus">
+<apex:facet name="start">
+<apex:image value="/img/loading.gif"/>
+</apex:facet> 
+</apex:actionStatus>
+</td>
+</tr>
+
+<apex:outputPanel layout="none" rendered="{!strGroupId != null}">                                                
+<apex:outputPanel layout="none" rendered="{!map_BundleIdToShowProductsChoice[objProductUseCase.Id]}">
+<tr>
+<td colspan="100">
+<apex:pageBlockTable style="float: right; width: 90%;font-size:90%" value="{!map_BundleIdToBundleProducts[objProductUseCase.Id]}" var="objBundleProduct">
+<apex:column headerValue="Product">
+<apex:outputField value="{!objBundleProduct.Product__r.Description}"/><br/>
+(<apex:outputField value="{!objBundleProduct.Product__c}"/>)
+</apex:column>
+<apex:column headerValue="Unit of Measure">
+<apex:outputField value="{!objBundleProduct.Product__r.Unit_of_Measure__c}"/>
+</apex:column>
+<apex:column headerValue="Quantity">
+<apex:outputField value="{!objBundleProduct.Quantity__c}"/>
+</apex:column>
+</apex:pageBlockTable>
+</td>
+</tr>
+</apex:outputPanel>
+
+</apex:outputPanel>
+</apex:repeat>
+</apex:repeat>
+-->
+    
+</apex:pageblock>
+</apex:outputPanel>
+<!--Anju Dec 18 usecases ends-->
+<apex:outputPanel rendered="{!strMainOption = 'Campaigns'}">
+    <span style="color:blue;font-size:9pt;">
+        <b>Please click 'Show Products' next to a bundle to configure it and add it to your quote</b>
+        <div align="right">
+            <apex:commandButton value="Add to Quote" action="{!addCampaignssBtnHandler}" status="status" reRender="PABlock,CampaignsBlock,msgs"/> 
+            
+        </div>
+    </span>
+    
+    <br/>
+    
+    <apex:pageblock id="CampaignsBlock" title="Dynamic Bundles"  >
+        <table class="list " border="0" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr class="headerRow">
+                    <th class="headerRow">Name</th>
+                    <th class="headerRow">Description</th>
+                    <th class="headerRow">Pre-Approved<br/>Discount  %</th>
+                    <th class="headerRow">Bundle<br/>Quantity</th>
+                    <th class="headerRow">Discount %</th>
+                    <th class="headerRow" width="15%">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:repeat value="{!list_CampaignsTypes}" var="strCampaignsType">
+                    <apex:variable value="{!0}" var="rowNumLevel1"/>
+                    <apex:repeat value="{!map_CampaignsTypesToBundles[strCampaignsType]}" var="objProductCampaigns">
+                        <apex:outputPanel layout="none" rendered="{!rowNumLevel1 == 0}">
+                            <tr style="background-color:rgba(255, 249, 179, 0.75)">
+                                <td colspan="100">
+                                    {!strCampaignsType}
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:variable value="{!1}" var="rowNumLevel1"/>
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                {!objProductCampaigns.Name}
+                            </td>
+                            <td class="dataCell">
+                                <apex:outputField value="{!objProductCampaigns.Description__c}" />
+                            </td>
+                            <td class="dataCell">
+                                <apex:outputField value="{!objProductCampaigns.Discount__c}"/>
+                            </td>
+                            <td class="dataCell">
+                                <apex:inputField value="{!objProductCampaigns.Quantity__c}" style="width:45px;"/>
+                            </td>
+                            <td class="dataCell">
+                                <apex:inputField value="{!objProductCampaigns.Additional_Discount__c}" style="width:45px;"/>
+                            </td>
+                            <td class="dataCell">
+                                <apex:commandLink styleClass="{!IF(map_CampaignsIdToShowProductsChoice[objProductCampaigns.Id],'btn','btnSharing')}" 
+                                                  value="{!IF(map_CampaignsIdToShowProductsChoice[objProductCampaigns.Id],'Hide Products','Show Products')}" 
+                                                  action="{!showHideCampaignsProducts}" status="prodDisplayStatus" reRender="CampaignsBlock"
+                                                  style="text-decoration: none;">
+                                    <apex:param name="strGroupId" assignTo="{!strGroupId}" value="{!objProductCampaigns.Id}" />
+                                </apex:commandLink>
+                                <apex:actionStatus id="prodDisplayStatus">
+                                    <apex:facet name="start">
+                                        <apex:image value="/img/loading.gif"/>
+                                    </apex:facet> 
+                                </apex:actionStatus>
+                            </td>
+                        </tr>
+                        <apex:outputPanel layout="none"  rendered="{!map_CampaignsIdToShowProductsChoice[objProductCampaigns.Id]}">
+                            <tr>
+                                <apex:repeat value="{!list_CampaignsProductTypes}" var="strCampaignsProductType">
+                                    {!strCampaignsProductType}</apex:repeat>
+                                
+                                
+                                <td colspan="100">
+                                    <apex:pageBlock title="Products" >
+                                        <apex:pageBlockSection title="Base Products" columns="1" collapsible="false">
+                                            
+                                            <apex:pageBlockTable style="float: right; width: 100%;font-size:90%" value="{!map_CampaignsIdToBundleProducts[objProductCampaigns.Id]}" var="objCampaignsProduct">
+                                                <apex:column headerValue="Product" width="70%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Description}"/><br/>
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__c}"/>)
+                                                </apex:column>
+                                                <apex:column headerValue="Unit of Measure" width="15%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Unit_of_Measure__c}"/>
+                                                </apex:column>
+                                                <apex:column headerValue="Quantity Ratio" width="15%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Quantity__c}" style="width:45px;" />
+                                                </apex:column>   
+                                            </apex:pageBlockTable>
+                                        </apex:pageBlockSection>
+                                        
+                                        <apex:pageBlockSection title="Substitutable Products" columns="1" collapsible="false">
+                                            
+                                            <apex:pageBlockTable style="float: right; width: 100%;font-size:90%" value="{!map_CampaignsIdToBundleProducts_Sub[objProductCampaigns.Id]}" var="objCampaignsProduct">
+                                                <apex:variable value="{!objCampaignsProduct.GroupId__c}" var="GroupId"/>
+                                                <apex:column headerValue=" Products">
+                                                    
+                                                    <apex:outputText style="color:{!If(objCampaignsProduct.Product_Type__c = 'Mandatory Substitutable','green','black')}"  value="{!objCampaignsProduct.Product__r.Description}"/><br/>
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__c}"/>)
+                                                </apex:column>
+                                                <apex:column headerValue="Unit of Measure">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Unit_of_Measure__c}"/>
+                                                </apex:column>
+                                                <apex:column headerValue="Quantity Ratio">
+                                                    <apex:outputField value="{!objCampaignsProduct.Quantity__c}" style="width:45px;" />
+                                                </apex:column>
+                                                <apex:column headerValue="Select">
+                                                    <apex:inputField value="{!objCampaignsProduct.Select__c}" />
+                                                </apex:column>
+                                                
+                                            </apex:pageBlockTable>
+                                        </apex:pageBlockSection>
+                                        <apex:pageBlockSection title="Optional Products" columns="1" collapsible="false">
+                                            
+                                            <apex:pageBlockTable style="float: right; width: 100%;font-size:90%" value="{!map_CampaignsIdToBundleProducts_Opt[objProductCampaigns.Id]}" var="objCampaignsProduct">
+                                                <apex:column headerValue="Product" width="70%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Description}"/><br/>
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__c}"/>)
+                                                </apex:column>
+                                                <apex:column headerValue="Unit of Measure" width="15%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Unit_of_Measure__c}"/>
+                                                </apex:column>
+                                                <apex:column headerValue="Quantity" width="15%">
+                                                    <apex:inputField value="{!objCampaignsProduct.Quantity__c}" style="width:45px;"/>
+                                                </apex:column> 
+                                            </apex:pageBlockTable>
+                                        </apex:pageBlockSection>
+                                        <apex:pageBlockSection title="LAB Products" columns="1" collapsible="false">
+                                            
+                                            <apex:pageBlockTable style="float: right; width: 100%;font-size:90%" value="{!map_CampaignsIdToBundleProducts_Lab[objProductCampaigns.Id]}" var="objCampaignsProduct">
+                                                <apex:column headerValue="Product" width="70%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Description}"/><br/>
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__c}"/>)
+                                                </apex:column>
+                                                <apex:column headerValue="Unit of Measure" width="15%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Unit_of_Measure__c}"/>
+                                                </apex:column>
+                                                <apex:column headerValue="Quantity" width="15%">
+                                                    <apex:inputField value="{!objCampaignsProduct.Quantity__c}" style="width:45px;"/>
+                                                </apex:column>  
+                                            </apex:pageBlockTable>
+                                        </apex:pageBlockSection>
+                                        <apex:pageBlockSection title="HA Products" columns="1" collapsible="false">
+                                            
+                                            <apex:pageBlockTable style="float: right; width: 100%;font-size:90%" value="{!map_CampaignsIdToBundleProducts_HA[objProductCampaigns.Id]}" var="objCampaignsProduct">
+                                                <apex:column headerValue="Product" width="70%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Description}"/><br/>
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__c}"/>)
+                                                </apex:column>
+                                                <apex:column headerValue="Unit of Measure" width="15%">
+                                                    <apex:outputField value="{!objCampaignsProduct.Product__r.Unit_of_Measure__c}"/>
+                                                </apex:column>
+                                                <apex:column headerValue="Quantity" width="15%">
+                                                    <apex:inputField value="{!objCampaignsProduct.Quantity__c}" style="width:45px;"/>
+                                                </apex:column>                                                                        
+                                            </apex:pageBlockTable>
+                                        </apex:pageBlockSection>
+                                        
+                                        
+                                    </apex:pageBlock>
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                    </apex:repeat>
+                </apex:repeat>
+            </tbody>
+        </table>
+    </apex:pageblock>
+</apex:outputPanel>
+<apex:outputPanel id="pnlPureSuccess" rendered="{!strMainOption = 'PureSuccess'}">
+    <apex:outputPanel id="pnlPureSuccessOffer">
+        <div align="right">
+            <apex:commandButton value="Add to Quote" action="{!addPureSuccessBtnHandler}" status="status" reRender="PABlock,bundleBlock,pnlPureSuccess"/> 
+        </div>
+        <br/>
+        <!--rendered="{!blnIsNewPricing && (objQuote.Keep_the_existing_estate_on_Perpetual__c || objQuote.BigMachines__Opportunity__r.Type == 'New logo' || objQuote.BigMachines__Opportunity__r.Cloud_Renewal__c)}" -->
+        <apex:pageblock id="pgblkPureSuccessBlock" title="PureSuccess" >
+            <table class="list " border="0" cellpadding="0" cellspacing="0">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Select</th>
+                        <th class="headerRow">Name</th>
+                        <th class="headerRow">Description</th> 
+                        <th class="headerRow">Price</th>                                                                              
+                        <th class="headerRow" width="15%">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <apex:repeat id="rpt1" value="{!list_PureSuccess}" var="strPureSuccessType">
+                        <apex:variable value="{!0}" var="rowNumLevel1"/>
+                        <apex:repeat id="rpt2" value="{!map_BundleTypeToBundles[strPureSuccessType]}" var="objProductPureSuccess">
+                            <apex:variable value="{!1}" var="rowNumLevel1"/>
+                            <tr class="dataRow">
+                                <td>
+                                    
+                                    <apex:outputPanel id="pnlSelected" rendered="{!objProductPureSuccess.Active__c}">
+                                        
+                                        <apex:inputField id="chkSelected" value="{!objProductPureSuccess.Selected__c}" style="display:none;"/>
+                                        <apex:outputPanel id="pnl1" rendered="{!objProductPureSuccess.Selected__c}">                                
+                                            <input type="radio" name="rdSelected" onclick="setCheckBox('{!objProductPureSuccess.Type__c}');" checked="true"/>                                   
+                                        </apex:outputPanel>
+                                        <apex:outputPanel id="pnl2" rendered="{!!objProductPureSuccess.Selected__c}">                                
+                                            <input type="radio" name="rdSelected" onclick="setCheckBox('{!objProductPureSuccess.Type__c}');" />                                   
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    <apex:outputField value="{!objProductPureSuccess.Selected__c}" rendered="{!NOT(objProductPureSuccess.Active__c)}" />
+                                    <!--
+<apex:outputText rendered="{!NOT(objProductPureSuccess.Active__c)}">
+Packages is already added to the quote.
+</apex:outputText>
+-->
+                                </td>
+                                <td class="dataCell">
+                                    <b>{!objProductPureSuccess.Name}</b>
+                                </td>
+                                <td class="dataCell">
+                                    {!objProductPureSuccess.Description__c}
+                                </td>
+                                <td>
+                                    <!--Mukunth added/modified below code for 6 digit project on 05-APR-2019-->
+                                    <!--<apex:outputField value="{!objProductPureSuccess.Product__r[strPricebookFieldName]}"/> -->  
+                                    <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!objProductPureSuccess.Product__r.Tier_Pricing_Decimal_Precision__c == null || objProductPureSuccess.Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                        <apex:param value="{!objProductPureSuccess.Product__r[strPricebookFieldName]}"/>
+                                    </apex:outputText>
+                                    <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!objProductPureSuccess.Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                        <apex:param value="{!objProductPureSuccess.Product__r[strPricebookFieldName]}"/>
+                                    </apex:outputText>
+                                    <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!objProductPureSuccess.Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                        <apex:param value="{!objProductPureSuccess.Product__r[strPricebookFieldName]}"/>
+                                    </apex:outputText>
+                                    <!--Mukunth code end-->
+                                </td>
+                                <td class="dataCell">
+                                    <apex:commandLink styleClass="{!IF(map_BundleIdToShowProductsChoice[objProductPureSuccess.Id],'btn','btnSharing')}" 
+                                                      value="{!IF(map_BundleIdToShowProductsChoice[objProductPureSuccess.Id],'Hide Products','Show Products')}" 
+                                                      action="{!showHideProducts}" status="prodDisplayStatus" reRender="bundleBlock1"
+                                                      style="text-decoration: none;">
+                                        <apex:param name="strGroupId" assignTo="{!strGroupId}" value="{!objProductPureSuccess.Id}" />
+                                    </apex:commandLink>
+                                    &nbsp;
+                                    <apex:actionStatus id="prodDisplayStatus">
+                                        <apex:facet name="start">
+                                            <apex:image value="/img/loading.gif"/>
+                                        </apex:facet> 
+                                    </apex:actionStatus>
+                                </td>
+                            </tr>
+                            <apex:outputPanel layout="none" rendered="{!map_BundleIdToShowProductsChoice[objProductPureSuccess.Id]}">
+                                <tr>
+                                    <td colspan="100">
+                                        <apex:pageBlockTable style="float: right; width: 90%;font-size:90%" value="{!map_BundleIdToBundleProducts[objProductPureSuccess.Id]}" var="objBundleProduct">
+                                            <apex:column headerValue="Product">
+                                                <apex:outputField value="{!objBundleProduct.Product__r.Description}"/><br/>
+                                                (<apex:outputField value="{!objBundleProduct.Product__c}"/>)
+                                            </apex:column>
+                                            <apex:column headerValue="Unit of Measure">
+                                                <apex:outputField value="{!objBundleProduct.Product__r.Unit_of_Measure__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Quantity">
+                                                <apex:outputField value="{!objBundleProduct.Quantity__c}"/>
+                                            </apex:column>
+                                            <!--<apex:column headerValue="Price">
+<apex:outputField value="{!objBundleProduct.Product__r[strPricebookFieldName]}"/>   
+</apex:column>-->
+                                        </apex:pageBlockTable>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                        </apex:repeat>
+                    </apex:repeat>
+                </tbody>
+            </table>
+        </apex:pageblock>
+        <br/>
+        <br/>
+    </apex:outputPanel>
+    <apex:outputPanel rendered="{!strMainOption = 'PureSuccess'}">
+        <br/>
+        <apex:pageblock id="bundleBlock1" title="Bundles">
+            <table class="list " border="0" cellpadding="0" cellspacing="0">
+                <thead>
+                    <tr class="headerRow">
+                        <th class="headerRow">Name</th>
+                        <th class="headerRow">Description</th>
+                        <apex:outputPanel layout="none" rendered="{!strPricebookFieldName != ''}">
+                            <th class="headerRow">Price</th>
+                        </apex:outputPanel>
+                        <th class="headerRow"># Of Bundles</th>
+                        <th class="headerRow">Additional<br/>Discount %</th>
+                        <th class="headerRow" width="15%">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:repeat value="{!list_PureSuccessBundle}" var="strBundleType">
+                        <apex:variable value="{!0}" var="rowNumLevel1"/>
+                        <apex:repeat value="{!map_BundleTypeToBundles[strBundleType]}" var="objProductBundle">
+                            <!--<apex:outputPanel layout="none" rendered="{!rowNumLevel1 == 0}">
+<tr style="background-color:rgba(255, 249, 179, 0.75)">
+<td colspan="100">
+{!strBundleType}
+</td>
+</tr>
+</apex:outputPanel>-->
+                            <apex:variable value="{!1}" var="rowNumLevel1"/>
+                            <tr class="dataRow">
+                                <td class="dataCell">
+                                    {!objProductBundle.Name}
+                                    <!--&nbsp;<apex:outputText value="({!objProductBundle.Discount__c}%)" rendered="{!NOT(ISBLANK(objProductBundle.Discount__c))}"
+style="font-weight: bold;font-size: 90%;"/>-->
+                                </td>
+                                <td class="dataCell">
+                                    {!objProductBundle.Description__c}
+                                </td>
+                                <apex:outputPanel layout="none">
+                                    <td class="dataCell">
+                                        <!--<apex:outputField value="{!objProductBundle[strPricebookFieldName]}"/>-->
+                                        <apex:outputField value="{!objProductBundle.Price__c}"/>
+                                    </td>
+                                </apex:outputPanel>
+                                <td class="dataCell">
+                                    <apex:inputField value="{!objProductBundle.Quantity__c}" style="width:45px;"/>
+                                </td>
+                                <td class="dataCell">
+                                    <apex:outputField value="{!objProductBundle.Additional_Discount__c}" style="width:45px;"/>
+                                </td>
+                                <td class="dataCell">
+                                    <apex:commandLink styleClass="{!IF(map_BundleIdToShowProductsChoice[objProductBundle.Id],'btn','btnSharing')}" 
+                                                      value="{!IF(map_BundleIdToShowProductsChoice[objProductBundle.Id],'Hide Products','Show Products')}" 
+                                                      action="{!showHideProducts}" status="prodDisplayStatus" reRender="bundleBlock1"
+                                                      style="text-decoration: none;">
+                                        <apex:param name="strGroupId" assignTo="{!strGroupId}" value="{!objProductBundle.Id}" />
+                                    </apex:commandLink>
+                                    <apex:actionStatus id="prodDisplayStatus">
+                                        <apex:facet name="start">
+                                            <apex:image value="/img/loading.gif"/>
+                                        </apex:facet> 
+                                    </apex:actionStatus>
+                                </td>
+                            </tr>
+                            <apex:outputPanel layout="none" rendered="{!map_BundleIdToShowProductsChoice[objProductBundle.Id]}">
+                                <tr>
+                                    <td colspan="100">
+                                        <apex:pageBlockTable style="float: right; width: 90%;font-size:90%" value="{!map_BundleIdToBundleProducts[objProductBundle.Id]}" var="objBundleProduct">
+                                            <apex:column headerValue="Product">
+                                                <apex:outputField value="{!objBundleProduct.Product__r.Description}"/><br/>
+                                                (<apex:outputField value="{!objBundleProduct.Product__c}"/>)
+                                            </apex:column>
+                                            <apex:column headerValue="Unit of Measure">
+                                                <apex:outputField value="{!objBundleProduct.Product__r.Unit_of_Measure__c}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Quantity">
+                                                <apex:outputField value="{!objBundleProduct.Quantity__c}"/>
+                                            </apex:column>
+                                        </apex:pageBlockTable>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                        </apex:repeat>
+                    </apex:repeat>
+                </tbody>
+            </table>
+        </apex:pageblock>
+    </apex:outputPanel>
+    
+    <apex:outputPanel id="pnlPureSuccessalacarte">
+        <!--
+<div align="right">
+<apex:commandButton value="Add to Quote" action="{!addPureSuccessBtnHandler}" status="status" reRender="PABlock,bundleBlock,pnlPureSuccessalacarte"/> 
+</div>
+-->
+        <br/>
+        <!--rendered="{!blnIsNewPricing && (objQuote.Does_customer_currently_have_PureSuccess__c || objQuote.Keep_the_existing_estate_on_Perpetual__c || objQuote.BigMachines__Opportunity__r.Type == 'New logo' || objQuote.BigMachines__Opportunity__r.Cloud_Renewal__c)}"-->
+        <apex:pageblock id="pgblkAlaCarte" title="A la Carte" >
+            <table class="list " border="0" cellpadding="0" cellspacing="0">
+                <thead>
+                    <tr class="headerRow">                                        
+                        <th class="headerRow">Name</th>
+                        <th class="headerRow">Description</th>  
+                        <th class="headerRow">Supp Info</th>                                                                             
+                        <th class="headerRow" style="width:45px;">Quantity</th>
+                        <th class="headerRow">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:repeat value="{!list_OfAlaCarte}" var="objProductAlaCarte">
+                        <apex:variable value="{!1}" var="rowNumLevel1"/>
+                        <tr class="dataRow"> 
+                            <td>
+                                {!objProductAlaCarte.Product__r.Description__c}    
+                            </td>
+                            <td>
+                                {!objProductAlaCarte.Product__r.Description__c}    
+                            </td>
+                            <td>
+                                <apex:actionRegion >
+                                    <apex:commandLink value="View" action="{!showProductInfo}" status="status" reRender="popPanel">
+                                        <apex:param name="strProductIdForInfo" assignTo="{!strProductIdForInfo}" value="{!objProductAlaCarte.Product__r.Id}" />
+                                    </apex:commandLink>
+                                </apex:actionRegion>
+                            </td>
+                            <td style="width:45px;">
+                                <apex:inputField style="width:45px;" value="{!objProductAlaCarte.Product__r.Quantity__c}"/>                                             
+                            </td> 
+                            <td>
+                                <!--Mukunth added/modified below code for 6 digit project on 05-APR-2019-->
+                                <!--<apex:outputField value="{!objProductAlaCarte.Product__r[strPricebookFieldName]}"/>   -->
+                                <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!objProductAlaCarte.Product__r.Tier_Pricing_Decimal_Precision__c == null || objProductAlaCarte.Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                    <apex:param value="{!objProductAlaCarte.Product__r[strPricebookFieldName]}"/>
+                                </apex:outputText>
+                                <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!objProductAlaCarte.Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                    <apex:param value="{!objProductAlaCarte.Product__r[strPricebookFieldName]}"/>
+                                </apex:outputText>
+                                <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!objProductAlaCarte.Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                    <apex:param value="{!objProductAlaCarte.Product__r[strPricebookFieldName]}"/>
+                                </apex:outputText>
+                                <!--Mukunth code end-->
+                                
+                            </td>   
+                        </tr>
+                    </apex:repeat>
+                </tbody>
+            </table>
+        </apex:pageblock>
+    </apex:outputPanel>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!strMainOption = 'Bundles'}">
+    <div align="right">
+        <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addBundlesBtnHandler}" status="status" reRender="PABlock,bundleBlock,msgs"/> 
+    </div>
+    <br/>
+    <apex:pageblock id="bundleBlock" title="Bundles">
+        <table class="list " border="0" cellpadding="0" cellspacing="0">
+            <thead>
+                <tr class="headerRow">
+                    <th class="headerRow">Name</th>
+                    <th class="headerRow">Description</th>
+                    <th class="headerRow">Discount</th>
+                    <apex:outputPanel layout="none" rendered="{!strPricebookFieldName != ''}">
+                        <th class="headerRow">Price</th>
+                    </apex:outputPanel>
+                    <th class="headerRow"># Of Bundles</th>
+                    <th class="headerRow">Additional<br/>Discount %</th>
+                    <th class="headerRow" width="15%">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:repeat value="{!list_BundleTypes}" var="strBundleType">
+                    <apex:variable value="{!0}" var="rowNumLevel1"/>
+                    <apex:repeat value="{!map_BundleTypeToBundles[strBundleType]}" var="objProductBundle">
+                        <apex:outputPanel layout="none" rendered="{!rowNumLevel1 == 0}">
+                            <tr style="background-color:rgba(255, 249, 179, 0.75)">
+                                <td colspan="100">
+                                    {!strBundleType}
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                        <apex:variable value="{!1}" var="rowNumLevel1"/>
+                        <tr class="dataRow">
+                            <td class="dataCell">
+                                {!objProductBundle.Name}
+                            </td>
+                            <td class="dataCell">
+                                {!objProductBundle.Description__c}
+                            </td>
+                            <td class="dataCell">
+                                <apex:outputField value="{!objProductBundle.Discount__c}"/>
+                            </td>
+                            <apex:outputPanel layout="none">
+                                <td class="dataCell">
+                                    <apex:outputField value="{!objProductBundle.Price__c}"/>
+                                </td>
+                            </apex:outputPanel>
+                            <td class="dataCell">
+                                <apex:inputField value="{!objProductBundle.Quantity__c}" style="width:45px;"/>
+                            </td>
+                            <td class="dataCell">
+                                <apex:inputField value="{!objProductBundle.Additional_Discount__c}" style="width:45px;"/>
+                            </td>
+                            <td class="dataCell">
+                                <apex:commandLink styleClass="{!IF(map_BundleIdToShowProductsChoice[objProductBundle.Id],'btn','btnSharing')}" 
+                                                  value="{!IF(map_BundleIdToShowProductsChoice[objProductBundle.Id],'Hide Products','Show Products')}" 
+                                                  action="{!showHideProducts}" status="prodDisplayStatus" reRender="bundleBlock"
+                                                  style="text-decoration: none;">
+                                    <apex:param name="strGroupId" assignTo="{!strGroupId}" value="{!objProductBundle.Id}" />
+                                </apex:commandLink>
+                                <apex:actionStatus id="prodDisplayStatus">
+                                    <apex:facet name="start">
+                                        <apex:image value="/img/loading.gif"/>
+                                    </apex:facet> 
+                                </apex:actionStatus>
+                            </td>
+                        </tr>
+                        <apex:outputPanel layout="none" rendered="{!map_BundleIdToShowProductsChoice[objProductBundle.Id]}">
+                            <tr>
+                                <td colspan="100">
+                                    <apex:pageBlockTable style="float: right; width: 90%;font-size:90%" value="{!map_BundleIdToBundleProducts[objProductBundle.Id]}" var="objBundleProduct">
+                                        <apex:column headerValue="Product">
+                                            <apex:outputField value="{!objBundleProduct.Product__r.Description}"/><br/>
+                                            (<apex:outputField value="{!objBundleProduct.Product__c}"/>)
+                                        </apex:column>
+                                        <apex:column headerValue="Unit of Measure">
+                                            <apex:outputField value="{!objBundleProduct.Product__r.Unit_of_Measure__c}"/>
+                                        </apex:column>
+                                        <apex:column headerValue="Quantity">
+                                            <apex:outputField value="{!objBundleProduct.Quantity__c}"/>
+                                        </apex:column>
+                                    </apex:pageBlockTable>
+                                </td>
+                            </tr>
+                        </apex:outputPanel>
+                    </apex:repeat>
+                </apex:repeat>
+            </tbody>
+        </table>
+    </apex:pageblock>
+</apex:outputPanel>
+
+<apex:outputPanel rendered="{!strMainOption = 'All Products'}">
+    <table style="width:100%;" border="0">
+        <tr>
+            <td width="25px">
+                <div style="width:25px;height:25px;background-color:#b3d9ff;"></div>        
+            </td>
+            <td width="170px">
+                Type of Fees
+            </td>
+            <td width="25px">
+                <div style="width:25px;height:25px;background-color:#ffb84d;"></div>
+            </td>
+            <td width="120px">
+                Category
+            </td>
+            <td width="25px">
+                <div style="width:25px;height:25px;background-color:#98bf21;"></div> 
+            </td>
+            <td>
+                Sub Category
+            </td>
+            <td style="width:20%;">
+                <span style="display: inline;float: right;">
+                    <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addProductsBtnHandler}" status="status" reRender="msgs,PABlock,categoryPanel"/> 
+                </span>            
+            </td>
+        </tr>
+    </table>
+    <br/>
+    <apex:outputPanel id="pnlTaxonomyCategories">
+        <ul style="list-style-type: none;margin: 0;padding: 0;">                                                        
+            <apex:repeat value="{!list_Categories}" var="strCategory">
+                <li class="categoryItem">
+                    <apex:commandLink styleClass="category1" style="{!IF(strCategory == strSelectedCategory, 'border:solid 1px black;', '')}" value="{!strCategory}" action="{!showTaxonomySolutions}" status="status" reRender="categoryPanel,pnlTaxonomySolutions,pnlProductFinancials,pnlTaxonomyCategories">
+                        <apex:param name="strSelectedCategory" assignTo="{!strSelectedCategory}" value="{!strCategory}"/>
+                    </apex:commandLink>
+                </li>
+            </apex:repeat>                           
+            <li class="categoryItem">
+                <apex:commandLink styleClass="category1" style="{!IF(strSelectedCategory == 'All', 'border:solid 1px black;', '')}"  value="All Fee Types" action="{!showTaxonomySolutions}" status="status" reRender="categoryPanel,pnlTaxonomySolutions,pnlProductFinancials,pnlTaxonomyCategories">
+                    <apex:param name="strSelectedCategory" assignTo="{!strSelectedCategory}" value="All"/>
+                </apex:commandLink>
+            </li>
+            
+        </ul>
+    </apex:outputPanel>
+    <br/><br/>
+    <apex:outputPanel id="pnlTaxonomySolutions">
+        <ul style="list-style-type: none;margin: 0;padding: 0;">
+            <apex:repeat value="{!listOfTaxonomySolutions}" var="eachCategory">
+                <li class="categoryItem">
+                    <apex:commandLink styleClass="category2" style="{!IF(eachCategory == strSelectedTaxonomySolution, 'border:solid 1px black;', 'border:solid 1px none;')}"  value="{!eachCategory}" action="{!showProductFinancials}" status="status" reRender="categoryPanel,pnlProductFinancials,pnlTaxonomySolutions">
+                        <apex:param name="strSelectedSolution" assignTo="{!strSelectedTaxonomySolution}" value="{!eachCategory}"/>
+                    </apex:commandLink>
+                </li>
+            </apex:repeat>                                
+            <li class="categoryItem">
+                <apex:commandLink styleClass="category2" rendered="{!strSelectedCategory != 'All'}" style="{!IF(strSelectedTaxonomySolution == 'All', 'border:solid 1px black;', 'border:solid 1px none;')}"   value="All Categories" action="{!showProductFinancials}" status="status" reRender="categoryPanel,pnlProductFinancials,pnlTaxonomySolutions">
+                    <apex:param name="strSelectedSolution" assignTo="{!strSelectedTaxonomySolution}" value="All"/>
+                </apex:commandLink>
+            </li>                                                                
+        </ul>
+    </apex:outputPanel>                        
+    <br/><br/><br/>
+    <apex:outputPanel id="categoryPanel">
+        <apex:repeat value="{!IF(strSelectedCategory == 'All',list_Categories,strSelectedCategory)}" var="strCategory">
+            <apex:repeat value="{!IF(strSelectedTaxonomySolution = 'All', map_TaxonomyCategories[strCategory], strSelectedTaxonomySolution)}" var="eachSolutionCategory" id="rpt1">
+                <apex:pageblock title="{!eachSolutionCategory}" >
+                    <table style="width:100%;">
+                        <tr>
+                            <td>
+                                <apex:outputPanel id="pnlProductFinancials" rendered="{!strSelectedTaxonomySolution != 'All' && list_ProductFinancials.size > 1}">
+                                    <ul style="list-style-type: none;margin: 0;padding: 0;">
+                                        <apex:repeat value="{!list_ProductFinancials}" var="eachCategory">
+                                            <li class="categoryItem">
+                                                <apex:commandLink styleClass="shortcutClass" style="{!IF(eachCategory == strProductFinancial, 'border:solid 1px gray;', 'border:solid 1px #ffffff;')}" value="{!eachCategory}" action="{!showProducts}" status="status" reRender="categoryPanel,pnlProductFinancials">
+                                                    <apex:param name="strSelectedBuildingBlock" assignTo="{!strProductFinancial}" value="{!eachCategory}"/>
+                                                </apex:commandLink>
+                                            </li>
+                                        </apex:repeat>
+                                        <li class="categoryItem">
+                                            <apex:commandLink styleClass="shortcutClass" style="{!IF('All' == strProductFinancial, 'border:solid 1px gray;', 'border:solid 1px #ffffff;')}" value="All Sub Categories" action="{!showProducts}" status="status" reRender="categoryPanel,pnlProductFinancials">
+                                                <apex:param name="strSelectedBuildingBlock" assignTo="{!strProductFinancial}" value="All"/>
+                                            </apex:commandLink>
+                                        </li>                                                    
+                                    </ul>                                                
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <apex:repeat value="{!IF(strProductFinancial = 'All', mapOfTaxonomyProductFinancial[eachSolutionCategory], strProductFinancial)}" var="eachProductFinancial" id="rpt2">                                                        
+                                    <apex:pageBlockSection title="{!eachProductFinancial}" collapsible="false" columns="1">    
+                                        <apex:pageBlockTable value="{!map_BuildingBlockToProducts[eachProductFinancial]}" var="objProduct" columnsWidth="35%,15%,10%,12%,8%,10%,10%" id="pgblkTable">
+                                            <apex:column headerValue="Product Name">
+                                                {!objProduct.Name}<span style="color:red;font-weight:bold;"><sup>{!objProduct.Show_New__c}</sup></span>
+                                            </apex:column>
+                                            <apex:column headerValue="APN Number">
+                                                {!objProduct.APN_Number__c}
+                                            </apex:column>
+                                            <apex:column headerValue="Concurrent">
+                                                {!objProduct.Is_Concurrent__c}
+                                            </apex:column>
+                                            <apex:column headerValue="Supp Info">
+                                                <apex:actionRegion >
+                                                    <apex:commandLink value="View" action="{!showProductInfo}" status="status" reRender="popPanel">
+                                                        <apex:param name="strProductIdForInfo" assignTo="{!strProductIdForInfo}" value="{!objProduct.Id}"/>
+                                                    </apex:commandLink>
+                                                </apex:actionRegion>
+                                            </apex:column>
+                                            <apex:column headerValue="Quantity">
+                                                <apex:selectList value="{!objProduct.Product_Name__c}" size="1" rendered="{!NOT(ISBLANK(objProduct.Quantities_Available__c))}">
+                                                    <apex:selectOption itemLabel="" itemValue=""/>
+                                                    <apex:selectOptions value="{!map_QuantitiesToSelectOptions[objProduct.Quantities_Available__c]}"/>
+                                                </apex:selectList>
+                                                <apex:inputField value="{!objProduct.Quantity__c}" style="width:45px;" rendered="{!ISBLANK(objProduct.Quantities_Available__c)}"/>
+                                            </apex:column>
+                                            <apex:column headerValue="Unit of Measure">
+                                                {!objProduct.Unit_of_Measure__c}
+                                            </apex:column>
+                                            <apex:column headerValue="Price" rendered="{!strPricebookFieldName != ''}">
+                                                <!--Mukunth added/modified below code for 6 digit project-->
+                                                <!--<apex:outputField value="{!objProduct[strPricebookFieldName]}"/>-->
+                                                <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!objProduct.Tier_Pricing_Decimal_Precision__c == null || objProduct.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                                    <apex:param value="{!objProduct[strPricebookFieldName]}"/>
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!objProduct.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                                    <apex:param value="{!objProduct[strPricebookFieldName]}"/>
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number,###,###,##0.00000}" rendered="{!objProduct.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                                    <apex:param value="{!objProduct[strPricebookFieldName]}"/>
+                                                </apex:outputText>
+                                            </apex:column>
+                                        </apex:pageBlockTable>
+                                    </apex:pageBlockSection>
+                                    <br/>
+                                </apex:repeat>
+                            </td>
+                        </tr>
+                    </table>
+                    <br/>
+                </apex:pageblock>
+                
+            </apex:repeat>
+            <div align="right">
+                <a href="#top" title="Go to Top of the page" style="text-decoration: none;">Top↑</a>&nbsp;|&nbsp;
+                <a href="#bottom" title="Go to Bottom of the page" style="text-decoration: none;">Bottom↓</a>
+            </div>
+        </apex:repeat> 
+    </apex:outputPanel>
+    <br/>
+    <div align="right">
+        <apex:commandButton value="{!IF(objQuote.BigMachines__Status__c = 'Simulated Quote','Add to Estimation','Add to Quote')}" action="{!addProductsBtnHandler}" status="status" reRender="msgs,PABlock,categoryPanel"/> 
+    </div>
+</apex:outputPanel>
+
+</apex:outputPanel>
+</td>
+<td valign="top" width="40%">
+    <div align="right">
+        <apex:outputText value="Pricebook: {!objQuote.New_Price_Book__c}" 
+                         style="background-color: rgba(212, 212, 207, 0.50);display: block;font-weight:bold;padding: 4px;"/>
+        <apex:outputText value="Currency: {!objQuote.CurrencyISOCode}" 
+                         style="background-color: rgba(212, 212, 207, 0.50);display: block;font-weight:bold;padding: 4px;"/>
+        <br/>
+    </div>
+    <apex:pageMessages id="msgs" escape="false"/>
+    <apex:pageblock title="Selected Items" id="PABlock">
+        <apex:pageBlockButtons location="top" rendered="{!list_BundlesToBeSaved.size > 0 || list_QuoteProductsToBeCreated.size > 0 || list_CampaignsToBeSaved.size > 0 || list_PureSuccessToBeSaved.size > 0 || list_OfAlaCarteToBeSaved.size > 0 || list_UseCasesToBeSaved.size > 0 || list_OfPureSuccessBundleToBeSaved.size > 0}">
+            <!--<apex:commandButton value="Save" action="{!saveBtnHandler}" status="status" reRender="msgs"/>-->
+            <apex:commandButton value="Save" action="{!saveBtnHandler}" status="status" reRender="msgs,ConfirmPanel" oncomplete="closeJSFunction('{!strIsSaveSuccessful}');"/>
+            <apex:commandButton value="Remove All" action="{!removeAllBtnHandler}" status="refreshStatus" reRender="PABlock"/>
+            <apex:commandButton value="Mark Favorite ?" action="{!markFavBtnHandler}" status="refreshStatus" reRender="PABlock"/>
+        </apex:pageBlockButtons>
+        <!--<apex:pageMessages id="msgs"/>-->
+        <apex:actionStatus id="refreshStatus">
+            <apex:facet name="start">
+                <apex:image value="/img/loading.gif"/>
+            </apex:facet> 
+        </apex:actionStatus>
+        <apex:outputPanel rendered="{!blnShowFavSaveOptions}" style="font-size:90%">
+            <b>Favorite Name :</b>&nbsp;
+            <apex:inputField value="{!objFavToBeSaved.Name}"/>&nbsp;
+            <apex:commandButton value="Save Favorite" action="{!saveFavourite}" status="refreshStatus" reRender="PABlock"/>&nbsp;
+            <apex:commandButton value="Cancel" action="{!cancelMarkFavourite}" status="refreshStatus" reRender="PABlock"/>
+            <br/><br/>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!list_BundlesToBeSaved.size > 0}">
+            <apex:pageBlockSection title="Bundles" collapsible="false"/>
+            <apex:variable var="rowNum" value="{!0}"/>
+            <apex:pageBlockTable value="{!list_BundlesToBeSaved}" var="objProductBundle">
+                <apex:column headerValue="Action">
+                    <apex:actionRegion >
+                        <apex:commandlink action="{!removeProductBundle}" rerender="PABlock" title="Remove Bundle" status="refreshStatus">
+                            <apex:param name="strProdIndex" assignTo="{!strProdIndex}" value="{!rowNum}" />
+                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>    
+                        </apex:commandlink>
+                    </apex:actionRegion>
+                    <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                </apex:column>
+                <apex:column headerValue="Name">
+                    {!objProductBundle.Name}&nbsp;
+                    <apex:outputText value="({!objProductBundle.Discount__c}%)" rendered="{!NOT(ISBLANK(objProductBundle.Discount__c))}"
+                                     style="font-weight: bold;font-size: 90%;"/>
+                </apex:column>
+                <apex:column headerValue="Price">
+                    <!--<apex:outputField value="{!objProductBundle[strPricebookFieldName]}"/>-->
+                    <apex:outputField value="{!objProductBundle.Price__c}"/>
+                </apex:column>
+                <apex:column headerValue="# Of Bundles">
+                    <apex:inputField value="{!objProductBundle.Quantity__c}" style="width:45px;" required="true"/>
+                </apex:column>
+                <apex:column >
+                    <apex:facet name="header">Additional<br/>Discount %</apex:facet>
+                    <apex:inputField value="{!objProductBundle.Additional_Discount__c}" style="width:45px;"/>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:outputPanel>
+        
+        <!--Anju Dec 18 usecases -->
+        <apex:outputPanel rendered="{!list_UseCasesToBeSaved.size > 0}">
+            <apex:pageBlockSection title="Use Cases" collapsible="false"/>
+            <apex:variable var="rowNum" value="{!0}"/>
+            <apex:pageBlockTable value="{!list_UseCasesToBeSaved}" var="objProductBundle">
+                <apex:column headerValue="Action">
+                    <apex:actionRegion >
+                        <apex:commandlink action="{!removeUseCases}" rerender="PABlock" title="Remove UseCase" status="refreshStatus">
+                            <apex:param name="strProdIndex" assignTo="{!strProdIndex}" value="{!rowNum}" />
+                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>    
+                        </apex:commandlink>
+                    </apex:actionRegion>
+                    <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                </apex:column>
+                <apex:column headerValue="Name">
+                    {!objProductBundle.Name}
+                </apex:column>
+                <apex:column headerValue="Description">                                    
+                    <apex:outputField value="{!objProductBundle.Description__c}"/>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:outputPanel>
+        <!--Anju Dec 18 usecases ends-->
+        <apex:outputPanel rendered="{!list_CampaignsToBeSaved.size > 0}">
+            <apex:pageBlockSection title="Dynamic Bundles" collapsible="false"/>
+            <apex:variable var="rowNum" value="{!0}"/>
+            <apex:pageBlockTable value="{!list_CampaignsToBeSaved}" var="objCamp">
+                <apex:column headerValue="Action">
+                    <apex:actionRegion >
+                        <apex:commandlink action="{!removeProduct}" rerender="PABlock" title="Remove Product" status="refreshStatus">
+                            <apex:param name="strProdIndex" assignTo="{!strProdIndex}" value="{!rowNum}" />
+                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}" rendered="{! Not(OR(objCamp.Campaign_Product_Type__c=='Mandatory',objCamp.Campaign_Product_Type__c=='Substitutable'))}"/>   
+                        </apex:commandlink>
+                    </apex:actionRegion>
+                    <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                </apex:column>
+                <apex:column headerValue="Name">
+                    <apex:outputText value="{!objCamp.Product__c} "/><br/>
+                    (<apex:outputText value="{!objCamp.Name}"/>)
+                </apex:column>
+                <apex:column headerValue="Price">
+                    <!--<apex:outputField value="{!objQP.List_Price__c}"/>-->
+                    <!--Mukunth added/modified below code for 6 digit project on 05-APR-2019-->
+                    <!--<apex:outputText value="{0, number,###,###,##0.00}">
+<apex:param value="{!objCamp.List_Price__c}"/>
+</apex:outputText>-->
+                    <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!mapProdToPrecision[objCamp.Product__c].Tier_Pricing_Decimal_Precision__c == null || mapProdToPrecision[objCamp.Product__c].Tier_Pricing_Decimal_Precision__c == '2'}">
+                        <apex:param value="{!objCamp.List_Price__c}"/>
+                    </apex:outputText>
+                    <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!mapProdToPrecision[objCamp.Product__c].Tier_Pricing_Decimal_Precision__c == '4'}">
+                        <apex:param value="{!objCamp.List_Price__c}"/>
+                    </apex:outputText>
+                    <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!mapProdToPrecision[objCamp.Product__c].Tier_Pricing_Decimal_Precision__c == '6'}">
+                        <apex:param value="{!objCamp.List_Price__c}"/>
+                    </apex:outputText>
+                    <!--Mukunth code end-->
+                </apex:column>
+                <apex:column headerValue="Quantity">
+                    <apex:outputField value="{!objCamp.Quantity__c}" rendered="{!NOT(ISBLANK(objCamp.Campaign_Product_Type__c))}"/>
+                    <apex:inputField value="{!objCamp.Quantity__c}" style="width:45px;" rendered="{!ISBLANK(objCamp.Campaign_Product_Type__c)}" required="true"/>
+                </apex:column>
+                <!--<apex:column headerValue="Discount %">
+<apex:outputField value="{!objCamp.Disc__c}" style="width:45px;" rendered="{!Not(ISBLANK(objCamp.Campaign_Product_Type__c))}"/>
+<apex:inputField value="{!objCamp.Disc__c}" style="width:45px;" rendered="{!ISBLANK(objCamp.Campaign_Product_Type__c)}"/>
+</apex:column>-->
+            </apex:pageBlockTable>
+        </apex:outputPanel>
+        
+        <!--PureSuccess -->
+        <apex:outputPanel rendered="{!list_PureSuccessToBeSaved.size > 0}">
+            <apex:pageBlockSection title="PureSuccess" collapsible="false"/>
+            <apex:variable var="rowNum" value="{!0}"/>
+            <apex:pageBlockTable value="{!list_PureSuccessToBeSaved}" var="objProductPureSuccess">
+                <apex:column headerValue="Action">
+                    <apex:actionRegion >
+                        <apex:commandlink action="{!removeProductBundle}" rerender="PABlock" title="Remove PureSuccess" status="refreshStatus">
+                            <apex:param name="strProdIndex" assignTo="{!strProdIndex}" value="{!rowNum}" />
+                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>    
+                        </apex:commandlink>
+                    </apex:actionRegion>
+                    <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                </apex:column>
+                <apex:column headerValue="Name">
+                    {!objProductPureSuccess.Name}
+                </apex:column>
+                <apex:column headerValue="Quantity">                                    
+                    <apex:outputField value="{!objProductPureSuccess.Quantity__c}"/>
+                </apex:column>
+                <apex:column headerValue="Price">                                    
+                    <apex:outputField value="{!objProductPureSuccess.Product__r[strPricebookFieldName]}"/>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!list_OfPureSuccessBundleToBeSaved.size > 0}">
+            <apex:pageBlockSection title="PureSuccess Bundles" collapsible="false"/>
+            <apex:variable var="rowNum" value="{!0}"/>
+            <apex:pageBlockTable value="{!list_OfPureSuccessBundleToBeSaved}" var="objProductBundle">
+                <apex:column headerValue="Action">
+                    <apex:actionRegion >
+                        <apex:commandlink action="{!removePureSuccessBundle}" rerender="PABlock" title="Remove Bundle" status="refreshStatus">
+                            <apex:param name="strProdIndex" assignTo="{!strProdIndex}" value="{!rowNum}" />
+                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>    
+                        </apex:commandlink>
+                    </apex:actionRegion>
+                    <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                </apex:column>
+                <apex:column headerValue="Name">
+                    {!objProductBundle.Name}&nbsp;
+                    <apex:outputText value="({!objProductBundle.Discount__c}%)" rendered="{!NOT(ISBLANK(objProductBundle.Discount__c))}"
+                                     style="font-weight: bold;font-size: 90%;"/>
+                </apex:column>
+                <apex:column headerValue="Price">
+                    <!--<apex:outputField value="{!objProductBundle[strPricebookFieldName]}"/>-->
+                    <apex:outputField value="{!objProductBundle.Price__c}"/>
+                </apex:column>
+                <apex:column headerValue="# Of Bundles">
+                    <apex:inputField value="{!objProductBundle.Quantity__c}" style="width:45px;" required="true"/>
+                </apex:column>
+            </apex:pageBlockTable>  
+        </apex:outputPanel>
+        <apex:outputPanel rendered="{!list_OfAlaCarteToBeSaved.size > 0}">
+            <apex:pageBlockSection title="A la Carte" collapsible="false"/>
+            <apex:variable var="rowNum" value="{!0}"/>
+            <apex:pageBlockTable value="{!list_OfAlaCarteToBeSaved}" var="objProductAlaCarte">
+                <apex:column headerValue="Action">
+                    <apex:actionRegion >
+                        <apex:commandlink action="{!removeAlaCarteItem}" rerender="PABlock" title="Remove A la Carte" status="refreshStatus">
+                            <apex:param name="strProdIndex" assignTo="{!strProdIndex}" value="{!rowNum}" />
+                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}"/>    
+                        </apex:commandlink>
+                    </apex:actionRegion>
+                    <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                </apex:column>
+                <apex:column headerValue="Name">
+                    {!objProductAlaCarte.Name}
+                </apex:column>
+                <apex:column headerValue="Price">
+                    {!objProductAlaCarte.List_Price__c}
+                </apex:column>
+                <apex:column headerValue="Quantity">                                    
+                    <apex:outputField value="{!objProductAlaCarte.Quantity__c}"/>
+                </apex:column>                                
+            </apex:pageBlockTable>
+        </apex:outputPanel>
+        
+        <apex:outputPanel rendered="{!list_QuoteProductsToBeCreated.size > 0}">
+            <apex:pageBlockSection title="Products" collapsible="false"/>
+            <apex:variable var="rowNum" value="{!0}"/>
+            <apex:pageBlockTable value="{!list_QuoteProductsToBeCreated}" var="objQP">
+                <apex:column headerValue="Action">
+                    <apex:actionRegion >
+                        <apex:commandlink action="{!removeProduct}" rerender="PABlock" title="Remove Product" status="refreshStatus">
+                            <apex:param name="strProdIndex" assignTo="{!strProdIndex}" value="{!rowNum}" />
+                            <apex:image url="{!URLFOR($Resource.NewQuoteScreenIcons,'/Icons/trash.png')}" rendered="{! Not(OR(objQP.Campaign_Product_Type__c=='Mandatory',objQP.Campaign_Product_Type__c=='Substitutable'))}"/>   
+                        </apex:commandlink>
+                    </apex:actionRegion>
+                    <apex:variable var="rowNum" value="{!rowNum + 1}"/>
+                </apex:column>
+                <apex:column headerValue="Name">
+                    <apex:outputText value="{!objQP.Name} "/><br/>
+                    (<apex:outputText value="{!objQP.APN_Number__c}"/>)
+                </apex:column>
+                <apex:column headerValue="Price">
+                    <!--<apex:outputField value="{!objQP.List_Price__c}"/>-->
+                    <!--Mukunth added/modified below code for 6 digit project on 05-APR-2019-->
+                    <!--<apex:outputText value="{0, number,###,###,##0.00}">
+<apex:param value="{!objQP.List_Price__c}"/>
+</apex:outputText>-->
+                    <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!mapProdToPrecision[objQP.BigMachines__Product__c].Tier_Pricing_Decimal_Precision__c == null || mapProdToPrecision[objQP.BigMachines__Product__c].Tier_Pricing_Decimal_Precision__c == '2'}">
+                        <apex:param value="{!objQP.List_Price__c}" />
+                    </apex:outputText>
+                    <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!mapProdToPrecision[objQP.BigMachines__Product__c].Tier_Pricing_Decimal_Precision__c == '4'}">
+                        <apex:param value="{!objQP.List_Price__c}" />
+                    </apex:outputText>
+                    <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!mapProdToPrecision[objQP.BigMachines__Product__c].Tier_Pricing_Decimal_Precision__c == '6'}">
+                        <apex:param value="{!objQP.List_Price__c}" />
+                    </apex:outputText>
+                </apex:column>
+                <apex:column headerValue="Quantity">
+                    <apex:outputField value="{!objQP.Quantity__c}" rendered="{!NOT(ISBLANK(objQP.Campaign_Product_Type__c))}"/>
+                    <apex:inputField value="{!objQP.Quantity__c}" style="width:45px;" rendered="{!ISBLANK(objQP.Campaign_Product_Type__c)}" required="true"/>
+                </apex:column>
+                <!--<apex:column headerValue="Discount %">
+<apex:outputField value="{!objQP.Disc__c}" style="width:45px;" rendered="{!Not(ISBLANK(objQP.Campaign_Product_Type__c))}"/>
+<apex:inputField value="{!objQP.Disc__c}" style="width:45px;" rendered="{!ISBLANK(objQP.Campaign_Product_Type__c)}"/>
+</apex:column>-->
+            </apex:pageBlockTable>
+        </apex:outputPanel>
+    </apex:pageblock>
+</td>
+</tr>
+</table>
+<a name="bottom"/>
+<apex:outputPanel id="popPanel" style="height:15px;">
+    <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!blnShowSupportingInfo}"/>
+    <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!blnShowSupportingInfo}">
+        <div align="right">
+            <apex:actionRegion >
+                <apex:commandLink value="[X]" action="{!hideProductInfo}" status="closingStatus" reRender="popPanel"/>
+                <apex:actionStatus id="closingStatus">
+                    <apex:facet name="start">
+                        <apex:image value="/img/loading.gif"/>
+                    </apex:facet> 
+                </apex:actionStatus>
+            </apex:actionRegion>
+        </div>
+        <apex:outputPanel layout="block" style="text-align:center;">
+            {!strProductInfo}
+        </apex:outputPanel>
+    </apex:outputPanel>
+</apex:outputPanel>
+
+<apex:outputPanel id="ConfirmPanel" >
+    <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!blnShowConfirmPanel}"/>
+    <apex:outputPanel styleClass="custPopup" layout="block" rendered="{!blnShowConfirmPanel}" style="height:400px; overflow: auto;">
+        <apex:pageMessages />
+        <apex:pageBlock title="Products requiring Acknowledgement">
+            <apex:pageBlockButtons location="both">
+                <apex:commandButton value="Continue" action="{!confBoxProceed}" reRender="ConfirmPanel" status="closingStatus" oncomplete="closeJSFunction('{!strIsSaveSuccessful}');"/>
+                <apex:commandButton value="Cancel" action="{!confBoxCancel}" reRender="ConfirmPanel" status="closingStatus"/>
+                <apex:actionStatus id="closingStatus">
+                    <apex:facet name="start">
+                        <apex:image value="/img/loading.gif"/>
+                    </apex:facet> 
+                </apex:actionStatus>
+            </apex:pageBlockButtons>
+            <apex:pageBlockTable value="{!list_NotificationProducts}" var="objConf">
+                <apex:column headerValue="Product">
+                    {!objConf.objProd.Description}<br/>({!objConf.objProd.Name})
+                </apex:column>
+                <apex:column headerValue="Important Note">
+                    <apex:outputField value="{!objConf.objProd.Notification_Message__c}"/>
+                </apex:column>
+                <apex:column headerValue="I acknowledge*">
+                    <apex:inputCheckbox value="{!objConf.blnIsSelected}"/>
+                </apex:column>
+            </apex:pageBlockTable>                    
+        </apex:pageBlock>         
+        <apex:outputText value="*Acknowledging this message means that you own the responsibility to take action as indicated after submitting an order for these items." />       
+    </apex:outputPanel>
+</apex:outputPanel>
+
+<div style="height:15px;">
+    <apex:actionStatus id="status">
+        <apex:facet name="start">    
+            <apex:outputPanel >
+                <apex:outputPanel styleClass="popupBackground" layout="block"/>
+                <apex:outputPanel styleClass="custPopup" layout="block">
+                    <apex:outputPanel layout="block" style="text-align:center;">
+                        Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:facet>                           
+    </apex:actionStatus>
+</div>
+</apex:form>
+<script>
+function closeJSFunction(strIsSaveSuccessful)
+{
+    if(strIsSaveSuccessful == 'Yes')
+    {
+        window.opener.saveAndReload();
+        close();
+    }
+}
+function setCheckBox(val){
+    
+    if(val == 'EQUIP' || val == 'Partner PureSuccess'){
+        if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:0:rpt2:0:chkSelected') != null)
+            document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:0:rpt2:0:chkSelected').checked = true;
+        if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:1:rpt2:0:chkSelected') != null)
+            document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:1:rpt2:0:chkSelected').checked = false;
+        if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:2:rpt2:0:chkSelected') != null)
+            document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:2:rpt2:0:chkSelected').checked = false;
+    }            
+    else if(val == 'GUIDE'){
+        if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:0:rpt2:0:chkSelected') != null)
+            document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:0:rpt2:0:chkSelected').checked = false;
+        if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:1:rpt2:0:chkSelected') != null)
+            document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:1:rpt2:0:chkSelected').checked = true;
+        if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:2:rpt2:0:chkSelected') != null)
+            document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:2:rpt2:0:chkSelected').checked = false;        
+    }
+        else{
+            if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:0:rpt2:0:chkSelected') != null)
+                document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:0:rpt2:0:chkSelected').checked = false;
+            if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:1:rpt2:0:chkSelected') != null)
+                document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:1:rpt2:0:chkSelected').checked = false;
+            if(document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:2:rpt2:0:chkSelected') != null)
+                document.getElementById('pg:frm:pgblkPureSuccessBlock:rpt1:2:rpt2:0:chkSelected').checked = true;
+        }
+    
+}
+</script>
+</apex:page>

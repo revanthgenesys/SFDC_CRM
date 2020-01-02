@@ -1,0 +1,507 @@
+<apex:page standardController="Case"
+	extensions="CreateCustomerPortalCaseExtenstion" action="{!lazyLoad}">
+	<apex:form id="caseForm">
+	<apex:includeScript value="/support/console/22.0/integration.js"/>
+
+		<script>
+        function hideRequiredFields(divId) {
+        var makeRequired = "{! !isPortal && !isCaNonAdmin}";
+            if(makeRequired == 'true'){
+                document.getElementById(divId).style.display= 'none';
+            }
+        };
+        
+        
+        </script>
+		<apex:includeScript value="{!$Resource.LookupPopUp}" />
+
+		<!-- <apex:includeScript value="/support/console/20.0/integration.js" /> -->
+		<apex:includeScript value="/support/console/25.0/integration.js" />
+		<script type="text/javascript">
+		
+			function testGetFocusedSubtabId() {
+            sforce.console.getFocusedSubtabId(showTabId);
+	        }
+	        var showTabId = function showTabId(result) {
+	                // Display the tab ID
+	            alert ('Tab ID: ' + result.id);
+	        };
+	        
+            function testCloseTab() {
+                //First find the ID of the current tab to close it
+                sforce.console.getEnclosingPrimaryTabId(closeSubtab);
+            }
+            
+            var closeSubtab = function closeSubtab(result) {
+                //Now that we've got the tab ID, we can close it
+                var tabId = result.id;
+                sforce.console.closeTab(tabId);
+                
+            };
+           	
+			var field1ClassName = 'End_User_Account__c';
+			var field2ClassName = 'Sold_To_Account__c';
+			
+        </script>
+		<!-- <apex:includeScript value="/support/console/22.0/integration.js" /> -->
+		<script type="text/javascript">
+            function testOpenPrimaryTab() {
+                //Open a new primary tab 
+                sforce.console.openPrimaryTab(null, "/{!Case.id}", true, 
+                    "Case : {!Case.CaseNumber}");
+            }
+            
+            var openSuccess = function openSuccess(result) {
+                //Report whether opening the new tab was successful
+                if (result.success == true) {
+                    alert('Primary tab successfully opened');
+                } else {
+                    alert('Primary tab cannot be opened');
+                }
+            };
+            
+      </script>
+
+
+		<!-- <apex:sectionHeader title="Select the type of request you would like to make"
+            rendered="{!NOT(showDynamicFld)}" />
+        <apex:pageBlock id="pblock" rendered="{!NOT(showDynamicFld)}>
+
+            <apex:selectList value="{!caseType}" multiselect="false" size="1">
+                <apex:selectOptions value="{!RecType}" />
+            </apex:selectList>
+            <apex:commandButton value="Go!" id="SubmitCase" reRender="caseForm"
+                action="{!caseType}">
+            </apex:commandButton>
+        </apex:pageBlock>-->
+
+		<apex:pageBlock id="dynFld" rendered="{!showDynamicFld}">
+		<script>
+        
+		        function callResetFilters(){
+		          var dontSkipFirstScreen = "{!dontSkipFirstScreen}"
+		          if(dontSkipFirstScreen == "false"){
+		              document.getElementById('j_id0:caseForm:dynFld:dynFldPBSection:prodLine:pLineList').value = '';
+		              document.getElementById('j_id0:caseForm:dynFld:dynFldPBSection:prod:prodList').value = '';
+		              document.getElementById('j_id0:caseForm:dynFld:dynFldPBSection:comp:counterStatus').value = '';
+		              document.getElementById('j_id0:caseForm:dynFld:dynFldPBSection:ver:verList').value = '';
+		              
+		              //resetFiltersAF();// Calling reset filters again to set the product, product line , component and version to none.
+		          }
+		        }
+		        
+		        function CloseAndRefresh(){
+		        
+		        var isProdChangeValid = {!isProdChangeValid};
+		            if(isProdChangeValid == true) {
+		            	//testGetFocusedSubtabId();
+		                testCloseTab();
+		                testOpenPrimaryTab();
+		                return false;
+		            }else{
+		                return false;
+		            }
+		        }
+        
+        </script>
+			<apex:pageMessages id="pgMsg"/>
+			<!-- <tr><td class="pbTitle"><h2 class="mainTitle"><apex:outputField value="{!case.RecordTypeId}"/></h2></td><td>&nbsp;</td></tr> -->
+			<div class="pbHeader">
+
+			<table cellspacing="0" cellpadding="0" border="0">
+				<tbody>
+					<tr>
+						<td class="pbTitle">
+						<h2 class="mainTitle"><apex:outputField value="{!case.RecordTypeId}" /></h2>
+						</td>
+						<td><apex:commandButton id="resetFilter"
+							value="Reset Filters" action="{!resetFilters}"
+							rendered="{!!displayCaseFields && prodFnd && isContactChosen}" rerender="dynFld" /></td>
+					</tr>
+				</tbody>
+			</table>
+			</div>
+		
+			<apex:pageBlockSection columns="1" id="dynFldPBSection"
+				rendered="{!prodFnd && !displayCaseFields}">
+				<apex:pageBlockSectionItem id="contact" rendered="{!!isPortal && !skip}">
+					<apex:outputLabel value="Contact" />
+					<apex:actionStatus startText=" Processing"
+						stopText=" Done " id="counterStatus">
+						<apex:facet name="start">Processing...
+          <img src="/apexpages/devmode/img/saveStatus.gif" />
+						</apex:facet>
+						<apex:facet name="stop">
+							<apex:inputField value="{!ca.ContactId}" required="true">
+								<apex:actionSupport event="onchange" action="{!chooseContact}"
+									rerender="dynFld" status="counterStatus">
+								</apex:actionSupport>
+							</apex:inputField>
+						</apex:facet>
+					</apex:actionStatus>
+				</apex:pageBlockSectionItem>
+
+
+				<apex:pageBlockSectionItem id="endUserAcc"
+					rendered="{!isContactChosen && !skip}">
+					<apex:outputLabel value="End User Account" />
+					<apex:outputPanel >
+						<apex:inputHidden value="{!endUserAccId}" id="endUserId" />
+						<div class="requiredInput"><apex:actionRegion >
+
+							<div class="requiredBlock" id="hide"><script
+								type="text/javascript">
+                               hideRequiredFields('hide');
+                            </script></div>
+							<apex:actionStatus startText=" Processing"
+								stopText=" Done " id="counterStatus">
+								<apex:facet name="start">Processing...
+         						 <img src="/apexpages/devmode/img/saveStatus.gif" />
+								</apex:facet>
+								<apex:facet name="stop">
+									<apex:inputText value="{!endUserAccName}" id="endUserName">
+										<apex:actionSupport event="onchange"
+											rerender="dynFldPBSection" onComplete=""
+											status="counterStatus" />
+									</apex:inputText>
+								</apex:facet>
+							</apex:actionStatus>
+						</apex:actionRegion> <a href="#"
+							onclick="openLookupPopup('{!$Component.endUserName}', '{!$Component.endUserId}', '{!fields}', 'End_User_Account__r', constructQuery( '{!$Component.query}'), 'a0Y'); return false">
+						<script type="text/javascript">
+							field1NameId = '{!$Component.endUserName}';
+							field1IdId = '{!$Component.endUserId}';
+						</script>
+						<img onmouseover="this.className='lookupIconOn';"
+							alt="Account Name Lookup (New Window)"
+							onmouseout="this.className='lookupIcon';" class="lookupIcon"
+							src="/s.gif" /> </a></div>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:inputHidden value="{!query}" id="query" />
+				<script type="text/javascript">
+					queryFieldId = '{!$Component.query}';
+				</script>
+				<apex:pageBlockSectionItem id="soldToAcc"
+					rendered="{!isContactChosen && !skip}">
+					<apex:outputLabel value="Sold To Account" />
+					<apex:outputPanel >
+						<apex:inputHidden value="{!soldToAccId}" id="soldToAccId" />
+						<div class="requiredInput"><apex:actionRegion >
+							<div class="requiredBlock" id="hideSoldTo"><script
+								type="text/javascript">
+                               hideRequiredFields('hideSoldTo');
+                            </script></div>
+							<apex:actionStatus startText=" Processing"
+								stopText=" Done " id="counterStatus">
+								<apex:facet name="start">Processing...
+          <img src="/apexpages/devmode/img/saveStatus.gif" />
+								</apex:facet>
+								<apex:facet name="stop">
+									<apex:inputText value="{!soldToAccName}" id="soldToAccName">
+										<apex:actionSupport event="onchange" rerender=""
+											onComplete="test();" status="counterStatus" />
+									</apex:inputText>
+								</apex:facet>
+							</apex:actionStatus>
+						</apex:actionRegion> <a href="#"
+							onclick="openLookupPopup('{!$Component.soldToAccName}', '{!$Component.soldToAccId}', '{!fields}', 'Sold_To_Account__r', constructQuery( '{!$Component.query}'), 'a0Y'); return false">
+						<script type="text/javascript">
+							field2NameId = '{!$Component.soldToAccName}';
+							field2IdId = '{!$Component.soldToAccId}';
+						</script>
+						<img onmouseover="this.className='lookupIconOn';"
+							alt="Account Name Lookup (New Window)"
+							onmouseout="this.className='lookupIcon';" class="lookupIcon"
+							src="/s.gif" /> </a></div>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<!--  <apex:inputField value="{!case.Product}"/> -->
+				<apex:pageBlockSectionItem id="prodLine"
+					rendered="{!isCaNonAdmin && isContactChosen}">
+					<apex:outputLabel value="Product Line" />
+					<apex:actionStatus startText=" Processing"
+						stopText=" Done " id="counterStatus">
+						<apex:facet name="start">Processing...
+          <img src="/apexpages/devmode/img/saveStatus.gif" />
+						</apex:facet>
+						<apex:facet name="stop">
+							<apex:selectList value="{!ca.Product_Line__c}" size="1" id="pLineList"
+								label="Product Line"
+								disabled="{!ca.End_User_Account__c== null || ca.Sold_To_Account__c == null}">
+								<apex:selectOptions value="{!ProdLine}" />
+								<apex:actionSupport event="onchange" rerender="dynFld"
+									oncomplete="" status="counterStatus" />
+							</apex:selectList>
+						</apex:facet>
+					</apex:actionStatus>
+
+				</apex:pageBlockSectionItem>
+
+				<apex:pageBlockSectionItem id="prod"
+					rendered="{!isCaNonAdmin && isContactChosen}">
+					<apex:outputLabel value="Product" />
+					<apex:outputPanel layout="block" styleClass="requiredInput">
+						<apex:outputPanel layout="block" styleClass="requiredBlock" />
+						<apex:actionStatus startText=" Processing"
+							stopText=" Done " id="counterStatus">
+							<apex:facet name="start">Processing...
+          <img src="/apexpages/devmode/img/saveStatus.gif" />
+							</apex:facet>
+							<apex:facet name="stop">
+
+								<apex:selectList value="{!ca.Support_Product__c}" size="1"
+									label="Product" id="prodList"
+									disabled="{!ca.End_User_Account__c== null || ca.Sold_To_Account__c == null}">
+									<apex:selectOptions value="{!Prods}" />
+									<apex:actionSupport event="onchange" action="{!gtComponents}"
+										rerender="" status="counterStatus" oncomplete="rrProLine();" />
+								</apex:selectList>
+							</apex:facet>
+						</apex:actionStatus>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:actionFunction name="rrProLine" action="{!gtProdLine}"
+					rerender="dynFld" />
+				<apex:pageBlockSectionItem id="comp"
+					rendered="{!isCaNonAdmin && isContactChosen}">
+					<apex:outputLabel value="Component" />
+					<apex:actionStatus startText=" Processing"
+						stopText=" Done " id="counterStatus">
+						<apex:facet name="start">Processing...
+          <img src="/apexpages/devmode/img/saveStatus.gif" />
+						</apex:facet>
+						<apex:facet name="stop">
+							<apex:selectList value="{!ca.Component__c}" size="1" id="compList"
+								label="Component" disabled="{!ca.Support_Product__c == null}">
+								<apex:selectOptions value="{!Components}" />
+								<apex:actionSupport event="onchange" action="{!gtversions}"
+									rerender="dynFld" status="counterStatus" oncomplete="" />
+							</apex:selectList>
+						</apex:facet>
+					</apex:actionStatus>
+				</apex:pageBlockSectionItem>
+
+				<apex:pageBlockSectionItem id="ver"
+					rendered="{!isCaNonAdmin && isContactChosen}">
+					<apex:outputLabel value="Product Version" />
+					<apex:selectList value="{!ca.Product_Version__c}" size="1" id="verList"
+						label="Version" disabled="{!ca.Component__c =null}">
+						<apex:selectOptions value="{!Versions}" />
+					</apex:selectList>
+				</apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem id="reason"
+                    rendered="{!!isPortal && skip}">
+                    <apex:outputLabel value="Unentitled Product Reason" />
+                    <apex:inputField value="{!ca.Un_entitled_product_reason__c}"/>
+                </apex:pageBlockSectionItem>
+
+
+			</apex:pageBlockSection>
+			<apex:pageBlockSection rendered="{!NOT(prodFnd)}" id="notFndSection"
+				columns="1">
+				<apex:pageMessage summary="{!$Label.DidntFindYourProductMsg}"
+					severity="warning" strength="3" escape="false" />
+				<apex:pageMessages />
+			</apex:pageBlockSection>
+            
+			<apex:pageBlockButtons location="bottom" rendered="{!showDynamicFld}" id="btns">
+
+                <apex:commandLink action="{!prNtFnd}" immediate="true"
+                    value="Didnt Find Your Product2?" id="dntFndPro2"
+                    rerender="dynFld"
+                    rendered="{!prodFnd && !skip && !isPortal && isCaNonAdmin =true && !displayCaseFields && isContactChosen}"
+                    onComplete="callResetFilters()">
+                    <apex:param name="skip" value="true" assignTo="{!skip}" />
+                    <apex:param name="dontSkipFirstScreen" value="false" assignTo="{!dontSkipFirstScreen}" />
+                    
+                </apex:commandLink>
+                
+				<apex:commandLink action="{!prNtFnd}" immediate="true"
+					value="Didnt Find Your Product?" id="dntFndPro"
+					rerender="dynFld,notFndSection"
+					rendered="{!prodFnd && isPortal && isCaNonAdmin =true && !displayCaseFields && !isCaseEdit && isContactChosen}">
+					<apex:param name="skip" value="true" assignTo="{!skip}" />
+				</apex:commandLink>
+
+				<apex:commandButton value="Next" id="next" action="{!next}"
+					rendered="{!prodFnd && !displayCaseFields && !isCaseEdit && NOT(isFeatureRequestCase)}"
+					rerender="">
+					<apex:param name="prodFnd" value="true" assignTo="{!prodFnd}" />
+					<apex:param name="dontSkipFirstScreen" value="true" assignTo="{!dontSkipFirstScreen}" />
+				</apex:commandButton>
+                <apex:commandButton value="Next" id="next1" action="{!next1}"
+					rendered="{!prodFnd && !displayCaseFields && !isCaseEdit && isFeatureRequestCase}" >
+					<apex:param name="prodFnd" value="true" assignTo="{!prodFnd}" />
+					<apex:param name="dontSkipFirstScreen" value="true" assignTo="{!dontSkipFirstScreen}" />
+				</apex:commandButton>
+				
+				<apex:commandButton value="Save" id="SaveProdChange"
+					 action="{!saveProdChange}" rendered="{!isCaseEdit}"
+					rerender="dynFld" /> <!-- onComplete="CloseAndRefresh();" /> -->
+				<apex:commandButton value="Cancel" id="CancelProdChange"
+					action="{!cancelProdChange}" rendered="{!isCaseEdit}"
+					rerender="dynFld" onComplete="CloseAndRefresh();" />
+
+				<apex:commandButton value="Save" id="Save" action="{!saveCase}"
+					rendered="{!displayCaseFields}" />
+				<apex:commandButton value="Cancel" id="Cancel" action="{!cancelCaseCreation}"
+					rendered="{!!isCaseEdit}" immediate="true" rerender="dynFld"/>
+
+
+			</apex:pageBlockButtons>
+			
+			<apex:pageBlockSection title="New Case" columns="1"
+				rendered="{!displayCaseFields && isCaNonAdmin && NOT(isFeatureRequestCase) && NOT(isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_1}"
+					var="f">
+					<apex:inputField value="{!ca[f]}"
+						required="{!OR(f.required, f.dbrequired)}" style="width:50%;"/>
+				</apex:repeat>
+			</apex:pageBlockSection>
+			<apex:pageBlockSection columns="2"
+				rendered="{!displayCaseFields && isCaNonAdmin && NOT(isFeatureRequestCase) && NOT(isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_2}"
+					var="f">
+					<apex:inputField value="{!ca[f]}"
+						required="{!OR(f.required, f.dbrequired)}" style="width:70%;"/>
+				</apex:repeat>
+			</apex:pageBlockSection>
+			<apex:pageBlockSection columns="1"
+				rendered="{!displayCaseFields && isCaNonAdmin && NOT(isFeatureRequestCase) && NOT(isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_3}"
+					var="f">
+					<apex:inputField value="{!ca[f]}"
+						required="{!OR(f.required, f.dbrequired)}" style="width:50%;"/>
+				</apex:repeat>
+			</apex:pageBlockSection>
+			<apex:pageBlockSection columns="2"
+				rendered="{!displayCaseFields && isCaNonAdmin && NOT(isFeatureRequestCase) && NOT(isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Product_Layout_4}"
+					var="f">
+					<apex:inputField value="{!ca[f]}"
+						required="{!OR(f.required, f.dbrequired)}" style="width:70%;"/>
+				</apex:repeat>
+			</apex:pageBlockSection>
+			
+			
+			
+			
+			<apex:pageBlockSection title="New Case" columns="1"
+				rendered="{!displayCaseFields && !isCaNonAdmin && NOT(isFeatureRequestCase) && NOT(isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Admin_Layout_1}"
+					var="f">
+					<apex:inputField value="{!ca[f]}"
+						required="{!OR(f.required, f.dbrequired)}" style="width:50%"/>
+
+				</apex:repeat>
+			</apex:pageBlockSection>
+						<apex:pageBlockSection columns="2"
+				rendered="{!displayCaseFields && !isCaNonAdmin && NOT(isFeatureRequestCase) && NOT(isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Internal_Admin_Layout_2}"
+					var="f">
+					<apex:inputField value="{!ca[f]}"
+						required="{!OR(f.required, f.dbrequired)}" style="width:70%"/>
+
+				</apex:repeat>
+			</apex:pageBlockSection>
+			
+			
+			<apex:pageBlockSection title="New Case" columns="1"
+				rendered="{!displayCaseFields && !isCaNonAdmin && NOT(isFeatureRequestCase) && (isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Admin_Layout_1}"
+					var="f">
+					<apex:inputField value="{!ca[f]}"  
+						required="{!OR(f.required, f.dbrequired)}" style="width:80%"/>
+						<!-- 
+						<apex:pageBlockSectionItem rendered="{!IF((f.FieldPath=='Priority'),true,false)}">  
+                    <apex:outputLabel value="Priority" >
+                        <img title="Cases with Critical or Production Down priority should be logged as a High." class="helpOrb" alt="" src="/s.gif"/>
+                    </apex:outputLabel>
+						<apex:outputPanel layout="block" styleClass="requiredInput">
+                        <apex:outputPanel layout="block" styleClass="requiredBlock" />
+				<apex:selectList label="Priority" value="{!ca.Priority}" multiselect="false" size="1" rendered="{!IF((f.FieldPath=='Priority'),true,false)}" title="Cases with Critical or Production Down priority should be logged as a High." required="true">
+                        <apex:selectOptions value="{!probType}" />
+                    </apex:selectList>
+                    </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                     -->
+				</apex:repeat>
+			</apex:pageBlockSection>
+			
+			<apex:pageBlockSection columns="2"
+				rendered="{!displayCaseFields && !isCaNonAdmin && NOT(isFeatureRequestCase) && (isPortal)}">
+				<apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Admin_Layout_2}"
+					var="f">
+					<apex:inputField value="{!ca[f]}" 
+						required="{!OR(f.required, f.dbrequired)}" style="width:70%"/>						
+				</apex:repeat>
+			</apex:pageBlockSection>
+          
+        <apex:pageBlockSection title="New Case" columns="1"
+                rendered="{!displayCaseFields && !!isCaNonAdmin && NOT(isFeatureRequestCase) && (isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_1}"
+                    var="f">
+                    <apex:inputField value="{!ca[f]}"
+                        required="{!OR(f.required, f.dbrequired)}" style="width:100%;"/>
+                        <!-- 
+                    <apex:pageBlockSectionItem rendered="{!IF((f.FieldPath=='Priority'),true,false)}">  
+                    <apex:outputLabel value="Priority" >
+                        <img title="Cases with Critical or Production Down priority should be logged as a High." class="helpOrb" alt="" src="/s.gif"/>
+                    </apex:outputLabel>
+                    <apex:outputPanel layout="block" styleClass="requiredInput">
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                    <apex:selectList label="Priority" value="{!ca.Priority}" multiselect="false" size="1" rendered="{!IF((f.FieldPath=='Priority'),true,false)}" title="Cases with Critical or Production Down priority should be logged as a High.">
+                        <apex:selectOptions value="{!probType}" />
+                    </apex:selectList>
+                    </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                     -->
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2"
+                rendered="{!displayCaseFields && !!isCaNonAdmin && NOT(isFeatureRequestCase) && (isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_2}"
+                    var="f">
+                    <apex:inputField value="{!ca[f]}" 
+                        required="{!OR(f.required, f.dbrequired)}" style="width:90%;"/>
+                 </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="1"
+                rendered="{!displayCaseFields && !!isCaNonAdmin && NOT(isFeatureRequestCase) && (isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_3}"
+                    var="f">
+                    <apex:inputField value="{!ca[f]}"
+                        required="{!OR(f.required, f.dbrequired)}" style="width:90%;"/>
+                 </apex:repeat>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection columns="2"
+                rendered="{!displayCaseFields && !!isCaNonAdmin && NOT(isFeatureRequestCase) && (isPortal)}">
+                <apex:repeat value="{!$ObjectType.Case.FieldSets.Genesys_Portal_Product_Layout_4}"
+                    var="f">
+                    <apex:inputField value="{!ca[f]}"
+                        required="{!OR(f.required, f.dbrequired)}" style="width:90%;"/>
+                 </apex:repeat>
+            </apex:pageBlockSection>
+			<br/>
+			</apex:pageBlock>
+		<apex:actionFunction action="{!next}" name="nextAdminCase"
+			rerender="caseForm">
+			<apex:param name="prodFnd" value="true" assignTo="{!prodFnd}" />
+		</apex:actionFunction>
+		<apex:actionFunction name="test" id="cancel" oncomplete="renDynFld()" />
+		<apex:actionFunction name="renDynFld" action="{!gtProdLine}"
+			rerender="dynFld" />    
+		<apex:actionFunction name="resetFiltersAF" action="{!resetFilters}" rerender="dynFld"	/>    
+	<apex:outputpanel id="ivr" rendered="{!isSaaS}">
+	<b>IVR Information </b><br/>
+	Contact Name: {!ivr_contact} <br/>
+	Sold To Account: {!ivr_SoldTo}<br/>
+	Product line: {!ivr_Productline}<br/>
+	Product: {!ivr_Product}
+	</apex:outputpanel> 
+	
+	</apex:form>
+
+</apex:page>

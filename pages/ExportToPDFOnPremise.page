@@ -1,0 +1,166 @@
+<apex:page title="Quote : {!quote.Name}" controller="ExportToExcelOnPremiseController" showheader="false" sidebar="false" standardStylesheets="false" 
+    readOnly="true" renderAs="pdf">
+    <apex:stylesheet value="{!URLFOR($Resource.ProposalCss1)}" />
+    <table style="width:600px;font-size:10pt;font-weight:normal;">
+        <tr>
+            <td colspan="2">
+                <b>
+                <img src="{!$Resource.GenesysLogo}" width="250px;"/>
+                </b>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <b>
+                Sales Quote
+                </b>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Quote Number
+            </td>
+            <td>
+                {!quote.Name}
+            </td>
+            
+        </tr>
+        <tr>
+            <td>
+                Opportunity
+            </td>
+            <td>
+                {!quote.BigMachines__Opportunity__r.Name}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Prepared By
+            </td>
+            <td>
+                {!quote.Owner.Name}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Created Date
+            </td>
+            <td>
+                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                   <apex:param value="{!quote.CreatedDate}" />
+                </apex:outputText>              
+            </td>
+        </tr>       
+    </table>
+    <br/>
+    <table border="0" class="smallText" cellpadding="5px" style="font-size:12px;border-color:black;text-align:center;border-collapse:collapse;width:100%;text-align:left;">
+        <thead class="header">
+                    <tr style="background-color:#504A4B;color:white">
+                        <th></th>
+                        <th class="headerRow">Product Number</th>
+                        <th class="headerRow">Description</th>                 
+                        <th class="headerRow" style="text-align:right;">Quantity</th>
+                        <th class="headerRow" style="text-align:right;">List Price</th>
+                        <th class="headerRow" style="text-align:right;">Ext List Price</th>                     
+                    </tr>
+                </thead>
+                <tbody>
+                    <apex:variable value="{!1}" var="rowNumLevel1"/>
+                    <apex:repeat value="{!list_QuoteProducts}" var="objQPWrapper">
+                        <!-- Quote Product Rows -->
+                        <tr>
+                            <td >{!rowNumLevel1}.</td>
+                            <td>
+                                <apex:outputText value="{!objQPWrapper.record.BigMachines__Product__r.Name}" />
+                            </td>
+                            <td>
+                                <apex:outputText value="{!objQPWrapper.record.BigMachines__Product__r.Description__c}" />
+                            </td>
+                            <td style="text-align:right;">
+                                <apex:outputText value="{!objQPWrapper.record.Quantity__c}"/>
+                            </td>
+                            <td style="text-align:right;">
+                                <apex:outputText value="{0, number,###,###,##0.00}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == null || objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '2'}">
+                                    <apex:param value="{!objQPWrapper.record.List_Price__c}" />
+                                </apex:outputText>
+                                <apex:outputText value="{0, number,###,###,##0.0000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '4'}">
+                                    <apex:param value="{!objQPWrapper.record.List_Price__c}" />
+                                </apex:outputText>
+                                <apex:outputText value="{0, number,###,###,##0.000000}" rendered="{!objQPWrapper.record.BigMachines__Product__r.Tier_Pricing_Decimal_Precision__c == '6'}">
+                                    <apex:param value="{!objQPWrapper.record.List_Price__c}" />
+                                </apex:outputText>
+                            </td>
+                            <td style="text-align:right;">
+                                <apex:outputText value="{!objQPWrapper.record.Ext_List__c}"/>
+                            </td>                                                       
+                        </tr>
+                        <apex:variable value="{!rowNumLevel1 + 1}" var="rowNumLevel1"/>
+                    </apex:repeat>
+                    <!-- Service Level Row -->                  
+                        <tr>
+                            <td >
+                            <apex:outputPanel rendered="{objServiceLevel.BigMachines__Product__r.Name != null}">
+                                    {!rowNumLevel1}.
+                                </apex:outputPanel>
+                            </td>                           
+                            <td>
+                                <apex:outputText value="{!objServiceLevel.BigMachines__Product__r.Name}"/>
+                            </td>
+                            <td >
+                                <apex:outputText value="{!objServiceLevel.Product_Description__c}"/>                          
+                            </td>
+                            <td style="text-align:right;">
+                                
+                            </td>
+                            <td style="text-align:right;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!objServiceLevel.List_Price__c}" />
+                                </apex:outputText>
+                            </td>
+                            <td style="text-align:right;">
+                                <apex:outputText value="{!objServiceLevel.Ext_List__c}"/>
+                            </td>
+                        </tr>
+                        <apex:variable value="{!rowNumLevel1 + 1}" var="rowNumLevel1"/>
+                    <!-- Third Party GC Line Row -->
+                         <tr>
+                            <td >
+                                <apex:outputPanel rendered="{objThirdPartyGCLine.BigMachines__Product__c != null}">
+                                    {!rowNumLevel1}.
+                                </apex:outputPanel>
+                            </td>                           
+                            <td>
+                                <apex:outputText value="{!objThirdPartyGCLine.BigMachines__Product__r.Name}"/>
+                            </td>
+                            <td >
+                                <apex:outputText value="{!objThirdPartyGCLine.Product_Description__c}"/>                          
+                            </td>
+                            <td style="text-align:right;">
+                                
+                            </td>
+                            <td style="text-align:right;">
+                                <apex:outputText value="{0, number, ###,##0.00}">
+                                    <apex:param value="{!objThirdPartyGCLine.List_Price__c}" />
+                                </apex:outputText>
+                            </td>
+                            <td style="text-align:right;">
+                                <apex:outputText value="{!objThirdPartyGCLine.Ext_List__c}"/>
+                            </td>
+                        </tr>
+                        <!-- 
+                        <tr>
+                            <td colspan="5">
+                            </td>
+                            <td style="text-align:right;">
+                                <b>
+                                    <apex:outputText value="{0, number, ###,##0.00}">
+                                        <apex:param value="{!quote.BigMachines__Total__c}" />
+                                    </apex:outputText>
+                                </b>
+                            </td>
+                        </tr>
+                         -->                         
+                </tbody>
+        </table>    
+    
+</apex:page>

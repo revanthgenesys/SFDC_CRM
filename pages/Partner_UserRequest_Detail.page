@@ -1,0 +1,551 @@
+<apex:page StandardController="Partner_User_Request__c"  extensions="PartnerUserRequestMatchingAccExtension" id="thePage">
+ 
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script> 
+        <apex:includeScript value="{!$Resource.PUR_LookUpPopUP}" />
+
+<Script>
+ j$ = jQuery.noConflict();
+ var acntFlag = "{!isExistingUserFound}";
+ var cntFlag  = "{!isExistingContactFound}";
+ var acntName = "{!cleanedCompany}";
+ 
+ console.log('---------acntName-----------'+acntName);
+ 
+ var accountName = "{!partnerUserRequest.Account_Name__c}";
+ 
+ var fistName = "{!partnerUserRequest.First_Name__c}";
+ var lastName = "{!partnerUserRequest.Last_Name__c}";
+ j$(window).load(function() {
+  j$(".pbBottomButtons").hide();
+  });
+ 
+  j$( document ).ready(function() {
+   /* Hide Edit & Del button in Communication */
+   //j$('.actionColumn').hide();
+  if(accountName == '')
+  {
+  j$('[id$=acntName]').val(acntName);
+  }
+  
+  j$('select.accessPickList').find('option:first').remove();
+  
+ 
+ var poralAccess = j$('[id$=portalAccess]').val();
+ var cntRadio = j$('[id$=newacntCheck]').is(':checked'); 
+ 
+  j$('[id$=newcntCheck]').change(function(){
+   if (j$(this).is(':checked')) {
+    console.log('Checked');
+  } else {
+    console.log('Unchecked');
+  }
+  });
+
+
+ if(poralAccess == 'Existing Partner User Access')
+    { 
+     j$('[id$=newAccountRadio]').hide();
+     j$(".pbBottomButtons").hide();
+    }else
+    {
+      j$('[id$=newAccountRadio]').show();
+      j$(".pbBottomButtons").hide();
+    }
+  });
+ 
+ function hideRadio(data)
+ {
+    var cntVal = j$('[id$=contactName]').val();         
+    if(data.value == 'Existing Partner User Access' && cntVal != '')
+    {
+     j$('[id$=newAccountRadio]').hide();
+     j$(".pbBottomButtons").hide();
+    }else
+    {
+      j$('[id$=newAccountRadio]').show();
+      j$(".pbBottomButtons").hide();
+    }
+ }
+ 
+  
+  function validContactLookup(targetName,targetId,acntName)
+  {
+  // var acntName = "{!partnerUserRequest.Account_Name__c}";
+   
+   console.log('------------acntName-----------'+acntName);
+      
+   console.log('------------targetName-----------'+targetName);
+   
+   console.log('------------targetId-----------'+targetId);
+  
+   if(acntName == '')
+   {
+     j$('[id$=cntLookupError]').show(); 
+    }else{
+     openLookupPopup(targetName,targetId, '{!fields}', '{!partnerUserRequest.Email__c}',acntName,'003'); 
+     j$('[id$=cntLookupError]').hide(); 
+     return false ;
+    }
+  }
+  
+  function clearAcntName()
+  {
+   console.log('----------------------inside-------------------');
+     j$('[id$=acntName]').val('');
+  }
+  
+   function SendEmail()
+   {
+     window.open('/apex/Communication?id={!Partner_User_Request__c.Id}', '_blank', 'toolbar=0,location=0,menubar=0');
+     return false;
+   }
+</Script>
+
+<style>
+   .firstVisitPopup
+    {
+        background-color: white;
+        border-width: 2px;
+        border-style: solid;
+        z-index: 9999;
+        left: 50%;
+        padding:10px;
+        position: absolute;
+        width: 600px;
+        margin-left: -250px;
+        top:300px;
+    }
+    .popupBackground
+    {
+        background-color:Black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+    } 
+</style>
+
+
+<apex:form id="theform">
+     <!--   <apex:actionFunction name="populateMatchingContactsAF" action="{!populateMatchingContact}" status="status" reRender="pnlContact">
+      <apex:param name="selectedAccountId" assignTo="{!selectedAccountId}" value=""/>
+      </apex:actionFunction>
+      <apex:actionFunction name="setMatchingContactsAF" action="{!setMatchingContact}" status="status" reRender="refresh">
+      <apex:param name="selectedContactId" assignTo="{!selectedContactId}" value=""/>
+      </apex:actionFunction>  -->
+            
+     <!--   <apex:actionFunction name="createNewAccountAF" action="{!createNewAccount}" status="status" reRender="thePanel" />
+      <apex:actionFunction name="createNewContactAF" action="{!createNewContact}" status="status" reRender="thePanel" />
+      <apex:actionFunction name="updatePRMAccess" action="{!updatePartnerAccess}" status="status" reRender="acntCntFields"/> -->
+      
+      <apex:actionFunction name="updateCntValues" action="{!updateUserCntDetails}" status="cntInputStatus" reRender="selectuserDet,inputFieldPanel"/>  
+      <apex:actionFunction name="createNewContactAF" action="{!createNewContact}" status="cntStatus" reRender="selectuserDet,inputFieldPanel" />
+      <apex:actionFunction name="updateAcntValues" action="{!updateUserAcntDetails}" status="acntStatus" reRender="selectuserDet,inputFieldPanel"/>
+      
+      <apex:sectionHeader title="Partner User Request" subtitle="{!Partner_User_Request__c.Name}"/>
+      <br/>
+
+      <!--<apex:pageBlock id="detailBlock">-->
+      
+       
+      
+      
+      <apex:outputPanel id="detailPanel">
+      <!-- PUR Details Start-->
+      <!--<apex:detail subject="{!Partner_User_Request__c.Id}" relatedList="false" title="false" id="theDetail"/>-->
+      
+      <!-- Partner User Request Handling Start-->
+      <apex:pageBlock title="Partner User Request Detail">
+        <apex:pageBlockSection columns="2">
+          
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Partner Request Number" />
+            <apex:outputField value="{!Partner_User_Request__c.Name}"/>
+          </apex:pageBlockSectionItem>
+          
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Owner" />
+            <apex:outputField value="{!Partner_User_Request__c.ownerid}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="First Name" />
+            <apex:outputField value="{!Partner_User_Request__c.First_Name__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Last Name" />
+            <apex:outputField value="{!Partner_User_Request__c.Last_Name__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Job Title" />
+            <apex:outputField value="{!Partner_User_Request__c.Job_Title__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Role" />
+            <apex:outputField value="{!Partner_User_Request__c.Role__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Company Name" />
+            <apex:outputField value="{!Partner_User_Request__c.Company_Name__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Country" />
+            <apex:outputField value="{!Partner_User_Request__c.Country__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Partner Type" />
+            <apex:outputField value="{!Partner_User_Request__c.Partner_Type__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Email" />
+            <apex:outputField value="{!Partner_User_Request__c.Email__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Status" />
+            <apex:outputField value="{!Partner_User_Request__c.Status__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Partner Portal Access" />
+            <apex:outputField value="{!Partner_User_Request__c.Partner_Portal_Access__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Contact Name" />
+            <apex:outputField value="{!Partner_User_Request__c.Contact_Name__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Case" />
+            <apex:outputField value="{!Partner_User_Request__c.Case__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Account Name" />
+            <apex:outputField value="{!Partner_User_Request__c.Account_Name__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Case Status" />
+            <apex:outputField value="{!Partner_User_Request__c.Case_Status__c}"/>
+          </apex:pageBlockSectionItem>
+          
+        </apex:pageBlockSection>
+      </apex:pageBlock>
+      
+     <!-- Partner User Request Handling End-->
+      
+      
+      <!-- PUR Details End-->
+      </apex:outputPanel>
+      <!--</apex:pageBlock>-->
+      
+      <!-- Partner User Request Handling Start-->
+      <apex:pageBlock title="Partner User Request Handling">
+        <apex:pageBlockSection columns="1">
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Assigned To" />
+            <apex:outputField value="{!Partner_User_Request__c.Assigned_To__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Request Status" /> 
+            <apex:outputField value="{!Partner_User_Request__c.Request_Status__c}"/>
+          </apex:pageBlockSectionItem>
+          <apex:pageBlockSectionItem >
+            <apex:outputLabel value="Channel Manager" />
+            <apex:outputField value="{!Partner_User_Request__c.Channel_Manager__c}"/>
+          </apex:pageBlockSectionItem>
+        </apex:pageBlockSection>
+      </apex:pageBlock>
+      
+     <!-- Partner User Request Handling End-->
+      
+      <apex:pageBlock id="pgblk">
+      <!-- Existing User Details Start-->
+       <div class="pbHeader">
+       <table border="0" cellpadding="0" cellspacing="0">
+       <tbody>
+       <tr>
+       <td class="pbTitle">
+       <h2 class="mainTitle">Existing User Details</h2>
+       </td>
+       </tr>
+       </tbody>
+       </table>
+       </div>
+      
+        <!-- Existing User Details Start-->
+        <apex:PageBlockTable value="{!existingUser}" var="eachRecord" rendered="{!isExistingUserFound}">
+        <apex:column headerValue="Existing User Name"><apex:outputLink value="/{!eachRecord.id}"  target="_blank"> {!eachRecord.Full_Name__c} </apex:outputLink></apex:column>
+        <apex:column headerValue="Account Name"><apex:outputLink value="/{!eachRecord.Contact.AccountId}" target="_blank"> {!eachRecord.Contact.Account.Name} </apex:outputLink> </apex:column>
+        <apex:column headerValue="Profile Name"><apex:outputLabel >{!eachRecord.Profile.Name} </apex:outputLabel></apex:column>
+        <apex:column headerValue="Is Active?"><apex:outputField value="{!eachRecord.isActive}"/></apex:column>        
+        </apex:pageBlockTable> 
+        
+        <apex:pageBlockSection >
+        <apex:outputLabel value="No existing user found" rendered="{!NOT(isExistingUserFound)}" />  
+        </apex:pageBlockSection>
+       <!-- Existing User Details End-->
+       
+       <!-- Existing User Details Start-->
+       <div class="pbHeader">
+       <table border="0" cellpadding="0" cellspacing="0">
+       <tbody>
+       <tr>
+       <td class="pbTitle">
+       <h2 class="mainTitle">Existing Contact Details</h2>
+       </td>
+       </tr>
+       </tbody>
+       </table>
+       </div>       
+              
+       <!-- Existing Contact Details Start-->
+       
+        <apex:PageBlockTable value="{!existingContact}" var="eachRecord" rendered="{!isExistingContactFound}">
+        <apex:column headerValue="Existing Contact Name"><apex:outputLink value="/{!eachRecord.id}"  target="_blank"> {!eachRecord.Name} </apex:outputLink></apex:column>
+        <apex:column headerValue="Account Name">  <apex:outputLink value="/{!eachRecord.Account.Id}" target="_blank"> {!eachRecord.Account.Name} </apex:outputLink>      </apex:column>
+        <apex:column headerValue="Country Name">  <apex:outputLabel value="{!eachRecord.Account.Country__r.Name}">  </apex:outputLabel></apex:column>
+        <apex:column headerValue="Account Type">  <apex:outputLabel value="{!eachRecord.Account.Type}">  </apex:outputLabel></apex:column>
+        <apex:column headerValue="GARN Number">  <apex:outputLabel value="{!eachRecord.Account.SAP_Code__c}">  </apex:outputLabel></apex:column>
+        <apex:column headerValue="Owner Name">  <apex:outputLabel > {!eachRecord.Owner.Name} </apex:outputLabel></apex:column>
+        <apex:column headerValue="Title"><apex:outputField value="{!eachRecord.Title}" /></apex:column>        
+        </apex:pageBlockTable> 
+    
+        <apex:pageBlockSection >
+        <apex:outputLabel value="No existing contact found" rendered="{!NOT(isExistingContactFound)}" />  
+        </apex:pageBlockSection>
+       <!-- Existing Contact Details End-->
+              
+       <!--Select User Details Start-->
+        <div class="pbHeader">
+        <table border="0" cellpadding="0" cellspacing="0">
+        <tbody>
+        <tr>
+        <td class="pbTitle">
+        <h2 class="mainTitle">Select User Details</h2>
+        </td>
+        </tr>
+        </tbody>
+        </table>
+        </div>
+        <br/>
+        
+         <apex:outputPanel id="thePanel">
+         
+         <apex:PageBlockSection id="selectuserDet">
+         <apex:outputPanel style="padding-left:125px;">
+         <apex:outputLabel value="Partner Portal Access" style="font-weight:bold;padding-right:18px;"/>
+         <apex:inputField id="portalAccess" value="{!partnerUserRequest.Partner_Portal_Access__c}" rendered="{!progressStatus}" styleclass="accessPickList">
+         </apex:inputField>
+         <apex:outputField value="{!partnerUserRequest.Partner_Portal_Access__c}" rendered="{!closedStatus}" /> 
+         </apex:outputPanel>
+         </apex:PageBlockSection>
+        
+     <!--    <apex:pageBlockSection >
+        <apex:inputField id="userAppAccess" value="{!partnerUserRequest.Show_Partner_Application__c}" rendered="{!partnerUserRequest.Status__c == 'Awaiting Approval' || partnerUserRequest.Status__c == 'Request Submitted'}"/>
+        <apex:outputField id="userAppAccessRead" value="{!partnerUserRequest.Show_Partner_Application__c}" rendered="{!partnerUserRequest.Status__c == 'Approved' || partnerUserRequest.Status__c == 'Denied'}"/>
+        </apex:pageBlockSection>  -->
+        
+        <apex:pageBlockSection id="newAccountRadio" rendered="false">
+            <apex:inputCheckBox id="newacntCheck" value="{!partnerUserRequest.Create_New_Account__c}" onchange="createNewAccountAF();return false;"  rendered="{!progressStatus && !hideNewAccount}" />             
+        </apex:pageBlockSection> 
+        
+        
+        <apex:PanelGrid id="newContactRadio">
+             <apex:outputPanel style="padding-left:130px;">
+             <apex:outputLabel value="Create New Contact" style="font-weight:bold;padding-right:30px;" rendered="{!progressStatus && !hideNewContact}" />
+             <apex:inputCheckBox id="newcntCheck" value="{!partnerUserRequest.Create_New_Contact__c}" onchange="createNewContactAF();return false;" rendered="{!progressStatus && !hideNewContact}" /> 
+             &nbsp;&nbsp;&nbsp;
+             <apex:actionStatus id="cntStatus">
+             <apex:facet name="start">
+                <apex:image value="/img/loading.gif"/> 
+             </apex:facet>                
+             </apex:actionStatus>
+             </apex:outputPanel>
+        </apex:PanelGrid>
+        
+        <apex:inputHidden value="{!lookupContact.Id}" id="targetId" />
+        <apex:PanelGrid id="inputFieldPanel">
+            <apex:outputPanel style="padding-left:130px;">
+            <apex:outputLabel value="Account Name" style="font-weight:bold;padding-right:62px;"/>
+            <apex:inputField id="acntName" value="{!partnerUserRequest.Account_Name__c}" onchange="updateAcntValues(); return false;" rendered="{!progressStatus == true && isExistingUserFound != true}"  />
+             
+             &nbsp;&nbsp;&nbsp;
+             <apex:actionStatus id="acntStatus">
+             <apex:facet name="start">
+                <apex:image value="/img/loading.gif"/> 
+             </apex:facet>                
+             </apex:actionStatus>
+            
+            <apex:outputField value="{!partnerUserRequest.Account_Name__c}"  rendered="{!closedStatus == true  && isExistingUserFound != true}"/>
+            <apex:outputField value="{!partnerUserRequest.Duplicate_Account__c}"  rendered="{!isExistingUserFound == true}"/>            
+            
+            </apex:outputPanel>           
+            <apex:outputPanel style="padding-left:130px;">
+            <apex:outputLabel value="Contact Name" style="font-weight:bold;padding-right:65px;"/>
+            <apex:inputText value="{!lookupContact.Name}" id="targetName" label="Contact Name" disabled="false"  rendered="{!progressStatus == true && isExistingUserFound != true}"  onchange="updateCntValues();return false;"/>
+            <apex:outputPanel rendered="{!progressStatus == true && isExistingUserFound != true}" >
+            <apex:outputLink id="contactLookup" onclick="validContactLookup('{!$Component.targetName}', '{!$Component.targetId}', '{!partnerUserRequest.Duplicate_Account__c}');" value="#">
+            <img onmouseover="this.className='lookupIconOn';" 
+            alt="Contact Name Lookup (New Window)"
+            onmouseout="this.className='lookupIcon';" class="lookupIcon"
+            src="/s.gif" /> 
+            </apex:outputLink>
+            &nbsp;&nbsp;
+            <apex:actionStatus id="cntInputStatus">
+            <apex:facet name="start">
+                <apex:image value="/img/loading.gif"/> 
+            </apex:facet>                
+            </apex:actionStatus> 
+             &nbsp;&nbsp;
+            <apex:outputText id="cntLookupError"   value="Please select Account Name before selecting the Contact Name"   style="color:red;font-size:13px;display:none;" />  
+            </apex:outputPanel>
+            <apex:outputField value="{!partnerUserRequest.Contact_Name__c}" rendered="{!closedStatus == true  ||  isExistingUserFound == true}"/>
+            </apex:outputPanel>   
+            <br/>        
+            
+            <apex:outputPanel style="padding-left:280px;">
+            <apex:CommandButton action="{!showEmailPopup}" value="Send Email to SalesOps" status="status" rendered="{!progressStatus == true}"  reRender="emailPopup"  onClick="clearAcntName();" > 
+            </apex:CommandButton>
+            &nbsp;&nbsp;&nbsp;
+            <apex:CommandButton action="{!showRejectPopup}" value="Reject" status="status" rendered="{!progressStatus == true}" reRender="rejectPopup"  immediate="true"> 
+            </apex:CommandButton>
+            &nbsp;&nbsp;&nbsp;
+            <apex:CommandButton action="{!updatePUR}" value="Update" status="status" rendered="{!progressStatus == true}" rerender="inputFieldPanel,approvalList,detailPanel"> 
+            </apex:CommandButton>
+             &nbsp;&nbsp;&nbsp;
+            <apex:actionStatus id="status">
+            <apex:facet name="start">
+                <apex:image value="/img/loading.gif"/> 
+            </apex:facet>                
+            </apex:actionStatus>
+             &nbsp;&nbsp;&nbsp;
+             <apex:outputText id="greenMessage" Value="{!updateStatus}" rendered="{! progressStatus == true && purUpdated == false && isExistingUserFound == false && sendEmailCLicked == false}" style="color:red;font-weight:bold;" />  
+             <apex:outputText id="redMessage" Value="{!updateStatus}" rendered="{! (progressStatus == true && purUpdated == true ) || (isExistingUserFound == true && closedStatus == false) || sendEmailCLicked == true}"  style="color:green;font-weight:bold;"/>                        
+            </apex:outputPanel>            
+            </apex:PanelGrid>
+            </apex:outputPanel>
+            
+         
+      <!--Select User Details End-->
+</apex:pageBlock>
+            
+            <!-- Email popup code Start-->
+            <apex:outputPanel id="emailPopup">
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayEmailPopup}"/>
+            <apex:outputPanel styleClass="firstVisitPopup" rendered="{!displayEmailPopup}">
+            <apex:pageBlock id="emailtBlock" title="Send Email"> 
+            <br/>
+            
+            <apex:panelGrid width="80%">
+            <apex:outputPanel rendered="{!sendEmailCLicked == false}">
+            <apex:outputLabel value="Subject" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;
+            <apex:inputField value="{!partnerUserRequest.Email_Subject__c}"  rendered="{!displayEmailPopup}" style="width:450px;">  </apex:inputField>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!sendEmailCLicked == false}">
+            <apex:outputLabel value="Body" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:inputField value="{!partnerUserRequest.Email_Body__c}"  rendered="{!displayEmailPopup}" style="margin: 2px;width: 450px;height: 127px;">
+            </apex:inputField>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!sendEmailCLicked == true}">
+            <apex:outputText value="The email has been sent successfully" style="font-weight:blod;"/>
+            </apex:outputPanel>
+                        
+            <apex:outputPanel style="float:right"> 
+                <apex:commandButton value="Send" action="{!SendEmail}"  rendered="{!sendEmailCLicked == false}" status="sendEmailStatus" rerender="emailPopup"/>&nbsp;&nbsp;&nbsp;
+                <apex:commandButton value="Close" action="{!closeEmailPopup}" immediate="true" rerender="emailPopup"  status="sendEmailStatus" onclick="location.reload();"/>&nbsp;&nbsp;&nbsp;
+                 <apex:actionStatus id="sendEmailStatus">
+                <apex:facet name="start">
+                <apex:image value="/img/loading.gif"/> 
+                </apex:facet>                
+            </apex:actionStatus> 
+            </apex:outputPanel>
+            </apex:panelGrid>   
+                                
+            </apex:pageBlock>
+            </apex:outputPanel>
+            </apex:outputPanel>   
+            
+            <!-- Email popup Code end -->
+            
+            
+            <!-- Reject popup code Start-->
+            <apex:outputPanel id="rejectPopup">
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayRejectPopup}"/>
+            <apex:outputPanel styleClass="firstVisitPopup" rendered="{!displayRejectPopup}">
+            <apex:pageBlock id="rejectBlock" title="Reject PUR"> 
+            <br/>
+            
+            <apex:panelGrid width="70%">
+            
+            <apex:outputPanel rendered="{!rejectButtonClicked == false}">
+            <apex:outputLabel value="PUR Number:" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;
+            <apex:outputtext value="{!Partner_User_Request__c.Name}"  rendered="{!displayRejectPopup}"/>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!rejectButtonClicked == false}">
+            <apex:outputLabel value="Name" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:outputtext value="{!partnerUserRequest.First_Name__c} {!partnerUserRequest.Last_Name__c}"  rendered="{!displayRejectPopup}"/>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!rejectButtonClicked == false}">
+            <apex:outputLabel value="Company Name / Country" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:outputtext value="{!partnerUserRequest.Company_Name__c} / {!partnerUserRequest.Country__r.Name}"  rendered="{!displayRejectPopup}"/>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!rejectButtonClicked == false}">
+            <apex:outputLabel value="Email" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:outputText value="{!partnerUserRequest.Email__c}"  rendered="{!displayRejectPopup}"/>
+            </apex:outputPanel>
+            
+            <apex:actionRegion >
+                <apex:outputPanel rendered="{!rejectButtonClicked == false}">
+                <apex:outputLabel value="Comments" style="font-weight:bold;"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <apex:inputField value="{!partnerUserRequest.Reject_Comments__c}"  rendered="{!displayRejectPopup}" style="margin: 2px;width: 450px;height: 127px;"/>
+                </apex:outputPanel> 
+            
+                <apex:outputPanel rendered="{!rejectButtonClicked == true}">
+                <apex:outputText value="The PUR has been Rejected successfully" style="font-weight:blod;"/>
+                </apex:outputPanel>
+                        
+                <apex:outputPanel style="float:right"> 
+                    <apex:commandButton value="Reject" action="{!rejectPur}"  rendered="{!rejectButtonClicked  == false}" status="rejectStatus"  rerender="rejectPopup" />&nbsp;&nbsp;&nbsp;
+                    <apex:commandButton value="Close" action="{!closeRejectPopup}" immediate="true" rerender="rejectPopup"  status="rejectStatus" onclick="location.reload();"/>&nbsp;&nbsp;&nbsp;
+                    <apex:actionStatus id="rejectStatus">
+                    <apex:facet name="start">
+                    <apex:image value="/img/loading.gif"/> 
+                    </apex:facet>                
+                </apex:actionStatus> 
+                </apex:outputPanel>
+            </apex:actionRegion>
+            
+            </apex:panelGrid>   
+                                
+            </apex:pageBlock>
+            </apex:outputPanel>
+            </apex:outputPanel>
+            <!-- Reject popup Code end -->
+  <apex:pageBlock title="History">
+    <apex:pageBlockTable value="{!Partner_User_Request__c.Histories}" var="hist">
+      <apex:column headerValue="CreatedDate" value="{!hist.createddate}"/>
+      <apex:column headerValue="Field" value="{!hist.Field}"/>
+      <apex:column headerValue="OldValue" value="{!hist.OldValue}"/>
+      <apex:column headerValue="NewValue" value="{!hist.NewValue}"/>
+
+    </apex:pageBlockTable>
+  </apex:pageBlock>
+</apex:form> 
+<apex:outputPanel id="approvalList" rendered="true">  
+<apex:relatedList list="ProcessSteps" rendered="{!partnerUserRequest.Record_Updated__c || (partnerUserRequest.Status__c == 'Approved' || partnerUserRequest.Status__c == 'Denied' ) }"></apex:relatedList>
+</apex:outputPanel>
+  <!--<apex:relatedList list="ActivityHistories" />-->
+ <apex:form >
+  <apex:commandButton value="Send Email" onclick="return SendEmail();"/>
+ </apex:form> 
+ <apex:relatedList list="Communication__r" />
+ 
+
+<apex:relatedList list="CombinedAttachments" />
+
+</apex:page>

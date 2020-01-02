@@ -1,0 +1,810 @@
+<apex:page controller="PartnerPortal_PeriodicReview_Class" extensions="PartnerRoles,PartnerRebateController" action="{!init}" sidebar="false" showheader="false">
+<apex:form id="frm" >
+ <apex:includeScript value="{!$Resource.pkb_jquery_1_6_2}"/>
+<style >
+    .mainDiv {
+    width:100%
+    height:100%;
+    // border: 1px solid grey;
+    top:150px;
+    left:150px;
+    }
+    .innerDiv{
+    padding : 20px 20px 10px 10px;
+    }
+    .titleDiv{
+    height:30px;
+    width:100%;
+    color:white;
+    background-color:grey;
+    padding-left: 20px;
+    padding-top: 10px;
+    border: 2px solid white;
+    }
+
+    h1 {
+    font-size:16px;
+    font-family:Georgia,Serif;
+    }
+
+    .brandPrimaryBgr {
+    background-color:#FFFFFF !important;
+    }
+    .sidebarModuleHeader {
+    padding-top: 15px;
+    padding-right: 8px;
+    padding-bottom: 10px;
+    padding-left: 15px;
+    font-weight: bold;
+    }
+   #popup
+    {
+      background-color: white;
+      border-width: 2px;
+      border-style: solid;
+      z-index: 9999;
+      left: 50%;
+      padding:10px;
+      position: absolute;
+      width: 500px;
+      margin-left: -350px;
+      top:80px;
+   }
+  .popupBg
+   {
+     background-color:black;
+     opacity: 0.20;
+     filter: alpha(opacity = 70);
+     position: absolute;   
+     width: 100%;
+     height: 100%;
+     top: 0;
+     left: 0;
+     z-index: 9998;
+   }
+   .close-btn { 
+    border: 3px solid #CC0000;
+    position: relative;
+    padding: 1px 5px;
+    top: -20px;
+    background-color: #CC0000;
+    left: 795px;
+    border-radius: 3px;
+   }
+
+
+   .close-btn a {
+    font-size: 15px;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+   }
+
+    .maintable,.tabheader,.tabrow
+    {
+    border:1px solid black;
+    border-collapse:collapse;
+    }
+    .tabheader
+    {
+    padding:5px;
+    }  
+    .tabrow
+    {
+    padding:5px;
+    }  
+    tr.dataRow {
+      background-color:white;
+    }
+    tr.dataRow:hover {
+      ackground-color: #e3f3ff;
+      }; 
+    .colHeader {
+    height: 50px;
+    font-style: italic;
+    }
+  .imgclass:hover{  
+            background-image: url(/img/help/helpOrbs.gif);  
+            background-repeat: no-repeat;  
+            width: 16px;  
+            height: 15px;     
+            background-position: right;  
+         
+        }  
+        .imgclass{  
+            background-image: url(/img/help/helpOrbs.gif);  
+            background-repeat: no-repeat;  
+            width: 16px;  
+            height: 15px;  
+        }
+</style>
+<apex:outputPanel id="pnlJS">
+<Script>
+ j$ = jQuery.noConflict();
+ 
+
+function revDetPopup(revName,revLabel)
+{
+ Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.PartnerPortal_PeriodicReview_Class.eachRevenueDetails}',
+                 revName,'{!selectedPRAccountId}',
+                function(result, event){
+                    if (event.status) {
+                        j$("#popup").show(); 
+                        j$("#popupBg").show(); 
+                       var newHtml = '<div style="text-align:center;"><h5><b>Revenue Details</b></h5> </div><div> <b>Revenue Type : </b>'+revLabel+'</div><br/><div><table  id="mainTable" class="list " border="0" cellpadding="1px" cellspacing="1px">';
+                           newHtml += '<thead class="rich-table-thead"><tr class="headerRow"><th class="headerRow">End User Name</th><th class="headerRow">Product Name</th><th class="headerRow">Quarter</th><th class="headerRow">Revenue Amount</th></tr>';
+                 
+                       j$.each(result, function(j, eachrow) {
+                           var prodName = '';
+                           if(eachrow.Product_Name__c != undefined)
+                           {
+                            prodName = eachrow.Product_Name__c;
+                           }else{
+                            prodName = '';
+                           }
+                           
+                           newHtml += '<tr class="dataRow">';
+                           newHtml +=  '<td class="dataCell">'+eachrow.End_User_Name__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+prodName+'</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.Quarter__c+'</td>';
+                           newHtml +=  '<td class="dataCell"> $'+formatCurrency(eachrow.Revenue_Amount__c).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")+'</td></tr>';
+                          });
+                           
+                           newHtml += '</thead></table></div>';
+                       j$('#refDiv').html(newHtml);
+                       var newheight = j$('#mainTable').height()+130;
+                       j$("#popup").height(newheight);
+                     } 
+                    else if (event.type === 'exception') {
+                        alert(event.message);
+                    } 
+                    else {
+                        alert(event.message);
+                    }
+                },
+                {escape: true}
+            );     
+         }
+         
+ function certDetPopup(fName,lName,aName)
+ {
+  Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.PartnerPortal_PeriodicReview_Class.eachCertDetails}',
+                 fName,lName,'{!certAccountName}',
+                function(result, event){
+                    if (event.status) {
+                        j$("#popup").show(); 
+                        j$("#popupBg").show(); 
+                        
+                       var email = result[0].Email__c
+                    
+                       var newHtml = '<div style="text-align:center;"><h5><b>Certification Information</b></h5></div><div> <b>First Name :  </b>'+fName+'</div><div> <b>Last Name :   </b>'+lName+'</div><div> <b>Email :     </b>'+email+'<br/><br/></div><div><table  id="mainTable" class="list " border="0" cellpadding="1px" cellspacing="1px">';
+                           newHtml += '<thead class="rich-table-thead"><tr class="headerRow"><th class="headerRow">Test Date:</th><th class="headerRow">Test Name:</th><th class="headerRow">Test Code:</th></tr>';
+                 
+                       j$.each(result, function(j, eachrow) {
+                           newHtml += '<tr class="dataRow"><td class="tabrow">'+timeConverter(eachrow.Test_Date__c)+'</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.Test_Name__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.Test_Code__c+'</td>';
+                          });
+    
+                       newHtml += '</thead></table></div>';
+                       j$('#refDiv').html(newHtml);
+                        var newheight = j$('#mainTable').height()+130;
+                       j$("#popup").height(newheight);
+                     } 
+                    else if (event.type === 'exception') {
+                        alert(event.message);
+                    } 
+                    else {
+                        alert(event.message);
+                    }
+                },
+                {escape: true}
+            );     
+         }
+ 
+ 
+   function trainDetPopup(fName,lName,aName)
+   {
+   Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.PartnerPortal_PeriodicReview_Class.eachTrainDetails}',
+                 fName,lName,'{!trainAccountName}',
+                function(result, event){
+                   if (event.status) {
+                    j$("#popup").show(); 
+                    j$("#popupBg").show(); 
+                    
+                    var email = result[0].Email__c
+                    
+                    
+                     var newHtml = '<div style="text-align:center;"><h3>Training Information :</h3></div><div> <b>First Name :  </b>'+fName+'</div><div> <b>Last Name :   </b>'+lName+'</div><div> <b>Email :     </b>'+email+'<br/><br/></div><div><table  id="mainTable" class="list " border="0" cellpadding="1px" cellspacing="1px">';
+                           newHtml += '<thead class="rich-table-thead"><tr class="headerRow"><th class="headerRow">Course Name</th><th class="headerRow">Course Start Date</th><th class="headerRow">Course End Date</th></tr>';
+                 
+                       j$.each(result, function(j, eachrow) {
+                           newHtml += '<tr class="dataRow">';
+                           newHtml +=  '<td class="dataCell">'+eachrow.Course_Name__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+timeConverter(eachrow.Course_Start_Date__c)+'</td>';
+                           newHtml +=  '<td class="dataCell">'+timeConverter(eachrow.Course_End_Date__c)+'</td>';
+                          });
+                           newHtml += '</thead></table></div>';
+                       j$('#refDiv').html(newHtml);
+                        var newheight = j$('#mainTable').height()+130;
+                       j$("#popup").height(newheight);
+                     } 
+                    else if (event.type === 'exception') {
+                        alert(event.message);
+                    } 
+                    else {
+                        alert(event.message);
+                    }
+                },
+                {escape: true}
+            );     
+         }
+         
+  function formatCurrency(num) {
+    num = isNaN(num) || num === '' || num === null ? 0.00 : num;
+    return parseFloat(num).toFixed(2);
+  }
+  
+   function timeConverter(UNIX_timestamp) {
+     var  timeStr =  String(UNIX_timestamp);
+     var timestamp = timeStr.slice(0,-3);
+     var a = new Date(timestamp * 1000);
+     var year = a.getUTCFullYear();
+     var month = a.getUTCMonth();
+     var date = a.getUTCDate();
+     month      += 1;
+     var time = month+'/'+date+'/'+year;
+     return time;
+   }
+   
+   function KPI2DetPopup(aName)
+   {
+   var newHtml = '';
+   var acntName = '{!selectedAccountName}';
+   Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.PartnerPortal_PeriodicReview_Class.eachKPI2Details}',
+                  '{!selectedAccountName}','{!region}','{!selectedKPI2Quarter}',
+                function(result, event){
+                   if (event.status) {
+                    j$("#popup").show(); 
+                    j$("#popupBg").show(); 
+                           newHtml += '<div style="text-align:center;"><h3>KPI2 Data Information :</h3></div><div> <b>Account Name :  </b>'+acntName +'<br/><br/></div><div><table id="mainTable1"class="list " border="0" cellpadding="1px" cellspacing="1px">';
+                           newHtml += '<thead class="rich-table-thead"><tr class="headerRow"><th class="headerRow">Period</th><th class="headerRow"># Late Renewals</th><th class="headerRow"># On-Time Renewals</th><th class="headerRow">Total Eligible Renewals</th><th class="headerRow">% On Time</th></tr>';
+                 
+                       j$.each(result, function(j, eachrow) {
+                           newHtml += '<tr class="dataRow">';
+                           newHtml +=  '<td class="dataCell">{!selectedKPI2Quarter}</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.Sum_of_PO_s_Not_On_Time__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.Sum_of_PO_s_On_Time__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.Total_PO_s__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.KPI_2_On_Time__c+'</td>';                           
+                          });
+                           newHtml += '</thead></table></div>';
+                     } 
+                    else if (event.type === 'exception') {
+                        alert(event.message);
+                    } 
+                    else {
+                        alert(event.message);
+                    }
+                },
+                {escape: true}
+            );   
+            
+    Visualforce.remoting.Manager.invokeAction(
+                '{!$RemoteAction.PartnerPortal_PeriodicReview_Class.eachKPI2DetailsP_info}',
+                 '{!selectedAccountName}', '{!region}','{!selectedKPI2Quarter}',
+                function(result, event){
+                   if (event.status) {
+                    j$("#popup").show(); 
+                    j$("#popupBg").show(); 
+                           newHtml += '<br/><br/><div><table id="mainTable2"class="list " border="0" cellpadding="1px" cellspacing="1px">';
+                           newHtml += '<thead class="rich-table-thead"><tr class="headerRow"><th class="headerRow">End User Name</th><th class="headerRow">PO Number</th><th class="headerRow">PO Date</th><th class="headerRow">Maintenance Start Date</th></tr>';
+                 
+                       j$.each(result, function(j, eachrow) {
+                           newHtml += '<tr class="dataRow">';
+                           newHtml +=  '<td class="dataCell">'+eachrow.End_User_Name__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+eachrow.PO_Number__c+'</td>';
+                           newHtml +=  '<td class="dataCell">'+timeConverter(eachrow.PO_Date__c)+'</td>';
+                           newHtml +=  '<td class="dataCell">'+timeConverter(eachrow.Maintenance_End_Date__c)+'</td>';                           
+                          });
+                           newHtml += '</thead></table></div>';
+                              
+                      j$('#refDiv').html(newHtml);
+                      var newheight = j$('#mainTable1').height()+j$('#mainTable2').height()+ 130;
+                      j$("#popup").height(newheight);  
+                     } 
+                    else if (event.type === 'exception') {
+                        alert(event.message);
+                    } 
+                    else {
+                        alert(event.message);
+                    }
+                },
+                {escape: true}
+            );   
+            
+   }  
+   
+</Script>
+</apex:outputPanel>
+    <div class="mainDiv">
+    <div class="innerDiv"> 
+    <table style="width:100%;align:left">
+    <apex:outputPanel rendered="{!isDesignatedContact}">
+    <!--  Revenue Table Start --> 
+    <tr>
+    <td>
+    <apex:actionFunction name="reLoadPR" action="{!populatePartnerRevenue}" rerender="pgblkPartnerRevenue" status="statusPR"/>
+    <!--Edited By Saurabh Gupta-->
+    
+    <apex:PageBlock rendered="{!AND(NOT(ISNULL(revenue_list)),revenue_list.size>0,pMRole.Revenue_Reporting__c)}" id="pgblkPartnerRevenue">
+        <table class="list " id="revTable" border="0" cellpadding="1px" cellspacing="1px">
+            <thead class="rich-table-thead">
+                <tr class="headerRow">
+                    <th class="headerRow" style="height:25px;font-size: 13px;">
+                        Partner Revenue
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <img src="/s.gif" Class="imgclass" title="All revenue sold by {!AccountName} in the time frame specified is reflected here.The revenue numbers are used to determine partner performance against revenue targets for program compliance and incentive management purposes." />
+                        <apex:selectList value="{!selectedPRAccountId}" rendered="{!showPickListPR}" size="1" onchange="reLoadPR();" >
+                            <apex:selectOptions value="{!childAccsSupportRevenue}" />
+                        </apex:selectList>                                                
+                    </th>
+                    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+                        <apex:actionstatus id="statusPR">
+                            <apex:facet name="start">
+                                <apex:image value="/img/loading.gif"/>
+                            </apex:facet>
+                        </apex:actionstatus>
+                    </th>
+                </tr>
+                <tr class="dataRow" valign="middle"> 
+                    <td class="dataCell">
+                        <b> MLB (mimimum level of business) target </b>
+                    </td>
+                    <td class="dataCell"> 
+                        <apex:outputText value="{0,number,#,##0.00}" style="color:green;font-weight:bold;">$
+                            <apex:param value="{!targetMLB}"/> 
+                        </apex:outputText>
+                    </td>
+                </tr>
+                    <apex:repeat value="{!revenue_list}" var="eachRecord" id="theRepeat">
+                        <tr class="dataRow">
+                            <td class="dataCell"><a href="#" onclick="revDetPopup('{!eachRecord.RevName}','{!eachRecord.RevLabel}')"><apex:outputText value="{!eachRecord.RevLabel}"/></a> </td>
+                            <td class="dataCell"> <apex:outputText value="{0,number,#,##0.00}"  style="text-align:right">$<apex:param value="{!eachRecord.Revenue}"/>  </apex:outputText></td>
+                        </tr>
+                    </apex:repeat>
+                    <tr class="dataRow">
+                        <td class="dataCell"> <b>TOTAL </b>
+                    </td>
+                    <td class="dataCell"> 
+                        <apex:outputText value="{0,number,#,##0.00}" style="color:Red;font-weight:bold;">$
+                        <apex:param value="{!totalRevenue}"/> </apex:outputText>
+                    </td>
+            </tr>
+        </thead>
+    </table>
+    </apex:PageBlock>
+    <!--Edited By Saurabh Gupta-->
+    
+    <apex:pageBlock rendered="{!AND(OR(ISNULL(revenue_list),revenue_list.size=0),pMRole.Revenue_Reporting__c)}">
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 13px;">Partner Revenue
+     &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="All revenue sold by {!AccountName} in the time frame specified is reflected here.The revenue numbers are used to determine partner performance against revenue targets for program compliance and incentive management purposes." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+    </th>
+    </tr>
+    <tr class="dataRow"><td  class="dataCell">No records to display.</td> </tr>
+    </thead>
+    </table>
+    </apex:pageBlock> 
+    </td>
+    </tr>
+    <!--  Revenue Table End -->
+    
+    <tr>
+    <td>
+    <table>
+    <tr>
+    <td width="800px">
+    <!--Edited by Saurabh Gupta !-->
+    <c:PartnerKPI AccountId="{!AccountId}" rendered="{!pMRole.KPI_s__c}"/>
+    </td>
+    <apex:actionFunction name="reLoadKP2" action="{!populateKP2Details}" />
+    <td width="50%"> 
+    <!--Edited Bt Saurabh Gupta-->
+    
+             <apex:pageBlock id="pgblktblKP2" rendered="{!pMRole.KPI_s__c}">
+             <table class="list " border="0" cellpadding="0" cellspacing="0">
+                 <tr class="headerRow">
+                 <th class="headerRow" style="height:25px;font-size: 12px;">Genesys Care KPI 2</th>
+                 <th class="headerRow" style="height:25px;font-size: 12px;">Period : &nbsp; 
+                    <apex:selectList value="{!selectedKPI2Quarter}" size="1" onchange="reLoadKP2();">
+                        <apex:selectOptions value="{!partnerKPI2Quarters}" />
+                    </apex:selectList> 
+                  </th> 
+                                
+                 <th class="headerRow"> 
+                     <apex:actionstatus id="statusKP2">
+                        <apex:facet name="start">
+                        <apex:image value="/img/loading.gif"/>
+                        </apex:facet>
+                     </apex:actionstatus>
+                </th>
+                </tr>
+              </table>
+            <table class="list " border="0" cellpadding="0" cellspacing="0">
+                <tr class="headerRow">
+                   <th>
+                    <apex:selectList value="{!selectedAccountName}" rendered="{!showPickListKPI2}" size="1" onchange="reLoadKP2();">
+                        <apex:selectOptions value="{!childAccsKPI2}" />
+                    </apex:selectList>
+                   </th>
+                   <th class="headerRow" style="font-size: 12px;">Weight</th>
+                   <th class="headerRow" style="font-size: 12px;">Score</th>
+                   <th class="headerRow" style="font-size: 12px;">YTD Score</th>
+                </tr>
+               <tr class="dataRow">
+               <td class="dataCell"><a href="#" onClick="KPI2DetPopup('Test')">Renewal Timeliness </a></td>
+               <td class="dataCell">100%</td>
+               <td class="dataCell">
+                <apex:outputPanel id="pnlKP2">
+                    {!kpi2TimeLineScore}%
+                </apex:outputPanel>
+                               
+               </td>
+               <td>
+                   {!kpi2YTDScore}%
+               </td>
+               </tr>
+     </table>
+     <br/>
+     <apex:outputLink target="_blank" value="{!URLFOR($Resource.GenesysPartnerKPI2014)}" >
+        Genesys Partner KPI 2014
+     </apex:outputLink>
+     
+     </apex:pageBlock>
+    </td>
+    </tr>
+    </table>
+    </td>
+    </tr>
+    </apex:outputPanel>
+    <!-- Certification Table Start -->
+    <tr>
+    <td>
+    <apex:PageBlock rendered="{!AND(NOT(ISNULL(cert_list)),cert_list.size>0)}">
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 13px;">Partner Certification 
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="A minimum number of certifications are required for each partner per their tier/level in the program.Below is a list of individuals who have achieved certification status (passed Genesys University certification exams) and the date on which they passed the exam. Note that certifications are valid for three years from pass date." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;"></th>
+    </tr>
+    </table>
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" >Individual Name</th>
+    <th class="headerRow" >Certification Exam Name</th>
+    <th class="headerRow" >Pass Date</th>
+    </tr>
+    <apex:repeat value="{!cert_list}" var="eachCert" id="theRepeat">
+    <tr class="dataRow">
+    <td class="dataCell"><a href="#" onclick="certDetPopup('{!eachCert.FName}','{!eachCert.LName}', 'test')"><apex:outputText value="{!eachCert.FName} {!eachCert.LName}"/></a> </td>
+    <td class="dataCell"><apex:outputText value="{!eachCert.exam_Name}"/> </td>
+    <td class="dataCell"><apex:outputText value="{0,date,MM/dd/yyyy}">  <apex:param value="{!eachCert.pass_Date}"/> </apex:outputText>  </td>
+    </tr>
+    </apex:repeat>
+    </thead>
+    </table>
+    </apex:PageBlock>
+    
+    <apex:pageBlock rendered="{!OR(ISNULL(cert_list),cert_list.size=0)}"> 
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 13px;">Partner Certification
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="A minimum number of certifications are required for each partner per their tier/level in the program.Below is a list of individuals who have achieved certification status (passed Genesys University certification exams) and the date on which they passed the exam. Note that certifications are valid for three years from pass date." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;"></th>
+    </tr>
+    <tr class="dataRow"><td  class="dataCell">No records to display.</td> </tr>
+    </thead>
+    </table>
+    </apex:pageBlock>
+    </td>
+
+    </tr>
+    <!-- Certification Table End -->
+    
+    <!-- Traning Table Start -->
+    <tr>
+    <td>
+    <apex:PageBlock rendered="{!AND(NOT(ISNULL(train_list)),train_list.size>0)}">
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 13px;">Partner Training
+     &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="Record of attended training by individuals within {!AccountName}.Training attendance is used to evaluate compliance with program requirements and adherance to training plans defined for each partner." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;"></th>
+    </tr>
+    </table>
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" >Individual Name</th>
+    <th class="headerRow" >Training Course</th>
+    <th class="headerRow" >Date</th>
+    <th class="headerRow" >Location</th>
+    </tr>
+    <apex:repeat value="{!train_list}" var="eachRecord" id="theRepeat">
+    <tr class="dataRow">
+    
+    <td class="dataCell"><a href="#" onclick="trainDetPopup('{!eachRecord.FName_train}','{!eachRecord.LName_train}','test')"><apex:outputText value="{!eachRecord.FName_train} {!eachRecord.LName_train}"/></a> </td>
+    <td class="dataCell"><apex:outputText value="{!eachRecord.Cert_Name}"/> </td>
+    <td class="dataCell"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachRecord.Cert_Date}"/></apex:outputText> </td>
+    <td class="dataCell"><apex:outputText value="{!eachRecord.Cert_Place}"/> </td>
+    </tr>
+    </apex:repeat>
+    </thead>
+    </table>
+    </apex:PageBlock>
+    
+    <apex:pageBlock rendered="{!OR(ISNULL(train_list),train_list.size=0)}"> 
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 13px;">Partner Training
+     &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="Record of attended training by individuals within {!AccountName}.Training attendance is used to evaluate compliance with program requirements and adherance to training plans defined for each partner." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+    </th>
+    </tr>
+    <tr class="dataRow"><td  class="dataCell">No records to display.</td> </tr>
+    </thead>
+    </table>
+    </apex:pageBlock>
+    </td>
+    </tr>
+     <!-- Traning Table End -->
+    
+    <!-- Lead Start -->
+    <tr>
+
+    <td style="width:25%">
+    <br/>
+    <!--Edited By Saurabh Gupta-->
+
+
+<apex:pageBlock rendered="{!FlagYes}" >
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+        <thead class="rich-table-thead">
+            <tr class="headerRow">
+                <th class="headerRow" style="height:25px;font-size: 13px;">
+                    Partner Rebate Target&nbsp;&nbsp;&nbsp;&nbsp;
+                    <img src="/s.gif" Class="imgclass" title="" />  
+                </th>
+                <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+                </th>
+            </tr>
+            <tr class="dataRow">                
+                <td>
+                    
+                   
+                        <apex:pageBlockTable value="{!PRebateList}"  var="objt"  id="theRepeat_2">                        
+                            <apex:column headerValue="Rebate Name">
+                                <apex:outputText value="{!objt.Rebate_Name__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Start Date">
+                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                    <apex:param value="{!objt.Start_Date__c}"/>
+                                </apex:outputText>
+                            </apex:column>
+                            <apex:column headerValue="End Date">
+                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                    <apex:param value="{!objt.End_Date__c}"/>
+                                </apex:outputText>
+                            </apex:column>                                                
+                            
+                            <apex:column headerValue="Genesys Care Amount">
+                                <apex:outputText value="{!objt.Amount__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="License Amount">
+                                <apex:outputText value="{!objt.License_Amount__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="SaaS Amount">
+                                <apex:outputText value="{!objt.SaaS_Amount__c}"/>
+                            </apex:column>                                                
+                            
+                                            
+                        </apex:pageBlockTable>
+                 
+                </td>
+            </tr>
+        </thead>
+    </table>
+</apex:pageBlock>
+<apex:pageBlock rendered="{!isERPublished}" >
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+        <thead class="rich-table-thead">
+            <tr class="headerRow">
+                <th class="headerRow" style="height:25px;font-size: 13px;">
+                    Partner Earned Rebate &nbsp;&nbsp;&nbsp;&nbsp;
+                    <img src="/s.gif" Class="imgclass" title="" />  
+                </th>
+                <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+                </th>
+            </tr>
+            <tr class="dataRow">                
+                <td>
+                   <apex:outputPanel rendered="{!isERPublished}" id="OP3">
+                        <apex:pageBlockTable value="{!PRebateList}"  var="objt"  id="theRepeat_2"> 
+                                               
+                            <apex:column headerValue="Rebate Name">
+                                <apex:outputText value="{!objt.Rebate_Name__c}" />
+                            </apex:column>
+                            <apex:column headerValue="Start Date">
+                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                    <apex:param value="{!objt.Start_Date__c}"/>
+                                </apex:outputText>
+                            </apex:column>
+                            <apex:column headerValue="End Date">
+                                <apex:outputText value="{0,date,MM/dd/yyyy}">
+                                    <apex:param value="{!objt.End_Date__c}"/>
+                                </apex:outputText>
+                            </apex:column>                                                
+                            
+                            <apex:column headerValue="Genesys Care Earned Amount">
+                                <apex:outputText value="{!objt.Earned_Genesys_Care_Amount__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="License Earned Amount">
+                                <apex:outputText value="{!objt.Earned_License_Amount__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="SaaS Earned Amount">
+                                <apex:outputText value="{!objt.Earned_SaaS_Amount__c}"/>
+                            </apex:column>                                                
+                            
+                                            
+                        </apex:pageBlockTable>
+                    </apex:outputPanel>
+                </td>
+            </tr>
+        </thead>
+    </table>
+</apex:pageBlock>
+<br/>
+
+
+
+
+    <apex:pageBlock rendered="{!AND(NOT(ISNULL(recordsToDisplay_lead)),recordsToDisplay_lead.size>0,pMRole.Lead_Referral__c)}">
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 12px;">Lead Referral Registrations 
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Lead for registration purposes. Upon successful approval and closing of an lead, the partner would be eligible for additional margin on the lead. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+    <button type="button" onclick="window.open('/partner/apex/LeadReferralRegistration')">Submit New Lead Referral Registration</button>
+    </th>
+    <th class="headerRow" style="height:25px;font-size: 12px;"></th>
+    </tr>
+    </thead>
+    </table>
+    <apex:pageBlockTable value="{!recordsToDisplay_lead}"  var="eachCert"  id="theRepeat_2">
+    <apex:column headerValue=""><apex:outputLink value="View" Value="/{!eachCert.leadData.Id}" target="_blank">View</apex:outputLink></apex:column>
+    <apex:column headerValue="Lead Referral Registrations"><apex:outputText value="{!eachCert.leadData.Name}"></apex:outputText></apex:column>
+    <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.leadData.CreatedDate}"/></apex:outputText></apex:column>
+    <apex:column headerValue="Approval Status"><apex:outputText value="{!eachCert.leadData.Status__c}"></apex:outputText></apex:column>
+    <!--
+    <apex:column headerValue="Exipiration Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.leadData.End_Date__c}"/></apex:outputText></apex:column>
+    -->
+    </apex:pageBlockTable>
+    </apex:pageBlock>
+    <!--Edited By Saurabh Gupta-->
+    <apex:pageBlock rendered="{!AND(OR(ISNULL(recordsToDisplay_lead),recordsToDisplay_lead.size=0),pMRole.Lead_Referral__c)}"> 
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 12px;">Lead Referral Registrations 
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Lead Referral for registration purposes. Upon successful approval and closing of an lead, the partner would be eligible for additional margin on the lead. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+    <button type="button" onclick="window.open('/partner/apex/LeadReferralRegistration')">Submit New Lead Referral Registration</button>
+    </th>
+    <th class="headerRow" style="height:25px;font-size: 12px;"></th>
+    </tr>
+    <tr class="dataRow"><td  class="dataCell">No records to display.</td></tr>
+    </thead>
+    </table>
+    </apex:pageBlock>
+    </td>
+    </tr>
+    <!-- Lead End -->
+    
+    
+    <!-- Opportunity Start -->
+    <tr>
+    <td style="width:25%">
+    <br/>
+    <!--Edited By Saurabh Gupta-->
+    
+    <apex:pageBlock rendered="{!AND(NOT(ISNULL(recordsToDisplay_opp)),recordsToDisplay_opp.size>0,pMRole.Oppty_Reg__c)}">
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 12px;">Opportunity Registrations 
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Opportunities for registration purposes. Upon successful approval and closing of an opportunity, the partner would be eligible for additional margin on the opportunity. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+    <button type="button" onclick="window.open('/partner/apex/PartnerPortalOppRegistration_Page')">Submit New Opportunity Registration</button>
+    </th>
+    <th class="headerRow" style="height:25px;font-size: 12px;"></th>
+    </tr>
+    </thead>
+    </table>
+    <apex:pageBlockTable value="{!recordsToDisplay_opp}"  var="eachCert"  id="theRepeat_2">
+    <apex:column headerValue=""><apex:outputLink value="View" Value="/{!eachCert.oppData.Id}" target="_blank">View</apex:outputLink></apex:column>
+    <apex:column headerValue="Opportunity Registrations"><apex:outputText value="{!eachCert.oppData.Name}"></apex:outputText></apex:column>
+    <apex:column headerValue="Submitted Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.oppData.CreatedDate}"/></apex:outputText></apex:column>
+    <apex:column headerValue="Approval Status"><apex:outputText value="{!eachCert.oppData.Status__c}"></apex:outputText></apex:column>
+    <apex:column headerValue="Exipiration Date"><apex:outputText value="{0,date,MM/dd/yyyy}"><apex:param value="{!eachCert.oppData.End_Date__c}"/></apex:outputText></apex:column>
+    </apex:pageBlockTable>
+    </apex:pageBlock>
+    <!--Edited By Saurabh Gupta-->
+    
+    <apex:pageBlock rendered="{!AND(OR(ISNULL(recordsToDisplay_opp),recordsToDisplay_opp.size=0),pMRole.Oppty_Reg__c)}"> 
+    <table class="list " border="0" cellpadding="1px" cellspacing="1px">
+    <thead class="rich-table-thead">
+    <tr class="headerRow">
+    <th class="headerRow" style="height:25px;font-size: 12px;">Opportunity Registrations 
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <img src="/s.gif" Class="imgclass" title="VAR/MSP/Cloud partners are eligible to submit Opportunities for registration purposes. Upon successful approval and closing of an opportunity, the partner would be eligible for additional margin on the opportunity. Below is a list of submitted registrations and their approval status and/or expiration date." />  
+    </th>
+    <th style="height:25px;font-size: 12px;font-weight:normal;font-style:italic;">
+    <button type="button" onclick="window.open('/partner/apex/PartnerPortalOppRegistration_Page')">Submit New Opportunity Registration</button>
+    </th>
+    <th class="headerRow" style="height:25px;font-size: 12px;"></th>
+    </tr>
+    <tr class="dataRow"><td  class="dataCell">No records to display.</td></tr>
+    </thead>
+    </table>
+    </apex:pageBlock>
+    </td>
+    </tr>
+    <!-- Opportunity End -->
+    
+    
+    </table>
+    </div>
+    </div>
+ 
+   
+  <div  id="popup" style="display:none; z-index:9999;padding: 10px; width: 800px; height: 400px; border: 2px solid #c2c2c2; background-color: #FFFFFF;  border-radius: 10px;">
+  <span class="close-btn"><a href="#" onclick="javascript:j$('#popup').hide();j$('#popupBg').hide();">X</a></span>
+  <apex:pageBlock >
+  <div id="refDiv"></div>
+  </apex:pageBlock>
+  
+  </div>  
+  <div id="popupBg" class="popupBg" style="display:none;"></div>
+  
+ </apex:form>
+         
+</apex:page>

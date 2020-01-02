@@ -1,0 +1,197 @@
+<apex:page Controller="SupportAccesscController" sidebar="false">
+   
+   <style> 
+        tabl {float:left;width:400px;}
+   </style>  
+     
+     <apex:form >  
+      <apex:pageBlock > 
+          <apex:pageMessages />
+       
+       <!-- On-Premises --->
+           <apex:pageBlockSection columns="1" showHeader="true" title="My Support Access - On-Premises Licenses" collapsible="false" rendered="{!AND(NOT(ISNULL(supAccessListUnique)),supAccessListUnique.size >0)}"/> 
+                <apex:outputPanel style="width:600px;height:20px;">
+                    &nbsp;
+                    <apex:actionstatus id="status">
+                        <apex:facet name="start">
+                            <apex:outputLabel value="Sorting, Please wait."/>
+                        </apex:facet>
+                    </apex:actionstatus>
+                </apex:outputPanel>
+                <apex:actionFunction name="sortRecordsAF" rerender="table" action="{!populateSARecords}" status="status">
+                    <apex:param name="firstParam" value="" assignTo="{!orderBy}" />
+                </apex:actionFunction>
+                <apex:pageBlockSection showHeader="true" id="table" columns="1" >
+                <apex:pageBlockSectionItem dataStyleClass="tabl">
+                 
+                   <apex:pageBlockTable value="{!supAccessListUnique}" var="sl" rendered="{!supAccessListUnique.size >0}">  
+                                     
+                        <apex:column value="{!sl.SR_Access_Level__c}" style="width:10px">
+                            <apex:facet name="header">
+                              <apex:commandLink value="Access Level" onclick="sortRecordsAF('SR_Access_Level__c'); return false;" style="font-weight:bold;"/>                                    
+                            </apex:facet>
+                        </apex:column>
+                        <apex:column value="{!sl.End_User_Account__r.Name}" style="width:40px">
+                            <apex:facet name="header">
+                                <apex:commandLink value="End User Account" onclick="sortRecordsAF('End_User_Account__r.Name'); return false;" style="font-weight:bold;"/>                                  
+                            </apex:facet>
+                        </apex:column> 
+                        
+                        <apex:column value="{!sl.End_User_Account__r.City__c}, {!sl.End_User_Account__r.Country__r.Name}" headerValue="End User Location" style="width:40px"/>                          
+                                  
+                        <apex:column value="{!sl.Sold_To_Account__r.Name}" style="width:40px" >        
+                            <apex:facet name="header"> 
+                                   <apex:commandLink value="Sold To Account" onclick="sortRecordsAF('Sold_To_Account__r.Name'); return false;" style="font-weight:bold;"/>                             
+                            </apex:facet>
+                        </apex:column>  
+                        
+                        <apex:column value="{!sl.Sold_To_Account__r.City__c}, {!sl.Sold_To_Account__r.Country__r.Name}" headerValue="Sold To Location" style="width:40px"/>  
+                        
+                        <apex:column value="{!sl.BOA_Platform__c }" headerValue="Product Line" style="width:40px"/>  
+                                 
+                        <apex:column value="{!sl.Service_Contract_Status__c}" style="width:40px" >        
+                            <apex:facet name="header"> 
+                                   <apex:commandLink value="Contract Status" onclick="sortRecordsAF('Service_Contract_Status__c'); return false;" style="font-weight:bold;"/>                             
+                            </apex:facet>
+                        </apex:column>                          
+          
+                   <apex:column style="width:40px; text-decoration:underline">   
+                       <apex:commandLink action="/customercare/SupportAccessServiceContracts?stId={!sl.Sold_To_Account__c}&euId={!sl.End_User_Account__c}" 
+                            value="Service Contracts" />         
+                   </apex:column>
+       
+                   </apex:pageBlockTable>
+               </apex:pageBlockSectionItem>
+         </apex:pageBlockSection>
+     <!-- END  On-Premises --->
+         
+     <!-- Cloud Access --->   
+     
+         <apex:pageBlockSection columns="1" showHeader="true" title="My Support Access - Cloud Subscriptions" collapsible="false" rendered="{!AND(NOT(ISNULL(supAccessCloudList)),supAccessCloudList.size >0)}"/> 
+             
+                <apex:actionFunction name="sortRecordsCL" rerender="table" action="{!getCloudSupportRecords}" >
+                    <apex:param name="ordby" value="" assignTo="{!orderByCld}" />
+                </apex:actionFunction>
+
+                <apex:pageBlockSection showHeader="true" id="table2" columns="1" >
+                <apex:pageBlockSectionItem dataStyleClass="tabl">
+         
+                <apex:pageBlockTable value="{!supAccessCloudList}" var="scl"  rendered="{!supAccessCloudList.size >0}">  
+          
+                        <apex:column value="{!scl.Access_Level__c}" style="width:100px">
+                            <apex:facet name="header">
+                              <apex:commandLink value="Access Level" onclick="sortRecordsCL('Access_Level__c'); return false;" style="font-weight:bold;"/>                                    
+                            </apex:facet>
+                        </apex:column>
+                        
+                           <apex:column value="{!scl.Account_Name__c}" style="width:200px">
+                            <apex:facet name="header">
+                              <apex:commandLink value="Account" onclick="sortRecordsCL('Account_Name__c'); return false;" style="font-weight:bold;"/>                                    
+                            </apex:facet>
+                        </apex:column>
+                        
+                        <apex:column value="{!scl.Cloud_Deployment__r.Name}" style="width:200px">
+                            <apex:facet name="header">
+                              <apex:commandLink value="Cloud Deployment" onclick="sortRecordsCL('Cloud_Deployment__r.Name'); return false;" style="font-weight:bold;"/>                                    
+                            </apex:facet>
+                        </apex:column>                         
+                        
+                         <apex:column value="{!scl.CD_Platform__c}" style="width:100px">
+                            <apex:facet name="header">
+                              <apex:commandLink value="Product Line" onclick="sortRecordsCL('CD_Platform__c'); return false;" style="font-weight:bold;"/>                                    
+                            </apex:facet>
+                        </apex:column>
+                        
+                         <apex:column value="{!scl.Cloud_Deployment__r.Care_Level__c}" style="width:100px">
+                            <apex:facet name="header">
+                              <apex:commandLink value="Support Package" onclick="sortRecordsCL('Cloud_Deployment__r.Care_Level__c'); return false;" style="font-weight:bold;"/>                                    
+                            </apex:facet>
+                        </apex:column>
+                        
+                         <apex:column value="{!scl.Cloud_Deployment__r.Support_Status__c}" style="width:100px">
+                            <apex:facet name="header">
+                              <apex:commandLink value="Status" onclick="sortRecordsCL('Cloud_Deployment__r.Support_Status__c'); return false;" style="font-weight:bold;"/>                                    
+                            </apex:facet>
+                        </apex:column>
+                                      
+                   </apex:pageBlockTable>
+               </apex:pageBlockSectionItem>
+         </apex:pageBlockSection>
+     
+     <!-- END Cloud Access --->        
+       
+        <apex:pageBlockSection id="blk" title="If you would like additional access, please complete the form below." collapsible="false"/>
+                 <apex:pageBlockSection columns="1" title="Types of Access" collapsible="false">
+                 
+                    <apex:outputText value="READ/ONLY = View case information linked to your Company/Partner, Knowledge Base, Genesys Community, Documentation." style="font-size: 12px;"/>
+                    <apex:outputText value="READ/WRITE = Create/View/Manage case information linked to your Company/Partner, Software Downloads, Knowledge Base, Genesys Community, Documentation." style="font-size: 12px;"/>                                    
+ 
+                  </apex:pageBlockSection>
+                    
+                 <apex:pageBlockSection title="Access level being requested" collapsible="false" columns="1">     
+                    <apex:selectRadio value="{!requestedAccess}" style="font-size: 12px" >
+                        <apex:selectOptions value="{!accessTypes}" />
+                  </apex:selectRadio>
+                 </apex:pageBlockSection>
+  
+                <apex:pageBlockSection columns="1">
+                  <apex:outputPanel >
+                      <apex:outputText value="Please specify which Genesys product line you need the access for." />
+                      <apex:outputText value=" This is especially important for your access setup if your company uses multiple product lines." style="color:red"/>
+                  </apex:outputPanel>
+                  
+                   <apex:outputPanel >    
+                       <apex:inputCheckbox id="peprem" value="{!linePureEngPrem}" />
+                       <apex:outputText value="  PureEngage On-Premises" />
+                   </apex:outputPanel>
+                   
+                   <apex:outputPanel >    
+                       <apex:inputCheckbox id="pecld" value="{!linePureEngCloud}" />
+                       <apex:outputText value="  PureEngage Cloud (including Outbound Engagement, legacy Premier Edition and Enterprise Edition)" />
+                   </apex:outputPanel>
+                   
+                   <apex:outputPanel >    
+                       <apex:inputCheckbox id="pcnctprem" value="{!linePureCnctPrem}" />
+                       <apex:outputText value="  PureConnect On-Premises (formerly known as Interactive Intelligence CIC)" />
+                   </apex:outputPanel>
+                   
+                   <apex:outputPanel >    
+                       <apex:inputCheckbox id="pcnctcld" value="{!linePureCnctCloud}" />
+                       <apex:outputText value="  PureConnect Cloud (formerly known as Interactive Intelligence CaaS)" />
+                   </apex:outputPanel>
+                   
+                   <apex:outputPanel >    
+                       <apex:inputCheckbox id="pcld" value="{!linePureCloud}" />
+                       <apex:outputText value="  PureCloud" />
+                   </apex:outputPanel>
+             
+                </apex:pageBlockSection>
+        
+                 <apex:pageBlockSection columns="1" title="To request access for additional accounts, please provide either Customer/Account info or Existing Contacts on those accounts, or both." collapsible="false">
+       
+                    <apex:outputText value="Company/Partner Combinations (End User/Sold To)" />
+
+                    <apex:inputTextarea value="{!helpfulInfo}" cols="100" rows="3"/>
+     
+                    <apex:outputText value="Existing Contacts" />
+                    <apex:inputTextarea value="{!exisingContacts}" cols="100" rows="3"/>
+                    
+                    <br/>
+                    <a style='font-size: 12px' >By submitting this form you accept the Genesys Care Contact </a><a style='cursor: pointer;font-weight:underline;color:blue;' onclick="window.open('http://www.genesys.com/customer-care/terms-and-conditions');">Terms and Conditions.</a>                                
+                                              
+                  
+                  </apex:pageBlockSection>   
+                 
+                   <apex:pageBlockButtons location="bottom">
+                       <apex:commandButton action="{!SubmitForm}" value="Submit Request" />
+                       <apex:commandButton action="{!ClearForm}" value="Clear Form" />
+                   </apex:pageBlockButtons> 
+                                    
+       </apex:pageBlock> 
+                       
+    </apex:form>
+  <script language="JavaScript">
+     function setFocusOnLoad() {
+    }
+ </script>
+</apex:page>

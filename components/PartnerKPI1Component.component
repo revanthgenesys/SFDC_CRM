@@ -1,0 +1,73 @@
+<apex:component controller="PartnerKPI1ComponentController">
+    <!--<apex:attribute name="platformParam" description="Platform Type" type="String" required="true" assignTo="{!platform}"/>-->
+    <style type="text/css">
+        .pbTitle {
+            white-space: nowrap
+                 }
+    </style>
+        <!--<apex:pageBlock id="KPI1Dashboard" title="KPI Dashboard - {!platform} {!IF(platform == 'PureConnect On Premise', '(INFORMATION ONLY until Sep 1, 2018)', '')}">-->
+        <apex:pageBlock id="KPI1Dashboard" title="KPI Dashboard - PureEngage on-premise / PureConnect on-premise">
+            <table align="center">  
+                <tr>
+                   <td align="right">
+                        <apex:outputLabel value="KPI Period : " rendered="{!selectedKPI1Period != null}" >
+                            <apex:selectList value="{!selectedKPI1Period}" multiselect="false" size="1">
+                                <apex:selectOptions value="{!kpi1Periods}" />
+                                <apex:actionSupport event="onchange" action="{!loadKpi1List}" reRender="GraphAndTable" status="counterKPI1Status" /> 
+                            </apex:selectList>
+                        </apex:outputLabel>
+                    </td>
+                    <td> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<apex:outputLink target="_blank" value="{!URLFOR($Resource.GenesysPartnerKPIGuide)}" >
+                            Genesys Care Appendix to the Partner Program Guide 2019
+                        </apex:outputLink>  
+                    </td>
+                </tr> 
+                <tr><td>
+                    <apex:actionStatus id="counterKPI1Status" >
+                        <apex:facet name="start" >
+                            <img src="/img/loading.gif" />  
+                            <span>Refreshing...</span>                  
+                        </apex:facet>
+                    </apex:actionStatus>
+               </td></tr>
+            </table>    
+            <apex:outputPanel id="GraphAndTable">
+                <apex:outputPanel rendered="{!kpi1List.size > 0}">
+                    <apex:chart height="210" width="350" animate="true" data="{!kpi1List}" >
+                        <apex:axis type="Gauge" position="gauge" gridFill="true" title="Genesys Care KPI" minimum="0" maximum="100" steps="10" margin="-5.5"/>
+                        <apex:gaugeSeries labelField="type" dataField="ytd" donut="50" highlight="false" colorSet="{!IF(kpi1List[0].ytd<=50,'red',IF(kpi1List[0].ytd<=70,'Yellow','green'))},grey" >
+                            <apex:chartTips height="20" width="200" />
+                        </apex:gaugeSeries>
+                    </apex:chart>
+                    <apex:pageBlockTable value="{!kpi1List}" var="kpi" columns="4" first="1">
+                        <apex:column headerValue="" value="{!kpi.type}" styleClass="{!CASE(kpi.type, 'KPI Score (%)', 'fontBold','fontNormal')}" />
+                        <apex:column headerValue="Weight" value="{!kpi.weight}" styleClass="{!CASE(kpi.type, 'KPI Score (%)', 'fontBold','fontNormal')}"/>
+                        <apex:column headerValue="Current Score" styleClass="{!CASE(kpi.type, 'KPI Score (%)', 'fontBold','fontNormal')}">
+                            <apex:outputPanel rendered="{!kpi.type == 'KPI Score (%)'}">
+                                <apex:commandLink onclick="window.location='/partner/ShowCaseDetails?kpiid={!kpi.kpi1Id}&psrc=kpidash'" value="{!FLOOR(kpi.kpi)}" reRender="false"/>
+                                <div class="mouseOverInfoOuter" id="mouseOverHelper" onfocus="addMouseOver(this)" onmouseover="addMouseOver(this)" tabindex="0">
+                                    <apex:image url="{!$Resource.QuestionMark}"/>
+                                    <div class="mouseOverInfo" id="hoverHelperText" style="display: none; opacity: -0.19999999999999996; left: 16px;">
+                                        <div class="body">Click the "number" link to view the score details</div>
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            
+                            <apex:outputText value="{!kpi.kpi}" rendered="{!kpi.type != 'KPI Score (%)'}"></apex:outputText>
+                        </apex:column> 
+                        <apex:column headerValue="YTD Score" styleClass="{!CASE(kpi.type, 'KPI Score (%)', 'fontBold','fontNormal')}">
+                        <apex:outputText value="{!kpi.ytd}"></apex:outputText>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                    <br />
+                    <!--<apex:outputText rendered="{!platform == 'PureConnect On Premise'}">-->
+                    <apex:outputText >
+                        <B><U><h6><font color="Black">Note:</font></h6></U> As of Sept 1, 2018 (Q1), Partners supporting multiple platforms now have one combined KPI score, displaying both PureEngage and PureConnect. To view the different platform per case, please see the case details page (found via the hyperlink under total Current Score).</B>
+                    </apex:outputText>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!kpi1List.size == 0}">
+                    No Genesys Care KPI records to display.
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlock>
+</apex:component>

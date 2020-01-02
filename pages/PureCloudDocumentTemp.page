@@ -1,0 +1,474 @@
+<apex:page StandardController="zqu__Quote__c" extensions="PureCloudDocumentController"
+           title="Quote Document for {!zqu__Quote__c.zqu__Account__r.Name}" docType="html-5.0" renderAs="pdf"
+            showHeader="false" standardStylesheets="false">
+    <head>
+        <apex:stylesheet value="{!URLFOR($Resource.estimatorPdf,'estimatorPdf.css')}"/>         
+    </head>
+
+    <div>
+        <div>
+            <table id="headerTable">
+                <tr>
+                    <td class="imageColumn">
+                        <apex:image value="/servlet/servlet.FileDownload?file={!imgDocumentId}" />
+                    </td>
+                </tr>
+            </table>        
+        </div>            
+        <div>
+            <table class="inlineTable" style="width:65%">
+                <tr>
+                    <th>Bill To</th>
+                    <td>
+                        <table>
+                            <tr>
+                                <td style="border:none">{!IF(zqu__Quote__c.zqu__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, zqu__Quote__c.zqu__Opportunity__r.BusinessPartner__r.Name, zqu__Quote__c.zqu__Opportunity__r.Account.Name)}</td>
+                            </tr>
+                            <tr>
+                                <td style="border:none">{!billingAddress.Address__c}</td>
+                            </tr>
+                            <tr style="{!IF(ISBLANK(billingAddress.Address2__c), 'display:none', '')}">
+                                <td style="border:none">{!billingAddress.Address2__c}</td>
+                            </tr>
+                            <tr>
+                                <td style="border:none">{!billingAddress.City__c},&nbsp;{!billingAddress.State__c}&nbsp;{!billingAddress.Zip_Code__c}</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <th>Ship To</th>
+                    <td>
+                        <table>
+                          <!--  <tr>
+                                <td style="border:none">{!zqu__Quote__c.zqu__Opportunity__r.BusinessPartner__r.Name}</td>
+                            </tr> -->
+                            <tr>
+                                <td style="border:none">{!shippingAddress.Address__c}</td>
+                            </tr>
+                            <tr style="{!IF(ISBLANK(shippingAddress.Address2__c), 'display:none', '')}">
+                                <td style="border:none">{!shippingAddress.Address2__c}</td>
+                            </tr>
+                            <tr>
+                                <td style="border:none">{!shippingAddress.City__c},&nbsp;{!shippingAddress.State__c}&nbsp;{!shippingAddress.Zip_Code__c}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <table class="inlineTable" style="width:30%">
+                <tr>
+                    <th>Date Created</th>
+                    <td>
+                        <apex:outputtext value="{0, date, MMM dd, yyyy}">
+                            <apex:param value="{!zqu__Quote__c.CreatedDate}" />
+                        </apex:outputText>    
+                    </td>
+                </tr>
+                <tr>
+                    <th>Quote Expiration</th>
+                    <td>
+                        <apex:outputtext value="{0, date, MMM dd, yyyy}">
+                            <apex:param value="{!zqu__Quote__c.zqu__ValidUntil__c}" />
+                        </apex:outputtext>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <br />
+        <div>
+            <table class="inlineTable" style="width:48%">
+                <tr>
+                    <th>Account Executive</th>
+                    <th>Customer Contact</th>
+                </tr>
+                <tr>
+                    <!--<td><apex:outputText value="{!zqu__Quote__c.Owner.Name}" /></td>-->
+                    <td><apex:outputText value="{!zqu__Quote__c.zqu__Opportunity__r.Owner.Name}" /></td>
+                    <td><apex:outputText value="{!zqu__Quote__c.zqu__SoldToContact__r.Name}" /></td>
+                </tr>
+            </table>
+            <table class="inlineTable" style="width:48%">
+                <tr>
+                    <th>Phone</th>
+                    <td><apex:outputText value="{!zqu__Quote__c.zqu__SoldToContact__r.Phone}" /></td>
+                </tr>
+                <tr>
+                    <th>E-mail</th>
+                    <td><apex:outputText value="{!zqu__Quote__c.zqu__SoldToContact__r.Email}" /></td>
+                </tr>
+            </table>
+        </div>
+        <br />
+        <div>
+            <table class="inlineTable" style="width:100%">
+                <tr>
+                    <th>Initial Subscription Term</th>
+                    <th>Renewal Subscription Term</th>
+                    <th style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription', '', 'display:none')}">Remaining Term</th>
+                    <th style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c = 'New Subscription', '', 'display:none')}">Ramp Period</th>
+                </tr>
+                <tr>
+                    <td>{!IF(zqu__Quote__c.zqu__Opportunity__r.Offering_Detail__c != 'Pilot/Trial/POC', 
+                                                    IF(zqu__Quote__c.zqu__InitialTerm__c = 0, '1 Month', TEXT(zqu__Quote__c.zqu__InitialTerm__c) & ' Month(s)'), 'N/A')}
+                    </td>
+                    <td>{!IF(zqu__Quote__c.zqu__Opportunity__r.Offering_Detail__c != 'Pilot/Trial/POC', 
+                                                    IF(zqu__Quote__c.zqu__InitialTerm__c = 0, '1 Month', TEXT(zqu__Quote__c.zqu__RenewalTerm__c) & ' Month(s)'), 'N/A')}
+                    </td>
+                    <td style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription', '', 'display:none')}">
+                        <apex:outputText value="{!TEXT(remainingTerm) + ' Month(s)'}" rendered="{!zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription'}" />
+                    </td>
+                    <td style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c = 'New Subscription', '', 'display:none')}">
+                        <apex:outputText value="{!TEXT(zqu__Quote__c.PureCloud_Ramp_Up_Period__c)}"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <br />
+        <div>
+            <table class="inlineTable" style="width:100%">
+                <tr>
+                    <th>Payment Terms</th>
+                    <th>Billing Period</th>
+                    <th>Auto Renew</th>
+                    <th>Currency</th>
+                </tr>
+                <tr>
+                    <td>{!zqu__Quote__c.zqu__PaymentTerm__c}</td>
+                    <td>{!IF(AND(zqu__Quote__c.zqu__Opportunity__r.Offering_Detail__c != 'Pilot/Trial/POC', zqu__Quote__c.Annual_Prepay__c), 'Annual', 'Monthly')}</td>
+                    <td>{!IF(zqu__Quote__c.zqu__Opportunity__r.Offering_Detail__c != 'Pilot/Trial/POC', 
+                            IF(zqu__Quote__c.zqu__InitialTerm__c = 0, 'Yes', 
+                                IF(zqu__Quote__c.zqu__AutoRenew__c = true, 'Yes', 'No')),
+                            'N/A')}
+                    </td>
+                    <td>{!zqu__Quote__c.zqu__Currency__c}</td>
+                </tr>
+            </table>
+        </div>
+        <br /><br />
+        <!-- Charge Output -->
+        <div>
+            <apex:repeat value="{!orderedCategories}" var="category">
+                <h2 style="page-break-after:avoid">{!category}</h2>
+                <apex:repeat value="{!chargeCatSubCatMap[category]}" var="subCategory">
+                    <table class="dataTable" style="width:100%">
+                        <caption class="tableCaption">{!subCategory}</caption>
+                        <tr>
+                            <th>Part</th>
+                            <th>Description</th>
+                            <th style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c = 'New Subscription', 'display:none', '')}">Original Quantity</th>
+                            <th>{!IF(zqu__Quote__c.zqu__SubscriptionType__c = 'New Subscription', 'Quantity', 'Updated Quantity')}</th>
+                            <th>List Price ({!zqu__Quote__c.zqu__Currency__c})</th>
+                            <th style="{!IF(zqu__Quote__c.zqu__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, '', 'display:none')}">Partner Price ({!zqu__Quote__c.zqu__Currency__c})</th>
+                            <th style="{!IF(NOT(zqu__Quote__c.zqu__Opportunity__r.Indirect_Partner_PureCloud_Approved__c), '', 'display:none')}">Extended Price ({!zqu__Quote__c.zqu__Currency__c})</th>
+                            <th>Unit Total ({!zqu__Quote__c.zqu__Currency__c})</th>
+                        </tr>
+                        <apex:repeat value="{!chargeCatSubCatMap[category][subCategory]}" var="c">                                                    
+                            <tr>
+                                <td style="width:25%"><div class="avoidBreak">{!c.NAME}</div></td>
+                                <td style="width:40%"><div class="avoidBreak">{!c.chargeObject['Product_Description__c']}</div></td>
+                                <td class="centerColumn" style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c = 'New Subscription', 'display:none', '')}">
+                                    <div class="avoidBreak">{!IF(originalChargeMap[c.PRODUCT_RATE_PLAN_CHARGE_SFDC_ID].QUANTITY = '-', '0', originalChargeMap[c.PRODUCT_RATE_PLAN_CHARGE_SFDC_ID].QUANTITY)}</div>
+                                </td>
+                                <td class="centerColumn"><div class="avoidBreak">{!IF(ISBLANK(TEXT(c.chargeObject['zqu__Quantity__c'])), '0', TEXT(c.chargeObject['zqu__Quantity__c']))}</div></td>
+                                <td class="numberColumn"><div class="avoidBreak">
+                                    <apex:outputtext value="{0}{1, number, ###,##0.00}" >
+                                        <apex:param value="{!currencySymbol}" />
+                                        <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Recurring', c.Period = 'Annual', category != 'One-Time Charges'), ROUND(VALUE(c.LIST_PRICE) / 12, 2), VALUE(c.LIST_PRICE))}" />
+                                    </apex:outputtext></div>                                  
+                                </td>
+                                <td class="numberColumn" style="{!IF(zqu__Quote__c.zqu__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, '', 'display:none')}"><div class="avoidBreak">
+                                    <apex:outputtext value="{0}{1, number, ###,##0.00}" >
+                                        <apex:param value="{!currencySymbol}" />
+                                        <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Recurring', c.Period = 'Annual'), ROUND(c.chargeObject['Partner_Price__c'] / 12, 2), c.chargeObject['Partner_Price__c'])}" />
+                                    </apex:outputtext></div>
+                                </td>
+                                <td class="numberColumn" style="{!IF(NOT(zqu__Quote__c.zqu__Opportunity__r.Indirect_Partner_PureCloud_Approved__c), '', 'display:none')}"><div class="avoidBreak">
+                                    <apex:outputtext value="{0}{1, number, ###,##0.00}" >
+                                        <apex:param value="{!currencySymbol}" />
+                                        <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Recurring', c.Period = 'Annual'), ROUND(VALUE(c.EFFECTIVE_PRICE) / 12, 2), VALUE(c.EFFECTIVE_PRICE))}" />
+                                    </apex:outputtext></div>                                    
+                                </td>
+                                <td class="numberColumn" style="{!IF(NOT(zqu__Quote__c.zqu__Opportunity__r.Indirect_Partner_PureCloud_Approved__c), '', 'display:none')}"><div class="avoidBreak">
+                                    <apex:outputtext value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '{0}{1}', '{0}{1, number, ###,##0.00}')}" >
+                                        <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), 'Based on Usage', currencySymbol)}" />
+                                        <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '', VALUE(c.TOTAL))}" />
+                                    </apex:outputtext></div>
+                                </td>
+                                <td class="numberColumn" style="{!IF(zqu__Quote__c.zqu__Opportunity__r.Indirect_Partner_PureCloud_Approved__c, '', 'display:none')}"><div class="avoidBreak">
+                                    <apex:outputtext value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '{0}{1}', '{0}{1, number, ###,##0.00}')}" >
+                                        <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), 'Based on Usage', currencySymbol)}" />
+                                        <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '', c.chargeObject['zqu__Total__c'])}" />
+                                    </apex:outputtext></div>
+                                </td>
+                            </tr>
+                        </apex:repeat>
+                        <tfoot class="ininFooter">
+                            <tr>
+                                <td colspan="{!IF(zqu__Quote__c.zqu__SubscriptionType__c != 'New Subscription', '5', '4')}" style="text-align:right">{!subCategory} Total:</td>
+                                <td colspan="2" style="text-align:right">
+                                    <apex:outputtext value="{!IF(OR(CONTAINS(subCategory, 'Estimated'), CONTAINS(subCategory, 'Voice')), '{0}{1}', '{0}{1, number, ###,##0.00}')}" >
+                                        <apex:param value="{!IF(OR(CONTAINS(subCategory, 'Estimated'), CONTAINS(subCategory, 'Voice')), 'Based on Usage', currencySymbol)}" />
+                                        <apex:param value="{!IF(OR(CONTAINS(subCategory, 'Estimated'), CONTAINS(subCategory, 'Voice')), '', subCatTotal[subCategory])}" />
+                                    </apex:outputtext>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <br />
+                </apex:repeat>
+            </apex:repeat>
+        </div>
+        <br />
+        <!-- Original Charges -->
+        <div style="{!IF(AND(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', NOT(originalCharges.empty)), '', 'display:none')}">
+            <h2>Original Charges</h2>
+            <table class="dataTable" style="width:100%">
+                <tr>
+                    <th>Part</th>
+                    <th>Original Quantity</th>
+                    <th>Original List Price</th>
+                    <th>Original Extended Price</th>
+                    <th>Original Total</th>
+                </tr>
+                <apex:repeat value="{!originalCharges}" var="c">                                                    
+                    <tr>
+                        <td style="width:40%"><div class="avoidBreak">{!c.NAME}</div></td>
+                        <td class="numberColumn"><div class="avoidBreak">{!c.QUANTITY}</div></td>
+                        <td class="numberColumn"><div class="avoidBreak">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}" >
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!VALUE(c.LIST_PRICE)}" />
+                            </apex:outputtext></div>                                  
+                        </td>
+                        <td class="numberColumn"><div class="avoidBreak">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}" >
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Recurring', c.Period = 'Annual'), ROUND(VALUE(c.EFFECTIVE_PRICE) / 12, 2), VALUE(c.EFFECTIVE_PRICE))}" />
+                            </apex:outputtext></div>                            
+                        </td>
+                        <td class="numberColumn"><div class="avoidBreak">
+                            <apex:outputtext value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '{0}{1}', '{0}{1, number, ###,##0.00}')}" >
+                                <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), 'Based on Usage', currencySymbol)}" />
+                                <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '', VALUE(c.TOTAL))}" />
+                            </apex:outputtext></div>
+                        </td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </div>
+        <br />
+        <!-- Removed Charges -->
+        <div style="{!IF(AND(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', NOT(removedCharges.empty)), '', 'display:none')}">
+            <h2>Removed Charges</h2>
+            <table class="dataTable" style="width:100%">
+                <tr>
+                    <th>Part</th>
+                    <th>Original Quantity</th>
+                    <th>Original List Price</th>
+                    <th>Original Extended Price</th>
+                    <th>Original Total</th>
+                </tr>
+                <apex:repeat value="{!removedCharges}" var="c">                                                    
+                    <tr>
+                        <td style="width:40%"><div class="avoidBreak">{!c.NAME}</div></td>
+                        <td class="numberColumn"><div class="avoidBreak">{!c.QUANTITY}</div></td>
+                        <td class="numberColumn"><div class="avoidBreak">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}" >
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Recurring', c.Period = 'Annual'), ROUND(VALUE(c.LIST_PRICE) / 12, 2), VALUE(c.LIST_PRICE))}" />
+                            </apex:outputtext></div>                                  
+                        </td>
+                        <td class="numberColumn"><div class="avoidBreak">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}" >
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Recurring', c.Period = 'Annual'), ROUND(VALUE(c.EFFECTIVE_PRICE) / 12, 2), VALUE(c.EFFECTIVE_PRICE))}" />
+                            </apex:outputtext></div>                            
+                        </td>
+                        <td class="numberColumn"><div class="avoidBreak">
+                            <apex:outputtext value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '{0}{1}', '{0}{1, number, ###,##0.00}')}" >
+                                <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), 'Based on Usage', currencySymbol)}" />
+                                <apex:param value="{!IF(AND(c.CHARGE_TYPE = 'Usage', c.TOTAL = '-'), '', VALUE(c.TOTAL))}" />
+                            </apex:outputtext></div>
+                        </td>
+                    </tr>
+                </apex:repeat>
+            </table>
+        </div>
+        <br />
+        <!-- Totals -->
+        <div class="avoidBreak" style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', '', 'display:none')}">
+            <h2>Changes to Contract Totals</h2>
+            <div>
+                <table class="totalTable" style="">
+                    <tr>
+                        <th>Monthly Changes</th>
+                        <td>
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!zqu__Quote__c.zqu__Previewed_Delta_MRR__c}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <!--<tr>
+                        <th>Total Contract Changes</th>
+                        <td>
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!zqu__Quote__c.zqu__Previewed_Delta_TCV__c}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>-->
+                </table>
+            </div>            
+        </div>
+        <br />
+        <div class="avoidBreak">
+            <h2>Totals</h2>
+            <div>
+                <table class="totalTable" style="">
+                    <tr style="{!IF(AND(zqu__Quote__c.Annual_PrePay__c, annualSubscriptionTotal != null, annualSubscriptionTotal > 0), '', 'display:none')}">
+                        <th style="font-weight:normal">{!IF(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', 'Amended Total ', '')}Annual Pre-Pay Subscription Fees:</th>
+                        <td style="font-weight:normal">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!annualSubscriptionTotal}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr style="{!IF(AND(NOT(zqu__Quote__c.Annual_PrePay__c), zqu__Quote__c.zqu__InitialTerm__c != null, zqu__Quote__c.zqu__InitialTerm__c > 0), '', 'display:none')}">
+                        <th style="font-weight:normal">{!IF(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', 'Amended ', '')}Minimum Monthly Subscription Fees:</th>
+                        <td style="font-weight:normal">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!monthlySubscriptionTotals}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr style="{!IF(zqu__Quote__c.zqu__InitialTerm__c = 0, '', 'display:none')}">
+                        <th style="font-weight:normal">Estimated Monthly Subscription Fees:</th>
+                        <td style="font-weight:normal">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!estimatedTotals}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr style="{!IF(AND(monthlyServiceTotals != null, monthlyServiceTotals > 0), '', 'display:none')}">
+                        <th style="font-weight:normal">Total Monthly Services:</th>
+                        <td style="font-weight:normal">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!monthlyServiceTotals}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Total Monthly Fees:</th>
+                        <td style="font-weight:bold">Based on Usage</td>
+                    </tr>                    
+                    <tr style="{!IF(AND(hardwareTotal != null, hardwareTotal > 0), '', 'display:none')}">
+                        <th style="font-weight:normal">Subtotal for Hardware:</th>
+                        <td style="font-weight:normal">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!hardwareTotal}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr style="{!IF(AND(onetimeServicesTotal != null, onetimeServicesTotal > 0), '', 'display:none')}">
+                        <th style="font-weight:normal">Subtotal for One-Time Services:</th>
+                        <td style="font-weight:normal">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!onetimeServicesTotal}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr style="{!IF(AND(educationTotal != null, educationTotal > 0), '', 'display:none')}">
+                        <th style="font-weight:normal">Subtotal for Education:</th>
+                        <td style="font-weight:normal">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!educationTotal}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Total One-Time Fees{!IF(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', ':*', ':')}</th>
+                        <td style="font-weight:bold">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <!-- <apex:param value="{!onetimeTotals + annualProratedTotal}" />        -->
+                                <apex:param value="{!onetimeTotals 
+                                                      + IF(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', annualProratedTotal, 0)
+                                                      - IF(zqu__Quote__c.zqu__SubscriptionType__c == 'New Subscription' && zqu__Quote__c.zqu__InitialTerm__c <= 12, annualSubscriptionTotal, 0)}" />                        
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <tr style="{!IF(AND(zqu__Quote__c.zqu__InitialTerm__c != null, zqu__Quote__c.zqu__InitialTerm__c >= 12, NOT(ISBLANK(zqu__Quote__c.zqu__Previewed_Discount__c)), zqu__Quote__c.zqu__Previewed_Discount__c > 0), '', 'display:none')}">
+                        <th>Annual Commitment Subscription Discount:</th>
+                        <td style="font-weight:bold">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!zqu__Quote__c.zqu__Previewed_Discount__c}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>
+                    <!--<tr style="{!IF(isMultiYearTerm, '', 'display:none')}">
+                        <th>Year 1 Contract Value:</th>
+                        <td style="font-weight:bold">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!yearOneContractValue}" />
+                            </apex:outputtext>
+                        </td>
+                    </tr>-->
+                    <tr style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', 'display:none', '')}">
+                        <th>Total Contract Value:</th>
+                        <td style="font-weight:bold">
+                            <apex:outputtext value="{0}{1, number, ###,##0.00}">
+                                <apex:param value="{!currencySymbol}" />
+                                <apex:param value="{!totalContractValue}" />                                
+                            </apex:outputtext>
+                        </td>
+                    </tr>                     
+                    <tfoot>
+                        <tr><td colspan="2" style="border:none">Hardware will be billed when shipped.  Taxes and shipping will be calculated upon invoicing.</td></tr>
+                        <tr style="{!IF(zqu__Quote__c.zqu__SubscriptionType__c == 'Amend Subscription', '', 'display:none')}"><td colspan="2" style="border:none">* Defined in Special Terms and Notes changes below</td></tr>
+                    </tfoot>
+                </table>
+            </div>            
+        </div>
+    </div>
+    <!-- Hidden Fields for controller access -->
+    <apex:outputField value="{!zqu__Quote__c.zqu__SubscriptionTermStartDate__c}" rendered="false"/>
+    <apex:outputField value="{!zqu__Quote__c.zqu__SubscriptionTermEndDate__c}" rendered="false" />
+    <apex:outputField value="{!zqu__Quote__c.zqu__Opportunity__r.BusinessPartner__c}" rendered="false" />
+    <apex:outputField value="{!zqu__Quote__c.zqu__StartDate__c }" rendered="false" />
+    <apex:outputField value="{!zqu__Quote__c.PureCloud_Ramp_Up_Period__c }" rendered="false" />
+    <apex:outputField value="{!zqu__Quote__c.zqu__InitialTerm__c }" rendered="false" />
+    
+  <!--  <br/><br/><br/><br/><br/><br/><br/>
+    <table class="dataTable" style="width:100%">
+        <caption class="tableCaption">Required Approvals</caption>
+        <tr>
+            <th width="20%">Role</th>
+            <th width="40%">Name</th>            
+            <th width="40%">Initials</th>
+        </tr>
+        <tr>
+            <td height="30px">Legal</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td height="30px">Finance</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td height="30px">Revenue Accounting</td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>-->
+</apex:page>

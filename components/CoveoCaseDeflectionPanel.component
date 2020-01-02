@@ -1,0 +1,82 @@
+<apex:component controller="CoveoCaseDeflectionPanelController">
+    <CoveoV2:JsSearch stylesheet="CoveoFullSearch.css"
+                      searchHub="{!$Setup.CoveoCaseDeflectionPanelPublic__c.HubName__c}" 
+                      filter="{!$Setup.CoveoCaseDeflectionPanelPublic__c.Filter__c}"/>
+                      
+    <apex:stylesheet value="{!URLFOR($Resource.CoveoCaseDeflectionPanel, 'css/CoveoCaseDeflectionPanel.css')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.CoveoCaseDeflectionPanel, 'js/CoveoCaseDeflectionPanel.js')}"/>
+    <apex:includeScript value="{!$Resource.CoveoCreateCaseButtonJs}"/>
+    
+    <script>
+        Coveo.$(function(){
+            //Initializes the coveoCaseDeflectionPanel javascript controller
+            coveoCaseDeflectionPanel.init("#search", 
+                                          ".theSubjectField", 
+                                          ".btn[type='button'][value='Save']", 
+                                          ".btn[type='submit'][value='Cancel']",
+                                          "[id$=VisitId]",
+                                          "{!coveoProductName} {!coveoComponentName}",
+                                          "{!coveoMajorRelease}",
+                                          {
+                                              Product: "{!coveoProductName}",
+                                              ProductLine: "{!coveoProductLineName}",
+                                              MajorRelease: "{!coveoMajorRelease}",
+                                              SoldTo: "{!coveoSoldToName}",
+                                              Account: "{!coveoUserAccountName}"
+                                          },
+                                         "select:has(option[value='2-High'])",
+                                         "select:has(option[value='Problem'])",
+                                         "select:has(option[value='Staging'])");
+            
+            //coveoCaseDescriptionInitializer
+            coveoCaseDescriptionInitializer.TargetFieldSelector = ".theDescriptionField";
+            coveoCaseDescriptionInitializer.init();
+            
+            //***** START HOTFIX: 2015-10-22 ******//
+            Coveo.$('#search').on('preprocessResults', function(e, args) {
+                args.results.results.forEach(function(r) {
+                    if (r.raw.sfkbid){
+                        r.clickUri = "/customercare/pkb_Home?id=" + r.raw.sfid + "&l=" + r.raw.sflanguage + "&fs=Search&pn=1";
+                    } 
+                });
+            });
+            //***** STOP HOTFIX: 2015-10-22 ******//
+            
+            //Initializes the JsSearch interface
+            Coveo.$('#search').coveo('init',{
+                'Analytics': {'searchHub': "{!$Setup.CoveoCaseDeflectionPanelPublic__c.HubName__c}"}
+            });
+        });
+    </script>
+    
+    <div id="search" class="CoveoSearchInterface" data-enable-history="true" data-auto-trigger-query="true" data-hide-until-first-query="false">
+    <div class="CoveoAnalytics" data-search-hub="{!$Setup.CoveoCaseDeflectionPanelPublic__c.HubName__c}">
+    </div>
+    <div class="coveo-tab-section">
+        <a class="CoveoTab" 
+           data-id="{!$Setup.CoveoCaseDeflectionPanelPublic__c.TabId__c}" 
+           data-caption="{!$Label.CoveoCaseDeflectionPanel_Title}" 
+           data-icon="coveo-sprites-tab-all-content">
+        </a>
+    </div>
+    <div class="coveo-main-section">
+        <div class="coveo-results-column">
+            <div class="CoveoErrorReport" data-pop-up="false">
+            </div>
+            <div class="CoveoResultList" data-wait-animation="fade">
+                <script id="Default" class="result-template" type="text/html">
+                <div class="coveo-result-frame">
+                    <div class="coveo-result-row">
+                        <div class="coveo-result-cell" style="width:20px; font-size:14px">
+                            <div class="coveo-result-cell" style="font-size:14px">
+                                <a class="CoveoResultLink" data-always-open-in-new-window="true"></a>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                                </script>
+            </div>
+        </div>
+    </div>
+    </div>
+</apex:component>

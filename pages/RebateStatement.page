@@ -1,0 +1,140 @@
+<apex:page controller="RebateStatementController">
+    <script>
+        function RebateStatementExport(rebateYear, currentAccount){
+            window.open("/partner/apex/RebateStatementExport?ry="+rebateYear+"&lua="+currentAccount); 
+        }
+    </script>
+    <apex:sectionHeader title="{!rebateYear}" subtitle="Rebate Statement"/>
+    <apex:form >
+	    <apex:variable var="availableRebateValue" value="{!rebate.Total_Earned_Rebate__c}" />
+
+    <apex:pageBlock title="{!rebateYear} Rebate Statement">
+    	<apex:pageBlockSection columns="1">
+        	<apex:outputPanel style="width:100%">
+                <table width="100%">
+                    <tr>
+                    	<td width="20%"><b>Partner Name</b></td>
+                        <td width="20%">{!pAccount.Name}</td>
+                        <td width="20%"><b>Channel Manager</b></td>
+                        <td width="20%">
+                            {!pAccount.Owner.Name} <br/> 
+                            {!pAccount.Owner.Title} <br/>
+                            {!pAccount.Owner.Email}
+                        </td>
+                        <td width="20%">&nbsp;</td>
+                    </tr>
+                    <tr height="10px">
+                    	<td colspan="5">&nbsp;</td>
+                    </tr>
+                    <tr>
+                    	<td>
+                            <b>Earned Rebate</b> <br />
+                            <b>Total Rebate Used</b> <br />
+                            <b>Total Rebate In-Process</b> 
+                        </td>
+                        <td>
+                            <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}"  rendered="{!(rebate.Total_Earned_Rebate__c != NULL)}">
+                                <apex:param value="{!rebate.Total_Earned_Rebate__c}" />
+                            </apex:outputText>
+							<br />
+                            <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}" rendered="{!(totalRebateUsed != NULL)}">
+                                <apex:param value="{!totalRebateUsed}" />
+                            </apex:outputText>
+							<br />
+                            <apex:outputText value="{!rebate.CurrencyIsoCode} {0, number, ###,###,###,###,##0.00}"  rendered="{!(totalRebateInProcess != NULL)}">
+                                <apex:param value="{!totalRebateInProcess}" />
+                            </apex:outputText>
+                        </td>
+                    	<td><b>Regional Channel Manager</b></td>
+                        <td>
+                            {!pAccount.Owner.Manager.Name} <br/>
+                            {!pAccount.Owner.Manager.Title} <br/>
+                            {!pAccount.Owner.Manager.Email}
+                        </td>
+                        <td width="20%">&nbsp;</td>
+                    </tr>
+                    <tr height="10px">
+                    	<td colspan="5">&nbsp;</td>
+                    </tr>
+                    <tr>
+                    </tr>
+                    <tr height="10px">
+                    	<td colspan="2">&nbsp;</td>
+                    </tr>
+                </table>
+            </apex:outputPanel>
+        	<apex:outputPanel >
+            	<table width="100%" border="1" cellpadding="0" cellspacing="0">
+                    <tr height="20px" valign="middle">
+                        <th>Date</th>
+                        <th>Expense Type</th>
+                        <th>Requested By</th>
+                        <th>Status</th>
+                        <th>Rebate Amount</th>
+                        <th>Balance</th>
+                    </tr>
+                    <tr height="20px" valign="middle">
+                        <td colspan="5" align="right"><b>Opening Balance &nbsp;&nbsp;</b></td>
+                        <td><b>
+  							<apex:outputText value="{0, number, ###,###,###,###,##0.00}">
+                                <apex:param value="{!availableRebateValue}" />
+                            </apex:outputText>                            
+                            <!-- {!availableRebateValue} -->
+                        </b></td>
+			        </tr>
+					<apex:repeat value="{!rebateRequests}" var="rebateRequest" id="theRepeat">
+                        <apex:variable var="availableRebateValue" value="{!IF(rebateRequest.Status__c == 'Processed', availableRebateValue - rebateRequest.Requested_Rebate_Amount__c, availableRebateValue)}"/>
+                        <tr height="20px" valign="middle">
+                            <td>&nbsp;
+                                <apex:outputText value="{0,date,MM/dd/yyyy}" >
+                            		<apex:param value="{!rebateRequest.Date__c}" /> 
+                        		</apex:outputText>  
+                            </td>
+                            <td>&nbsp;{!rebateRequest.Expense_Type__c}</td>
+                            <td>&nbsp;{!rebateRequest.Contact__r.Name}</td>
+                            <td>&nbsp;{!rebateRequest.Status__c}</td>
+                            <td>&nbsp;{!rebateRequest.Requested_Rebate_Amount__c}</td>
+                            <td>&nbsp;
+							<apex:outputText value="{0, number, ###,###,###,###,##0.00}">
+                                <apex:param value="{!availableRebateValue}" />
+                            </apex:outputText>                                 
+                            </td>
+                        </tr>
+                    </apex:repeat>
+                    <tr height="20px" valign="middle">
+                        <td colspan="5" align="right"><b>Closing Balance &nbsp;&nbsp;</b></td>
+                        <td>
+                            <b>
+							<apex:outputText value="{0, number, ###,###,###,###,##0.00}">
+                                <apex:param value="{!availableRebateValue}" />
+                            </apex:outputText>                                
+                            </b>
+                        </td>
+			        </tr>
+
+                </table>
+            </apex:outputPanel>
+        </apex:pageBlockSection>
+		<!--
+		<apex:pageBlockTable value="{!rebateRequests}" var="rr">
+        	<apex:column value="{!rr.Date__c}" />
+            <apex:column value="{!rr.Expense_Type__c}" />
+            <apex:column value="{!rr.Contact__r.Name}" />
+        	<apex:column value="{!rr.Status__c}" />
+        	<apex:column value="{!rr.Requested_Rebate_Amount__c}" />
+            <apex:column title="Balance"  headerValue="Balance">
+	            <apex:variable var="availableRebateValue" value="{!IF(rr.Status__c == 'Processed', availableRebateValue - rr.Requested_Rebate_Amount__c, availableRebateValue)}"/>
+                {!availableRebateValue}
+                <apex:facet name="footer">{!availableRebateValue}</apex:facet>
+            </apex:column>
+        </apex:pageBlockTable>
+		-->
+		<apex:pageBlockButtons >
+            <apex:commandButton value="Export to Excel" onclick="RebateStatementExport('{!rebateYear}', '{!accountId}'); return false;" />
+            <apex:commandButton value="Back" action="{!redirectToPerformance}" immediate="true"/>
+            
+        </apex:pageBlockButtons>
+
+    </apex:pageBlock>
+    </apex:form>
+</apex:page>
