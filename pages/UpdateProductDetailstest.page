@@ -1,0 +1,135 @@
+<apex:page standardController="case" extensions="UpdateProductDetailsController" id="pg">
+    
+    <apex:form id="frm">
+        
+        <apex:pageBlock id="pgblk2" rendered="{!isPureConnectCloud}">
+         This page is not supported for PureConnect products. Please use the “Change Cloud Deployment/Contact/Service” button instead.
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Cancel" onclick="history.go(-1); return false;" />
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+        
+        <apex:pageBlock id="pgblk3" rendered="{!isElse}">
+         This case is for Cloud Platform. Product list is not available for this Cloud Platform.
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Cancel" onclick="history.go(-1); return false;" />
+            </apex:pageBlockButtons> 
+        </apex:pageBlock>
+        
+        <apex:pageBlock id="pgblk" rendered="{!IF(OR(isPureEngageCloud == True, isPureCloud== True), TRUE, FALSE)}">
+            <apex:pageMessages />
+            <apex:pageBlockButtons location="bottom">
+                <apex:commandButton value="Save" id="Save" action="{!saveCaseUpdates}" status="status"/>
+                <apex:commandButton value="Cancel" onclick="history.go(-1); return false;" />
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection id="pgsecPltfrm" columns="1">
+                <apex:inputText value="{!CloudPlatform}" label="Cloud Platform" id="txtPltfrm" />
+                <script>
+                    document.getElementById('pg:frm:pgblk:pgsecPltfrm:txtPltfrm').disabled = true;
+                </script>    
+            </apex:pageBlockSection>
+            
+            <!-- Required  Category--->
+        <apex:pageBlockSection columns="1" id="cat2" >
+          <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Product Category" />
+                <apex:outputPanel id="pnl10" layout="block" styleClass="requiredInput" >
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                        <apex:selectList value="{!selectedCategory}" size="1" label="Product Category" style="width:200px">
+                            <apex:selectOptions value="{!categories}" />                
+                            <apex:actionSupport event="onchange" rerender="pcgrp,pcgrp2,pgsecProduct,pgsecProduct2,pgseccmp,pgsecprobcat" 
+                     action="{!onchangeCategory}" status="status" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+                
+        </apex:pageBlockSection>
+       <!-- Required  Category --->
+            
+            <!-- Required  Group--->
+        <apex:pageBlockSection columns="1" id="pcgrp2" >
+          <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Product Group" />
+                <apex:outputPanel id="pnl10" layout="block" styleClass="requiredInput" >
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                        <apex:selectList value="{!selectedProductGroup}" size="1" label="Product Group Req" style="width:200px">
+                            <apex:selectOptions value="{!ProductGroups}" />                
+                            <apex:actionSupport event="onchange" rerender="pcgrp,pgsecProduct,pgsecProduct2,pgseccmp,pgsecprobcat" 
+                     action="{!onchangeGroup}" status="status" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+                
+        </apex:pageBlockSection>
+       <!-- Required  Group --->
+            
+            <!-- Required  Product--->
+        <apex:pageBlockSection columns="1" id="pgsecProduct2" >
+          <apex:pageBlockSectionItem >
+                <apex:outputLabel value="Products" />
+                <apex:outputPanel id="pnl10" layout="block" styleClass="requiredInput" >
+                    <apex:outputPanel layout="block" styleClass="requiredBlock" />
+                        <apex:selectList value="{!selectedProduct}" size="1" label="Product" style="width:200px">
+                            <apex:selectOptions value="{!Products}" />                
+                            <apex:actionSupport event="onchange" action="{!onchangeProduct}" rerender="pcgrp,pgsecProduct,pgseccmp,pgsecprobcat" 
+                            status="status" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+            </apex:pageBlockSectionItem> 
+                
+        </apex:pageBlockSection>
+       <!-- Required  Product --->
+            
+            
+            <apex:pageblockSection id="pgseccmp" rendered="{!IF(AND(isPureEngageCloud == True, isPureCloud== false), TRUE, FALSE)}">
+                <apex:selectList value="{!selectedComponent}" size="1" label="Component" style="width:200px" >
+                <apex:selectOptions value="{!components}" />                
+                </apex:selectList>
+            </apex:pageblockSection>
+            
+            <!-- Problem Category -->
+            <apex:pageblockSection id="pgsecprobcat" >
+                <apex:selectList value="{!selectedProblemCategory}" size="1" label="Problem Category" style="width:200px" >
+                <apex:selectOptions value="{!ProblemCategorys}" />                
+                </apex:selectList>
+            </apex:pageblockSection>
+            
+            
+        </apex:pageBlock>
+        
+        <apex:actionStatus id="status" stopText="">
+        <apex:facet name="start">
+            <div>
+                <div class="popupBackground" />
+                    <div class="PopupPanel">
+                        <table border="0" width="100%" height="100%">
+                            <tr>
+                                <td align="center"><img src="{!$Resource.favorite_icon_maybe}"/>&nbsp;&nbsp;<b>Please Wait</b></td>
+                            </tr>
+                        </table>
+                    </div>
+               </div>
+        </apex:facet>
+    </apex:actionStatus>
+    </apex:form>
+<style>
+    .popupBackground {
+        /* Background color */
+        background-color:black;
+        opacity: 0.50;
+        filter: alpha(opacity = 50);
+     
+        /* Dimensions */
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 998;
+        position: absolute;
+         
+        /* Mouse */
+        cursor:wait;
+    }
+</style>    
+</apex:page>

@@ -1,0 +1,192 @@
+<!--
+VF Page Name = OpenAccountTab
+Purpose = Page represent the Account List along with related CCDB/Subscriptions. User Story# S-647338, Task# T-848006
+Developed By = Sajid Khan
+Developed Date = 25-Nov-2019
+Modified By = Sushen Adhikary
+Modified Date = 12-Dec-2019
+-->
+<apex:page standardController="Account" extensions="OpenAccountTabController" showHeader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}"  sidebar="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" >
+
+    <apex:composition template="{!$Site.Template}"><!--showHeader="{!NOT(ISPICKVAL($User.UserType,'PowerPartner'))}" -->
+        <apex:define name="header">
+            <c:PartnerPortalHeader currPageName="nothomepage" rendered="{!ISPICKVAL($User.UserType,'PowerPartner')}"/>
+        </apex:define>
+        <apex:define name="tabs">
+            <c:PartnerPortalTabs tabname="acctTab"/>
+        </apex:define>
+        <apex:define name="sidebar">
+            <c:PartnerQuickLinks />
+        </apex:define>
+        
+        <apex:define name="body">
+            <apex:form id="TheForm">
+                <apex:pageBlock title="Accounts List" id="TablePanel">
+                     <apex:pageMessages ></apex:pageMessages>
+                    <div align="center">
+                    <apex:commandButton style="align:center" value="New" action="{!create}"/>
+                    </div>
+                      <div style="margin:10px 0px;">
+                     <h6>View:</h6>&nbsp;&nbsp;
+                        <apex:selectList value="{!AccFilterId}" size="1" id="filterMenu">
+                      <apex:selectOptions value="{!AccountExistingViews}"></apex:selectOptions>
+                      <apex:actionSupport event="onchange"  action="{!resetFilter}" rerender="OppTable,TablePanel,pagenav," status="TableUpdateStatus"/>
+                        </apex:selectList> 
+                     </div>
+                    <div style="clear: both;"></div>
+                    <apex:actionStatus id="TableUpdateStatus">                   
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv waitingSearchDivOpacity" style="width: 100%; height: 100vh; display: block;opacity: 0.60;"/>
+                            <div id="loading_image" class="waitingSearchDiv" style="width: 100%; height: 100%; display: block;">
+                                <div class="waitingHolder" style="top: 48%; width: 20px;background:#fff;">
+                                    <img class="waitingImage" src="/img/loading.gif" style="background:#fff;"/>
+                                    <span class="waitingDescription">Refreshing...</span>
+                                </div>
+                            </div>
+                        </apex:facet>
+                        <apex:facet name="stop"/>
+                    </apex:actionStatus>
+                    
+                    <!-- Account table -->
+                      <b>
+                       <apex:outputText rendered="{! IF(AccFilterId == '',true,false)}">Recent Accounts</apex:outputText> 
+                    </b>
+                    
+                    <apex:pageBlockTable id="OppTable" value="{!CurrentAccountList}" var="a">
+                        
+                        <!--Account Name-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Account.Name" assignTo="{!SortField}" />
+                                     <apex:outputText value="Account Name {!IF(SortField=='Name',IF(SortDirection='asc','▲','▼'),'')}" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                               <apex:outputLink value="/partner/PartnerPortalAcctDetail?Id={!a.Id}" target="_parent">{!a.Name}</apex:outputlink>
+                            </apex:column>
+                             <apex:column headerValue="Account Name" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputLink value="/partner/PartnerPortalAcctDetail?Id={!a.Id}" target="_parent">{!a.Name}</apex:outputlink>
+                            </apex:column>
+                        <!--Parent-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Parent" assignTo="{!SortField}" />
+                                     <apex:outputText value="Parent" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.Parent.Name}"/>
+                            </apex:column>
+                             <apex:column headerValue="Parent" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.Parent.Name}" />
+                            </apex:column>
+                        <!--Type-->
+                        <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Type" assignTo="{!SortField}" />
+                                     <apex:outputText value="Type {!IF(SortField=='Type',IF(SortDirection='asc','▲','▼'),'')}" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.Type}"/>
+                            </apex:column>
+                            <apex:column headerValue="Type" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.Type}" />
+                            </apex:column>
+                        
+                        <!--Account Classification-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Account Classification" assignTo="{!SortField}" />
+                                     <apex:outputText value="Account Classification {!IF(SortField=='Account Classification',IF(SortDirection='asc','▲','▼'),'')}" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.AccountClassification__c}"/>
+                            </apex:column>
+                             <apex:column headerValue="Account Classification" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.AccountClassification__c}" />
+                            </apex:column>
+                        <!--Country-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Country" assignTo="{!SortField}" />
+                                     <apex:outputText value="Country" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.Country__c}"/>
+                            </apex:column>
+                             <apex:column headerValue="Country" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.Country__c}" />
+                            </apex:column>
+                        <!--GARN Code-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="GARN Account Code" assignTo="{!SortField}" />
+                                     <apex:outputText value="GARN Account Code" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.SAP_Account_Code__c}"/>
+                            </apex:column>
+                             <apex:column headerValue="GARN Account Code" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.SAP_Account_Code__c}" />
+                            </apex:column>
+                        <!--Phone-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Phone" assignTo="{!SortField}" />
+                                     <apex:outputText value="Phone" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.Phone}"/>
+                            </apex:column>
+                             <apex:column headerValue="Phone" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.Phone}" />
+                            </apex:column>
+                        <!--Owner Name-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Owner last Name" assignTo="{!SortField}" />
+                                     <apex:outputText value="Owner last Name" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.Owner.LastName}"/>
+                            </apex:column>
+                             <apex:column headerValue="Owner Last Name" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.Owner.LastName}" />
+                            </apex:column>
+                        <!--Status-->
+                         <apex:column rendered="{! IF(noOfRecords!=0 && AccFilterId != '',true,false)}">
+                               <apex:facet name="header">
+                                  <apex:commandLink action="{!SortToggle}" rerender="TablePanel" status="TableUpdateStatus">
+                                     <apex:param name="SortField" value="Status" assignTo="{!SortField}" />
+                                     <apex:outputText value="Status" />
+                                  </apex:commandLink>
+                               </apex:facet>
+                             <apex:outputText value="{!a.Status__c}"/>
+                            </apex:column>
+                             <apex:column headerValue="Status" rendered="{! IF(noOfRecords!=0 && AccFilterId != '',false,true)}">
+                               <apex:outputText value="{!a.Status__c}" />
+                            </apex:column>                    
+                    </apex:pageBlockTable>                    
+                    
+                </apex:pageBlock>
+            </apex:form>
+        </apex:define>
+    </apex:composition>
+    
+    <style type="text/css">
+        /*   bPageBlock {
+            border-top-width: 0px;
+        } */
+        .loading-icon {
+        background-image: url(/img/loading.gif);
+        width: 16px;
+        height: 16px;
+    }
+    </style>
+</apex:page>

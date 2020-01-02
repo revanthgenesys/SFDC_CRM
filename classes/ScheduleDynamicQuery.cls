@@ -1,0 +1,6 @@
+global class ScheduleDynamicQuery implements Schedulable {
+    
+    global void execute(SchedulableContext ctx) {
+        // awesome code here
+    }
+}

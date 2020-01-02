@@ -1,0 +1,118 @@
+<apex:page id="pg" standardController="Opportunity" extensions="GUOpportunityQuotes" sidebar="false" showHeader="false" >
+    <apex:form id="frm">
+        <apex:actionFunction name="deleteQuoteAF" action="{!deleteQuote}" reRender="pgblk" status="status">
+            <apex:param value="" name="strQuoteIdToBeDeleted" assignTo="{!strQuoteIdToBeDeleted}" />
+            <apex:param value="" name="blnIsBMQuote" assignTo="{!blnIsBMQuote}" />
+        </apex:actionFunction>
+        <apex:outputLabel value="Quotes can not be created for selected offering type." rendered="{!NOT(blnShowQuoteSection)}" />        
+        <apex:pageBlock id="pgblk"  title="Quotes" rendered="{!blnShowQuoteSection}">        
+            <apex:pagemessages />
+            <apex:pageBlockButtons location="top" > 
+                <apex:outputPanel rendered="{!blnIsPartner}">
+                    <!-- Updated URL for Create New Quote Button by Shweta Khandelwal for Genesys University 26-12-2019 #T-852991 #S-650068-->
+                    <apex:commandButton value="Create New Quote" onclick="window.open('/partner/apex/GUOptyQuoteCategory?oppId={!strOppId}'); return false;" rendered="{!blnShowNewQuoteButton}"/>
+                    <!--Added below variable by Sajid Khan, Date : 28/11/2019, Task# T-847992,  Story # S-647325-->
+                    <!--apex:commandButton value="Make Quote Primary Test" action="{!updateQuote}"  rendered="{!blnShowNewQuoteButton}" reRender="pgblk" oncomplete="window.top.location='/{!objOpp.Id}';return false;"/-->
+                    <apex:commandButton value="Make Quote Primary" action="{!updateQuote}"  rendered="{!blnShowNewQuoteButton}" reRender="pgblk" oncomplete="window.top.location.reload(true);"/>
+                    <apex:outputText value="Quote can not be created. Opportunity is not yet approved." rendered="{!NOT(blnShowNewQuoteButton)}" />
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!NOT(blnIsPartner)}">
+                    <!-- Updated URL for Create New Quote Button by Shweta Khandelwal for Genesys University 26-12-2019 #T-852991 #S-650068-->
+                    <apex:commandButton value="Create New Quote" onclick="window.open('/apex/GUOptyQuoteCategory?oppId={!strOppId}'); return false;"/>
+                    <apex:commandButton value="Make Quote Primary" action="{!updateQuote}" oncomplete="window.top.location='/{!objOpp.Id}';return false;" />  
+                    <apex:commandButton value="New FYM Quote" onclick="goToNewFYMQuote(); return false;" />
+                </apex:outputPanel>
+            </apex:pageBlockButtons> 
+            <span style="height:22px;">&nbsp;
+                <apex:actionStatus id="status">
+                    <apex:facet name="start">    
+                        Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+                    </apex:facet>                           
+                </apex:actionStatus>
+            </span>
+            <apex:outputLabel value="No quote found" rendered="{!list_OfQuotes.size == 0}" />            
+            <apex:pageBlockTable value="{!list_OfQuotes}" var="eachQuote" rendered="{!list_OfQuotes.size != 0}" id="pgblktbl">                  
+                <!--<apex:column headerValue="Action">
+                    &nbsp; <apex:outputLink value="/{!eachQuote.strQuoteId}/e" target="_blank">Edit</apex:outputLink> &nbsp;|&nbsp; <a href="#" onclick="deleteQuoteAF('{!eachQuote.strQuoteId}', {!eachQuote.blnIsBMQuote});" style="color:red">Del</a>
+                </apex:column>-->
+                <apex:column headerValue="Action">
+                   <!-- &nbsp; <apex:outputLink value="{!IF(eachQuote.strOfferingType=='PureCloud', IF(eachQuote.strStatus=='Quote In Progress' || eachQuote.strStatus=='Revision Pending', 'https://genesys--zqu.na48.visual.force.com/apex/EditQuoteProducts?scontrolCaching=1&id='+eachQuote.strQuoteId, '/'+eachQuote.strQuoteId), '/'+eachQuote.strQuoteId+'/e')}" target="_blank">Edit</apex:outputLink> -->
+                       &nbsp;
+                    <!--<apex:outputLink value="/{!eachQuote.strQuoteId}/e" target="_blank">Edit</apex:outputLink>-->
+                    <a href="/apex/GUCreateQuoteCIC?id={!eachQuote.strQuoteId}" target="_blank"> Edit</a>
+                       <apex:outputpanel layout="none" rendered="{!$ObjectType.BigMachines__Quote__c.deletable}">
+                         &nbsp;|&nbsp;<a href="#" onclick="deleteQuoteAF('{!eachQuote.strQuoteId}', {!eachQuote.blnIsBMQuote});" style="color:red">Del</a>
+                    </apex:outputpanel>
+                </apex:column>
+                <apex:column headerValue="Is Primary?"  id="clmIsPrimary" width="30px">
+                    <apex:inputCheckBox value="{!eachQuote.blnIsPrimary}" id="chkIsPrimary" onclick="return checkIsPrimaryCheckboxes();" />
+                </apex:column>
+                <apex:column headerValue="Quote">
+                    <apex:outputLink value="/{!eachQuote.strQuoteId}{!IF(TEXT($User.UserType) == 'PowerPartner', '/e' , '')}" target="_blank"> <!-- rendered="{!eachQuote.blnIsBMQuote}">-->
+                        {!eachQuote.strQuoteName}
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Description">
+                    {!eachQuote.strDescription}
+                </apex:column>
+                <apex:column headerValue="Revision No">
+                    {!eachQuote.decRevisionNO}
+                </apex:column>
+                <apex:column headerValue="Status">
+                    {!eachQuote.strStatus}
+                </apex:column>
+                <!--<apex:column headerValue="Platform Type">
+                    {!eachQuote.strPlatformType}
+                </apex:column> -->
+                <apex:column headerValue="Lead Platform">
+                    <apex:outputText value="PureEngage On Premise" rendered="{!eachQuote.strOfferingType == ''}"/>
+                    <apex:outputText value="{!eachQuote.strOfferingType}" rendered="{!eachQuote.strOfferingType != 'On Premise'}"/>
+                </apex:column>  
+                <apex:column headerValue="Primary play">
+                    {!eachQuote.Top_Play}
+                </apex:column>
+                <apex:column headerValue="Total" style="text-align:left;">
+                    <apex:outputText value="{0, number, ###,##0.00}">
+                        <apex:param value="{!eachQuote.decTotal}" />
+                    </apex:outputText> 
+                </apex:column>                
+                <apex:column headerValue="CreatedDate">
+                    <apex:outputText value="{0,date,MM'/'dd'/'yyyy}">
+                        <apex:param value="{!eachQuote.createdDate}" />
+                    </apex:outputText>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:form>
+    <script>
+        function checkIsPrimaryCheckboxes(){
+            var noOfCheckBoxesChecked = 0;
+            try{
+                for(var i = 0; i <= 200; i++){
+                    var currentCheckBox = document.getElementById('pg:frm:pgblk:pgblktbl:' + i + ':chkIsPrimary');
+                    if(currentCheckBox.checked)
+                        noOfCheckBoxesChecked++;    
+                }
+            }
+            catch(e){}
+            if(noOfCheckBoxesChecked > 1){
+                alert('Please select only one quote !');
+                return false;
+            }
+            return true;
+        }       
+    
+        function reLoadWindow(){
+            window.top.location.href = window.top.location.href;
+        }
+    
+        function goToNewFYMQuote(){         
+            if("{!Opportunity.Sold_To_Country__c}"==''){
+                alert("Please enter Sold To country");            
+            }
+            else
+                window.top.location.href = '/apex/CreateFYMQuote?id={!Opportunity.Id}&retURL=/{!Opportunity.Id}';
+            
+        }
+    </script>
+</apex:page>

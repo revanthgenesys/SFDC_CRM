@@ -1,0 +1,1578 @@
+<apex:page id="pg" standardController="GCR_Content_Document_Detail__c" extensions="GCRContentDocumentDetailsController" sidebar="false" 
+           showHeader="{!NOT(hideHeader)}" tabStyle="Account" title="GCR Content Documents" > 
+    <style>
+        .displayNone { 
+        display:none; 
+        }
+        .displayBlock {
+        display:block;
+        }
+        .ui-autocomplete-loading { 
+        background: white url(/img/loading32.gif) right center no-repeat;
+        background-size:15px 15px; 
+        }
+        .placeHolder {
+        font-style: italic;
+        }
+        .outBorder {
+        border:3px outset black;
+        }
+        .inBorder{
+        border-top:2px  black;
+        border-left:2px black;
+        }
+        
+    </style>
+    <!-- Include the Jquery Script files -->
+    <link rel="stylesheet" href="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.treeview.css')}"/>
+    <!-- 
+<script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.js')}" type="text/javascript"></script>
+-->
+    
+    <script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.cookie.js')}" type="text/javascript"></script>
+<script src="{!URLFOR($Resource.Jtreeview,'Jquerytreeview/jquery.treeview.js')}" type="text/javascript"></script>
+<!-- 
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" />
+        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js" />
+            
+            <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" />
+                <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js" />
+                    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" />
+                        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js" />
+                            <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js" />
+                                <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js" />
+                                    -->
+                                    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" />
+                                        <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js" />
+                                            <apex:styleSheet value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/themes/smoothness/jquery-ui.css" />
+                                                <!-- End of Javascript files -->
+                                                    <apex:outputPanel id="pnlJS">  
+                                                        <script type="text/javascript">              
+                                                            $(function() {
+                                                                $("#tree").treeview({
+                                                                    collapsed: false,
+                                                                    animated: "medium",
+                                                                    control:"#sidetreecontrol",
+                                                                    persist: "location"
+                                                                });
+                                                            })
+                                                              function reloadpage()
+                                                                    {
+                                                                        alert('test');
+                                                                        if('{!hasoverride}') {
+                                                                            alert('test1');
+                                                                            window.parent.location.href=window.parent.location.href + '&documentRecordId={!recordId}';
+                                                                        }
+
+                                                                    }  
+
+                                                        </script> 
+</apex:outputPanel>  
+<apex:form id="autoCompleteForm" >
+<apex:actionFunction name="showAllAF" action="{!showAll}" />
+<apex:actionFunction name="showFromCurrentGCRAF" action="{!showFromCurrentGCR}" />
+<apex:actionFunction name="populateRecord" action="{!populateCurrentRecord}" rerender="pnlMain" status="status">
+<apex:param name="selectedRecordId" value="" assignTo="{!selectedRecordId}" />
+</apex:actionFunction>
+<apex:actionFunction name="setAccountId" action="{!setAccountId}" >
+<apex:param name="accountId" value="" assignTo="{!accountId}" />
+</apex:actionFunction>
+<apex:actionFunction name="setFinalAttachmentId" action="{!setFinalAttachmentId}" status="status" reRender="pgmsg">
+<apex:param name="attachmentId" value="" assignTo="{!attachmentId}" />
+</apex:actionFunction>
+<apex:actionFunction name="delAttachment" action="{!delAttachment}" status="status" reRender="pgblkAttachments">
+<apex:param name="attachmentId" value="" assignTo="{!attachmentIdToBeDeleted}"/>
+</apex:actionFunction>
+<apex:actionFunction name="refreshFinance" action="{!refresh}" status="status" reRender="pgblkFinanceEdit" />
+<apex:actionFunction name="refreshLegalAF" immediate="true" action="{!refresh}" status="status" reRender="pgblkLegalEdit">
+<apex:param name="autoRenew" value="" assignTo="{!autoRenew}"/>    
+</apex:actionFunction>    
+
+<table width="100%" border="0">
+<tr>
+<td></td>
+<td></td>
+<td>
+<div style="height:15px;">
+<apex:actionStatus id="status">
+<apex:facet name="start">    
+Please wait ... &nbsp; <apex:image value="/img/loading.gif"/>
+</apex:facet>                           
+</apex:actionStatus>
+</div>
+</td>
+</tr>
+<tr>
+<td width="1%" valign="top">
+&nbsp;
+</td>
+<td width="24%" rowspan="100" valign="top">
+<apex:pageBlock title="Legal Contracts" id="pgblkSearch">
+<apex:pageBlockSection id="searchSection" columns="1" >
+<apex:pageBlockSectionItem id="searchSectionItem">
+<apex:outputPanel id="searchPanel">
+<apex:outputLabel value="Account" />                                
+<apex:outputPanel rendered="{!AND(NOT(lockAccountSelection), isAdminUser)}">
+&nbsp; <apex:inputField value="{!gcr.Account__c}" onchange="setAccountId(); return false;"/>
+<!-- 
+<apex:inputText id="accountTextBoxId" value="{!searchTerm}" styleClass="placeHolder" style="width:200px;"/>
+<apex:inputHidden id="searchAccountId" value="{!selectedAccount}" />
+-->
+</apex:outputPanel>
+<apex:outputPanel rendered="{!lockAccountSelection}">                                   
+    &nbsp; : &nbsp;<b>{!currentAccount.Name}</b> &nbsp; &nbsp; 
+    <apex:commandLink value="Change Account" action="{!resetAccount}" reRender="searchPanel" status="status" rendered="{!AND(isAdminUser, NOT(embedded))}"/>
+</apex:outputPanel>
+<br/><br/>
+<apex:inputCheckBox value="{!showAll}" onchange="showAllAF(); return false;"/>Show All
+<apex:outputPanel rendered="{!isAdminUser}">                                    
+    &nbsp;&nbsp;
+    <apex:outputPanel rendered="{!gcrId != ''}">
+        <apex:inputCheckBox value="{!showFromCurrentGCR}" onchange="showFromCurrentGCRAF(); return false;"/>Show From Current Request Only
+    </apex:outputPanel>
+</apex:outputPanel>
+<!-- Tree -->
+<div class="treeheader" style="height:0px;">&nbsp;</div>
+<div id="sidetreecontrol" width="300px">
+    <a href="?#">
+        <font style="color:blue;">Collapse All</font>
+    </a> 
+    &nbsp; | &nbsp; 
+    <a href="?#">
+        <font style="color:blue;">Expand All</font>
+    </a>
+</div>
+<ul id="tree">
+    <apex:repeat value="{!treeItems}" var="eachItem">
+        <apex:repeat value="{!eachItem.record}" var="eachParent">
+            <li>
+                <span class="formattextcon" style="vertical-align:text-top;">
+                    <table>
+                        <tr>
+                            <td>
+                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_icon.png')}" rendered="{!eachItem.isFolder}" style="width:20px;height:20px;"/>
+                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_plus_icon.png')}" rendered="{!AND(isAdminUser, eachItem.isAddFolder)}" style="width:20px;height:20px;"/>
+                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/document_icon.png')}" rendered="{!eachItem.isDocument}"  style="width:20px;height:20px;"/>
+                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/add-document-icon.png')}" rendered="{!eachItem.isAddDocumentTop}"  style="width:20px;height:15px;"/>                                                                
+                            </td>
+                            <td>
+                                <apex:outputText escape="false" value="{!eachParent}" />
+                            </td>
+                            <td>   
+                                <apex:outputPanel rendered="{!isAdminUser}">                                                            
+                                    <a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewFolder=true&parentId={!eachItem.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+                                        <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_plus_icon.png')}" style="width:20px;height:20px;" rendered="{!AND(NOT(eachItem.isAddFolder), NOT(eachItem.isAddDocumentTop))}" />
+                                    </a>    
+                                    <a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewDocument=true&parentId={!eachItem.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+                                        <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/add-document-icon.png')}" rendered="{!eachItem.isFolder}"  style="width:20px;height:15px;"/>
+                                    </a>          
+                                </apex:outputPanel>                                                  
+                            </td>
+                        </tr>
+                    </table>
+                </span>                                             
+                <ul>
+                    <apex:repeat value="{!eachItem.childRecords}" var="eachChild">
+                        <li> 
+                            <span class="formattextcon">   
+                                <table>
+                                    <tr>
+                                        <td valign="top">                                                             
+                                            <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_icon.png')}" rendered="{!eachChild.isFolder}"  style="width:20px;height:20px;"/> 
+                                            <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/document_icon.png')}" rendered="{!eachChild.isDocument}"  style="width:20px;height:20px;"/>                                                                           
+                                        </td>
+                                        <td valign="top">
+                                            <apex:outputText escape="false"  value="{!eachChild.record}"/>
+                                        </td>
+                                        <td valign="top">
+                                            <apex:outputPanel rendered="{!isAdminUser}">                                                            
+                                                <a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewFolder=true&parentId={!eachChild.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+                                                    <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_plus_icon.png')}" rendered="{!eachChild.isFolder}"  style="width:20px;height:20px;"/>
+                                                </a>
+                                                &nbsp;            
+                                                <a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewDocument=true&parentId={!eachChild.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+                                                    <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/add-document-icon.png')}" rendered="{!eachChild.isFolder}"  style="width:20px;height:15px;"/>
+                                                </a>                                                                                
+                                            </apex:outputPanel>                                                                         
+                                        </td> 
+                                    </tr>
+                                </table>
+                            </span> 
+                            <ul>
+                                <apex:repeat value="{!eachChild.childRecords}" var="eachChildLevel2">
+                                    <li>
+                                        <span class="formattextcon">
+                                            <table>
+                                                <tr>
+                                                    <td valign="top">
+                                                        <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_icon.png')}" rendered="{!eachChildLevel2.isFolder}"  style="width:20px;height:20px;"/>
+                                                        <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/document_icon.png')}" rendered="{!eachChildLevel2.isDocument}"  style="width:20px;height:20px;"/>
+                                                    </td>
+                                                    <td valign="top">                                                   
+                                                        <apex:outputText escape="false"  value="{!eachChildLevel2.record}"/>
+                                                    </td> 
+                                                    <td valign="top">
+                                                        <apex:outputPanel rendered="{!isAdminUser}">                                                            
+                                                            <a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewFolder=true&parentId={!eachChildLevel2.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+                                                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_plus_icon.png')}" rendered="{!eachChildLevel2.isFolder}"  style="width:20px;height:20px;"/>
+                                                            </a>
+                                                            &nbsp;            
+                                                            <a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewDocument=true&parentId={!eachChildLevel2.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+                                                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/add-document-icon.png')}" rendered="{!eachChildLevel2.isFolder}"  style="width:20px;height:15px;"/>
+                                                            </a>                                                                                
+                                                        </apex:outputPanel>  
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </span>
+                                        <ul>
+                                            <apex:repeat value="{!eachChildLevel2.childRecords}" var="eachChildLevel3">
+                                                <li>
+                                                    <span class="formattextcon">
+                                                        <table>
+                                                            <tr>
+                                                                <td>
+                                                                    <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_icon.png')}" rendered="{!eachChildLevel3.isFolder}" style="width:20px;height:20px;"/>
+                                                                    <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/document_icon.png')}" rendered="{!eachChildLevel3.isDocument}"  style="width:20px;height:20px;"/>
+                                                                </td>
+                                                                <td>
+                                                                    <apex:outputText escape="false"  value="{!eachChildLevel3.record}"/>
+                                                                </td>
+                                                                <td>
+                                                                    <apex:outputPanel rendered="{!isAdminUser}"> 
+                                                                        <!--                                                            
+<a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewFolder=true&parentId={!eachChildLevel3.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+<apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_plus_icon.png')}" rendered="{!eachChildLevel3.isFolder}"  style="width:20px;height:20px;"/>
+</a>
+&nbsp;
+-->              
+                                                                        <a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewDocument=true&parentId={!eachChildLevel3.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+                                                                            <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/add-document-icon.png')}" rendered="{!eachChildLevel3.isFolder}"  style="width:20px;height:15px;"/>
+                                                                        </a>                                                                                                                                                                                            
+                                                                    </apex:outputPanel> 
+                                                                </td>
+                                                            </tr>
+                                                        </table> 
+                                                    </span>
+                                                    <ul>
+                                                        <apex:repeat value="{!eachChildLevel3.childRecords}" var="eachChildLevel4">
+                                                            <li>
+                                                                <span class="formattextcon">
+                                                                    <table>
+                                                                        <tr>
+                                                                            <td>
+                                                                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_icon.png')}" rendered="{!eachChildLevel4.isFolder}" style="width:20px;height:20px;"/>
+                                                                                <apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/document_icon.png')}" rendered="{!eachChildLevel4.isDocument}"  style="width:20px;height:20px;"/>
+                                                                            </td>
+                                                                            <td>
+                                                                                <apex:outputText escape="false"  value="{!eachChildLevel4.record}"/> 
+                                                                            </td>
+                                                                            <td>
+                                                                                <apex:outputPanel rendered="{!isAdminUser}">      
+                                                                                    <!--                                                        
+<a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewFolder=true&parentId={!eachChildLevel4.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+<apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/folder_plus_icon.png')}" rendered="{!eachChildLevel3.isFolder}"  style="width:20px;height:20px;"/>
+</a>
+&nbsp;                                                                                                                            
+<a href="#" onclick="location.href='/apex/GCRContentDocumentDetails?addNewDocument=true&parentId={!eachChildLevel4.recordId}&accId={!accountId}&gcrId={!gcrId}&hideHeader={!hideHeader}'; return false;" style="text-decoration:none; color:green;" class=""> 
+<apex:image url="{!URLfor($Resource.LegalIcons, '/LegalIcons/add-document-icon.png')}" rendered="{!eachChildLevel3.isFolder}"  style="width:20px;height:15px;"/>
+</a>
+-->                                                                                                                                                                                             
+                                                                                </apex:outputPanel> 
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>  
+                                                                </span>                                                                                             
+                                                            </li>                                                                               
+                                                        </apex:repeat>
+                                                    </ul>                                                                                              
+                                                </li>                                                                               
+                                            </apex:repeat>
+                                        </ul>                       
+                                    </li>
+                                </apex:repeat>
+                            </ul>
+                        </li>
+                    </apex:repeat>
+                </ul>                                                 
+            </li>
+        </apex:repeat>  
+    </apex:repeat>
+</ul>
+</apex:outputPanel>
+</apex:pageBlockSectionItem>
+</apex:pageBlockSection>
+</apex:pageBlock>
+</td>
+
+<td valign="top" width="72%">                              
+    <apex:outputPanel id="pnlMain"> 
+        <apex:pageBlock rendered="{!NOT(OR(renderPageBlock,renderFolderPagebLock))}">
+            <apex:outputLabel value="Please select document to see details." />
+        </apex:pageBlock> 
+        <apex:pageMessages id="pgmsg"/>
+        
+        <apex:pageBlock id="pgblkFolder" rendered="{!renderFolderPagebLock}">
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!saveFolder}" rendered="{!pageMode == 'edit'}"/>
+                <apex:commandButton value="Edit" action="{!editFolder}" reRender="pnlMain" status="status" rendered="{!pageMode == 'detail' && !isEditHide}"/>
+                <apex:commandButton value="Delete" action="{!deleteFolder}" reRender="pnlMain" status="status" rendered="{!pageMode == 'detail'}"/>   
+                <apex:commandButton value="Cancel" action="{!cancel}" reRender="pnlMain" status="status" rendered="{!pageMode == 'edit'}"/>                                             
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Folder Details" rendered="{!pageMode == 'detail'}" columns="2">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Folder Name" />
+                    <apex:outputField value="{!currentRecordFolder.Name}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Parent Folder" />
+                    <apex:outputField value="{!currentRecordFolder.Parent_Folder__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Account" />
+                    <apex:outputField value="{!currentRecordFolder.Account__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="GCR" />
+                    <apex:outputField value="{!currentRecordFolder.GCR__c}" />                                
+                </apex:pageBlockSectionItem>
+                
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Folder Details" rendered="{!pageMode == 'edit'}" columns="2">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Folder Name" />
+                    <apex:inputField value="{!currentRecordFolder.Name}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Parent Folder" />
+                    <apex:inputField value="{!currentRecordFolder.Parent_Folder__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Account" />
+                    <apex:inputField value="{!currentRecordFolder.Account__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="GCR" />
+                    <apex:inputField value="{!currentRecordFolder.GCR__c}" />                                
+                </apex:pageBlockSectionItem>
+                
+                
+                
+            </apex:pageBlockSection>                        
+        </apex:pageBlock>
+        <apex:pageBlock id="pgblkFolderDocumentList" rendered="{!renderFolderPagebLock}" title="Documents">
+            <apex:outputLabel value="No records to show." rendered="{!NOT(showDocumentsUnderFolder)}" />
+            <apex:pageBlockTable value="{!documentsUnderFolder}" var="eachDocument" rendered="{!showDocumentsUnderFolder}" >
+                <apex:column headerValue="Action">
+                    <apex:outputLink value="/apex/GCRContentDocumentDetails?id={!eachDocument.id}{!urlParams}">
+                        {!eachDocument.Name}
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="Document Type">
+                    {!eachDocument.Contract_Document_Type__c}
+                </apex:column>                          
+                <apex:column headerValue="Effective Date">
+                    {!eachDocument.Effective_Date__c}
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+        <apex:pageBlock id="pgblk" rendered="{!renderPageBlock}" title="{!currentRecord.Document_Name__c}">
+            <apex:pageBlockButtons >
+                
+                <apex:commandLink style="color:red;font-weight:bold" action="{!sendToFinanceViaDocusign}" value="Send to Customer" id="theCommandLink" target="_new" rendered="{!AND(pageMode == 'detail', (currentGCR.Status__c == '6-Approved by Finance' || currentGCR.Status__c == '9-Signed by Genesys' )  )}" onClick="top.document.location.href='/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!record.Id}&parentIds={!docusignStatusRecordId}&autorun=false&ddpids={!partnerDDP}'; return false;"/>
+                
+                <apex:commandButton value="Save" action="{!save}" reRender="pnlMain,pgblkSearch,pnlJS" status="status" rendered="{!pageMode == 'edit'}"/>  
+                <apex:commandButton value="Edit" action="{!edit}" reRender="pnlMain" status="status" rendered="{!AND(pageMode == 'detail', isAdminUser, !isEditHide)}"/>
+                <apex:commandButton value="Edit" action="{!edit}" disabled="true" reRender="pnlMain" status="status" rendered="{!isEditHide}"/>
+                <!-- <apex:commandButton value="Send for Finance Approval" action="{!sendToFinanceDirectly}" reRender="pgmsg" rendered="{!AND(pageMode == 'detail', isAdminUser)}" onComplete="window.parent.location.href=window.parent.location.href + '&documentRecordId={!recordId}';"/> -->
+               <apex:commandButton value="Send for Finance Approval" action="{!sendToFinanceDirectly}" reRender="pgmsg" rendered="{!AND(pageMode == 'detail', isAdminUser)}" />
+                <!--<apex:commandButton value="Send to Customer" action="{!sendToFinanceViaDocusign}" rendered="{!AND(pageMode == 'detail', isAdminUser, currentGCR.Status__c == '9-Signed by Genesys')}" onComplete="location.href='/apex/loop__looplus?sessionId={!$Api.Session_ID}&eid={!record.Id}'; return false;"/>-->
+                
+                <!-- 
+<apex:commandButton value="Approve" action="{!approve}" rendered="{!AND(pageMode == 'detail', isAdminUser, currentGCR.Status__c == '5-Pending Finance Approval')}" onComplete="window.parent.location.href=window.parent.location.href + '&documentRecordId={!recordId}';"/>
+-->                           
+                <apex:commandButton value="Need Clarification" onclick="window.parent.location.href='/apex/GCRequest?accId={!accountId}&documentId={!currentRecord.id}&crt=General%20Inquiry'; return false;" rendered="{!pageMode == 'detail'}"/>  
+               <!-- <apex:commandButton value="Need Amendment" onclick="window.parent.location.href='/apex/GCRequest?accId={!accountId}&documentId={!currentRecord.id}&crt=Amendment'; return false;" rendered="{!pageMode == 'detail'}"/>-->                            
+                <apex:commandButton value="Delete" action="{!deleteDocument}" rendered="{!AND(pageMode == 'detail', isAdminDeleteUser)}"/>                            
+                <apex:commandButton value="Cancel" action="{!cancel}" reRender="pnlMain" status="status" rendered="{!pageMode == 'edit'}"/>                                             
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection title="Legal" rendered="{!pageMode == 'detail'}" columns="2">   
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Legal Request" />
+                    <apex:outputField value="{!currentRecord.GCR__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Approval Status" />
+                    <apex:outputField value="{!currentRecord.Approval_Status__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Customer Name" />
+                    <apex:outputField value="{!currentRecord.Account_Name__c}" />
+                </apex:pageBlockSectionItem>
+                <!--
+                    Added By Ashish Goyal
+                    Related to Legal DSR
+                -->    
+                <apex:pageBlockSectionItem >                                             
+                    <apex:outputLabel value="Contract Category" />  
+                    <apex:outputField value="{!currentRecord.Contract_Category__c}"/>
+                </apex:pageBlockSectionItem>
+                
+                <!--
+                    End: Ashish
+                -->
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Status" />
+                    <apex:outputField value="{!currentRecord.Status__c}" />
+                </apex:pageBlockSectionItem>                            
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Folder" />
+                    <apex:outputField value="{!currentRecord.Folder__c}" />
+                </apex:pageBlockSectionItem>
+                <!--
+                    Added By Ashish Goyal
+                    Related to Legal DSR
+                -->    
+                <apex:pageBlockSectionItem >    
+                    <apex:outputLabel value="Are Governing Contract Dates same as Subscription Term Dates?" />
+                    <apex:outputField value="{!currentRecord.Is_Governing_Contract__c}" />
+                </apex:pageBlockSectionItem>  
+
+                <!--
+                    End: Ashish
+                -->
+                
+                <apex:pageBlockSectionItem >                    
+                    <apex:outputLabel value="Contract Type" />  
+                    <apex:outputField value="{!currentRecord.Contract_Type__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Effective Date" /> 
+                    <apex:outputField value="{!currentRecord.Effective_Date__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Expiration/Renewal Date" />            
+                    <apex:outputField value="{!currentRecord.Expiration_Renewal_Date__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                    
+                    <apex:outputLabel value="Document Name" />  
+                    <apex:outputField value="{!currentRecord.Document_Name__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Auto Renew?" />            
+                    <apex:outputField value="{!currentRecord.Auto_Renew__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!currentRecord.Auto_Renew__c}">                
+                    <apex:outputLabel value="Auto Renew (Period)" />            
+                    <apex:outputField value="{!currentRecord.Auto_Renew_For_Period__c}" />
+                </apex:pageBlockSectionItem>                            
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Genesys Entity" />
+                    <apex:outputField value="{!currentRecord.Genesys_Entity__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Comments" />
+                    <apex:outputField value="{!currentRecord.Comments__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > 
+                    <apex:outputLabel value="Governing Legal Exceptions" />
+                    <apex:outputField value="{!currentRecord.Legal_Exceptions__c}"/>
+                </apex:pageBlockSectionItem>  
+                <apex:pageBlockSectionItem >         
+                    <apex:outputLabel value="Visibility Status" />
+                    <apex:outputField value="{!currentRecord.Visibility_Status__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Customer Signed" />
+                    <apex:outputField value="{!currentRecord.Customer_Signed__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement')}">                
+                    <apex:outputLabel value="Partner Agreement Type" />
+                    <apex:outputField value="{!currentRecord.Agreement_Type__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement',NOT(ISNULL(currentRecord.Agreement_Type__c)),CONTAINS(currentRecord.Agreement_Type__c,'Other'))}">                
+                    <apex:outputLabel value="Partner Agreement Type (Other)" />
+                    <apex:outputField value="{!currentRecord.Partner_Agreement_Type_Other__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement')}">                
+                    <apex:outputLabel value="Territory(ies)" />
+                    <apex:outputField value="{!currentRecord.Territory_ies__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement')}">                
+                    <apex:outputLabel value="Current Partner Agreement" />
+                    <apex:outputField value="{!currentRecord.Current_Partner_Agreement__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Override Default Approvals" />
+                    <apex:outputField value="{!currentRecord.Legal_Approval_Signature_Configuration__c}" />  
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="Legal" rendered="{!pageMode == 'edit'}" id="pgblkLegalEdit">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Legas Request" />
+                    <apex:outputField value="{!currentRecord.GCR__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Account Name" />
+                    <apex:inputField value="{!currentRecord.Account_Name__c}" required="true" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >    
+                <!--
+                    Added By Ashish Goyal
+                    Related to Legal DSR
+                -->                
+                    <apex:outputLabel value="Contract Category" />  
+                    <apex:actionRegion >
+                        <apex:inputField value="{!currentRecord.Contract_Category__c}" required="{!isGovContrctType}">
+                            <apex:actionSupport action="{!checkRequiredField}" status="status" event="onchange" reRender="pgmsg, pgblkLegalEdit" />
+                        </apex:inputField>
+                    </apex:actionRegion>    
+                </apex:pageBlockSectionItem>
+                
+                <!--
+                    End: Ashish
+                -->
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Folder" />
+                    <apex:selectList value="{!currentRecord.Folder__c}" size="1">
+                        <apex:selectOptions value="{!folderList}"/> 
+                    </apex:selectList>                                  
+                </apex:pageBlockSectionItem>
+                
+                <!--
+                    Added By Ashish Goyal
+                    Related to Legal DSR
+                -->  
+                <apex:pageBlockSectionItem rendered="{!isGovContrctType}">    
+                    <apex:outputLabel value="Are Governing Contract Dates same as Subscription Term Dates?" />                                
+                    <apex:actionRegion >
+                        <apex:inputField value="{!currentRecord.Is_Governing_Contract__c}">
+                            <apex:actionSupport action="{!enableGoveringFields}" status="status" event="onchange" reRender="pgblkLegalEdit" />
+                        </apex:inputField>
+                    </apex:actionRegion> 
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem rendered="{!!isGovContrctType}">    
+                    <apex:outputLabel value="Are Governing Contract Dates same as Subscription Term Dates?" />
+                    <apex:inputField value="{!currentRecord.Is_Governing_Contract__c}" html-disabled="true" />
+                </apex:pageBlockSectionItem>
+                <!--
+                    End: Ashish
+                -->
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Contract Type" />
+                    <apex:actionRegion >
+                    <apex:inputField value="{!currentRecord.Contract_Type__c}" required="true">
+                        <apex:actionSupport action="{!checkGoverningType}" event="onchange" reRender="pgblkLegalEdit" />
+                    </apex:inputField>
+                    </apex:actionRegion>    
+                </apex:pageBlockSectionItem>    
+                                
+                <!--
+                    Added By Ashish Goyal
+                    Related to Legal DSR
+                -->  
+                <apex:pageBlockSectionItem rendered="{!isEffDateEnable}">                
+                    <apex:outputLabel value="Effective Date"  />     
+                    <apex:outputPanel rendered="{!isEffDateEnable}">
+                        <div class="requiredInput"> 
+                            <div class="requiredBlock"></div>
+                            <apex:inputField value="{!currentRecord.Effective_Date__c}" />
+                        </div>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!!isEffDateEnable}">                
+                    <apex:outputLabel value="Effective Date"  />     
+                    <apex:inputField value="{!currentRecord.Effective_Date__c}" html-disabled="true" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!isExpDateEnable}">                
+                    <apex:outputLabel value="Expiration/Renewal Date" />        
+                    <apex:outputPanel rendered="{!isExpDateEnable}">
+                        <div class="requiredInput"> 
+                            <div class="{!IF(AND(NOT(autoRenew), isExpDateEnable), 'requiredBlock', '')}"></div>
+                            <apex:inputField value="{!currentRecord.Expiration_Renewal_Date__c}" />
+                        </div>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!!isExpDateEnable}">                
+                    <apex:outputLabel value="Expiration/Renewal Date" />        
+                    <apex:inputField value="{!currentRecord.Expiration_Renewal_Date__c}" html-disabled="true" />
+                </apex:pageBlockSectionItem>
+                
+                <!--
+                    End: Ashish
+                -->
+                
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Document Name" />      
+                    <apex:inputField value="{!currentRecord.Document_Name__c}" required="true"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="pgblkSecItemAutoRenew">                
+                    <apex:outputLabel value="Auto Renew?" />            
+                    <apex:inputField value="{!currentRecord.Auto_Renew__c}" onclick="refreshLegalAF(document.getElementById('pg:autoCompleteForm:pgblk:pgblkLegalEdit:pgblkSecItemAutoRenew:chkAutoRenew').checked); return false;" id="chkAutoRenew" />
+                </apex:pageBlockSectionItem>
+                 <apex:pageBlockSectionItem rendered="{!autoRenew}">   
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!autoRenew}">                
+                    <apex:outputLabel value="Auto Renew (Period)" />            
+                    <apex:inputField value="{!currentRecord.Auto_Renew_For_Period__c}" required="{!(autoRenew)}"/>
+                </apex:pageBlockSectionItem> 
+                     
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Genesys Entity" />
+                    <apex:inputField value="{!currentRecord.Genesys_Entity__c}" required="true" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Comments" />       
+                    <apex:inputField value="{!currentRecord.Comments__c}" />                            
+                </apex:pageBlockSectionItem>
+                
+                <!--
+                    Added By Ashish Goyal
+                    Related to Legal DSR
+                -->  
+                <apex:pageBlockSectionItem rendered="{!isLEDateEnable}">  
+                    <apex:outputLabel value="Governing Legal Exceptions" />
+                    <apex:inputField value="{!currentRecord.Legal_Exceptions__c}" required="{!CONTAINS($Label.Contract_Type_for_Legal_DSR, currentRecord.Contract_Type__c)}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!!isLEDateEnable}">  
+                    <apex:outputLabel value="Governing Legal Exceptions" />
+                    <apex:inputField value="{!currentRecord.Legal_Exceptions__c}" html-disabled="true" />
+                </apex:pageBlockSectionItem>
+                
+                <!--
+                    End: Ashish
+                -->
+                <!--
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Governing Legal Exceptions" />
+                    <apex:inputField value="{!currentRecord.Legal_Exceptions__c}" required="{!IF(contains($Label.Contract_Type_for_Legal_DSR, currentRecord.Contract_Type__c),"TRUE","FALSE")}"  />
+                </apex:pageBlockSectionItem>  -->
+                <apex:pageBlockSectionItem >      
+                    <apex:outputLabel value="Visibility Status" />
+                    <apex:inputField value="{!currentRecord.Visibility_Status__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Customer Signed" />
+                    <apex:inputField value="{!currentRecord.Customer_Signed__c}" />                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement')}">                
+                    <apex:outputLabel value="Partner Agreement Type" />
+                    <apex:inputField value="{!currentRecord.Agreement_Type__c}" >
+                        <apex:actionSupport event="onchange" reRender="pgblkLegalEdit" />
+                    </apex:inputField>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement')}">                
+                    <apex:outputLabel value="Current Partner Agreement" />
+                    <apex:inputField value="{!currentRecord.Current_Partner_Agreement__c}" />                           
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem id="temp"  rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement',NOT(ISNULL(currentRecord.Agreement_Type__c)),CONTAINS(currentRecord.Agreement_Type__c,'Other'))}" >                
+                    <apex:outputLabel value="Partner Agreement Type (Other)" />
+                    <apex:inputField value="{!currentRecord.Partner_Agreement_Type_Other__c}" />                           
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement',OR(ISNULL(currentRecord.Agreement_Type__c),NOT(CONTAINS(currentRecord.Agreement_Type__c,'Other'))))}" >
+                </apex:pageBlockSectionItem>
+                <!--<apex:pageBlockSectionItem >                
+<apex:outputLabel value="Amendments"/>
+<apex:inputField value="{!currentRecord.Amendments__c}">
+<apex:actionSupport event="onchange" reRender="pgblkLegalEdit"/>
+</apex:inputField>
+</apex:pageBlockSectionItem>
+<apex:pageBlockSectionItem rendered="{!AND(NOT(ISNULL(currentRecord.Amendments__c)),currentRecord.Amendments__c == 'Other')}">                
+<apex:outputLabel value="Amendments (Other)" />
+<apex:inputField value="{!currentRecord.Amendments_Other__c}" />                           
+</apex:pageBlockSectionItem> -->
+                <apex:pageBlockSectionItem rendered="{!AND(currentRecord.Contract_Type__c == 'Partner Agreement')}">                
+                    <apex:outputLabel value="Territory(ies)" />
+                    <c:MultiselectPicklist leftLabel="Available Countries"
+                                           leftOptions="{!list_AllCountries}"
+                                           rightLabel="Selected Countries"
+                                           rightOptions="{!list_SelectedCountries}"
+                                           size="10"
+                                           width="200px"/>                           
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Override Default Approvals" />
+                    <apex:selectList value="{!currentRecord.Legal_Approval_Signature_Configuration__c}" multiselect="false" size="1">
+                        <apex:selectOptions value="{!approverOptions}"/>
+                    </apex:selectList>                           
+                </apex:pageBlockSectionItem>
+                
+                
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Finance" rendered="{!pageMode == 'detail'}">
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Acceptance" /> 
+                    <apex:outputField value="{!currentRecord.Acceptance__c}" />
+                </apex:pageBlockSectionItem>                        
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Acceptance__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Acceptance__c=='Other')}" >                
+                    <apex:outputLabel value="Acceptance(Other)" /> 
+                    <apex:outputField value="{!currentRecord.Acceptance_Other__c}" />
+                </apex:pageBlockSectionItem>                        
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Cloud SLA" />
+                    <apex:outputField value="{!currentRecord.SLA__c}"  />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.SLA__c<>'Yes')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.SLA__c=='Yes')}" >                
+                    <apex:outputLabel value="Cloud SLA(terms)" /> 
+                    <apex:outputField value="{!currentRecord.SLA_Other__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Maintenance SLA" />
+                    <apex:outputField value="{!currentRecord.Maint_SLA__c}"  />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maint_SLA__c<>'Non-Standard')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maint_SLA__c=='Non-Standard')}" >                
+                    <apex:outputLabel value="Maintenance SLA (terms)" /> 
+                    <apex:outputField value="{!currentRecord.Maint_SLA_Other__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Pricing Terms" />
+                    <apex:outputField value="{!currentRecord.Pricing__c}"  />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c<>'Terms')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c=='Terms')}" >                
+                    <apex:outputLabel value="Pricing Description" /> 
+                    <apex:outputField value="{!currentRecord.Pricing_Terms__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c=='Terms')}">                        
+                    <apex:outputLabel value="Pricing Start Date" />
+                    <apex:outputField value="{!currentRecord.Pricing_Start_Date__c}" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c=='Terms')}" >
+                    <apex:outputLabel value="Pricing End Date" />
+                    <apex:outputField value="{!currentRecord.Pricing_End_Date__c}" />
+                </apex:pageBlockSectionItem>
+                
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Shipping Terms" />
+                    <apex:outputField value="{!currentRecord.Shipping_Terms_Opt__c}"  />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Shipping_Terms_Opt__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Shipping_Terms_Opt__c=='Other')}" >                
+                    <apex:outputLabel value="Shipping Terms(Other)" /> 
+                    <apex:outputField value="{!currentRecord.Shipping_Terms__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Penalties" />
+                    <apex:outputField value="{!currentRecord.Penalties__c}" />                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Penalties__c<>'Yes')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Penalties__c == 'Yes')}">
+                    <apex:outputLabel value="Penalties Description" />
+                    <apex:outputField value="{!currentRecord.Penalties_Description__c}" />                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Warranty" />
+                    <apex:outputField value="{!currentRecord.Warranty__c}" />                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty__c<>'Non-Standard')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty__c == 'Non-Standard')}">
+                    <apex:outputLabel value="Warranty Description" />
+                    <apex:outputField value="{!currentRecord.Warranty_Other__c}" />                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Warranty Period Start Date" />
+                    <apex:outputField value="{!currentRecord.Warranty_Period_Start__c}" />
+                </apex:pageBlockSectionItem> 
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty_Period_Start__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty_Period_Start__c == 'Other')}">
+                    <apex:outputLabel value="Warranty Period Start (Other)" />
+                    <apex:outputField value="{!currentRecord.Warranty_Period_Start_Other__c}" />
+                </apex:pageBlockSectionItem>
+                
+                
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Product Services Convered by Contract" />
+                    <apex:outputField value="{!currentRecord.Product_Services_Covered_by_Contract1__c}" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Product_Services_Covered_by_Contract1__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Product_Services_Covered_by_Contract1__c == 'Other')}">
+                    <apex:outputLabel value="Product Services Convered by Contract (Other)" />
+                    <apex:outputField value="{!currentRecord.Product_Services_Other__c}" />
+                </apex:pageBlockSectionItem>                            
+                
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Maintenance Type" />
+                    <apex:outputField value="{!currentRecord.Maintenance_Type__c}" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maintenance_Type__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maintenance_Type__c == 'Other')}">
+                    <apex:outputLabel value="Maintenance Type(Other)" />
+                    <apex:outputField value="{!currentRecord.Maintenance_Type_Other__c}" />
+                </apex:pageBlockSectionItem>                            
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Payment Terms" />
+                    <apex:outputField value="{!currentRecord.Payment_Terms__c}" />
+                </apex:pageBlockSectionItem> 
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Payment_Terms__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Payment_Terms__c == 'Other')}">
+                    <apex:outputLabel value="Payment Terms (Other)" />
+                    <apex:outputField value="{!currentRecord.Payment_Terms_Other__c}" />
+                </apex:pageBlockSectionItem>         
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Maintenance Rate" />
+                    <apex:outputField value="{!currentRecord.Maintenance_Rate__c}" />
+                    
+                </apex:pageBlockSectionItem> 
+                
+                <apex:pageBlockSectionItem >    
+                </apex:pageBlockSectionItem>             
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Finance Comments" />
+                    <apex:outputField value="{!currentRecord.Finance_Comments__c}" />
+                    
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >    
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Contractual Discounts" />
+                    <apex:outputField value="{!currentRecord.Contractual_Discounts__c}" />                              
+                </apex:pageBlockSectionItem>    
+                
+                <!-- 
+                    Added by Liam
+                    Related to Dan Best's Request
+                -->
+                
+                <apex:pageBlockSectionItem >    
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Free Product or Service not Quoted" />
+                    <apex:outputField value="{!currentRecord.Free_Product_or_Service_not_Quoted__c}" />                              
+                </apex:pageBlockSectionItem>                   
+    
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Free_Product_or_Service_not_Quoted__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Free_Product_or_Service_not_Quoted__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:outputField value="{!currentRecord.Details_1__c}" />
+                </apex:pageBlockSectionItem>  
+                
+                <!-- // -->
+ 
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Material Right 1" />
+                    <apex:outputField value="{!currentRecord.Material_Right_1__c}" />                                
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c<>'Yes')}">                
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c=='Yes')}" >                
+                    <apex:outputLabel value="Description" /> 
+                    <apex:outputField value="{!currentRecord.Description_1__c}" />
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c=='Yes')}" >  
+                    <apex:outputLabel value="Value" /> 
+                    <apex:outputField value="{!currentRecord.Value_1__c}" />                                
+                </apex:pageBlockSectionItem> 
+ 
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c=='Yes')}" >  
+                    <apex:outputLabel value="Probability of Occurring" /> 
+                    <apex:outputField value="{!currentRecord.Probability_of_Occurring_1__c}" />         
+                </apex:pageBlockSectionItem>    
+
+                <!-- // -->
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Material Right 2" />
+                    <apex:outputField value="{!currentRecord.Material_Right_2__c}" />                                
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c<>'Yes')}">                
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c=='Yes')}" >                
+                    <apex:outputLabel value="Description" /> 
+                    <apex:outputField value="{!currentRecord.Description_2__c}" />
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c=='Yes')}" >  
+                    <apex:outputLabel value="Value" /> 
+                    <apex:outputField value="{!currentRecord.Value_2__c}" />                                
+                </apex:pageBlockSectionItem> 
+ 
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c=='Yes')}" >  
+                    <apex:outputLabel value="Probability of Occurring" /> 
+                    <apex:outputField value="{!currentRecord.Probability_of_Occurring_2__c}" />         
+                </apex:pageBlockSectionItem> 
+
+                <!-- // -->
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Material Right 3" />
+                    <apex:outputField value="{!currentRecord.Material_Right_3__c}" />                                
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c<>'Yes')}">                
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c=='Yes')}" >                
+                    <apex:outputLabel value="Description" /> 
+                    <apex:outputField value="{!currentRecord.Description_3__c}" />
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c=='Yes')}" >  
+                    <apex:outputLabel value="Value" /> 
+                    <apex:outputField value="{!currentRecord.Value_3__c}" />                                
+                </apex:pageBlockSectionItem> 
+ 
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c=='Yes')}" >  
+                    <apex:outputLabel value="Probability of Occurring" /> 
+                    <apex:outputField value="{!currentRecord.Probability_of_Occurring_3__c}" />         
+                </apex:pageBlockSectionItem> 
+
+                <!-- // -->
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Contract Combination" />
+                    <apex:outputField value="{!currentRecord.Contract_Combination__c}"/>                             
+                </apex:pageBlockSectionItem>                 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Contract_Combination__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Contract_Combination__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:outputField value="{!currentRecord.Details_2__c}" />
+                </apex:pageBlockSectionItem>     
+ 
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Varaible Consideration" />
+                    <apex:outputField value="{!currentRecord.Varaible_Consideration__c}"/>                             
+                </apex:pageBlockSectionItem>                 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Varaible_Consideration__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Varaible_Consideration__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:outputField value="{!currentRecord.Details_3__c}" />
+                </apex:pageBlockSectionItem>  
+ 
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="PureBridge Opportunity" />
+                    <apex:outputField value="{!currentRecord.PureBridge_Opportunity__c}"/>                             
+                </apex:pageBlockSectionItem>                 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.PureBridge_Opportunity__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.PureBridge_Opportunity__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:outputField value="{!currentRecord.Levers_Included__c}" />
+                </apex:pageBlockSectionItem>  
+
+                <!-- 
+                    End: Liam
+                -->
+
+            </apex:pageBlockSection>                     
+            
+            
+            <apex:pageBlockSection title="Finance" rendered="{!pageMode == 'edit'}" id="pgblkFinanceEdit">
+                
+                <apex:pageBlockSectionItem >                
+                    <apex:outputLabel value="Acceptance" /> 
+                    <apex:inputField value="{!currentRecord.Acceptance__c}" onchange="refreshFinance(); return false;"/>
+                </apex:pageBlockSectionItem>                        
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Acceptance__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Acceptance__c=='Other')}" >                
+                    <apex:outputLabel value="Acceptance(Other)" /> 
+                    <apex:inputField value="{!currentRecord.Acceptance_Other__c}" />
+                </apex:pageBlockSectionItem>                        
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Cloud SLA" />
+                    <apex:inputField value="{!currentRecord.SLA__c}" onchange="refreshFinance(); return false;" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.SLA__c<>'Yes')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.SLA__c=='Yes')}" >                
+                    <apex:outputLabel value="Cloud SLA(terms)" /> 
+                    <apex:inputField value="{!currentRecord.SLA_Other__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Maintenance SLA" />
+                    <apex:inputField value="{!currentRecord.Maint_SLA__c}" onchange="refreshFinance(); return false;" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maint_SLA__c<>'Non-Standard')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maint_SLA__c=='Non-Standard')}" >                
+                    <apex:outputLabel value="Maintenance SLA (terms)" /> 
+                    <apex:inputField value="{!currentRecord.Maint_SLA_Other__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Pricing Terms" />
+                    <apex:inputField value="{!currentRecord.Pricing__c}" onchange="refreshFinance(); return false;" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c<>'Terms')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c=='Terms')}" >                
+                    <apex:outputLabel value="Pricing Description" /> 
+                    <apex:inputField value="{!currentRecord.Pricing_Terms__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c=='Terms')}">                        
+                    <apex:outputLabel value="Pricing Start Date" />
+                    <apex:inputField value="{!currentRecord.Pricing_Start_Date__c}" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Pricing__c=='Terms')}" >
+                    <apex:outputLabel value="Pricing End Date" />
+                    <apex:inputField value="{!currentRecord.Pricing_End_Date__c}" />
+                </apex:pageBlockSectionItem>
+                
+                
+                
+                <apex:pageBlockSectionItem >                        
+                    <apex:outputLabel value="Shipping Terms" />
+                    <apex:inputField value="{!currentRecord.Shipping_Terms_Opt__c}" onchange="refreshFinance(); return false;" />
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Shipping_Terms_Opt__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Shipping_Terms_Opt__c=='Other')}" >                
+                    <apex:outputLabel value="Shipping Terms(Other)" /> 
+                    <apex:inputField value="{!currentRecord.Shipping_Terms__c}" />
+                </apex:pageBlockSectionItem>       
+                
+                
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Penalties" />
+                    <apex:inputField value="{!currentRecord.Penalties__c}" onchange="refreshFinance(); return false;"/>                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Penalties__c<>'Yes')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Penalties__c == 'Yes')}">
+                    <apex:outputLabel value="Penalties Description" />
+                    <apex:inputField value="{!currentRecord.Penalties_Description__c}" />                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Warranty" />
+                    <apex:inputField value="{!currentRecord.Warranty__c}" onchange="refreshFinance(); return false;"/>                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty__c<>'Non-Standard')}">                
+                    
+                </apex:pageBlockSectionItem>    
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty__c == 'Non-Standard')}">
+                    <apex:outputLabel value="Warranty Description" />
+                    <apex:inputField value="{!currentRecord.Warranty_Other__c}" />                                                      
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Warranty Period Start Date" />
+                    <apex:inputField value="{!currentRecord.Warranty_Period_Start__c}" onchange="refreshFinance(); return false;"/>
+                </apex:pageBlockSectionItem> 
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty_Period_Start__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Warranty_Period_Start__c == 'Other')}">
+                    <apex:outputLabel value="Warranty Period Start (Other)" />
+                    <apex:inputField value="{!currentRecord.Warranty_Period_Start_Other__c}" />
+                </apex:pageBlockSectionItem>
+                
+                
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Product Services Convered by Contract" />
+                    <apex:inputField value="{!currentRecord.Product_Services_Covered_by_Contract1__c}" onchange="refreshFinance(); return false;"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Product_Services_Covered_by_Contract1__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Product_Services_Covered_by_Contract1__c == 'Other')}">
+                    <apex:outputLabel value="Product Services Convered by Contract (Other)" />
+                    <apex:inputField value="{!currentRecord.Product_Services_Other__c}" />
+                </apex:pageBlockSectionItem>                            
+                
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Maintenance Type" />
+                    <apex:inputField value="{!currentRecord.Maintenance_Type__c}" onchange="refreshFinance(); return false;"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maintenance_Type__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Maintenance_Type__c == 'Other')}">
+                    <apex:outputLabel value="Maintenance Type(Other)" />
+                    <apex:inputField value="{!currentRecord.Maintenance_Type_Other__c}" />
+                </apex:pageBlockSectionItem>                            
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Payment Terms" />
+                    <apex:inputField value="{!currentRecord.Payment_Terms__c}" onchange="refreshFinance(); return false;"/>
+                </apex:pageBlockSectionItem> 
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Payment_Terms__c<>'Other')}">                
+                    
+                </apex:pageBlockSectionItem>                                
+                
+                
+                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Payment_Terms__c == 'Other')}">
+                    <apex:outputLabel value="Payment Terms (Other)" />
+                    <apex:inputField value="{!currentRecord.Payment_Terms_Other__c}" />
+                </apex:pageBlockSectionItem>         
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Maintenance Rate" />
+                    <apex:inputField value="{!currentRecord.Maintenance_Rate__c}" />
+                    
+                </apex:pageBlockSectionItem> 
+                
+                <apex:pageBlockSectionItem >    
+                </apex:pageBlockSectionItem>             
+                
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Finance Comments" />
+                    <apex:inputField value="{!currentRecord.Finance_Comments__c}" />
+                    
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem >    
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Contractual Discounts" />
+                    <apex:inputField value="{!currentRecord.Contractual_Discounts__c}" />                               
+                </apex:pageBlockSectionItem>    
+                
+                <!-- 
+                    Added by Liam
+                    Related to Dan Best's Request
+                -->
+
+                <apex:pageBlockSectionItem >    
+                </apex:pageBlockSectionItem> 
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Free Product or Service not Quoted" />
+                    <apex:inputField value="{!currentRecord.Free_Product_or_Service_not_Quoted__c}" onchange="refreshFinance(); return false;"/>                             
+                </apex:pageBlockSectionItem>                   
+    
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Free_Product_or_Service_not_Quoted__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Free_Product_or_Service_not_Quoted__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:inputField value="{!currentRecord.Details_1__c}" />
+                </apex:pageBlockSectionItem>                   
+
+                <!-- // -->
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Material Right 1" />
+                    <apex:inputField value="{!currentRecord.Material_Right_1__c}" onchange="refreshFinance(); return false;"/>                                
+                </apex:pageBlockSectionItem>  
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c=='Yes')}" >                
+                    <apex:outputLabel value="Description" /> 
+                    <apex:inputField value="{!currentRecord.Description_1__c}" />
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c=='Yes')}" >  
+                    <apex:outputLabel value="Value" /> 
+                    <apex:inputField value="{!currentRecord.Value_1__c}" />                                
+                </apex:pageBlockSectionItem> 
+ 
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_1__c=='Yes')}" >  
+                    <apex:outputLabel value="Probability of Occurring" /> 
+                    <apex:inputField value="{!currentRecord.Probability_of_Occurring_1__c}" />         
+                </apex:pageBlockSectionItem>   
+
+                <!-- // -->
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Material Right 2" />
+                    <apex:inputField value="{!currentRecord.Material_Right_2__c}" onchange="refreshFinance(); return false;"/>                                
+                </apex:pageBlockSectionItem>  
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c=='Yes')}" >                
+                    <apex:outputLabel value="Description" /> 
+                    <apex:inputField value="{!currentRecord.Description_2__c}" />
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c=='Yes')}" >  
+                    <apex:outputLabel value="Value" /> 
+                    <apex:inputField value="{!currentRecord.Value_2__c}" />                                
+                </apex:pageBlockSectionItem> 
+ 
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_2__c=='Yes')}" >  
+                    <apex:outputLabel value="Probability of Occurring" /> 
+                    <apex:inputField value="{!currentRecord.Probability_of_Occurring_2__c}" />         
+                </apex:pageBlockSectionItem>   
+
+                <!-- // -->
+
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Material Right 3" />
+                    <apex:inputField value="{!currentRecord.Material_Right_3__c}" onchange="refreshFinance(); return false;"/>                                
+                </apex:pageBlockSectionItem>  
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c=='Yes')}" >                
+                    <apex:outputLabel value="Description" /> 
+                    <apex:inputField value="{!currentRecord.Description_3__c}" />
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c=='Yes')}" >  
+                    <apex:outputLabel value="Value" /> 
+                    <apex:inputField value="{!currentRecord.Value_3__c}" />                                
+                </apex:pageBlockSectionItem> 
+ 
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Material_Right_3__c=='Yes')}" >  
+                    <apex:outputLabel value="Probability of Occurring" /> 
+                    <apex:inputField value="{!currentRecord.Probability_of_Occurring_3__c}" />         
+                </apex:pageBlockSectionItem>                                 
+ 
+                <!-- // -->
+                
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Contract Combination" />
+                    <apex:inputField value="{!currentRecord.Contract_Combination__c}" onchange="refreshFinance(); return false;"/>                             
+                </apex:pageBlockSectionItem>                 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Contract_Combination__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Contract_Combination__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:inputField value="{!currentRecord.Details_2__c}" />
+                </apex:pageBlockSectionItem>     
+ 
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="Varaible Consideration" />
+                    <apex:inputField value="{!currentRecord.Varaible_Consideration__c}" onchange="refreshFinance(); return false;"/>                             
+                </apex:pageBlockSectionItem>                 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Varaible_Consideration__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.Varaible_Consideration__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:inputField value="{!currentRecord.Details_3__c}" />
+                </apex:pageBlockSectionItem>  
+ 
+                <apex:pageBlockSectionItem >   
+                    <apex:outputLabel value="PureBridge Opportunity" />
+                    <apex:inputField value="{!currentRecord.PureBridge_Opportunity__c}" onchange="refreshFinance(); return false;"/>                             
+                </apex:pageBlockSectionItem>                 
+
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.PureBridge_Opportunity__c<>'Yes')}">                
+                </apex:pageBlockSectionItem>    
+                                
+                <apex:pageBlockSectionItem rendered="{!(currentRecord.PureBridge_Opportunity__c=='Yes')}" >                
+                    <apex:outputLabel value="Details" /> 
+                    <apex:inputField value="{!currentRecord.Levers_Included__c}" />
+                </apex:pageBlockSectionItem>  
+
+                <!-- 
+                    End: Liam
+                -->               
+                
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:include pageName="GCR_Quotes_Opportunity_Account"/>
+        <apex:pageBlock id="pgblkAttachments" rendered="{!renderPageBlock}" title="Attachments">
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="Attach File" onclick="window.open('/p/attach/NoteAttach?pid={!currentRecord.id}&parentname={!currentRecord.Name}&retURL=/apex/GCRContentDocumentDetails?id={!currentRecord.id}%26refreshParent=true', 'attWindow');return false;" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection rendered="{!NOT(showAttachments)}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="No reocrds to display" />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockTable value="{!attachments}" var="eachAtt" rendered="{!showAttachments}">
+                <apex:column headerValue="Name">
+                    <apex:outputLink value="/{!eachAtt.att.id}" target="_blank">View</apex:outputLink>
+                    <apex:outputPanel rendered="{!isAdminUser}">
+                        &nbsp;|&nbsp;
+                        <apex:commandLink onclick="delAttachment('{!eachAtt.att.id}'); return false;" value="Del" immediate="true" status="status" reRender="pgblkAttachments"/>
+                    </apex:outputPanel>
+                </apex:column>
+                <apex:column headerValue="Title">
+                    <apex:outputLink value="/{!eachAtt.att.id}" target="_blank"> {!eachAtt.att.Name} </apex:outputLink>
+                </apex:column>
+                <apex:column value="{!eachAtt.att.CreatedBy.Name}" headerValue="Created By"/>
+                <apex:column headerValue="Created Date">
+                    <apex:outputText value="{0,date,MM/dd/yyyy HH:mm:ss }">
+                        <apex:param value="{!eachAtt.att.CreatedDate}" />
+                    </apex:outputText>                              
+                </apex:column>
+                <apex:column headerValue="Signed Document?">
+                    <apex:outputPanel rendered="{!eachAtt.isFinal}">
+                        <input type="radio" name="finalDocument" checked="true" onchange="setFinalAttachmentId('{!eachAtt.att.id}'); return false;"/>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!NOT(eachAtt.isFinal)}">
+                        <input type="radio" name="finalDocument" onchange="setFinalAttachmentId('{!eachAtt.att.id}'); return false;"/>
+                    </apex:outputPanel>                             
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>                    
+        <apex:outputPanel rendered="{!renderPageBlock}" >
+            <c:GCRContentDocumentApprovalHistory idGCRDoument="{!currentRecord.id}" retURL="/apex/GCRequest?id={!currentRecord.GCR__c}%26documentRecordId={!currentRecord.id}" />
+        </apex:outputPanel>
+    </apex:outputPanel> 
+    <c:GenericHistoryComponent object="{!record}" recordsLimit="10"/>                                                  
+</td> 
+</tr>       
+</table>
+</apex:form>
+<table width="100%" border="0">
+    <tr>
+        <td width="1%"></td>
+        <td width="24%"></td>
+        <td width="72%">
+            <!--  <apex:relatedList subject="{!currentRecord}" list="DocuSign_Status__r" />   -->
+            <!-- <apex:repeat value="{!DocusignRecpDisplay}" var="docusign" id="theRepeat">
+<apex:outputText value="{!docusign.id}" id="theValue"/><br/>
+</apex:repeat>           
+-->
+            <apex:pageBlock title="Docusign Status">
+                <apex:pageblockTable value="{!DocusignRecpDisplay}" var="docusign">
+                    
+                    
+                    
+                    
+                    
+                    <apex:column styleclass="inBorder">
+                        <apex:facet name="header">Recipient Email</apex:facet>
+                        <apex:outputText value="{!docusign.dsfs__DocuSign_Recipient_Email__c }"/>
+                    </apex:column>  
+                    
+                    
+                    
+                    <apex:column styleclass="inBorder">
+                        <apex:facet name="header">Date Sent</apex:facet>
+                        <apex:outputText value="{!docusign.dsfs__Date_Sent__c}"/>
+                    </apex:column>  
+                    
+                    <apex:column styleclass="inBorder">
+                        <apex:facet name="header">Date Delivered</apex:facet>
+                        <apex:outputText value="{!docusign.dsfs__Date_Delivered__c}"/>
+                    </apex:column>  
+                    
+                    <apex:column styleclass="inBorder">
+                        <apex:facet name="header">Recipient Status</apex:facet>
+                        <apex:outputText value="{!docusign.dsfs__Recipient_Status__c}"/>
+                    </apex:column>  
+                    
+                    <apex:column styleclass="inBorder">
+                        <apex:facet name="header">Recipient Status</apex:facet>
+                        <apex:outputText value="{!docusign.dsfs__Date_Signed__c}"/>
+                    </apex:column>  
+                    
+                    
+                    
+                </apex:pageblockTable>
+            </apex:pageBlock>
+            
+            
+        </td>
+    </tr>       
+</table>
+
+    <script type="text/javascript">
+        var PLACEHOLDER = 'Enter Account Name Here'; 
+        var accountObjects;
+        var queryTerm;
+
+        $('[id$=accountTextBoxId]').autocomplete({
+            minLength: 2,
+            source: function(request, response) {
+                queryTerm = request.term;
+                GCRContentDocumentDetailsController.searchAccount(request.term, function(result, event){
+                    if(event.type == 'exception') {
+                        alert(event.message);
+                    } else {
+                        accountObjects = result;
+                        response(accountObjects);
+                    }
+                });
+            },
+            focus: function( event, ui ) {
+                $('[id$=accountTextBoxId]').val( ui.item.Name );
+                return false;
+            },
+            select: function( event, ui ) {
+                $('[id$=accountTextBoxId]').val( ui.item.Name );
+                $('[id$=searchAccountId]').val( ui.item.Id );
+                setAccountIdJS(ui.item.Id);
+                return false;
+            },
+        })
+        .data( "ui-autocomplete" )._renderItem = function( ul, item ) {
+            var entry = "<a>" + item.Name;
+            
+            entry = entry + "</a>";
+            entry = entry.replace(queryTerm, "<b>" + queryTerm + "</b>");
+            return $( "<li></li>" )
+            .data( "ui-autocomplete-item", item )
+            .append( entry )
+            .appendTo( ul );
+        };
+
+        // Add or remove placeholder values
+        $('[id$=accountTextBoxId]').val(PLACEHOLDER);
+        $('[id$=accountTextBoxId]').on("focus",  function(event){
+            $tgt = $(event.target);
+            if($tgt.val() === PLACEHOLDER ){
+                $tgt.val('');
+                $tgt.removeClass('placeHolder');
+            }
+        });
+        $('[id$=accountTextBoxId]').on( "blur",  function(event){
+            $tgt = $(event.target);
+            if($tgt.val() === '' ){
+                $tgt.val(PLACEHOLDER);
+                $tgt.addClass('placeHolder');
+            }
+        });    
+    </script>
+    <script>
+        if(location.href.indexOf('refreshParent=true') != -1){
+            window.opener.location.reload();
+            window.parent.focus();
+            window.close();
+        }
+    </script>
+</apex:page>
