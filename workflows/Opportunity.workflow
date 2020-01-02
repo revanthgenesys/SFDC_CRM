@@ -2,21 +2,7 @@
 <Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
     <alerts>
         <fullName>AppFoundry_Email_Alert</fullName>
-        <ccEmails>appfoundry.sales@genesys.com</ccEmails>
         <description>AppFoundry Email Alert</description>
-        <protected>false</protected>
-        <recipients>
-            <recipient>liam.clifford@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <senderType>CurrentUser</senderType>
-        <template>all/AppFoundry_Win_Notification</template>
-    </alerts>
-    <alerts>
-        <fullName>AppFoundry_Email_Alert_WF</fullName>
-        <ccEmails>Appfoundry.sales@genesys.com</ccEmails>
-        <ccEmails>David.Madsen@genesys.com</ccEmails>
-        <description>AppFoundry_Email_Alert</description>
         <protected>false</protected>
         <recipients>
             <recipient>liam.clifford@genesys.com</recipient>
@@ -38,7 +24,7 @@
     </alerts>
     <alerts>
         <fullName>AppFoundry_Email_Alert_for_APAC_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>AppFoundry Opportunity Closed Won - APAC - All</description>
         <protected>false</protected>
         <recipients>
@@ -61,7 +47,7 @@
     </alerts>
     <alerts>
         <fullName>AppFoundry_Email_Alert_for_EMEA_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>AppFoundry Opportunity Closed Won - EMEA - All</description>
         <protected>false</protected>
         <recipients>
@@ -84,7 +70,7 @@
     </alerts>
     <alerts>
         <fullName>AppFoundry_Email_Alert_for_LATAM_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>AppFoundry Opportunity Closed Won - LATAM - All</description>
         <protected>false</protected>
         <recipients>
@@ -107,7 +93,7 @@
     </alerts>
     <alerts>
         <fullName>AppFoundry_Email_Alert_for_NA_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>AppFoundry Opportunity Closed Won - NA - All</description>
         <protected>false</protected>
         <recipients>
@@ -122,10 +108,10 @@
         <description>Booked Opportunity Needs to be closed</description>
         <protected>false</protected>
         <recipients>
-            <type>owner</type>
+            <recipient>liam.clifford@genesys.com</recipient>
+            <type>user</type>
         </recipients>
-        <senderAddress>datacleanup@genesys.com</senderAddress>
-        <senderType>OrgWideEmailAddress</senderType>
+        <senderType>CurrentUser</senderType>
         <template>all/Booked_Opportunity_Needing_to_be_closed</template>
     </alerts>
     <alerts>
@@ -226,7 +212,7 @@
     </alerts>
     <alerts>
         <fullName>Cloud_Opportunity_Closed_Won_TCV_NEW_TestEmailAlert</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>Cloud Opportunity Closed Won TCV NEW-TestEmailAlert</description>
         <protected>false</protected>
         <recipients>
@@ -336,10 +322,10 @@
         <description>Expired Opportunity</description>
         <protected>false</protected>
         <recipients>
-            <type>owner</type>
+            <recipient>liam.clifford@genesys.com</recipient>
+            <type>user</type>
         </recipients>
-        <senderAddress>datacleanup@genesys.com</senderAddress>
-        <senderType>OrgWideEmailAddress</senderType>
+        <senderType>CurrentUser</senderType>
         <template>all/Expired_Opportunity</template>
     </alerts>
     <alerts>
@@ -830,6 +816,10 @@
         <recipients>
             <type>accountOwner</type>
         </recipients>
+        <recipients>
+            <recipient>navaneetha.krishnan@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
         <senderAddress>cloudrenewals@genesys.com</senderAddress>
         <senderType>OrgWideEmailAddress</senderType>
         <template>Cloud_Renewal_Email_Template/Creation_of_Renewal_Opportunity_Direct</template>
@@ -841,6 +831,10 @@
         <recipients>
             <type>accountOwner</type>
         </recipients>
+        <recipients>
+            <recipient>navaneetha.krishnan@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
         <senderType>CurrentUser</senderType>
         <template>Cloud_Renewal_Email_Template/Renewal_Opp_for_Direct_Customers_PCC</template>
     </alerts>
@@ -850,6 +844,10 @@
         <protected>false</protected>
         <recipients>
             <type>accountOwner</type>
+        </recipients>
+        <recipients>
+            <recipient>navaneetha.krishnan@genesys.com</recipient>
+            <type>user</type>
         </recipients>
         <senderType>CurrentUser</senderType>
         <template>Cloud_Renewal_Email_Template/Renewal_Opportunity_Direct_PECloud</template>
@@ -862,12 +860,12 @@
             <type>accountOwner</type>
         </recipients>
         <recipients>
-            <field>Channel_Manager_Email__c</field>
+            <field>Sold_To_Business_Partner_Mail__c</field>
             <type>email</type>
         </recipients>
         <recipients>
-            <field>Sold_To_Business_Partner_Mail__c</field>
-            <type>email</type>
+            <recipient>navaneetha.krishnan@genesys.com</recipient>
+            <type>user</type>
         </recipients>
         <senderAddress>cloudrenewals@genesys.com</senderAddress>
         <senderType>OrgWideEmailAddress</senderType>
@@ -881,12 +879,12 @@
             <type>accountOwner</type>
         </recipients>
         <recipients>
-            <field>Channel_Manager_Email__c</field>
+            <field>Sold_To_Business_Partner_Mail__c</field>
             <type>email</type>
         </recipients>
         <recipients>
-            <field>Sold_To_Business_Partner_Mail__c</field>
-            <type>email</type>
+            <recipient>navaneetha.krishnan@genesys.com</recipient>
+            <type>user</type>
         </recipients>
         <senderType>CurrentUser</senderType>
         <template>Cloud_Renewal_Email_Template/Temp_for_Renewal_Opp_for_Indirect_PCC</template>
@@ -899,12 +897,12 @@
             <type>accountOwner</type>
         </recipients>
         <recipients>
-            <field>Channel_Manager_Email__c</field>
+            <field>Sold_To_Business_Partner_Mail__c</field>
             <type>email</type>
         </recipients>
         <recipients>
-            <field>Sold_To_Business_Partner_Mail__c</field>
-            <type>email</type>
+            <recipient>navaneetha.krishnan@genesys.com</recipient>
+            <type>user</type>
         </recipients>
         <senderType>CurrentUser</senderType>
         <template>Cloud_Renewal_Email_Template/Renewal_Opportunity_InDirect_PECloud</template>
@@ -923,7 +921,7 @@
     </alerts>
     <alerts>
         <fullName>On_Permise_Opportunity_Closed_Won_TestEmailAlert</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>On Permise Opportunity Closed Won -TestEmailAlert</description>
         <protected>false</protected>
         <recipients>
@@ -1243,7 +1241,8 @@
     </alerts>
     <alerts>
         <fullName>PS_Email_Template_for_APAC_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
+        <ccEmails>PSWorldwide@genesys.com</ccEmails>
         <description>PS Opportunity Closed Won - APAC - All</description>
         <protected>false</protected>
         <recipients>
@@ -1273,7 +1272,8 @@
     </alerts>
     <alerts>
         <fullName>PS_Email_Template_for_Cloud_Client_Services_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
+        <ccEmails>PSWorldwide@genesys.com</ccEmails>
         <description>PS Opportunity Closed Won - Cloud Client Services- All</description>
         <protected>false</protected>
         <recipients>
@@ -1303,7 +1303,8 @@
     </alerts>
     <alerts>
         <fullName>PS_Email_Template_for_EMEA_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
+        <ccEmails>PSWorldwide@genesys.com</ccEmails>
         <description>PS Opportunity Closed Won - EMEA - All</description>
         <protected>false</protected>
         <recipients>
@@ -1333,7 +1334,8 @@
     </alerts>
     <alerts>
         <fullName>PS_Email_Template_for_LATAM_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
+        <ccEmails>PSWorldwide@genesys.com</ccEmails>
         <description>PS Opportunity Closed Won - LATAM - All</description>
         <protected>false</protected>
         <recipients>
@@ -1363,7 +1365,8 @@
     </alerts>
     <alerts>
         <fullName>PS_Email_Template_for_North_America_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
+        <ccEmails>PSWorldwide@genesys.com</ccEmails>
         <description>PS Opportunity Closed Won - North America - All</description>
         <protected>false</protected>
         <recipients>
@@ -1393,7 +1396,8 @@
     </alerts>
     <alerts>
         <fullName>PS_Email_Template_for_PureEngage_Cloud_All</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
+        <ccEmails>PSWorldwide@genesys.com</ccEmails>
         <description>PS Opportunity Closed Won - PureEngage Cloud - All</description>
         <protected>false</protected>
         <recipients>
@@ -1489,15 +1493,52 @@
         <template>Old_Templates/Pre_Game_Opp_Rejection_Notification2</template>
     </alerts>
     <alerts>
-        <fullName>PureBridge_Special_Offer_11_27</fullName>
-        <description>PureBridge Special Offer 11.27</description>
+        <fullName>Prem_Perpetual_Oppty_Approval_Request_APAC</fullName>
+        <ccEmails>apac@genesys.com.invalid</ccEmails>
+        <description>Prem Perpetual Oppty Approval Request - APAC</description>
         <protected>false</protected>
-        <recipients>
-            <type>owner</type>
-        </recipients>
-        <senderAddress>salesforce-noreply@genesys.com</senderAddress>
-        <senderType>OrgWideEmailAddress</senderType>
-        <template>all/PureBridge_SWAT_Promotion_11_27</template>
+        <senderType>CurrentUser</senderType>
+        <template>Pre_Sales_Engagements/Prem_Perpetual_Oppty_Approval_Request</template>
+    </alerts>
+    <alerts>
+        <fullName>Prem_Perpetual_Oppty_Approval_Request_EMEA</fullName>
+        <ccEmails>emea@genesys.com.invalid</ccEmails>
+        <description>Prem Perpetual Oppty Approval Request - EMEA</description>
+        <protected>false</protected>
+        <senderType>CurrentUser</senderType>
+        <template>Pre_Sales_Engagements/Prem_Perpetual_Oppty_Approval_Request</template>
+    </alerts>
+    <alerts>
+        <fullName>Prem_Perpetual_Oppty_Approval_Request_LATAM</fullName>
+        <ccEmails>latam@genesys.com.invalid</ccEmails>
+        <description>Prem Perpetual Oppty Approval Request - LATAM</description>
+        <protected>false</protected>
+        <senderType>CurrentUser</senderType>
+        <template>Pre_Sales_Engagements/Prem_Perpetual_Oppty_Approval_Request</template>
+    </alerts>
+    <alerts>
+        <fullName>Prem_Perpetual_Oppty_Approval_Request_NA</fullName>
+        <ccEmails>mariya@genesys.com.invalid</ccEmails>
+        <description>Prem Perpetual Oppty Approval Request - NA</description>
+        <protected>false</protected>
+        <senderType>CurrentUser</senderType>
+        <template>Pre_Sales_Engagements/Prem_Perpetual_Oppty_Approval_Request</template>
+    </alerts>
+    <alerts>
+        <fullName>Prem_Perpetual_Oppty_Approved</fullName>
+        <ccEmails>approved@genesys.com.invalid</ccEmails>
+        <description>Prem Perpetual Oppty Approved</description>
+        <protected>false</protected>
+        <senderType>CurrentUser</senderType>
+        <template>Pre_Sales_Engagements/Prem_Perpetual_Oppty_Approved</template>
+    </alerts>
+    <alerts>
+        <fullName>Prem_Perpetual_Oppty_Declined</fullName>
+        <ccEmails>declined@genesys.com.invalid</ccEmails>
+        <description>Prem Perpetual Oppty Declined</description>
+        <protected>false</protected>
+        <senderType>CurrentUser</senderType>
+        <template>Pre_Sales_Engagements/Prem_Perpetual_Oppty_Declined</template>
     </alerts>
     <alerts>
         <fullName>PureCloud_Stage_5_Email_Notification</fullName>
@@ -1517,7 +1558,7 @@
     </alerts>
     <alerts>
         <fullName>Rental_Opportunity_Closed_Won</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>Rental Opportunity Closed Won</description>
         <protected>false</protected>
         <recipients>
@@ -1618,7 +1659,7 @@
     </alerts>
     <alerts>
         <fullName>Subscription_Opportunity_Closed_Won</fullName>
-        <ccEmails>WinNotification@genesys.com</ccEmails>
+        <ccEmails>SalesAllWorldwide@genesys.com</ccEmails>
         <description>Subscription Opportunity Closed Won</description>
         <protected>false</protected>
         <recipients>
@@ -1727,10 +1768,6 @@
             <type>user</type>
         </recipients>
         <recipients>
-            <recipient>dianne.turner@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
             <recipient>holli.bingham@genesys.com</recipient>
             <type>user</type>
         </recipients>
@@ -1751,7 +1788,7 @@
             <type>user</type>
         </recipients>
         <recipients>
-            <recipient>travis.mcgee@genesys.com</recipient>
+            <recipient>trevor.dewitt@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>
@@ -1782,16 +1819,6 @@
         <template>Old_Templates/Opportunity_Closed_Won</template>
     </alerts>
     <fieldUpdates>
-        <fullName>AF_Opp_Field_Update_WF</fullName>
-        <description>Map TRUE to Appfoundry_Notification_sent__c after opp is closed (AF parts required). Created by Liam Clifford.</description>
-        <field>AppFoundry_Notification_Sent__c</field>
-        <literalValue>1</literalValue>
-        <name>AppFoundry_Notification_Sent__c update</name>
-        <notifyAssignee>false</notifyAssignee>
-        <operation>Literal</operation>
-        <protected>false</protected>
-    </fieldUpdates>
-    <fieldUpdates>
         <fullName>Account_Name_Update</fullName>
         <description>Copy Opportunity Account Name in Account Name Custom field.</description>
         <field>Account_Name_Custom__c</field>
@@ -1817,16 +1844,6 @@
         <name>Amount of Time Opp is Open</name>
         <notifyAssignee>false</notifyAssignee>
         <operation>Formula</operation>
-        <protected>false</protected>
-    </fieldUpdates>
-    <fieldUpdates>
-        <fullName>AppFoundry_Notification_Sent_c_apiupdat</fullName>
-        <description>Map TRUE into appfoundry_notification_sent__c after opp is closed (AF parts required). created by liam clifford.</description>
-        <field>AppFoundry_Notification_Sent__c</field>
-        <literalValue>1</literalValue>
-        <name>AppFoundry_Notification_Sent__c update</name>
-        <notifyAssignee>false</notifyAssignee>
-        <operation>Literal</operation>
         <protected>false</protected>
     </fieldUpdates>
     <fieldUpdates>
@@ -2338,7 +2355,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 AND 8</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2393,7 +2410,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND ((2 AND 3) OR (4 AND 5) OR (6 AND 7) OR (8 AND 9) OR (10 AND 11)) AND 12 AND (13 OR 14) AND 15 AND 16 AND 17 AND 18</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2498,7 +2515,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 AND 8</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2553,7 +2570,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND ((2 AND 3) OR (4 AND 5) OR (6 AND 7) OR (8 AND 9) OR (10 AND 11)) AND 12 AND (13 OR 14) AND 15 AND 16 AND 17 AND 18</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2658,7 +2675,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 AND 8</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2713,7 +2730,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND ((2 AND 3) OR (4 AND 5) OR (6 AND 7) OR (8 AND 9) OR (10 AND 11)) AND 12 AND (13 OR 14) AND 15 AND 16 AND 17 AND 18</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2818,7 +2835,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 AND 8</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2873,7 +2890,7 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND ((2 AND 3) OR (4 AND 5) OR (6 AND 7) OR (8 AND 9) OR (10 AND 11)) AND 12 AND (13 OR 14) AND 15 AND 16 AND 17 AND 18</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -2966,28 +2983,6 @@ RecordTypeId =&apos;012U0000000LrBP&apos;
             <value>True</value>
         </criteriaItems>
         <description>AppFoundry Opportunity Closed Won -NA - filtered by Opportunity threshold value and send to all</description>
-        <triggerType>onCreateOrTriggeringUpdate</triggerType>
-    </rules>
-    <rules>
-        <fullName>AppFoundry_Notification_Sent_Mapping</fullName>
-        <actions>
-            <name>AppFoundry_Email_Alert_WF</name>
-            <type>Alert</type>
-        </actions>
-        <actions>
-            <name>AF_Opp_Field_Update_WF</name>
-            <type>FieldUpdate</type>
-        </actions>
-        <active>true</active>
-        <description>Map when opp is closed when appfoundry is included. created by liam clifford.</description>
-        <formula>ISPICKVAL(Win_Loss_Status__c,&apos;Won&apos;) &amp;&amp;
-ISPICKVAL(StageName,&apos;6.Closed&apos;) &amp;&amp;
-ISPICKVAL(ForecastStatus__c,&apos;0.Booked&apos;) &amp;&amp;
-RecordType.Name = &apos;GEN - Opportunity Record Type&apos; &amp;&amp;
-Primary_Quote__r.PrimQuoteHasAppFoundry__c = True &amp;&amp;
-AppFoundry_Notification_Sent__c = False &amp;&amp;
-CloseDate &gt;= TODAY() - 45 &amp;&amp;
-$User.BypassWorkflows__c &lt;&gt; True</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -4624,7 +4619,7 @@ ISCHANGED(ForecastStatus__c), OR(RecordType.Name =&apos;GEN - Opportunity Record
             <name>Email_Sent_Cloud</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 AND 8 AND 9 AND (10 OR 11 OR 12 OR 13 OR 17) AND 14 AND 15 AND 16</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -5689,6 +5684,19 @@ RecordTypeId = &quot;012U0000000LrBP&quot;)</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
         <workflowTimeTriggers>
             <actions>
+                <name>MKTG_LATAM_Stalled_Oppt_Alert_21_Days</name>
+                <type>Alert</type>
+            </actions>
+            <actions>
+                <name>Sent_Alert_LATAM_Oppt_Untouched_21_days</name>
+                <type>Task</type>
+            </actions>
+            <offsetFromField>Opportunity.Last_Significant_Update__c</offsetFromField>
+            <timeLength>21</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+        <workflowTimeTriggers>
+            <actions>
                 <name>MKTG_LATAM_Stalled_Oppt_Alert_35_days</name>
                 <type>Alert</type>
             </actions>
@@ -5724,19 +5732,6 @@ RecordTypeId = &quot;012U0000000LrBP&quot;)</formula>
             </actions>
             <offsetFromField>Opportunity.Last_Significant_Update__c</offsetFromField>
             <timeLength>28</timeLength>
-            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
-        </workflowTimeTriggers>
-        <workflowTimeTriggers>
-            <actions>
-                <name>MKTG_LATAM_Stalled_Oppt_Alert_21_Days</name>
-                <type>Alert</type>
-            </actions>
-            <actions>
-                <name>Sent_Alert_LATAM_Oppt_Untouched_21_days</name>
-                <type>Task</type>
-            </actions>
-            <offsetFromField>Opportunity.Last_Significant_Update__c</offsetFromField>
-            <timeLength>21</timeLength>
             <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
         </workflowTimeTriggers>
     </rules>
@@ -5878,7 +5873,7 @@ RecordTypeId =&apos;012U0000000LrBPIA0&apos;
             <name>Email_Sent_On_Premise</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 AND 8 AND 9 AND (10 OR 11 OR 12 OR 13) AND 14 AND 15 AND 16 AND 17</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -7258,7 +7253,7 @@ RecordTypeId =&apos;012U0000000LrBPIA0&apos;
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND ((2 AND 3) OR (4 AND 5) OR (6 AND 7) OR (8 AND 9)) AND 10 and 11 and 12 AND 13 AND 14 AND 15 AND 16</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -7500,26 +7495,6 @@ RecordTypeId =&apos;012U0000000LrBPIA0&apos;
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
-        <fullName>PB Special promotion 11%2E27</fullName>
-        <actions>
-            <name>PureBridge_Special_Offer_11_27</name>
-            <type>Alert</type>
-        </actions>
-        <active>false</active>
-        <criteriaItems>
-            <field>Opportunity.RecordTypeId</field>
-            <operation>equals</operation>
-            <value>GEN - Pre-GAME Opp</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>Opportunity.Name</field>
-            <operation>contains</operation>
-            <value>_PureBridge</value>
-        </criteriaItems>
-        <description>One-time email message that gets sent to opp owner to tell them about special purebridge promotion around PureEngage T-server accounts</description>
-        <triggerType>onCreateOnly</triggerType>
-    </rules>
-    <rules>
         <fullName>PS - Update Owner%27s Manager%27s Email</fullName>
         <actions>
             <name>MKTG_Update_Owners_Managers_Email</name>
@@ -7542,10 +7517,9 @@ OR(ISNEW(), ISCHANGED(OwnerId))
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - APAC - no value thresholds and targeted to opportunity and Account Owners only</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7558,9 +7532,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPIC
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - Cloud Client Services- filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  OR(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)  ),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000), AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  OR(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)  ),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7573,10 +7547,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPIC
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - Cloud Client Services - no value thresholds and targeted to opportunity and Account Owners only</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  OR(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  OR(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7589,11 +7562,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPIC
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - EMEA - no value thresholds and targeted to opportunity and Account Owners only</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7606,11 +7577,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICK
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - LATAM - no value thresholds and targeted to opportunity and Account Owners only</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7623,10 +7592,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICK
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - North America - no value thresholds and targeted to opportunity and Account Owners only</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7639,9 +7607,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPIC
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - PureEngage Cloud - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000), AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7654,11 +7622,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),  AND(ISPIC
             <name>Win_Owner_Notification_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS Opportunity Closed Won - PureEngage Cloud - no value thresholds and targeted to opportunity and Account Owners only</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &lt; 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Owner_Notification_Sent__c = false,  $User.BypassWorkflows__c = false,  Amount &gt; 0,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &lt; 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &lt; 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &lt; 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &lt; 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &lt; 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &lt; 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7707,11 +7673,9 @@ ISPICKVAL( StageName , &quot;6.Closed&quot;)
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureCloud Opportunity Closed Won - APAC - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7724,10 +7688,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPIC
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureCloud Opportunity Closed Won - EMEA - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7740,10 +7703,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureCloud Opportunity Closed Won - LATAM - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7756,10 +7718,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureCloud Opportunity Closed Won - North America - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureCloud&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7772,10 +7733,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureConnect Opportunity Closed Won - APAC - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7788,10 +7748,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureConnect Opportunity Closed Won - EMEA - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7804,10 +7763,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureConnect Opportunity Closed Won - LATAM - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7820,10 +7778,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureConnect Opportunity Closed Won - North America - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureConnect&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7836,10 +7793,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureEngage Opportunity Closed Won - APAC - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;APAC&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7852,10 +7808,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureEngage Opportunity Closed Won - EMEA - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;EMEA&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7868,10 +7823,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureEngage Opportunity Closed Won - LATAM - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;Latin America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -7884,10 +7838,9 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <description>PS PureEngage Opportunity Closed Won - North America - filtered by Opportunity threshold value and send to all</description>
-        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),
-AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
+        <formula>AND(  ISPICKVAL( StageName, &quot;6.Closed&quot;),  RecordType.Name = &quot;Professional Services&quot;,  ISPICKVAL( PS_Region__c, &quot;North America&quot;),  ISPICKVAL( Win_Loss_Status__c , &quot;Won&quot;),  ISPICKVAL( PS_Line_of_Business__c, &quot;PureEngage&quot;),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Cloud&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;ARM&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;Decisions&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Outbound&quot;)),  NOT(ISPICKVAL( PS_Business_Units__c , &quot;PureEngage Premier&quot;)),  OR ( CloseDate &gt;= TODAY(), CloseDate &gt; (TODAY()-30) ),  Win_Email_Sent__c = false,  $User.BypassWorkflows__c = false,  OR  (  AND(ISPICKVAL(CurrencyIsoCode, &quot;USD&quot;), Amount &gt;= 100000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;EUR&quot;), Amount &gt;= 75000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;GBP&quot;), Amount &gt;= 60000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;JPY&quot;), Amount &gt;= 10000000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;AUD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;NZD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;SGD&quot;), Amount &gt;= 150000),  AND(ISPICKVAL(CurrencyIsoCode, &quot;BRL&quot;), Amount &gt;= 200000)  )  )</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
@@ -8073,6 +8026,100 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <value>GEN - Pre-GAME Opp</value>
         </criteriaItems>
         <triggerType>onCreateOnly</triggerType>
+    </rules>
+    <rules>
+        <fullName>Prem Perpetual Oppty Approval Request - APAC</fullName>
+        <actions>
+            <name>Prem_Perpetual_Oppty_Approval_Request_APAC</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <formula>AND(
+NOT($User.BypassWorkflows__c), 
+ISCHANGED(Prem_Perpetual_Approval__c), 
+TEXT(Prem_Perpetual_Approval__c) = &quot;Approval Requested&quot;, 
+TEXT(Sold_To_Country__r.Region__c) = &quot;APAC&quot;,
+ (TEXT(Lead_Offer__c) = &quot;PureEngage Premise&quot; || TEXT(Lead_Offer__c) = &quot;PureConnect Premise&quot;)
+)</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>Prem Perpetual Oppty Approval Request - EMEA</fullName>
+        <actions>
+            <name>Prem_Perpetual_Oppty_Approval_Request_EMEA</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <formula>AND(
+NOT($User.BypassWorkflows__c), 
+ISCHANGED(Prem_Perpetual_Approval__c), 
+TEXT(Prem_Perpetual_Approval__c) = &quot;Approval Requested&quot;, 
+TEXT(Sold_To_Country__r.Region__c) = &quot;EMEA&quot;,
+ (TEXT(Lead_Offer__c) = &quot;PureEngage Premise&quot; || TEXT(Lead_Offer__c) = &quot;PureConnect Premise&quot;)
+)</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>Prem Perpetual Oppty Approval Request - LATAM</fullName>
+        <actions>
+            <name>Prem_Perpetual_Oppty_Approval_Request_LATAM</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <formula>AND(
+NOT($User.BypassWorkflows__c), 
+ISCHANGED(Prem_Perpetual_Approval__c), 
+TEXT(Prem_Perpetual_Approval__c) = &quot;Approval Requested&quot;, 
+TEXT(Sold_To_Country__r.Region__c) = &quot;LATAM&quot;,
+ (TEXT(Lead_Offer__c) = &quot;PureEngage Premise&quot; || TEXT(Lead_Offer__c) = &quot;PureConnect Premise&quot;)
+)</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>Prem Perpetual Oppty Approval Request - NA</fullName>
+        <actions>
+            <name>Prem_Perpetual_Oppty_Approval_Request_NA</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <formula>AND(
+NOT($User.BypassWorkflows__c), 
+ISCHANGED(Prem_Perpetual_Approval__c), 
+TEXT(Prem_Perpetual_Approval__c) = &quot;Approval Requested&quot;, 
+TEXT(Sold_To_Country__r.Region__c) = &quot;North America&quot;,
+ (TEXT(Lead_Offer__c) = &quot;PureEngage Premise&quot; || TEXT(Lead_Offer__c) = &quot;PureConnect Premise&quot;)
+)</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>Prem Perpetual Oppty Approved</fullName>
+        <actions>
+            <name>Prem_Perpetual_Oppty_Approved</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <formula>AND(
+NOT($User.BypassWorkflows__c), 
+ISCHANGED(Prem_Perpetual_Approval__c), 
+TEXT(Prem_Perpetual_Approval__c) = &quot;Approved&quot;, 
+ (TEXT(Lead_Offer__c) = &quot;PureEngage Premise&quot; || TEXT(Lead_Offer__c) = &quot;PureConnect Premise&quot;)
+)</formula>
+        <triggerType>onAllChanges</triggerType>
+    </rules>
+    <rules>
+        <fullName>Prem Perpetual Oppty Declined</fullName>
+        <actions>
+            <name>Prem_Perpetual_Oppty_Declined</name>
+            <type>Alert</type>
+        </actions>
+        <active>false</active>
+        <formula>AND(
+NOT($User.BypassWorkflows__c), 
+ISCHANGED(Prem_Perpetual_Approval__c), 
+TEXT(Prem_Perpetual_Approval__c) = &quot;Declined&quot;, 
+ (TEXT(Lead_Offer__c) = &quot;PureEngage Premise&quot; || TEXT(Lead_Offer__c) = &quot;PureConnect Premise&quot;)
+)</formula>
+        <triggerType>onAllChanges</triggerType>
     </rules>
     <rules>
         <fullName>PureCloud Stage 5 Notification</fullName>
@@ -8645,7 +8692,7 @@ AND(ISPICKVAL(CurrencyIsoCode, &quot;CAD&quot;), Amount &gt;= 100000),  AND(ISPI
             <name>Email_Sent_Rental</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 and 8 AND (9 OR 10 OR 11 OR 12) AND 13 AND 14 and 15 and 16</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>
@@ -9416,7 +9463,7 @@ ISCHANGED( StageName )</formula>
             <name>Email_Sent_Rental</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND (3 OR 4) AND 5 AND 6 AND 7 and 8 AND (9 OR 10 OR 11 OR 12) AND 13 AND 14 AND 15 AND 16 AND 17</booleanFilter>
         <criteriaItems>
             <field>Opportunity.StageName</field>

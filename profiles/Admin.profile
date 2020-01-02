@@ -88,9 +88,6 @@
         <layout>Alarm__c-Alarm Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
-        <layout>AppAnalyticsQueryRequest-App Analytics Query Request Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
         <layout>Apps_Projects__c-Apps Projects Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
@@ -1456,6 +1453,9 @@
         <layout>Pure_Success_Package__c-PureSuccess Package Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
+        <layout>Puresuccess_audit_log__c-Puresuccess_package_audit_log Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
         <layout>QUESTION_AND_ANSWER__kav-Question and Answer Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
@@ -1465,7 +1465,16 @@
         <layout>Question-Question Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
+        <layout>QuickText-Quick Text Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
         <layout>Quota_Attainment__c-Quota_Attainment Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Quote-Quote Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>QuoteLineItem-Quote Line Item Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
         <layout>Quote_Approval_And_Quote_Approval_Region__c-Quote Approval And Quote Approval Region Layout</layout>
@@ -2204,10 +2213,6 @@
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>
-        <name>EditBillingInfo</name>
-    </userPermissions>
-    <userPermissions>
-        <enabled>true</enabled>
         <name>EditBrandTemplates</name>
     </userPermissions>
     <userPermissions>
@@ -2404,10 +2409,6 @@
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>
-        <name>ManageHubConnections</name>
-    </userPermissions>
-    <userPermissions>
-        <enabled>true</enabled>
         <name>ManageInteraction</name>
     </userPermissions>
     <userPermissions>
@@ -2485,10 +2486,6 @@
     <userPermissions>
         <enabled>true</enabled>
         <name>ManageRoles</name>
-    </userPermissions>
-    <userPermissions>
-        <enabled>true</enabled>
-        <name>ManageSandboxes</name>
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>
@@ -2741,6 +2738,10 @@
     <userPermissions>
         <enabled>true</enabled>
         <name>ViewSetup</name>
+    </userPermissions>
+    <userPermissions>
+        <enabled>true</enabled>
+        <name>ViewUserPII</name>
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>

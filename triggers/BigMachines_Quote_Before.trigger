@@ -32,8 +32,13 @@ trigger BigMachines_Quote_Before on BigMachines__Quote__c (before insert, before
                 return;
             }
             currentQuote.addError('Quote has to be primary before Order can be Submitted/Accepted/Approved on it.');
-            return;
-        }
+            return;    }
+        //Added on 27/12/2019 by Kalyan for Incident-INC0437245 Start.
+        /*if(currentQuote.Opportunity_Type__c==ServiceContractUtil.OPP_GEN_NEW_DEV_NAME){
+            currentQuote.Maintenance_Start_Date__c=system.today();
+            currentQuote.Maintenance_End_Date__c=system.today().addmonths(12);
+        }*/
+        //Added on 27/12/2019 by Kalyan for Incident-INC0437245 Ends.
     }
     
     if(Util.Bypass_Trigger_Chk)

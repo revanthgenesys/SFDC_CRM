@@ -57,7 +57,6 @@
     <tabs>Contract_Tier_Set_Period__c</tabs>
     <tabs>Sales_Analytics</tabs>
     <tabs>Inbound_Calling_Rate__c</tabs>
-    <tabs>standard-WaveHome</tabs>
     <tabs>Call_Center_Settings</tabs>
     <tabs>Product_Tier_Set__c</tabs>
     <tabs>LDAP_Log__c</tabs>
@@ -65,6 +64,5 @@
     <tabs>Partner_Directory_Staging__c</tabs>
     <tabs>Genie_2_0</tabs>
     <tabs>New_Solution_Design__c</tabs>
-    <tabs>Delete_History_Object__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>License_Snapshot__c</tabs>
 </CustomApplication>

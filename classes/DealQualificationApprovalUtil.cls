@@ -328,6 +328,7 @@ public without sharing class DealQualificationApprovalUtil {
               AND Quote_Approval_Config__r.Quote_Type__c =: quoteType
               AND Quote_Approval_Config__r.Offering_Type__c INCLUDES (:quoteOfferingType)
               AND (Quote_Approval_Config__r.Pricing_Type__c =: dq.Pricing_Type__c OR Quote_Approval_Config__r.Pricing_Type__c = NULL)];
+              system.debug('quoteApprovalRegions new pricing++ Navanee1' + quoteApprovalRegions);
         }
         else{
           quoteApprovalRegions = [SELECT Quote_Approval_Config__c FROM Quote_Approval_And_Quote_Approval_Region__c
@@ -336,12 +337,14 @@ public without sharing class DealQualificationApprovalUtil {
               AND Quote_Approval_Config__r.Quote_Type__c =: quoteType
               AND Quote_Approval_Config__r.Offering_Type__c INCLUDES(:quoteOfferingType) 
               AND (Quote_Approval_Config__r.Pricing_Type__c =: dq.Pricing_Type__c OR Quote_Approval_Config__r.Pricing_Type__c = NULL)];
+              system.debug('quoteApprovalConfigIds else pricing++ Navanee2' + quoteApprovalRegions);
         }
         //will hold approval config ids
         Set<Id> quoteApprovalConfigIds = new Set<Id>();
         //Looping over each record
         for(Quote_Approval_And_Quote_Approval_Region__c eachQuoteApprovalRegion : quoteApprovalRegions){
             quoteApprovalConfigIds.add(eachQuoteApprovalRegion.Quote_Approval_Config__c);
+            system.debug('quoteApprovalConfigIds navanee3' + quoteApprovalConfigIds);
         }
         //Querying quote approval
         List<Quote_Approval_Config_And_Steps__c> quoteApprovalConfigs = [SELECT Quote_Approval_Steps__c, Quote_Approval_Config__r.Approval_Type__c, 
@@ -396,6 +399,7 @@ public without sharing class DealQualificationApprovalUtil {
               AND Quote_Approval_Config__r.Offering_Type__c INCLUDES(:quoteOfferingType) 
               AND (Quote_Approval_Config__r.Pricing_Type__c =: quote.Quote_Opportunity_Type__c OR Quote_Approval_Config__r.Pricing_Type__c = NULL)
               ];
+              system.debug('quoteApprovalRegions new pricing++ Navanee4' + quoteApprovalRegions);
       }
       else{
         quoteApprovalRegions = [SELECT Quote_Approval_Config__c FROM Quote_Approval_And_Quote_Approval_Region__c
@@ -405,12 +409,14 @@ public without sharing class DealQualificationApprovalUtil {
               AND Quote_Approval_Config__r.Offering_Type__c INCLUDES(:quoteOfferingType)
               AND (Quote_Approval_Config__r.Pricing_Type__c =: quote.Quote_Opportunity_Type__c OR Quote_Approval_Config__r.Pricing_Type__c = NULL)
               ];
+              system.debug('quoteApprovalRegions new pricing++ Navanee5' + quoteApprovalRegions);
       }
         //will hold approval config ids
         Set<Id> quoteApprovalConfigIds = new Set<Id>();
         //Looping over each record
         for(Quote_Approval_And_Quote_Approval_Region__c eachQuoteApprovalRegion : quoteApprovalRegions){
             quoteApprovalConfigIds.add(eachQuoteApprovalRegion.Quote_Approval_Config__c);
+            system.debug('quoteApprovalConfigIds new pricing++ Navanee6' + quoteApprovalConfigIds);
         }
         //Querying quote approval
         List<Quote_Approval_Config__c> quoteApprovalConfigs = [SELECT Threshold_From__c, Approval_Type__c FROM Quote_Approval_Config__c 

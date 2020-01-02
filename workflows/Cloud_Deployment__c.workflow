@@ -105,7 +105,7 @@ TEXT(Support_Status__c) &lt;&gt; &quot;Order Processing&quot;
             <name>Cloud_Deployment_new_added</name>
             <type>Alert</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>User.BypassWorkflows__c</field>
             <operation>equals</operation>

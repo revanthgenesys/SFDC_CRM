@@ -223,7 +223,7 @@
     <tabs>Partner_Directory_Staging__c</tabs>
     <tabs>Genie_2_0</tabs>
     <tabs>New_Solution_Design__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>License_Snapshot__c</tabs>
     <workspaceConfig>
         <mappings>
             <tab>BigMachines__Quote__c</tab>
@@ -232,13 +232,13 @@
             <tab>Deal_Support__c</tab>
         </mappings>
         <mappings>
-            <tab>Engagio</tab>
-        </mappings>
-        <mappings>
             <tab>Genie_2_0</tab>
         </mappings>
         <mappings>
             <tab>Legal_Contract_Requests</tab>
+        </mappings>
+        <mappings>
+            <tab>License_Snapshot__c</tab>
         </mappings>
         <mappings>
             <tab>New_Solution_Design__c</tab>

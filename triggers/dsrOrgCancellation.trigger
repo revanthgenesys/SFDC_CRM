@@ -1,5 +1,7 @@
 trigger dsrOrgCancellation on Subscription__c (before update,after update) {
  
+    if(Util.Bypass_Trigger_Chk)
+            return;
     List<Subscription__c> subsc = [SELECT 
                                    Account__c, 
                                    Id,

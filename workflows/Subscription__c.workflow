@@ -2,7 +2,6 @@
 <Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
     <alerts>
         <fullName>AppFoundry_CCDB_Email_Alert</fullName>
-        <ccEmails>appfoundry.sales@genesys.com</ccEmails>
         <description>AppFoundry CCDB Email Alert</description>
         <protected>false</protected>
         <recipients>

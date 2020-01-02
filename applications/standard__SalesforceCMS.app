@@ -7,11 +7,11 @@
     <navType>Console</navType>
     <tabs>standard-CmsAuthorHome</tabs>
     <tabs>New_Solution_Design__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>License_Snapshot__c</tabs>
     <uiType>Lightning</uiType>
     <workspaceConfig>
         <mappings>
-            <tab>Engagio</tab>
+            <tab>License_Snapshot__c</tab>
         </mappings>
         <mappings>
             <tab>New_Solution_Design__c</tab>

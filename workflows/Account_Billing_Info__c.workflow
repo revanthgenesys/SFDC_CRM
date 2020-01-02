@@ -17,6 +17,10 @@
         <ccEmails>ankit.sanghvi@genesys.com;</ccEmails>
         <description>Credit memo email notification (EMEA)</description>
         <protected>false</protected>
+        <recipients>
+            <recipient>jose.rodriguez@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
         <senderType>CurrentUser</senderType>
         <template>Old_Templates/credit_memo</template>
     </alerts>

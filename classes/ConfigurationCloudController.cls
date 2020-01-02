@@ -747,7 +747,7 @@ continue;  */
             //Disables already added pure success package.
             if(!list_OfQuoteProducts.isEmpty()){
                 for(BigMachines__Quote_Product__c eachQP : list_OfQuoteProducts){
-                    if(eachQP.Bundle__r.Name != null && eachQP.Bundle__r.Name.containsIgnoreCase('Equip') && objProductPureSuccess.Name != null && objProductPureSuccess.Name.containsIgnoreCase('Equip')){
+                    if(eachQP.Bundle__r.Name != null && eachQP.Bundle__r.Name.containsIgnoreCase('PureSuccess') && objProductPureSuccess.Name != null && objProductPureSuccess.Name.containsIgnoreCase('PureSuccess')){
                         objProductPureSuccess.Active__c = false;
                         objProductPureSuccess.Selected__c = true;
                         blnOfferPresent = true;
@@ -1468,6 +1468,7 @@ objQP.List_Price__c *= objAudioCodeSettings.Volume_Break_Multiplier__c;
                                                    List_Price__c = (Decimal)eachAlaCarteItem.Product__r.get(strPricebookFieldName),
                                                    Name = eachAlaCarteItem.Product__r.Name,
                                                    description__c = eachAlaCarteItem.Product__r.description__c );
+                eachAlaCarteItem.Product__r.Quantity__c = null;
                 list_OfAlaCarteToBeSaved.add(newProduct);
             }
         }

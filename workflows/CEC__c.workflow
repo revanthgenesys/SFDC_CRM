@@ -138,7 +138,15 @@
             <type>creator</type>
         </recipients>
         <recipients>
+            <recipient>danielle.hall@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
             <recipient>edin.golomb@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>
@@ -195,6 +203,10 @@
         </recipients>
         <recipients>
             <recipient>edin.golomb@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>
@@ -366,6 +378,10 @@
             <type>user</type>
         </recipients>
         <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
             <recipient>terra.peterson@genesys.com</recipient>
             <type>user</type>
         </recipients>
@@ -392,6 +408,10 @@
             <type>user</type>
         </recipients>
         <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
             <recipient>terra.peterson@genesys.com</recipient>
             <type>user</type>
         </recipients>
@@ -415,6 +435,10 @@
         </recipients>
         <recipients>
             <recipient>johanna.rogers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>
@@ -518,6 +542,10 @@
             <type>user</type>
         </recipients>
         <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
             <recipient>terra.peterson@genesys.com</recipient>
             <type>user</type>
         </recipients>
@@ -540,6 +568,10 @@
             <type>user</type>
         </recipients>
         <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
             <recipient>terra.peterson@genesys.com</recipient>
             <type>user</type>
         </recipients>
@@ -559,6 +591,10 @@
         </recipients>
         <recipients>
             <recipient>johanna.rogers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>
@@ -749,6 +785,10 @@
             <type>user</type>
         </recipients>
         <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
             <recipient>terra.peterson@genesys.com</recipient>
             <type>user</type>
         </recipients>
@@ -794,6 +834,10 @@
         </recipients>
         <recipients>
             <recipient>johanna.rogers@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>laura.bowers@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>

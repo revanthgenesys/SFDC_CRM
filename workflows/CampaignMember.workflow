@@ -14,15 +14,7 @@
             <type>user</type>
         </recipients>
         <recipients>
-            <recipient>kylie.ray@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
             <recipient>santosh.singh@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
-            <recipient>velusamy.t@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <senderAddress>partners@genesys.com</senderAddress>
@@ -39,15 +31,7 @@
             <type>user</type>
         </recipients>
         <recipients>
-            <recipient>karen.smith@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
             <recipient>kathy.gogan@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
-            <recipient>kylie.ray@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <senderAddress>partners@genesys.com</senderAddress>
@@ -87,15 +71,7 @@
         <description>LATAM PMC Lead Alert</description>
         <protected>false</protected>
         <recipients>
-            <recipient>deivison.oliveira@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
             <recipient>kathy.gogan@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
-            <recipient>kylie.ray@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>

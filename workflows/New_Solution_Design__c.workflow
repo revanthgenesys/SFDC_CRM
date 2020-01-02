@@ -40,6 +40,15 @@
         <template>unfiled$public/Solution_Design_Approval_VF3</template>
     </alerts>
     <fieldUpdates>
+        <fullName>Approval_date_update</fullName>
+        <field>Approved_Rejected_Date__c</field>
+        <formula>TODAY()</formula>
+        <name>Approval date update</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+    </fieldUpdates>
+    <fieldUpdates>
         <fullName>Approve_Reject_date</fullName>
         <field>Approved_Rejected_Date__c</field>
         <formula>Today()</formula>
@@ -102,4 +111,14 @@
         <operation>Literal</operation>
         <protected>false</protected>
     </fieldUpdates>
+    <rules>
+        <fullName>Approval date rule</fullName>
+        <actions>
+            <name>Approval_date_update</name>
+            <type>FieldUpdate</type>
+        </actions>
+        <active>false</active>
+        <formula>OR( ISPICKVAL(Status__c , &apos;Approved&apos;) ,ISPICKVAL(Status__c , &apos;Rejected&apos;) )</formula>
+        <triggerType>onCreateOrTriggeringUpdate</triggerType>
+    </rules>
 </Workflow>

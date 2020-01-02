@@ -1291,7 +1291,7 @@ NOT($User.BypassWorkflows__c ) )</formula>
     </rules>
     <rules>
         <fullName>PureConnect Cancellation</fullName>
-        <active>true</active>
+        <active>false</active>
         <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND (9 OR 10) AND 11</booleanFilter>
         <criteriaItems>
             <field>Deal_Support__c.Support_Area__c</field>
@@ -1360,6 +1360,11 @@ NOT($User.BypassWorkflows__c ) )</formula>
             </actions>
             <offsetFromField>Deal_Support__c.Official_Cancelation_Date__c</offsetFromField>
             <timeLength>0</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+        <workflowTimeTriggers>
+            <offsetFromField>Deal_Support__c.Official_Cancelation_Date__c</offsetFromField>
+            <timeLength>-7</timeLength>
             <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
         </workflowTimeTriggers>
     </rules>

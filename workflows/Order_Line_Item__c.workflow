@@ -2,11 +2,13 @@
 <Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
     <alerts>
         <fullName>AppFoundry_Email_Notification_OLI</fullName>
-        <ccEmails>appfoundry.sales@genesys.com</ccEmails>
         <description>AppFoundry Email Notification (OLI)</description>
         <protected>false</protected>
-        <senderAddress>salesforce-noreply@genesys.com</senderAddress>
-        <senderType>OrgWideEmailAddress</senderType>
+        <recipients>
+            <recipient>liam.clifford@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
         <template>all/AppFoundry_Order_Notification</template>
     </alerts>
     <alerts>
@@ -30,17 +32,6 @@
         <operation>Formula</operation>
         <protected>false</protected>
     </fieldUpdates>
-    <rules>
-        <fullName>AppFoundry OLI Notification</fullName>
-        <actions>
-            <name>AppFoundry_Email_Notification_OLI</name>
-            <type>Alert</type>
-        </actions>
-        <active>false</active>
-        <description>For every order line item (OLI) that is associated to an order that gets Approved, this will send out an email for each individual OLI. Created by Liam Clifford. Business Sponsor: AppFoundry team.</description>
-        <formula>AppFoundry_Notification__c = true</formula>
-        <triggerType>onCreateOrTriggeringUpdate</triggerType>
-    </rules>
     <rules>
         <fullName>Update Line %23 On Manually Added Cloud Billing Order Lines</fullName>
         <actions>

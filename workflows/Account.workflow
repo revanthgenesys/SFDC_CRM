@@ -12,14 +12,11 @@
     </alerts>
     <alerts>
         <fullName>NewAccount_Awaiting_Approval</fullName>
+        <ccEmails>liam.clifford@genesys.com</ccEmails>
         <description>NewAccount Awaiting Approval</description>
         <protected>false</protected>
         <recipients>
             <recipient>carmela.meneses@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
-            <recipient>cyril.coronado@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>
@@ -49,10 +46,6 @@
         <protected>false</protected>
         <recipients>
             <recipient>carmela.meneses@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
-        <recipients>
-            <recipient>cyril.coronado@genesys.com</recipient>
             <type>user</type>
         </recipients>
         <recipients>
