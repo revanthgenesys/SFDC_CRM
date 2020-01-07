@@ -17,4 +17,5 @@
     <tabs>Genie_2_0</tabs>
     <tabs>New_Solution_Design__c</tabs>
     <tabs>License_Snapshot__c</tabs>
+    --<NEW LINE>>
 </CustomApplication>
