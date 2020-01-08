@@ -18,4 +18,5 @@
     <tabs>New_Solution_Design__c</tabs>
     <tabs>License_Snapshot__c</tabs>
     --<NEW LINE>>
+        New line added
 </CustomApplication>
