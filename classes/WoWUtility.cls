@@ -979,27 +979,32 @@ public without sharing class WoWUtility {
      // Method added by Rsystems 23-08-2017 as per Debora Email
      
      public static List<Wow_Sub_Regional_Users__c> getSubRegionalNewUsersName(String segment,String SubRegion, String offeringtype){
+         system.debug('Entering into Method @@@@@@@@@getSubRegionalNewUsersName');
         List<Wow_Sub_Regional_Users__c> list_SubRegion= Wow_Sub_Regional_Users__c.getall().values();
         List<Wow_Sub_Regional_Users__c> list_FinalSubRegion=new List<Wow_Sub_Regional_Users__c>();
        
-        if(list_SubRegion.size() > 0 && (( segment != '' && SubRegion != null ) || offeringtype == 'PureCloud' )){
-       
+        if(list_SubRegion.size() > 0 && (( String.isNotBlank(segment) && String.isNotBlank(SubRegion) ) || String.isNotBlank(offeringtype))){ //KK 19/12       
             for(Wow_Sub_Regional_Users__c objSubRegion:list_SubRegion){
+                                if((String.isNotBlank(objSubRegion.Offering_Type__c))){ //KK 19/12
+
                 if(objSubRegion.Offering_Type__c == offeringtype){
                     list_FinalSubRegion.add(objSubRegion);
                 }
-                else if(objSubRegion.Segment__c == segment && objSubRegion.SubRegion__c == SubRegion){
+                                }
+              if(String.isNotBlank(objSubRegion.Segment__c) && String.isNotBlank(objSubRegion.SubRegion__c )){ //KK 19/12                 
+              if(objSubRegion.Segment__c == segment && objSubRegion.SubRegion__c == SubRegion){
+                  system.debug('Segment##'+objSubRegion.Segment__c+'AND'+'Sub Region@@@'+objSubRegion.SubRegion__c);
                     list_FinalSubRegion.add(objSubRegion);
                 }
             }
-        
+            }
             //if no leader exist then pick all admin
-            if(list_FinalSubRegion.size() <= 0){
+           /* if(list_FinalSubRegion.size() <= 0){
                 for(Wow_Sub_Regional_Users__c objSubRegion:list_SubRegion){
                    if(objSubRegion.Is_Admin__c)
                     list_FinalSubRegion.add(objSubRegion);
                 } 
-            }    
+            } */   
         }
         else{
             for(Wow_Sub_Regional_Users__c objSubRegion:list_SubRegion){

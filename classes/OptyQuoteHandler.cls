@@ -131,7 +131,7 @@ public without sharing class OptyQuoteHandler {
                    Account.RecordType.DeveloperName, Indirect_Partner_PureCloud_Approved__c,
                    BusinessPartner__r.Approved_for_PureCloud_Billing__c, BusinessPartner__r.SMART_Qualified__c, BusinessPartner__r.Subscription_Qualified__c,
                    Account.Pricesheet_Permission__c,BusinessPartner__r.Pricesheet_Permission__c, BusinessPartner__r.Partner_Offering_Type__c,
-                   Cloud_Renewal__c, Pricebook2Id 
+                   Cloud_Renewal__c, Pricebook2Id,Prem_Perpetual_Approval__c 
                    FROM Opportunity WHERE id =: strOppId];
         strSelectedOrderType = '';
         
@@ -336,6 +336,16 @@ objOppQuoteCategory.Quote_Type__c = objOpty.Quote_Type1__c;
         System.debug('--objOppQuoteCategory.Offering_Details__c --'+objOppQuoteCategory.Offering_Details__c +'  Quote_Type__c  '+objOppQuoteCategory.Quote_Type__c); 
         If(objOppQuoteCategory.Offering_Details__c == 'Free Trial')
             return createQuoteAndGoToQuote();
+
+        //MS perpetual approval required
+        if (objOpty.Type == 'New logo' && objOppQuoteCategory.Order_Type__c == 'New' &&
+            (objOppQuoteCategory.Lead_Offer__c == 'PureEngage Premise' || objOppQuoteCategory.Lead_Offer__c == 'PureConnect Premise') &&
+             objOpty.Prem_Perpetual_Approval__c != 'Approved') {
+               ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.Error, 
+               'All premise New logo deals must lead with Subscription. For approval to quote premise perpetual, set the \"Prem Perpetual Approval\" opportunity field to \"Approval Requested\"'));
+               return null;
+        } 
+
         if((!String.isBlank(objOppQuoteCategory.Order_Type__c) || strSelectedOrderType == 'New'  || strSelectedOrderType == 'Amend' || objOppQuoteCategory.Quote_Type__c == 'Self Service' || objOppQuoteCategory.Quote_Type__c == 'Business Edition')
            && objOppQuoteCategory.Offering_Details__c != 'Rental' && objOppQuoteCategory.Quote_Type__c != 'Cloud Partner (PPU)' && objOppQuoteCategory.Quote_Type__c != 'Outbound Engagement' 
            && objOppQuoteCategory.Quote_Type__c != 'Premier Edition' && UserInfo.getUserType() != 'PowerPartner' && !isSmallMediumCenter)

@@ -25,5 +25,5 @@
     <tabs>Partner_Directory_Staging__c</tabs>
     <tabs>Genie_2_0</tabs>
     <tabs>New_Solution_Design__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>License_Snapshot__c</tabs>
 </CustomApplication>

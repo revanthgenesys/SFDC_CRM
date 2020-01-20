@@ -20,5 +20,6 @@
     <tabs>Sales_Training</tabs>
     <tabs>New_Solution_Design__c</tabs>
     <tabs>Delete_History_Object__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>standard-Quote</tabs>
+    <tabs>License_Snapshot__c</tabs>
 </CustomApplication>

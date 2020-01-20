@@ -145,7 +145,7 @@ public class PortalNewCaseFeedUpdate {
           fdi.ParentId = caseId;
           fdi.Visibility = 'AllUsers';
           fdi.Title = 'Update from Customer';
-          fdi.IsRichText = true;
+          //fdi.IsRichText = true;//Commented for INC0429308
           try {   	
                   insert fdi; 
                   System.debug('** fdi.Body : ' + fdi.Body) ;  

@@ -2,15 +2,21 @@ trigger OrderLineItem_Before on Order_Line_Item__c (before insert,before update,
 {
     if(Util.Bypass_Trigger_Chk)
         return;
-// adding from line 7 to line 14 - for the incident INC0441400 by Suresh Rayi on 05/12/2019
+
+    // adding from line 6 to line 18 - for the incident INC0441400 by Suresh Rayi on 05/12/2019
+    // modified on 23/12/2019 by Suresh Rayi
+    Id orderRecordTypeId = Schema.SObjectType.Order__c.getRecordTypeInfosByName().get('Cloud Monthly Billing Order').getRecordTypeId();
     if(trigger.isBefore && trigger.IsDelete){ 
-        for (Order_Line_Item__c oli : Trigger.old){      
-            system.debug('loggedin user profile: '+UserInfo.getProfileId());
-            If(UserInfo.getProfileId() != System.Label.SystemAdministratorProfileID){
-                oli.addError('You cannot delete Order Line Items after adding them, If you don\'t want the Order Line Item, please modify the quantity to Zero(0).');
+        for (Order_Line_Item__c oli : Trigger.old){ 
+            if(oli.Order__c != Null && oli.Order__r.RecordTypeId != Null && oli.Order__r.RecordTypeId == orderRecordTypeId){   
+                system.debug('loggedin user profile: '+UserInfo.getProfileId());
+                If(UserInfo.getProfileId() != System.Label.SystemAdministratorProfileID){
+                    oli.addError('You cannot delete Order Line Items after adding them, If you don\'t want the Order Line Item, please modify the quantity to Zero(0).');
+                }
             }
         }
     }
+    
     // ECD old logic needs to not run for delete
     if (!Trigger.isDelete) {  
     

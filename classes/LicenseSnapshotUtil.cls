@@ -241,12 +241,14 @@
         }
         
         // InActive all existing records first
-        List<License_Snapshot__c> existingSnapShotData = [SELECT id, IsActive__c FROM License_Snapshot__c WHERE Sold_To__c IN :soldToAccountIds AND End_User__c = :endUserAccountId];
+        List<License_Snapshot__c> existingSnapShotData = [SELECT id, IsActive__c, Part_Number__c FROM License_Snapshot__c WHERE Sold_To__c IN :soldToAccountIds AND End_User__c = :endUserAccountId];
         for(License_Snapshot__c lp : existingSnapShotData){
             lp.IsActive__c = false;
         }
         Database.update(existingSnapShotData);
-        
+        for(License_Snapshot__c esd : existingSnapShotData){
+            system.debug('existingSnapShotData$$$'+esd.IsActive__c);
+        }
         // Insert new Snapshot data
         Database.upsert(snapshotRecordsNEW, Schema.License_Snapshot__c.Sold_To_End_User_Part_Number__c, false);
             
@@ -327,12 +329,18 @@
             }
             snapshotRecord.IsActive__c = true;
             licenseSnapshotRecordsMap.put(uniqueKey, snapshotRecord);
+            system.debug('licenseSnapshotRecordsMap.values()@@@'+licenseSnapshotRecordsMap.values());
         }
+        
         return licenseSnapshotRecordsMap.values();  
     }
     
     public static void performPurchaseUpgrades(String endUser){
         Map<String, UL_Upsize_Parts__c> ULUpsizeParts = UL_Upsize_Parts__c.getAll();
+        /*for(String prd:ULUpsizeParts.KeySet()){
+            system.debug('#########'+prd);
+
+        }*/
         // Snapshot rows with UL Parts
         List<License_Snapshot__c> snapshotRecordsULParts = [SELECT Id, Name, 
                                                                 Part_Number__c, Description__c, Product__c, Product__r.APN_Number__c, ProductCategory__c, Product_Category_Version__c, ProductVersion__c, 
@@ -342,6 +350,10 @@
                                                             WHERE End_User__c = :endUser AND IsActive__c = true AND Part_Number__c IN :ULUpsizeParts.KeySet()];
         
         if(!snapshotRecordsULParts.isEmpty()){
+            /*for(License_Snapshot__c ls:snapshotRecordsULParts){
+                            system.debug('$$$$$$$$$$$$$$'+ls.Part_Number__c);
+
+            }*/
             Map<String, String> itemCategories = new Map<String, String>();
             for(LMS_ItemCategory__c lic : [SELECT id, Category_Id__c, Short_Name__c FROM LMS_ItemCategory__c]){
                 itemCategories.put(lic.Category_Id__c, lic.Short_Name__c);  
@@ -358,8 +370,8 @@
                     ULUpsizePartsNamesUpgradeTo.add(ulPart.Part_To_Be_Incremented__c);
                 }
             }                                           
-            System.debug(ULUpsizePartsNamesUpgradeFrom);
-            System.debug(ULUpsizePartsNamesUpgradeTo);
+            System.debug('!!!!!!!!!!!!!@@@@@@@@@@@@@'+ULUpsizePartsNamesUpgradeFrom);
+            System.debug('$$$$$$$$$$$$@@@@@@@@@@@@'+ULUpsizePartsNamesUpgradeTo);
     
             Map<String, Product2> productsMap = new Map<String, Product2>();
             for(Product2 p: [SELECT Id, APN_Number__c, Description FROM Product2 WHERE APN_Number__c IN :ULUpsizePartsNamesUpgradeTo]){

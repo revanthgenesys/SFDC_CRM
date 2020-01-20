@@ -532,7 +532,7 @@ public static void CreateOrderFromQuote(Id quoteId, Id parentId, Boolean generat
                                       Amendment_For__r.Term__c,Amendment_For__r.Ramp_End_Date__c,Amendment_For__r.Subscription_Start_Date__c,Amendment_For__r.Subscription_End_Date__c,
                                       BigMachines__Opportunity__r.Sold_To_Country__r.Name, BigMachines__Opportunity__r.Country__r.Name,License_Reduction_Fee__c,Total_KPI1_Amount__c,Total_KPI2_Amount__c,Total_Shelving_Fee__c,
                                       Maintenance_Due_Discount_Amount__c, Special_Offer_Terms__c,Initial_Subscription_Term__c
-                                      FROM BigMachines__Quote__c WHERE id = : quoteId];
+                                      FROM BigMachines__Quote__c WHERE id = : quoteId];    
     List<Profile> PROFILE = [SELECT Id, Name FROM Profile WHERE Id = :userinfo.getProfileId() LIMIT 1];
     if(generateRevProOrder != null && !generateRevProOrder)
         objQuote.Generate_Revpro_Order__c = generateRevProOrder;
@@ -707,11 +707,12 @@ public static void CreateOrderFromQuote(Id quoteId, Id parentId, Boolean generat
     }
 
     //Created order line items
-    if (objQuote.Offering_Type__c == 'PureEngage Subscription' || objQuote.Offering_Type__c == 'PureConnect Subscription')
+    if (objQuote.Offering_Type__c == 'PureEngage Subscription' || objQuote.Offering_Type__c == 'PureConnect Subscription'){
         insertOrderLineItemsSubscription(objQuote, objOrder, objOpportunity, objOrder.License_FYM_detail__c == 'License only order');
-    else
+    }
+    else{
         insertOrderLineItems(objQuote, objOrder, objOpportunity, objOrder.License_FYM_detail__c == 'License only order');
-    
+    }
     /********** UPDATE ORDER *******************************/
     //IN CASE ORDER IS RESUBMITTED WITHOUT FYM
     list_LicenseOrder = [SELECT id FROM Order__c WHERE Quote__c = : objQuote.id AND License_FYM_detail__c = 'Maintenance Only Order'];
@@ -766,10 +767,12 @@ public static void CreateOrderFromQuote(Id quoteId, Id parentId, Boolean generat
         }
         //Created order line items
 
-        if (objQuote.Offering_Type__c == 'PureEngage Subscription' || objQuote.Offering_Type__c == 'PureConnect Subscription')
+        if (objQuote.Offering_Type__c == 'PureEngage Subscription' || objQuote.Offering_Type__c == 'PureConnect Subscription'){
             insertOrderLineItemsSubscription(objQuote, objOrder, objOpportunity, objOrder.License_FYM_detail__c == 'License only order');
-        else
+            }
+        else{
             insertOrderLineItems(objQuote, objOrder, objOpportunity, objOrder.License_FYM_detail__c == 'License only order');
+            }
     }
     //Creates orders
     CreateOrderAddresses(licenseOrderId, objQuote);

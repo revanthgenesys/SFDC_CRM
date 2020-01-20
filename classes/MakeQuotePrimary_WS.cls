@@ -27,6 +27,8 @@ global without sharing class MakeQuotePrimary_WS {
          
         opp.Incremental_Agent_Seat_Count__c = selectedQuote.Max_Seat_Count__c;
         if(selectedQuote.PPU_Rental__c && selectedQuote.Offering_Type__c != 'Cloud Partner (PPU)' && selectedQuote.Offering_Type__c != 'PureConnect Subscription' && selectedQuote.Offering_Type__c != 'PureEngage Subscription'){
+      //if(selectedQuote.PPU_Rental__c && (selectedQuote.Offering_Type__c == 'Cloud Partner (PPU)' || selectedQuote.Offering_Type__c == 'PureConnect Subscription')){
+
             opp.Quote_Amount__c = 0;
             opp.Total_PS_Support__c = 0;
            // opp.Hardware_Total__c = 0;
@@ -135,6 +137,7 @@ global without sharing class MakeQuotePrimary_WS {
                 opp.Annual_Contract_Value_Subscription__c = opp.Monthly_Commitment__c = 0;
         }        
         else if(selectedQuote.Offering_Type__c == 'PureEngage Subscription' || selectedQuote.Offering_Type__c == 'PureConnect Subscription'){
+            //system.debug('@@@@@@@@@@@@@@@###########'+selectedQuote.Offering_Type__c);
             opp.Total_PS_Support__c = opp.Annual_Contract_Value_new__c = 
                 opp.Total_Annual_Contract_Value__c =
                 opp.Annual_Contract_Value_Subscription__c = opp.Monthly_Commitment__c = 0;

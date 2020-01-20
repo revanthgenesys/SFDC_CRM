@@ -30,6 +30,5 @@
     <tabs>Smart_Finder</tabs>
     <tabs>Order_Acknowledge_Email__c</tabs>
     <tabs>New_Solution_Design__c</tabs>
-    <tabs>Delete_History_Object__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>License_Snapshot__c</tabs>
 </CustomApplication>

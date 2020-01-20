@@ -668,7 +668,7 @@ Approval_Submission_Date__c = Date.today());*/
                 Initial_Subscription_Term__c = '1 Year', Billing_Category__c = 'Annual Pre-Pay',
                 Billing_Period__c = 'Annually', Ramp_Period__c = '90', Approval_Submission_Date__c = Date.today(),
                 Billing_Start_Date__c = Date.today(), Subscription_Start_Date__c = Date.today().addDays(90),
-                PureCloud_Monthly_Minimum__c = 2000, Subscription_End_Date__c = Date.today().addMonths(12),
+                PureCloud_Monthly_Minimum__c = 2000, Subscription_End_Date__c = Date.today().addMonths(12),Special_Offer_Terms__c='test',
                 Total_Services__c=0,Total_Contract_Value__c=0,Annual_Contract_Value__c = 100000,Total_Hardware__c = 1000,Total_Education__c = 1000,Setup_Provisioning_Charges__c = 1000);
             list_NewQuotes.add(objNewQuote);            
         }

@@ -78,17 +78,8 @@
         <template>Genesys_Customer_Care_Templates/Case_Closed_Owner_Notification</template>
     </alerts>
     <alerts>
-        <fullName>Case_Pending_For_Review_Alert</fullName>
-        <ccEmails>genesyscareww@genesyslab.com</ccEmails>
-        <description>Case Pending For Review Alert</description>
-        <protected>false</protected>
-        <senderAddress>customercare@genesys.com</senderAddress>
-        <senderType>OrgWideEmailAddress</senderType>
-        <template>all/Case_Pending_for_Review_Email_Template</template>
-    </alerts>
-    <alerts>
         <fullName>Case_Pending_For_Review_Alert_APAC</fullName>
-        <ccEmails>GCAPAC@genesys.com</ccEmails>
+        <ccEmails>Jessica.doucette@genesys.com</ccEmails>
         <description>Case Pending For Review Alert APAC</description>
         <protected>false</protected>
         <senderAddress>customercare@genesys.com</senderAddress>
@@ -97,7 +88,7 @@
     </alerts>
     <alerts>
         <fullName>Case_Pending_For_Review_Alert_EMEA</fullName>
-        <ccEmails>GCEMEA@genesys.com</ccEmails>
+        <ccEmails>Marley.powers@genesys.com</ccEmails>
         <description>Case Pending For Review Alert EMEA</description>
         <protected>false</protected>
         <senderAddress>customercare@genesys.com</senderAddress>
@@ -106,7 +97,7 @@
     </alerts>
     <alerts>
         <fullName>Case_Pending_For_Review_Alert_LATAM</fullName>
-        <ccEmails>LATAMGenesysCare@genesys.com</ccEmails>
+        <ccEmails>Stephanie.Patsourakos@genesys.com</ccEmails>
         <description>Case Pending For Review Alert LATAM</description>
         <protected>false</protected>
         <senderAddress>customercare@genesys.com</senderAddress>
@@ -115,7 +106,7 @@
     </alerts>
     <alerts>
         <fullName>Case_Pending_For_Review_Alert_NA</fullName>
-        <ccEmails>GenesysCareNA@genesys.com</ccEmails>
+        <ccEmails>erin.brown@genesys.com</ccEmails>
         <description>Case Pending For Review Alert NA</description>
         <protected>false</protected>
         <senderAddress>customercare@genesys.com</senderAddress>
@@ -124,7 +115,7 @@
     </alerts>
     <alerts>
         <fullName>Case_Pending_For_Review_Alert_null</fullName>
-        <ccEmails>GenesysCareNA@genesys.com</ccEmails>
+        <ccEmails>erin.brown@genesys.com</ccEmails>
         <description>Case Pending For Review Alert null</description>
         <protected>false</protected>
         <senderAddress>customercare@genesys.com</senderAddress>
@@ -601,7 +592,6 @@
     </alerts>
     <alerts>
         <fullName>PureConnect_MIM_Email_Alert</fullName>
-        <ccEmails>pcc-major-incident@genesyscloud.pagerduty.com</ccEmails>
         <description>PureConnect MIM Email Alert</description>
         <protected>false</protected>
         <recipients>
@@ -1789,17 +1779,18 @@
         <fullName>Update_PSG_email</fullName>
         <description>Product support groups email alias update</description>
         <field>PSG_email__c</field>
-        <formula>CASE(Product_Support_Group__c, 
-&quot;Custom Applications&quot;,&quot;TSCaseQueue-CustomApplications@genesys.com&quot;, 
-&quot;PureCloud&quot;,&quot;CCCaseQueue-CloudPureCloud@genesys.com&quot;, 
-&quot;PureEngage Business Applications&quot;,&quot;TSCaseQueue-BusinessApplications@genesys.com&quot;, 
-&quot;PureEngage Reporting &amp; Analytics&quot;,&quot;TSCaseQueue-Reporting&amp;Analytics@genesys.com&quot;, 
-&quot;PureEngage Telephony&quot;,&quot;TSCaseQueue-Telephony@genesys.com&quot;, 
-&quot;PureEngage Voice Self Service&quot;,&quot;TSCaseQueue-VoiceSelfService@genesys.com&quot;, 
-&quot;PureEngage CC Tools &amp; Infrastructure&quot;,&quot;CCCaseQueue-ToolsInfrastructure@genesys.com&quot;, 
-&quot;PureEngage Cloud Hybrid&quot;,&quot;CCCaseQueue-CloudHybrid@genesys.com&quot;, 
-&quot;PureEngage CC Provisioning&quot;,&quot;PECCCProv@genesys.com&quot;, 
-&quot;&quot; )</formula>
+        <formula>CASE(Product_Support_Group__c,
+&quot;Custom Applications&quot;,&quot;test-TSCaseQueue-CustomApplications@genesys.com&quot;,
+&quot;PureCloud&quot;,&quot;mariap@genesys.com&quot;,
+&quot;PureEngage Business Applications&quot;,&quot;test-TSCaseQueue-BusinessApplications@genesys.com&quot;,
+&quot;PureEngage Reporting &amp; Analytics&quot;,&quot;mariap@genesys.com&quot;,
+&quot;PureEngage Telephony&quot;,&quot;mariap94044@hotmail.com&quot;,
+&quot;PureEngage Voice Self Service&quot;,&quot;test-TSCaseQueue-VoiceSelfService@genesys.com&quot;,
+&quot;PureEngage CC Tools &amp; Infrastructure&quot;,&quot;test-CCCaseQueue-ToolsInfrastructure@genesys.com&quot;,
+&quot;PureEngage Cloud Hybrid&quot;,&quot;mariap94044@hotmail.com&quot;,
+&quot;PureEngage CC Provisioning&quot;,&quot;test-PECCCProv@genesys.com&quot;,
+&quot;&quot;
+)</formula>
         <name>Update PSG email</name>
         <notifyAssignee>false</notifyAssignee>
         <operation>Formula</operation>
@@ -1878,25 +1869,6 @@
             <timeLength>30</timeLength>
             <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
         </workflowTimeTriggers>
-    </rules>
-    <rules>
-        <fullName>Case Sub status to Maintenance Investigated</fullName>
-        <actions>
-            <name>Case_Pending_For_Review_Alert</name>
-            <type>Alert</type>
-        </actions>
-        <active>false</active>
-        <criteriaItems>
-            <field>Case.Sub_Status__c</field>
-            <operation>equals</operation>
-            <value>Maintenance Review</value>
-        </criteriaItems>
-        <criteriaItems>
-            <field>User.BypassWorkflows__c</field>
-            <operation>equals</operation>
-            <value>False</value>
-        </criteriaItems>
-        <triggerType>onCreateOrTriggeringUpdate</triggerType>
     </rules>
     <rules>
         <fullName>Case Sub status to Maintenance Investigated APAC</fullName>
@@ -2515,7 +2487,7 @@ IF($User.Id != PMOwnerNew__c, true, false)
             <name>PureConnect_MIM_Email_Alert</name>
             <type>Alert</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Case.Cloud_Platform__c</field>
             <operation>equals</operation>
@@ -4168,18 +4140,6 @@ IF($User.Id != PMOwnerNew__c, true, false)
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
         <workflowTimeTriggers>
             <actions>
-                <name>Medium_and_Low_Priority_Awaiting_Info_Status_Third_Follow_Up</name>
-                <type>Alert</type>
-            </actions>
-            <actions>
-                <name>Close_the_Case</name>
-                <type>Task</type>
-            </actions>
-            <timeLength>14</timeLength>
-            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
-        </workflowTimeTriggers>
-        <workflowTimeTriggers>
-            <actions>
                 <name>Medium_and_Low_Priority_Awaiting_Info_Status_Second_Follow_Up</name>
                 <type>Alert</type>
             </actions>
@@ -4192,6 +4152,18 @@ IF($User.Id != PMOwnerNew__c, true, false)
                 <type>Alert</type>
             </actions>
             <timeLength>4</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Medium_and_Low_Priority_Awaiting_Info_Status_Third_Follow_Up</name>
+                <type>Alert</type>
+            </actions>
+            <actions>
+                <name>Close_the_Case</name>
+                <type>Task</type>
+            </actions>
+            <timeLength>14</timeLength>
             <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
         </workflowTimeTriggers>
     </rules>
@@ -5306,15 +5278,6 @@ IF($User.Id != PMOwnerNew__c, true, false)
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
         <workflowTimeTriggers>
             <actions>
-                <name>Medium_and_Low_Priority_Solution_Proposed_Status_First_Follow_Up</name>
-                <type>Alert</type>
-            </actions>
-            <offsetFromField>Case.Do_Not_Auto_Follow_Up_Until__c</offsetFromField>
-            <timeLength>2</timeLength>
-            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
-        </workflowTimeTriggers>
-        <workflowTimeTriggers>
-            <actions>
                 <name>Medium_and_Low_Priority_Solution_Proposed_Status_Second_Follow_Up</name>
                 <type>Alert</type>
             </actions>
@@ -5333,6 +5296,15 @@ IF($User.Id != PMOwnerNew__c, true, false)
             </actions>
             <offsetFromField>Case.Do_Not_Auto_Follow_Up_Until__c</offsetFromField>
             <timeLength>14</timeLength>
+            <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
+        </workflowTimeTriggers>
+        <workflowTimeTriggers>
+            <actions>
+                <name>Medium_and_Low_Priority_Solution_Proposed_Status_First_Follow_Up</name>
+                <type>Alert</type>
+            </actions>
+            <offsetFromField>Case.Do_Not_Auto_Follow_Up_Until__c</offsetFromField>
+            <timeLength>2</timeLength>
             <workflowTimeTriggerUnit>Days</workflowTimeTriggerUnit>
         </workflowTimeTriggers>
     </rules>

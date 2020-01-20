@@ -772,10 +772,12 @@ public without sharing class CreateQuoteOnPremiseController1 {
                 if(quote.Quote_Opportunity_Type__c != 'Old Pricing' && !quote.PPU_Rental__c){
                    // DDSToolMain.QuoteDDSWrapper objWrapper = DDSToolMain.calculateDealScore(quote);
                     DDSToolInterface.QuoteDDSWrapper objWrapper = DDSToolInterface.calculateDealScore(quote);
+                    system.debug('objWrappernav' + objWrapper);
                     String strMessage = objWrapper.strMessage;                    
                     quote = objWrapper.objQuote;
                     quote.Deal_Score_Cutoffs__c = objWrapper.strCutoffs;
                     update quote;
+                    
                     if(strMessage != null)
                         ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, strMessage));
                 }
@@ -1914,7 +1916,7 @@ public without sharing class CreateQuoteOnPremiseController1 {
             for(Schema.FieldSetMember field : gridFields)
                 strQuoteProductsQuery += field.getFieldPath() + ', ';
             
-            strQuoteProductsQuery += 'Id,APN_Number__c,Is_Training_Unit__c';
+            strQuoteProductsQuery += 'Id,APN_Number__c,Is_Training_Unit__c,Dropped_Products__c';
             strQuoteProductsQuery += ' FROM BigMachines__Quote_Product__c WHERE BigMachines__Quote__c = \'' + quote.Id + '\'';
             List<BigMachines__Quote_Product__c> quoteProducts = (List<BigMachines__Quote_Product__c>)Database.query(strQuoteProductsQuery);
             List<BigMachines__Quote_Product__c> quoteProductsCopy = new List<BigMachines__Quote_Product__c>();
@@ -2611,6 +2613,7 @@ totalThirdpartyExtNetPrice += objQP.Ext_Net_Price__c * (objQP.Third_Party_GC__c 
                 //Util.Bypass_Trigger_Chk = false;
                 update quote;
                 //Initiating order creation process.
+                system.debug('submitOrderBtnHandler.quote.id###'+quote.id);
                 QuoteUtil.CreateOrderFromQuote(quote.id);
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM,'Order Submitted'));
                 blnIsReviseOrder = false;

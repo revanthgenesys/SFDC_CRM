@@ -8,8 +8,9 @@
             <field>Email</field>
             <type>email</type>
         </recipients>
-        <senderType>CurrentUser</senderType>
-        <template>all/Genesys_Consultant_Program_Registration</template>
+        <senderAddress>consultantrelations@genesys.com</senderAddress>
+        <senderType>OrgWideEmailAddress</senderType>
+        <template>MarketoEmailTemplates/Your_Genesys_Consultant_Program_Registration</template>
     </alerts>
     <alerts>
         <fullName>MKTG_Premier_Lead_Assignment</fullName>
@@ -1136,7 +1137,7 @@ NOT($User.BypassWorkflows__c)
     </rules>
     <rules>
         <fullName>Lead Conversion Status Inactive</fullName>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>
@@ -1156,7 +1157,7 @@ NOT($User.BypassWorkflows__c)
             <name>Update_Lead_Status_Copy_Known_Name</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>
@@ -1176,7 +1177,7 @@ NOT($User.BypassWorkflows__c)
             <name>Copy_Lead_Status_for_MCL</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>
@@ -1196,7 +1197,7 @@ NOT($User.BypassWorkflows__c)
             <name>Copy_Lead_Status_for_MQL</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>
@@ -1216,7 +1217,7 @@ NOT($User.BypassWorkflows__c)
             <name>Copy_Lead_Status_for_MQL_Engaged</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>
@@ -1236,7 +1237,7 @@ NOT($User.BypassWorkflows__c)
             <name>Copy_Lead_Status_for_No_Potential</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>
@@ -1256,7 +1257,7 @@ NOT($User.BypassWorkflows__c)
             <name>Copy_Lead_Status_for_Recycled</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>
@@ -1276,7 +1277,7 @@ NOT($User.BypassWorkflows__c)
             <name>Copy_Lead_Status_for_SQL</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
+        <active>false</active>
         <criteriaItems>
             <field>Lead.Status</field>
             <operation>equals</operation>

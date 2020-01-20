@@ -220,9 +220,20 @@
     </alerts>
     <alerts>
         <fullName>Pricing_method_conversion_orders_email_alert</fullName>
-        <ccEmails>GenesysCareOperations@genesys.com</ccEmails>
         <description>Pricing method conversion orders email alert</description>
         <protected>false</protected>
+        <recipients>
+            <recipient>debora.lane@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>monika.negi@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
+        <recipients>
+            <recipient>navaneetha.krishnan@genesys.com</recipient>
+            <type>user</type>
+        </recipients>
         <senderType>CurrentUser</senderType>
         <template>unfiled$public/Order_Pricing_method_conversion</template>
     </alerts>
@@ -247,6 +258,7 @@
     <alerts>
         <fullName>Send_Rejection_Email_to_PureCloud_Connect_PS</fullName>
         <ccEmails>oc@genesys.com</ccEmails>
+        <ccEmails>so-helpdesk@genesys.com</ccEmails>
         <ccEmails>PSNABillingRequests@genesys.com</ccEmails>
         <ccEmails>nik.mills@genesys.com</ccEmails>
         <description>Send Rejection Email to PureCloud_Connect PS</description>
@@ -262,6 +274,7 @@
         <fullName>Send_Rejection_Email_to_PureEngage_PS</fullName>
         <ccEmails>psoperations@genesys.com</ccEmails>
         <ccEmails>oc@genesys.com</ccEmails>
+        <ccEmails>so-helpdesk@genesys.com</ccEmails>
         <ccEmails>PSNABillingRequests@genesys.com</ccEmails>
         <ccEmails>nik.mills@genesys.com</ccEmails>
         <description>Send Rejection Email to PureEngage PS</description>
@@ -552,8 +565,8 @@ NOT($User.BypassWorkflows__c),  ISPICKVAL( License_FYM_detail__c,&apos;PS Orders
             <name>Update_Reject_Date</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>true</active>
-        <formula>AND( ISPICKVAL( status__c, &apos;Rejected&apos;),
+        <active>false</active>
+        <formula>AND( ISPICKVAL( status__c, &apos;Rejected&apos;), 
 RecordType.Name = &apos;PS_Orders&apos;,
 NOT($User.BypassWorkflows__c), 
 ISPICKVAL( License_FYM_detail__c,&apos;PS Orders&apos;),

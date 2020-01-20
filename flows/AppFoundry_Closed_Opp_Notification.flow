@@ -13,9 +13,9 @@
                 <stringValue>mapQuoteProduct</stringValue>
             </value>
         </processMetadataValues>
-        <name>myRule_1_A1</name>
+        <name>myRule_5_A1</name>
         <label>Map 1 Quote Product</label>
-        <locationX>100</locationX>
+        <locationX>500</locationX>
         <locationY>200</locationY>
         <actionName>mapQuoteProduct</actionName>
         <actionType>flow</actionType>
@@ -115,6 +115,9 @@
         <label>myDecision</label>
         <locationX>50</locationX>
         <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>myDecision2</targetReference>
+        </defaultConnector>
         <defaultConnectorLabel>default</defaultConnectorLabel>
         <rules>
             <name>myRule_1</name>
@@ -129,6 +132,65 @@
             <connector>
                 <targetReference>myRule_1_A1</targetReference>
             </connector>
+            <label>Criteria that will stop the process 1</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>1.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision2</name>
+        <label>myDecision2</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnector>
+            <targetReference>myDecision4</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_3</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_3</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_3_A1</targetReference>
+            </connector>
+            <label>Criteria that will stop the process 2</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <processMetadataValues>
+            <name>index</name>
+            <value>
+                <numberValue>2.0</numberValue>
+            </value>
+        </processMetadataValues>
+        <name>myDecision4</name>
+        <label>myDecision4</label>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <defaultConnectorLabel>default</defaultConnectorLabel>
+        <rules>
+            <name>myRule_5</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>formula_myRule_5</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>myRule_5_A1</targetReference>
+            </connector>
             <label>Primary Quote is created/changed</label>
         </rules>
     </decisions>
@@ -138,62 +200,64 @@
             <name>originalFormula</name>
             <value>
                 <stringValue>(
-(NOT(ISBLANK([Opportunity].Primary_Quote_Type__c))
-||
-ISCHANGED([Opportunity].Primary_Quote__c)
-))
-&amp;&amp;
-NOT
-(
 ISBLANK([Opportunity].Primary_Quote_Type__c) ||
 ISPICKVAL([Opportunity].StageName, &apos;6.Closed&apos;) ||
 ISPICKVAL([Opportunity].ForecastStatus__c, &apos;0.Booked&apos;) ||
 ISPICKVAL([Opportunity].ForecastStatus__c, &apos;6.Omitted&apos;) ||
 [Opportunity].Pipeline_Validation_Flag__c == false ||
-[Opportunity].AppFoundry_Notification_Sent__c == true ||
-(
-CONTAINS($Profile.Name,&quot;Updates&quot;) ||
-CONTAINS($Profile.Name,&quot;.com&quot;) ||
-CONTAINS($Profile.Name,&quot;MDM Admin&quot;) ||
-CONTAINS($Profile.Name,&quot;g360&quot;) ||
-CONTAINS($Profile.Name,&quot;API&quot;) ||
-CONTAINS($Profile.Name,&quot;User&quot;) ||
-CONTAINS($Profile.Name,&quot;Integration&quot;) ||
-CONTAINS($Profile.Name, &apos;System Admin&apos;) ||
-CONTAINS($Profile.Name, &apos;Data Admin&apos;)))
-
-
+[Opportunity].AppFoundry_Notification_Sent__c == true
+)
 </stringValue>
             </value>
         </processMetadataValues>
         <name>formula_myRule_1</name>
         <dataType>Boolean</dataType>
         <expression>(
-(NOT(ISBLANK({!myVariable_current.Primary_Quote_Type__c}))
-||
-ISCHANGED({!myVariable_current.Primary_Quote__c})
-))
-&amp;&amp;
-NOT
-(
 ISBLANK({!myVariable_current.Primary_Quote_Type__c}) ||
 ISPICKVAL({!myVariable_current.StageName}, &apos;6.Closed&apos;) ||
 ISPICKVAL({!myVariable_current.ForecastStatus__c}, &apos;0.Booked&apos;) ||
 ISPICKVAL({!myVariable_current.ForecastStatus__c}, &apos;6.Omitted&apos;) ||
 {!myVariable_current.Pipeline_Validation_Flag__c} == false ||
-{!myVariable_current.AppFoundry_Notification_Sent__c} == true ||
-(
-CONTAINS({!$Profile.Name},&quot;Updates&quot;) ||
-CONTAINS({!$Profile.Name},&quot;.com&quot;) ||
-CONTAINS({!$Profile.Name},&quot;MDM Admin&quot;) ||
-CONTAINS({!$Profile.Name},&quot;g360&quot;) ||
-CONTAINS({!$Profile.Name},&quot;API&quot;) ||
-CONTAINS({!$Profile.Name},&quot;User&quot;) ||
-CONTAINS({!$Profile.Name},&quot;Integration&quot;) ||
-CONTAINS({!$Profile.Name}, &apos;System Admin&apos;) ||
-CONTAINS({!$Profile.Name}, &apos;Data Admin&apos;)))</expression>
+{!myVariable_current.AppFoundry_Notification_Sent__c} == true
+)</expression>
     </formulas>
-    <interviewLabel>AppFoundry_Closed_Opp_Notification-24_InterviewLabel</interviewLabel>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>[Opportunity].Primary_Quote__c.PrimQuoteHasAppFoundry__c == true</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_3</name>
+        <dataType>Boolean</dataType>
+        <expression>{!myVariable_current.Primary_Quote__r.PrimQuoteHasAppFoundry__c} == true</expression>
+    </formulas>
+    <formulas>
+        <processMetadataValues>
+            <name>originalFormula</name>
+            <value>
+                <stringValue>(
+NOT(ISBLANK([Opportunity].Primary_Quote_Type__c))
+||
+ISCHANGED([Opportunity].Primary_Quote__c)
+)
+&amp;&amp; 
+[Opportunity].Primary_Quote__c.BigMachines__Status__c &lt;&gt; &apos;Order Accepted&apos;
+
+</stringValue>
+            </value>
+        </processMetadataValues>
+        <name>formula_myRule_5</name>
+        <dataType>Boolean</dataType>
+        <expression>(
+NOT(ISBLANK({!myVariable_current.Primary_Quote_Type__c}))
+||
+ISCHANGED({!myVariable_current.Primary_Quote__c})
+)
+&amp;&amp; 
+{!myVariable_current.Primary_Quote__r.BigMachines__Status__c} &lt;&gt; &apos;Order Accepted&apos;</expression>
+    </formulas>
+    <interviewLabel>AppFoundry_Closed_Opp_Notification-42_InterviewLabel</interviewLabel>
     <label>AF - Closed Opp Notification Bln</label>
     <processMetadataValues>
         <name>ObjectType</name>
@@ -220,8 +284,266 @@ CONTAINS({!$Profile.Name}, &apos;Data Admin&apos;)))</expression>
         </value>
     </processMetadataValues>
     <processType>Workflow</processType>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>criteria</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[Opportunity]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_1_A1</name>
+        <label>do nothing</label>
+        <locationX>100</locationX>
+        <locationY>200</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>inputDataType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Owner ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue>User</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideType</name>
+                <value>
+                    <stringValue>ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>operatorDataType</name>
+                <value>
+                    <stringValue>String</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>OwnerId</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>AppFoundry Notification Sent</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>AppFoundry_Notification_Sent__c</field>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </inputAssignments>
+        <object>Opportunity</object>
+    </recordUpdates>
+    <recordUpdates>
+        <processMetadataValues>
+            <name>evaluationType</name>
+            <value>
+                <stringValue>criteria</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>extraTypeInfo</name>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>isChildRelationship</name>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>reference</name>
+            <value>
+                <stringValue>[Opportunity]</stringValue>
+            </value>
+        </processMetadataValues>
+        <processMetadataValues>
+            <name>referenceTargetField</name>
+        </processMetadataValues>
+        <name>myRule_3_A1</name>
+        <label>do nothing</label>
+        <locationX>300</locationX>
+        <locationY>200</locationY>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </processMetadataValues>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>myVariable_current.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <processMetadataValues>
+                <name>implicit</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>inputDataType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>Owner ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue>User</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideType</name>
+                <value>
+                    <stringValue>ID</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>operatorDataType</name>
+                <value>
+                    <stringValue>String</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>OwnerId</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <processMetadataValues>
+                <name>dataType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>isRequired</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideLabel</name>
+                <value>
+                    <stringValue>AppFoundry Notification Sent</stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>leftHandSideReferenceTo</name>
+                <value>
+                    <stringValue></stringValue>
+                </value>
+            </processMetadataValues>
+            <processMetadataValues>
+                <name>rightHandSideType</name>
+                <value>
+                    <stringValue>Boolean</stringValue>
+                </value>
+            </processMetadataValues>
+            <field>AppFoundry_Notification_Sent__c</field>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </inputAssignments>
+        <object>Opportunity</object>
+    </recordUpdates>
     <startElementReference>myDecision</startElementReference>
-    <status>Active</status>
+    <status>Obsolete</status>
     <variables>
         <name>myVariable_current</name>
         <dataType>SObject</dataType>

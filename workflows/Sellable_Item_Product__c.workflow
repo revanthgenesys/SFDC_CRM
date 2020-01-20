@@ -255,10 +255,6 @@
             <recipient>MML_Finance_Management</recipient>
             <type>group</type>
         </recipients>
-        <recipients>
-            <recipient>mike.lauziere@genesys.com</recipient>
-            <type>user</type>
-        </recipients>
         <senderType>CurrentUser</senderType>
         <template>all/MDM_Sellable_Item_Status_Change_Notification_Email</template>
     </alerts>

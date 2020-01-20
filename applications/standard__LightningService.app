@@ -20,7 +20,7 @@
     <tabs>Partner_Directory_Staging__c</tabs>
     <tabs>Genie_2_0</tabs>
     <tabs>New_Solution_Design__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>License_Snapshot__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>LightningService_UtilityBar</utilityBar>
     <workspaceConfig>
@@ -31,13 +31,13 @@
             <tab>Call_Center_Settings</tab>
         </mappings>
         <mappings>
-            <tab>Engagio</tab>
-        </mappings>
-        <mappings>
             <tab>Genie_2_0</tab>
         </mappings>
         <mappings>
             <tab>LDAP_Log__c</tab>
+        </mappings>
+        <mappings>
+            <tab>License_Snapshot__c</tab>
         </mappings>
         <mappings>
             <tab>New_Solution_Design__c</tab>

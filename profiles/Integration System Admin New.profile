@@ -88,9 +88,6 @@
         <layout>Alarm__c-Alarm Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
-        <layout>AppAnalyticsQueryRequest-App Analytics Query Request Layout</layout>
-    </layoutAssignments>
-    <layoutAssignments>
         <layout>Apps_Projects__c-Apps Projects Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
@@ -874,7 +871,7 @@
         <layout>Invoice__c-Invoice Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
-        <layout>Jira_Issue_Link__c-Mapped Jira Issue - PE%2FPC</layout>
+        <layout>Jira_Issue_Link__c-Mapped Jira Issue - PE Profiles</layout>
     </layoutAssignments>
     <layoutAssignments>
         <layout>JobTracker-Job Tracker Layout - Winter %2716</layout>
@@ -1456,6 +1453,9 @@
         <layout>Pure_Success_Package__c-PureSuccess Package Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
+        <layout>Puresuccess_audit_log__c-Puresuccess_package_audit_log Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
         <layout>QUESTION_AND_ANSWER__kav-Question and Answer Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
@@ -1465,7 +1465,16 @@
         <layout>Question-Question Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
+        <layout>QuickText-Quick Text Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
         <layout>Quota_Attainment__c-Quota_Attainment Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>Quote-Quote Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>QuoteLineItem-Quote Line Item Layout</layout>
     </layoutAssignments>
     <layoutAssignments>
         <layout>Quote_Approval_And_Quote_Approval_Region__c-Quote Approval And Quote Approval Region Layout</layout>
@@ -2195,18 +2204,6 @@
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>
-        <name>ModifyAllData</name>
-    </userPermissions>
-    <userPermissions>
-        <enabled>true</enabled>
-        <name>ModifyDataClassification</name>
-    </userPermissions>
-    <userPermissions>
-        <enabled>true</enabled>
-        <name>ModifyMetadata</name>
-    </userPermissions>
-    <userPermissions>
-        <enabled>true</enabled>
         <name>NewReportBuilder</name>
     </userPermissions>
     <userPermissions>
@@ -2260,10 +2257,6 @@
     <userPermissions>
         <enabled>true</enabled>
         <name>UseWebLink</name>
-    </userPermissions>
-    <userPermissions>
-        <enabled>true</enabled>
-        <name>ViewAllData</name>
     </userPermissions>
     <userPermissions>
         <enabled>true</enabled>

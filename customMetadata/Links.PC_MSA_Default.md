@@ -16,6 +16,6 @@
     </values>
     <values>
         <field>URL__c</field>
-        <value xsi:type="xsd:string">https://help.mypurecloud.com/articles/terms-and-conditions/</value>
+        <value xsi:type="xsd:string">https://help.mypurecloud.com/wp-content/uploads/2019/09/Relationship-Agreement-PureCloud-Only-North-America-23-Sep-19.pdf</value>
     </values>
 </CustomMetadata>

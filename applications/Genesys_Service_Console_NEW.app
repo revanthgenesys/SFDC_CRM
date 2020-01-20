@@ -193,7 +193,7 @@
     <tabs>Download_Center</tabs>
     <tabs>Solution_Search_Alert__c</tabs>
     <tabs>New_Solution_Design__c</tabs>
-    <tabs>Engagio</tabs>
+    <tabs>License_Snapshot__c</tabs>
     <workspaceConfig>
         <mappings>
             <tab>Availability_and_Workload</tab>
@@ -208,7 +208,7 @@
             <tab>Download_Center</tab>
         </mappings>
         <mappings>
-            <tab>Engagio</tab>
+            <tab>License_Snapshot__c</tab>
         </mappings>
         <mappings>
             <tab>New_Solution_Design__c</tab>

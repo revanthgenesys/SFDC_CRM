@@ -100,7 +100,7 @@ public class SubscriptionAutoRenewal {
                 objNewSubscrp.Auto_Renewed__c = true;
                 objNewSubscrp.Message__c = '';
                 If(objNewSubscrp.Offering_Type__c == SubscriptionUtil.OFFERING_TYPE_PC){
-                    objNewSubscrp.Committed_Term_Date_Validation__c = objNewSubscrp.Subscription_End_Date__c + 1;
+                    objNewSubscrp.Committed_Term_Date_Validation__c = objNewSubscrp.Subscription_Start_Date__c;//Updated for I-396805
                 }
                 /*if(objNewSubscrp.Original_Subscription__c == null) {
 objNewSubscrp.Original_Subscription__c = objNewSubscrp.Id;
@@ -148,7 +148,7 @@ objNewSubscrp.Original_Subscription__c = objNewSubscrp.Id;
                 objSubscrp.Auto_Renewed__c = true;
                 objSubscrp.Message__c = '';
                 If(objSubscrp.Offering_Type__c == SubscriptionUtil.OFFERING_TYPE_PC){
-                    objSubscrp.Committed_Term_Date_Validation__c = objSubscrp.Subscription_End_Date__c + 1;
+                    objSubscrp.Committed_Term_Date_Validation__c = objSubscrp.Subscription_Start_Date__c;//Updated for I-396805
                 }
                 /*if(objSubscrp.Original_Subscription__c == null) {
 objSubscrp.Original_Subscription__c = objSubscrp.Id;

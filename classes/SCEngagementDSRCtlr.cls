@@ -335,7 +335,9 @@ public without sharing class SCEngagementDSRCtlr{
                                                                         Notes__c
                                                                         from DSR_Virtual_Team__c
                                                                         where SCE_ID__c =:sceId
-                                                                        and Virtual_User_Role__c =:'Sub Regional Leader'];
+                                                                        and Virtual_User_Role__c =:'Sub Regional Leader'
+                                                          				and Sub_Region__c=:opp.Owner.Owner_Sub_Region__c
+                                                          				and Segment__c=:opp.Owner.Segment__c];
             system.debug(' From DSR Virtual Team '+ lstDSRVirtualTeam.size());
             if(lstDSRVirtualTeam.size() > 0){
                 for(DSR_Virtual_Team__c dsr : lstDSRVirtualTeam){

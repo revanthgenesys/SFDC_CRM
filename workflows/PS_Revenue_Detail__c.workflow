@@ -19,9 +19,9 @@
         <template>unfiled$public/PS_RevPro_Event_without_Approved_Oppty</template>
     </alerts>
     <alerts>
-        <fullName>PS_LATAM_RevPro_Event_without_Opportunity_being_Approved</fullName>
+        <fullName>PS_LATAM_Project_RevPro_Event_on_unapproved_Oppty</fullName>
         <ccEmails>issues@genesys.com</ccEmails>
-        <description>PS LATAM RevPro Event without Opportunity being Approved</description>
+        <description>PS LATAM Project RevPro Event on unapproved Oppty</description>
         <protected>false</protected>
         <recipients>
             <recipient>thais.brito@genesys.com</recipient>
@@ -97,7 +97,7 @@
     <rules>
         <fullName>PS LATAM Project RevPro Event on unapproved Oppty</fullName>
         <actions>
-            <name>PS_LATAM_RevPro_Event_without_Opportunity_being_Approved</name>
+            <name>PS_LATAM_Project_RevPro_Event_on_unapproved_Oppty</name>
             <type>Alert</type>
         </actions>
         <active>true</active>

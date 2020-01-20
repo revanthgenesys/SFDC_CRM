@@ -46,46 +46,9 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>myRule_1_pmetdec</targetReference>
-            </connector>
-            <label>AF CCDB == Cancelled</label>
-        </rules>
-    </decisions>
-    <decisions>
-        <name>myRule_1_pmetdec</name>
-        <label>Previously Met Decision</label>
-        <locationX>100</locationX>
-        <locationY>100</locationY>
-        <defaultConnector>
-            <targetReference>myRule_1_A1</targetReference>
-        </defaultConnector>
-        <defaultConnectorLabel>Not Previously Met</defaultConnectorLabel>
-        <rules>
-            <name>myRule_1_pmetnullrule</name>
-            <conditionLogic>or</conditionLogic>
-            <conditions>
-                <leftValueReference>myVariable_old</leftValueReference>
-                <operator>IsNull</operator>
-                <rightValue>
-                    <booleanValue>true</booleanValue>
-                </rightValue>
-            </conditions>
-            <connector>
                 <targetReference>myRule_1_A1</targetReference>
             </connector>
-            <label>Previously Met - Null</label>
-        </rules>
-        <rules>
-            <name>myRule_1_pmetrule</name>
-            <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>formula_myRule_1_pmetrule</leftValueReference>
-                <operator>EqualTo</operator>
-                <rightValue>
-                    <booleanValue>true</booleanValue>
-                </rightValue>
-            </conditions>
-            <label>Previously Met - Prev</label>
+            <label>AF CCDB == Cancelled</label>
         </rules>
     </decisions>
     <description>Send an email to AppFoundry alias when specific criteria around CCDB cancellations is met.</description>
@@ -93,63 +56,56 @@
         <processMetadataValues>
             <name>originalFormula</name>
             <value>
-                <stringValue>NOT(ISBLANK([Subscription__c].Quote__c))
-&amp;&amp;
-(
-NOT(ISPICKVAL([Subscription__c].Status__c,&quot;&quot;)) &amp;&amp;
+                <stringValue>(
 ISCHANGED([Subscription__c].Status__c) &amp;&amp;
-(ISPICKVAL([Subscription__c].Status__c,&quot;Cancelled&quot;) || ISPICKVAL([Subscription__c].Status__c,&quot;Inactive&quot;)))
+ISPICKVAL(PRIORVALUE([Subscription__c].Status__c),&quot;Active&quot;) &amp;&amp; ISPICKVAL([Subscription__c].Status__c,&quot;Cancelled&quot;)) 
 &amp;&amp;
 [Subscription__c].Platform_Type__c = &apos;Cloud&apos; 
 &amp;&amp;
 [Subscription__c].Quote__c.PrimQuoteHasAppFoundry__c = true
-</stringValue>
+&amp;&amp;
+(
+(
+NOT(CONTAINS($Profile.Name,&quot;Updates&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;.com&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;MDM Admin&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;g360&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;API&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;User&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;Integration&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name, &apos;System Admin&apos;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name, &apos;Data Admin&apos;))
+)
+||
+$User.Full_Name__c == &apos;Liam Clifford&apos;)</stringValue>
             </value>
         </processMetadataValues>
         <name>formula_myRule_1</name>
         <dataType>Boolean</dataType>
-        <expression>NOT(ISBLANK({!myVariable_current.Quote__c}))
-&amp;&amp;
-(
-NOT(ISPICKVAL({!myVariable_current.Status__c},&quot;&quot;)) &amp;&amp;
+        <expression>(
 ISCHANGED({!myVariable_current.Status__c}) &amp;&amp;
-(ISPICKVAL({!myVariable_current.Status__c},&quot;Cancelled&quot;) || ISPICKVAL({!myVariable_current.Status__c},&quot;Inactive&quot;)))
+ISPICKVAL(PRIORVALUE({!myVariable_current.Status__c}),&quot;Active&quot;) &amp;&amp; ISPICKVAL({!myVariable_current.Status__c},&quot;Cancelled&quot;)) 
 &amp;&amp;
 {!myVariable_current.Platform_Type__c} = &apos;Cloud&apos; 
 &amp;&amp;
-{!myVariable_current.Quote__r.PrimQuoteHasAppFoundry__c} = true</expression>
-    </formulas>
-    <formulas>
-        <processMetadataValues>
-            <name>originalFormula</name>
-            <value>
-                <stringValue>NOT(ISBLANK([Subscription__c].Quote__c))
+{!myVariable_current.Quote__c.PrimQuoteHasAppFoundry__c} = true
 &amp;&amp;
 (
-NOT(ISPICKVAL([Subscription__c].Status__c,&quot;&quot;)) &amp;&amp;
-ISCHANGED([Subscription__c].Status__c) &amp;&amp;
-(ISPICKVAL([Subscription__c].Status__c,&quot;Cancelled&quot;) || ISPICKVAL([Subscription__c].Status__c,&quot;Inactive&quot;)))
-&amp;&amp;
-[Subscription__c].Platform_Type__c = &apos;Cloud&apos; 
-&amp;&amp;
-[Subscription__c].Quote__c.PrimQuoteHasAppFoundry__c = true
-</stringValue>
-            </value>
-        </processMetadataValues>
-        <name>formula_myRule_1_pmetrule</name>
-        <dataType>Boolean</dataType>
-        <expression>NOT(ISBLANK({!myVariable_old.Quote__c}))
-&amp;&amp;
 (
-NOT(ISPICKVAL({!myVariable_old.Status__c},&quot;&quot;)) &amp;&amp;
-ISCHANGED({!myVariable_old.Status__c}) &amp;&amp;
-(ISPICKVAL({!myVariable_old.Status__c},&quot;Cancelled&quot;) || ISPICKVAL({!myVariable_old.Status__c},&quot;Inactive&quot;)))
-&amp;&amp;
-{!myVariable_old.Platform_Type__c} = &apos;Cloud&apos; 
-&amp;&amp;
-{!myVariable_old.Quote__r.PrimQuoteHasAppFoundry__c} = true</expression>
+NOT(CONTAINS($Profile.Name,&quot;Updates&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;.com&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;MDM Admin&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;g360&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;API&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;User&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name,&quot;Integration&quot;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name, &apos;System Admin&apos;)) &amp;&amp;
+NOT(CONTAINS($Profile.Name, &apos;Data Admin&apos;))
+)
+||
+$User.Full_Name__c == &apos;Liam Clifford&apos;)</expression>
     </formulas>
-    <interviewLabel>AppFoundry_CCDB_Notification-8_InterviewLabel</interviewLabel>
+    <interviewLabel>AppFoundry_CCDB_Notification-1_InterviewLabel</interviewLabel>
     <label>AppFoundry CCDB Notification</label>
     <processMetadataValues>
         <name>ObjectType</name>
@@ -340,7 +296,7 @@ ISCHANGED({!myVariable_old.Status__c}) &amp;&amp;
         <object>BigMachines__Quote__c</object>
     </recordUpdates>
     <startElementReference>myDecision</startElementReference>
-    <status>Active</status>
+    <status>Obsolete</status>
     <variables>
         <name>myVariable_current</name>
         <dataType>SObject</dataType>

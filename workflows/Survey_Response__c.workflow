@@ -142,7 +142,7 @@
             <name>NPS_Relationship_Alert_for_Australia_and_New_Zealand</name>
             <type>Alert</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>If End User Country Australia or New Zealand send to ANZNPSDetractor@genesys.com</description>
         <formula>!$User.BypassWorkflows__c &amp;&amp;  TEXT(Survey_Type__c) = &quot;Relationship&quot; &amp;&amp; NPS_Rating__c != &quot;10&quot; &amp;&amp; NPS_Rating__c != &quot;9&quot; &amp;&amp; NPS_Rating__c != &quot;8&quot; &amp;&amp; NPS_Rating__c != &quot;7&quot; &amp;&amp; (End_User_Country__c = &quot;Australia&quot; || End_User_Country__c = &quot;New Zealand&quot;)</formula>
         <triggerType>onCreateOrTriggeringUpdate</triggerType>
@@ -153,7 +153,7 @@
             <name>NPS_PureCloud_Notification</name>
             <type>Alert</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>If field NPS_Deployment_Type__c = “PureCloud” send to PureCloudRelationshipNPSDetractorAlert@genesys.com
 Exclude Australia and New Zealand</description>
         <formula>!$User.BypassWorkflows__c &amp;&amp;  TEXT(Survey_Type__c) = &quot;Relationship&quot; &amp;&amp; NPS_Deployment_Type__c = &quot;PureCloud&quot; &amp;&amp; NPS_Rating__c != &quot;10&quot; &amp;&amp; NPS_Rating__c != &quot;9&quot; &amp;&amp; NPS_Rating__c != &quot;8&quot; &amp;&amp; NPS_Rating__c != &quot;7&quot; &amp;&amp; End_User_Country__c != &quot;Australia&quot; &amp;&amp; End_User_Country__c != &quot;New Zealand&quot;</formula>
@@ -165,7 +165,7 @@ Exclude Australia and New Zealand</description>
             <name>NPS_PurConnect_Cloud_Notification</name>
             <type>Alert</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>If field NPS_Deployment_Type__c = “PureConnect Cloud” send to PCCloudRelationshipNPSDetractorAlert@genesys.com
 Exclude Australia and New Zealand</description>
         <formula>!$User.BypassWorkflows__c &amp;&amp;  TEXT(Survey_Type__c) = &quot;Relationship&quot; &amp;&amp; NPS_Deployment_Type__c = &quot;PureConnect Cloud&quot; &amp;&amp; NPS_Rating__c != &quot;10&quot; &amp;&amp; NPS_Rating__c != &quot;9&quot; &amp;&amp; NPS_Rating__c != &quot;8&quot; &amp;&amp; NPS_Rating__c != &quot;7&quot; &amp;&amp; End_User_Country__c != &quot;Australia&quot; &amp;&amp; End_User_Country__c != &quot;New Zealand&quot;</formula>
@@ -177,7 +177,7 @@ Exclude Australia and New Zealand</description>
             <name>NPS_PurConnect_Premise</name>
             <type>Alert</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>If field NPS_Deployment_Type__c = “PureConnect Premise” send to PCPremRelationshipNPSDetractorAlert@genesys.com
 Exclude Australia and New Zealand</description>
         <formula>!$User.BypassWorkflows__c &amp;&amp;  TEXT(Survey_Type__c) = &quot;Relationship&quot; &amp;&amp; NPS_Deployment_Type__c = &quot;PureConnect Premise&quot; &amp;&amp; NPS_Rating__c != &quot;10&quot; &amp;&amp; NPS_Rating__c != &quot;9&quot; &amp;&amp; NPS_Rating__c != &quot;8&quot; &amp;&amp; NPS_Rating__c != &quot;7&quot; &amp;&amp; End_User_Country__c != &quot;Australia&quot; &amp;&amp; End_User_Country__c != &quot;New Zealand&quot;</formula>
@@ -189,7 +189,7 @@ Exclude Australia and New Zealand</description>
             <name>NPS_PureEngage_Notification</name>
             <type>Alert</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>If field NPS_Deployment_Type__c = “PureEngage Premise” or blank send the following email to PEPremRelationshipNPSDetractorAlert@genesys.com
 Exclude Australia and New Zealand</description>
         <formula>!$User.BypassWorkflows__c &amp;&amp;  TEXT(Survey_Type__c) = &quot;Relationship&quot; &amp;&amp; NPS_Rating__c != &quot;10&quot; &amp;&amp; NPS_Rating__c != &quot;9&quot; &amp;&amp; NPS_Rating__c != &quot;8&quot; &amp;&amp; NPS_Rating__c != &quot;7&quot; &amp;&amp; (NPS_Deployment_Type__c = &quot;PureEngage Premise&quot; || ISBLANK(NPS_Deployment_Type__c)) &amp;&amp; End_User_Country__c != &quot;Australia&quot; &amp;&amp; End_User_Country__c != &quot;New Zealand&quot;</formula>
@@ -201,7 +201,7 @@ Exclude Australia and New Zealand</description>
             <name>NPS_PureEngage_Cloud_Notification</name>
             <type>Alert</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>If field NPS_Deployment_Type__c = “PureEngage Cloud” OR “Premier” or “Outbound” or “LEC” send to PECloudRelationshipNPSDetractorAlert@genesys.com
 Exclude Australia and New Zealand</description>
         <formula>!$User.BypassWorkflows__c &amp;&amp;  TEXT(Survey_Type__c) = &quot;Relationship&quot; &amp;&amp; (NPS_Deployment_Type__c = &quot;PureEngage Cloud&quot; || NPS_Deployment_Type__c = &quot;Premier&quot; ||  NPS_Deployment_Type__c = &quot;Outbound&quot; ||  NPS_Deployment_Type__c = &quot;Legacy Enterprise&quot; ) &amp;&amp; NPS_Rating__c != &quot;10&quot; &amp;&amp; NPS_Rating__c != &quot;9&quot; &amp;&amp; NPS_Rating__c != &quot;8&quot; &amp;&amp; NPS_Rating__c != &quot;7&quot; &amp;&amp; End_User_Country__c != &quot;Australia&quot; &amp;&amp; End_User_Country__c != &quot;New Zealand&quot;</formula>
@@ -217,7 +217,7 @@ Exclude Australia and New Zealand</description>
             <name>Set_Account_Owner_Manager_Email</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>Sent to Account Owner and Account Owner Manager
 NPS Rating 0 to 6
 sent out in 72 hrs.</description>
@@ -243,7 +243,7 @@ sent out in 72 hrs.</description>
             <name>Set_Account_Owner_Manager_Email</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>Sent to Account Owner and Account Owner Manager
 NPS Rating 7 or 8
 does out in 24 hrs.</description>
@@ -273,7 +273,7 @@ does out in 24 hrs.</description>
             <name>Set_Account_Owner_Manager_Email</name>
             <type>FieldUpdate</type>
         </actions>
-        <active>false</active>
+        <active>true</active>
         <description>Sent to Account Owner and Account Owner Manager
 NPS Rating &gt; 8
 sent out immediately</description>

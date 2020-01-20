@@ -61,7 +61,7 @@ public class TestUpdateQuoteProductCumulative {
         insert objSubProd;
         Test.startTest();
         UpdateQuoteProductCumulative clsOppAndQuoteRenewal = new UpdateQuoteProductCumulative();
-        Database.executeBatch(clsOppAndQuoteRenewal,1000); 
+        Database.executeBatch(clsOppAndQuoteRenewal,2000); 
         Test.stopTest();       
         
         

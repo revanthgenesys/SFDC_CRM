@@ -56,6 +56,7 @@ public class DDSToolInterface {
     public static QuoteDDSWrapper calculateDealScore(BigMachines__Quote__c objQuote){
         
     	DDSToolMain dds = DDSToolMain.getDDSToolMain(objQuote.Id,Integer.valueOf(2));
+        system.debug('dds123' + dds);
         QuoteDDSWrapper objWrapper = new QuoteDDSWrapper();
         objWrapper.objQuote = objQuote;
         if(dds != null && dds.finalScore == null ) {         
@@ -78,6 +79,7 @@ public class DDSToolInterface {
             }
 
             DDSHistory.DealScore__c = objQuote.Deal_Score__c;
+            system.debug('DDSHistory123'+ DDSHistory);
             insert  DDSHistory;                  
         }  
     	return objWrapper;   
