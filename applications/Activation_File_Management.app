@@ -19,4 +19,5 @@
     <tabs>License_Snapshot__c</tabs>
     --<NEW LINE>>
         New line added
+    Second line added
 </CustomApplication>
