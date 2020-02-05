@@ -206,5 +206,3 @@ private class Account_BeforeTest {
         delete Acc;
     }
 }
-
-New line added here
